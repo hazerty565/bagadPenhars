@@ -45,165 +45,234 @@ You can preview the production build with `npm run preview`.
 
 ```text
 bagadPenhars/
+│
 ├── src/
 │   ├── app.html
-│   ├── app.d.ts
-│   ├── hooks.server.ts            <-- Injecte la session Supabase dans event.locals.user
+│   ├── app.d.ts               ← App.Locals { user, session }, App.PageData
+│   ├── app.css
+│   ├── hooks.server.ts        ← injecte session Supabase → event.locals.user
 │   │
 │   ├── lib/
+│   │   ├── supabase.ts          ← client browser (anon key)
+│   │   ├── config.ts            ← SITE_NAME, DEFAULT_LANG, LANGS, ARTICLES_PER_PAGE…
+│   │   │
+│   │   ├── server/              ← jamais importé côté client
+│   │   │   ├── supabase.ts        ← client service_role key
+│   │   │   ├── articles.ts        ← getArticles(), getArticleBySlug(), getArticlesByTag()
+│   │   │   ├── events.ts          ← getEvents(), getUpcomingEvents()
+│   │   │   └── media.ts           ← getAlbums(), getMediaByAlbum()
+│   │   │
 │   │   ├── auth/
-│   │   │   ├── roles.ts
-│   │   │   └── permissions.ts
+│   │   │   ├── roles.ts           ← enum Role { admin, member, anon }
+│   │   │   └── permissions.ts     ← canEdit(), canInvite(), canManagePupitre()
+│   │   │
 │   │   ├── i18n/
-│   │   │   ├── index.ts
-│   │   │   ├── store.ts
+│   │   │   ├── index.ts           ← types Language, t(), localizedPath()
+│   │   │   ├── store.ts           ← store lang réactif
 │   │   │   └── locales/
-│   │   │       ├── fr.json
+│   │   │       ├── fr.json        ← source de vérité
 │   │   │       ├── en.json
-│   │   │       └── br.json
+│   │   │       └── br.json        ← brezhoneg
+│   │   │
 │   │   ├── components/
-│   │   │   ├── Nav.svelte
+│   │   │   ├── ui/
+│   │   │   │   ├── Button.svelte
+│   │   │   │   ├── Input.svelte
+│   │   │   │   ├── Badge.svelte
+│   │   │   │   ├── Spinner.svelte
+│   │   │   │   └── Pagination.svelte
+│   │   │   │
+│   │   │   ├── Nav.svelte           menu unique adaptatif
+│   │   │   │                                ← anon : liens publics + login
+│   │   │   │                                ← connecté : + profil / sécurité / notifs
+│   │   │   │                                ← chef pupitre : + mon pupitre / fichiers
+│   │   │   │                                ← admin : + lien → /[lang]/admin
 │   │   │   ├── Footer.svelte
-│   │   │   ├── LangSwitcher.svelte
+│   │   │   ├── LangSwitcher.svelte  ← fr · br · en (dans la Nav)
+│   │   │   ├── Sidebar.svelte       ← navigation interne admin uniquement
 │   │   │   ├── ArticleCard.svelte
-│   │   │   ├── RichEditor.svelte
-│   │   │   ├── ImageUpload.svelte   <-- Envoie le fichier directement via un formulaire standard
+│   │   │   ├── RichEditor.svelte    ← TipTap
+│   │   │   ├── ImageUpload.svelte
 │   │   │   ├── MediaGallery.svelte
+│   │   │   ├── VideoEmbed.svelte    ← YouTube / mp4 / Google Drive (plus tard)
 │   │   │   ├── Toast.svelte
 │   │   │   ├── Modal.svelte
 │   │   │   ├── Map.svelte
-│   │   │   ├── NotificationButton.svelte
-│   │   │   └── Sidebar.svelte
+│   │   │   └── NotificationButton.svelte
+│   │   │
+│   │   ├── data/                ← données statiques
+│   │   │   ├── formation.ts
+│   │   │   ├── partenaires.ts
+│   │   │   └── nav.ts             ← liens nav (source unique)
+│   │   │
 │   │   ├── stores/
-│   │   │   ├── toast.ts
 │   │   │   ├── user.ts
-│   │   │   └── lang.ts
+│   │   │   ├── lang.ts
+│   │   │   └── toast.ts
+│   │   │
 │   │   ├── types/
 │   │   │   ├── article.ts
 │   │   │   ├── event.ts
-│   │   │   ├── user.ts            <-- is_super_admin, is_admin, responsable_pupitre
-│   │   │   └── media.ts
+│   │   │   ├── user.ts
+│   │   │   ├── media.ts
+│   │   │   └── album.ts
+│   │   │
 │   │   ├── utils/
 │   │   │   ├── slugify.ts
-│   │   │   └── language.ts
-│   │   ├── services/
-│   │   │   └── media.ts            <-- Contient la logique d'envoi vers Supabase Storage
+│   │   │   ├── language.ts
+│   │   │   ├── date.ts
+│   │   │   └── seo.ts
+│   │   │
 │   │   └── notifications/
 │   │       ├── client.ts
 │   │       └── server.ts
 │   │
-│   ├── routes/
-│   │   ├── +layout.svelte
-│   │   ├── +layout.server.ts
-│   │   │
-│   │   └── [lang]/                 <-- Gestion de la langue globale
-│   │       ├── +layout.svelte
-│   │       ├── +layout.server.ts
-│   │       ├── +page.svelte       <-- +page.server.ts associé pour charger les articles/événements
-│   │       ├── +page.server.ts    <-- Charge les données initiales pour l'accueil publique
-│   │       │
-│   │       ├── articles/
-│   │       │   ├── +page.svelte
-│   │       │   ├── +page.server.ts <-- Charge la liste des articles publics
-│   │       │   └── [slug]/
-│   │       │       ├── +page.svelte
-│   │       │       └── +page.server.ts <-- Charge l'article complet selon le slug
-│   │       ├── agenda/
-│   │       │   ├── +page.svelte
-│   │       │   └── +page.server.ts <-- Charge les événements de l'agenda
-│   │       ├── bagad/
-│   │       │   └── +page.svelte
-│   │       ├── partenaires/
-│   │       │   └── +page.svelte
-│   │       ├── contact/
-│   │       │   ├── +page.svelte
-│   │       │   └── +page.server.ts <-- Gère l'envoi du formulaire de contact (Action)
-│   │       ├── media/
-│   │       │   └── +page.svelte
-│   │       ├── login/
-│   │       │   ├── +page.svelte
-│   │       │   └── +page.server.ts <-- Gère la connexion avec Supabase (Action)
-│   │       ├── reset-password/
-│   │       │   ├── +page.svelte
-│   │       │   └── +page.server.ts <-- Gère la demande de réinitialisation (Action)
-│   │       │
-│   │       │  /===============================================================\
-│   │       │ |  ESPACES PRIVÉS & SÉCURISÉS                                     |
-│   │       │  \===============================================================/
-│   │       │
-│   │       ├── (compte)/          <-- ACCESSIBLE À TOUS LES CONNECTÉS
-│   │       │   ├── +layout.server.ts <-- GARDIEN : Vérifie la session
-│   │       │   ├── +layout.svelte
-│   │       │   │
-│   │       │   ├── profil/
-│   │       │   │   ├── +page.svelte
-│   │       │   │   └── +page.server.ts <-- Form Action : Met à jour les infos du profil
-│   │       │   ├── securite/
-│   │       │   │   ├── +page.svelte
-│   │       │   │   └── +page.server.ts <-- Form Action : Change le mot de passe
-│   │       │   └── notifications/
-│   │       │       ├── +page.svelte
-│   │       │       └── +page.server.ts <-- Form Action : Enregistre les préférences d'alertes
-│   │       │
-│   │       ├── (gestion-pupitre)/ <-- ACCESSIBLE AUX CHEFS DE PUPITRE & SUPER ADMIN
-│   │       │   └── pupitre/
-│   │       │       ├── +layout.server.ts <-- GARDIEN : Bloque si responsable_pupitre === null
-│   │       │       ├── +layout.svelte
-│   │       │       ├── +page.svelte       <-- Dashboard du Chef
-│   │       │       │
-│   │       │       ├── fichiers/
-│   │       │       │   ├── +page.svelte
-│   │       │       │   └── +page.server.ts <-- Form Action : Réceptionne et stocke les partitions/audios
-│   │       │       └── notifications/
-│   │       │           ├── +page.svelte
-│   │       │           └── +page.server.ts <-- Form Action : Envoie la notif flash au pupitre
-│   │       │
-│   │       └── (gestion-admin)/   <-- ACCESSIBLE AUX ADMINS & SUPER ADMIN
-│   │           └── admin/
-│   │               ├── +layout.server.ts <-- GARDIEN : Bloque si is_admin === false
-│   │               ├── +layout.svelte
-│   │               ├── +page.svelte       <-- Dashboard de l'Admin Général
-│   │               │
-│   │               ├── articles/
-│   │               │   ├── +page.svelte
-│   │               │   ├── +page.server.ts <-- Charge tous les articles + Action "Supprimer"
-│   │               │   ├── new/
-│   │               │   │   ├── +page.svelte
-│   │               │   │   └── +page.server.ts <-- Form Action : Crée un nouvel article
-│   │               │   └── [id]/
-│   │               │       └── edit/
-│   │               │           ├── +page.svelte
-│   │               │           └── +page.server.ts <-- Form Action : Modifie l'article
-│   │               ├── agenda/
-│   │               │   ├── +page.svelte
-│   │               │   ├── +page.server.ts <-- Charge l'agenda + Action "Supprimer"
-│   │               │   └── new/
-│   │               │       ├── +page.svelte
-│   │               │       └── +page.server.ts <-- Form Action : Crée un événement
-│   │               ├── membres/
-│   │               │   ├── +page.svelte
-│   │               │   ├── +page.server.ts <-- Charge les membres
-│   │               │   └── invite/
-│   │               │       ├── +page.svelte
-│   │               │       └── +page.server.ts <-- Form Action : Invite un membre (via Supabase/Netlify)
-│   │               ├── media/
-│   │               │   ├── +page.svelte
-│   │               │   └── +page.server.ts <-- Gère l'affichage global des fichiers média du site
-│   │               ├── notifications/
-│   │               │   ├── +page.svelte
-│   │               │   └── +page.server.ts <-- Form Action : Envoie une notif globale
-│   │               └── permissions/
-│   │                   ├── +page.svelte
-│   │                   └── +page.server.ts <-- Form Action : Modifie les rangs en BDD (Super Admin)
-│   │
-│   └── (aucun dossier api ici)
-│   
-├── static/
+│   └── routes/
+│       ├── +layout.svelte          ← racine (app.css, Toast global)
+│       ├── +layout.server.ts       ← redirect / → /fr (detect Accept-Language)
+│       ├── +error.svelte
+│       │
+│       ├── auth/callback/
+│       │   └── +server.ts           ← valide token Supabase (invite + reset)
+│       │
+│       ├── sitemap.xml/
+│       │   └── +server.ts           ← sitemap dynamique avec slugs articles
+│       │
+│       └── [lang]/               fr · en · br
+│           ├── +layout.svelte     ← Nav (adaptative) + Footer
+│           ├── +layout.server.ts  ← valide lang + injecte translations + session
+│           ├── +error.svelte      ← erreur localisée i18n
+│           │
+│           ├── +page.svelte       ← Home : hero + events + articles récents
+│           ├── +page.server.ts
+│           │
+│           ├── articles/
+│           │   ├── +page.svelte
+│           │   ├── +page.server.ts
+│           │   └── [slug]/
+│           │       ├── +page.svelte
+│           │       └── +page.server.ts ← SSR + meta OG
+│           │
+│           ├── bagad/
+│           │   ├── +page.svelte   ← cards tag=bagad + lien voir plus
+│           │   └── +page.server.ts
+│           │
+│           ├── formation/         statique
+│           │   └── +page.svelte   ← lib/data/formation.ts
+│           │
+│           ├── agenda/
+│           │   ├── +page.svelte
+│           │   └── +page.server.ts
+│           │
+│           ├── media/             Google Drive plus tard
+│           │   ├── +page.svelte   ← galerie masonry : photos + vidéos + albums
+│           │   └── +page.server.ts
+│           │
+│           ├── partenaires/       statique
+│           │   └── +page.svelte   ← lib/data/partenaires.ts
+│           │
+│           ├── contact/
+│           │   ├── +page.svelte
+│           │   └── +page.server.ts ← Form Action : envoi email
+│           │
+│           ├── login/
+│           │   ├── +page.svelte
+│           │   └── +page.server.ts ← signInWithPassword → redirect /[lang]/profil
+│           │
+│           ├── reset-password/
+│           │   ├── +page.svelte
+│           │   └── +page.server.ts
+│           │
+│           ├── (compte)/          session requise
+│           │   ├── +layout.server.ts ← gardien : !session → redirect /[lang]/login
+│           │   ├── +layout.svelte
+│           │   ├── profil/
+│           │   │   ├── +page.svelte   ← dashboard unique, menu adaptatif
+│           │   │   └── +page.server.ts
+│           │   ├── securite/
+│           │   │   ├── +page.svelte
+│           │   │   └── +page.server.ts
+│           │   └── notifications/
+│           │       ├── +page.svelte
+│           │       └── +page.server.ts
+│           │
+│           ├── (gestion-pupitre)/ chef pupitre
+│           │   └── pupitre/
+│           │       ├── +layout.server.ts ← gardien : responsable_pupitre === null → 403
+│           │       ├── +layout.svelte
+│           │       ├── +page.svelte
+│           │       ├── fichiers/
+│           │       │   ├── +page.svelte
+│           │       │   └── +page.server.ts ← upload → bucket pupitre-files (privé)
+│           │       └── notifications/
+│           │           ├── +page.svelte
+│           │           └── +page.server.ts
+│           │
+│           └── (gestion-admin)/   admin — français forcé en interne
+│               └── admin/
+│                   ├── +layout.server.ts ← gardien is_admin + force lang='fr'
+│                   ├── +layout.svelte   ← Nav + Sidebar (fr uniquement)
+│                   ├── +error.svelte
+│                   ├── +page.svelte     ← dashboard stats
+│                   ├── +page.server.ts  ← nb articles, membres, events
+│                   ├── articles/
+│                   │   ├── +page.svelte
+│                   │   ├── +page.server.ts
+│                   │   ├── new/
+│                   │   │   ├── +page.svelte   ← RichEditor + champs fr/br/en
+│                   │   │   └── +page.server.ts
+│                   │   └── [id]/edit/
+│                   │       ├── +page.svelte
+│                   │       └── +page.server.ts
+│                   ├── agenda/
+│                   │   ├── +page.svelte
+│                   │   ├── +page.server.ts
+│                   │   └── new/
+│                   │       ├── +page.svelte
+│                   │       └── +page.server.ts
+│                   ├── membres/
+│                   │   ├── +page.svelte
+│                   │   ├── +page.server.ts
+│                   │   └── invite/
+│                   │       ├── +page.svelte
+│                   │       └── +page.server.ts ← inviteUserByEmail via Netlify fn
+│                   ├── media/
+│                   │   ├── +page.svelte
+│                   │   └── +page.server.ts
+│                   ├── notifications/
+│                   │   ├── +page.svelte
+│                   │   └── +page.server.ts
+│                   └── permissions/
+│                       ├── +page.svelte
+│                       └── +page.server.ts ← update is_admin / responsable_pupitre
+│
 ├── supabase/
-├── netlify/
-├── package.json
+│   ├── config.toml
+│   └── migrations/
+│       ├── 001_profiles.sql
+│       ├── 002_articles.sql
+│       ├── 003_events.sql
+│       ├── 004_media.sql
+│       ├── 005_albums.sql
+│       └── 006_rls_policies.sql
+│
+├── netlify/functions/
+│   ├── invite-user.ts
+│   └── send-notification.ts
+│
+├── static/
+│   ├── favicon.png
+│   ├── logo-penhars.svg
+│   ├── manifest.json
+│   ├── robots.txt
+│   └── logos/
+│
+├── svelte.config.js         ← adapter-netlify
 ├── vite.config.ts
-├── svelte.config.js
 ├── tailwind.config.js
-└── postcss.config.js
+├── postcss.config.js
+├── netlify.toml
+├── tsconfig.json
+├── package.json
+└── README.md
 ```
