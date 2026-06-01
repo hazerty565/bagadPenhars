@@ -246,15 +246,31 @@ bagadPenhars/
 │                       ├── +page.svelte
 │                       └── +page.server.ts ← update is_admin / responsable_pupitre
 │
-├── supabase/
-│   ├── config.toml
-│   └── migrations/
-│       ├── 001_profiles.sql
-│       ├── 002_articles.sql
-│       ├── 003_events.sql
-│       ├── 004_media.sql
-│       ├── 005_albums.sql
-│       └── 006_rls_policies.sql
+|──supabase/
+|  ├──config.toml
+|  └── migrations/
+|      ├── 001_extensions.sql
+|      ├── 002_profiles.sql
+|      ├── 003_sections.sql
+|      ├── 004_music_levels.sql
+|      ├── 005_profile_music_levels.sql
+|      ├── 006_site_roles.sql
+|      ├── 007_profile_site_roles.sql
+|      ├── 008_events.sql
+|      ├── 009_event_attendees.sql
+|      ├── 010_event_recurrences.sql
+|      ├── 011_items.sql
+|      ├── 012_loans.sql
+|      ├── 013_articles.sql
+|      ├── 014_media.sql
+|      ├── 015_albums.sql
+|      ├── 016_album_media.sql
+|      ├── 017_contacts.sql
+|      ├── 018_notifications.sql
+|      ├── 019_documents.sql
+|      ├── 020_indexes.sql
+|      ├── 021_rls_policies.sql
+|      └── 022_seed_data.sql
 │
 ├── netlify/functions/
 │   ├── invite-user.ts
