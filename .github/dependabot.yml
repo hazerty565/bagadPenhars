@@ -1,14 +1,20 @@
 version: 2
 updates:
+  # Configuration pour les dépendances npm/pnpm
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
+    open-pull-requests-limit: 20
+    
+    # Regroupement de toutes les mises à jour en une seule Pull Request
+    groups:
+      dependencies:
+        patterns:
+          - "*"
+
+  # Configuration pour les actions GitHub
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
