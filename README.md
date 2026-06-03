@@ -472,15 +472,56 @@ bagadPenhars/
 │                           └── +page.server.ts
 │
 │
-├── supabase/
-│   ├── config.toml
-│   └── migrations/
-│       ├── 001_profiles.sql
-│       ├── 002_articles.sql
-│       ├── 003_events.sql
-│       ├── 004_media.sql
-│       ├── 005_albums.sql
-│       └── 006_rls_policies.sql
+supabase/
+|   ├── config.toml
+|   └── migrations/
+│      ├── 001_extensions.sql
+│      ├── 010_enums.sql
+│      ├── 020_reference_site_roles.sql
+│      ├── 021_reference_association_roles.sql
+│      ├── 022_reference_sections.sql
+│      ├── 023_reference_music_levels.sql
+│      ├── 030_profiles.sql
+│      ├── 031_profile_association_roles.sql
+│      ├── 032_profile_sections.sql
+│      ├── 033_invitations.sql
+│      ├── 040_events.sql
+│      ├── 041_event_attendances.sql
+│      ├── 050_polls.sql
+│      ├── 051_poll_options.sql
+│      ├── 052_poll_responses.sql
+│      ├── 060_articles.sql
+│      ├── 061_albums.sql
+│      ├── 062_media.sql
+│      ├── 063_documents.sql
+│      ├── 070_items.sql
+│      ├── 071_loans.sql
+│      ├── 080_partners.sql
+│      ├── 081_contacts.sql
+│      ├── 082_notifications.sql
+│      ├── 090_storage_buckets.sql
+│      ├── 100_functions_updated_at.sql
+│      ├── 101_functions_profiles.sql
+│      ├── 102_functions_notifications.sql
+│      ├── 110_rls_profiles.sql
+│      ├── 111_rls_events.sql
+│      ├── 112_rls_polls.sql
+│      ├── 113_rls_documents.sql
+│      ├── 114_rls_media.sql
+│      ├── 115_rls_items.sql
+│      ├── 116_rls_loans.sql
+│      ├── 117_rls_notifications.sql
+│      ├── 120_seeds_site_roles.sql  -- Optionnel : garder ici ou dans seeds/
+│      ├── 121_seeds_association_roles.sql
+│      ├── 122_seeds_sections.sql
+│      ├── 123_seeds_music_levels.sql
+│      └── 999_indexes.sql
+│
+└── seeds/
+    ├── site_roles.sql
+    ├── association_roles.sql
+    ├── sections.sql
+    └── music_levels.sql
 │
 ├── netlify/
 │   └── functions/
