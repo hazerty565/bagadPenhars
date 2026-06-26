@@ -122,20 +122,23 @@ bagad-penhars/
 │       ├── +layout.server.ts
 │       ├── +error.svelte
 │       │
+│       ├── (public)/               # 🌐 Pages publiques avec i18n
+│       │   └── [lang]/
+│       │       ├── +page.svelte    # home
+│       │       ├── bagad/
+│       │       ├── formation/
+│       │       ├── agenda/
+│       │       ├── media/
+│       │       ├── partenaires/
+│       │       └── contact/
+│       │
 │       ├── auth/
 │       │   ├── login/
-│       │   └── logout/
+│       │   ├── logout/
+│       │   └── invitation/          # 🔐 Page de complétion du profil (token unique)
+│       │       └── +page.svelte    # Formulaire sécurisé (validation côté serveur)
 │       │
-│       ├── [lang]/                  # pages publiques FR / BR / EN
-│       │   ├── +page.svelte         # home
-│       │   ├── bagad/
-│       │   ├── formation/
-│       │   ├── agenda/
-│       │   ├── media/
-│       │   ├── partenaires/
-│       │   └── contact/
-│       │
-│       └── dashboard/               # 🔒 zone privée
+│       └── dashboard/               # 🔒 Zone privée (pas d'i18n, français uniquement)
 │           ├── +layout.server.ts    # guard requireAuth
 │           ├── +layout.svelte
 │           ├── +page.svelte
@@ -176,7 +179,7 @@ bagad-penhars/
 | `events` | répétitions et événements |
 | `attendance` | présences par événement |
 | `documents` | documents internes |
-| `invitations` | invitations en attente |
+| `invitations` | invitations en attente (avec token unique, `expiresAt`, `used`) |
 
 **Buckets** :
 
@@ -188,14 +191,24 @@ bagad-penhars/
 
 ---
 
-## 🔐 Invitation flow
+## 🔐 Invitation flow (sécurisé)
 
-1. Admin saisit un email dans `/dashboard/admin/invitations`
-2. Création du compte Appwrite
-3. Envoi email d'invitation
-4. Profil créé vide en base
-5. L'utilisateur complète son profil à la première connexion
-6. Validation admin (activation du rôle `member`)
+1. **Admin** saisit un email dans `/dashboard/admin/invitations`.
+2. **Création du compte Appwrite** (via API serveur).
+3. **Génération d’un token unique** (UUID) avec :
+   - `email` : Email du futur membre.
+   - `expiresAt` : Date d’expiration (ex : +7 jours).
+   - `used: false` : Token non utilisé.
+4. **Envoi de l’email d’invitation** avec un lien vers `/auth/invitation?token=UUID`.
+5. **Page `/auth/invitation`** :
+   - **Validation côté serveur** du token (existence, non expiré, non utilisé).
+   - **Formulaire sécurisé** (POST) pour compléter le profil (nom, pupitre, etc.).
+   - **Soumission** :
+     - Re-vérification du token.
+     - Création du profil en base avec rôle `pending`.
+     - Marquer le token comme `used: true`.
+6. **Redirection** vers `/login?success=true`.
+7. **Validation admin** : L’admin active manuellement le rôle `member` dans `/dashboard/admin/invitations`.
 
 ---
 
@@ -205,17 +218,21 @@ bagad-penhars/
 |-----------|-------|
 | `attendance` | mise à jour présence en live |
 | `events` | agenda live (ajout/modif) |
-| `invitations` | notification admin |
+| `invitations` | notification admin pour nouvelles invitations |
 
 ---
 
 ## 🧠 Philosophie
 
-- **Simple** — pas de SaaS, pas d'over-engineering
-- **Appwrite** — unique backend (auth, db, stockage, realtime)
-- **Logique côté SvelteKit** — load functions + form actions
-- **Dashboard unique** — affichage conditionnel selon rôle, pas de routes séparées par rôle
-- **i18n public uniquement** — la zone privée est en français uniquement
+- **Simple** — pas de SaaS, pas d'over-engineering.
+- **Appwrite** — unique backend (auth, db, stockage, realtime).
+- **Logique côté SvelteKit** — load functions + form actions.
+- **Dashboard unique** — affichage conditionnel selon rôle, pas de routes séparées par rôle.
+- **i18n public uniquement** — la zone privée est en **français uniquement**.
+- **Sécurité** :
+  - Tokens d’invitation **uniques, expirants, à usage unique**.
+  - Validation **côté serveur** pour toutes les actions sensibles.
+  - **Pas de guards manuels** pour les routes publiques/privées : SvelteKit gère la séparation via `(public)` et `dashboard/`.
 
 ---
 
