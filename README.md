@@ -51,17 +51,6 @@ Les permissions sont gérées par :
 permissions[]
 ```
 
-Exemple :
-
-```ts
-[
-  "agenda.read",
-  "agenda.manage",
-  "documents.read",
-  "news.manage"
-]
-```
-
 ---
 
 # 📊 Dashboard (SIMPLE)
@@ -75,7 +64,7 @@ Une seule route :
 Affichage conditionnel selon rôle :
 
 - agenda (événements + répétitions)
-- présence (présent / absent)
+- présence
 - documents
 - profil
 - gestion pupitre (chef)
@@ -85,57 +74,88 @@ Affichage conditionnel selon rôle :
 
 # 📅 Agenda
 
-## Visible :
 - événements publics
-- répétitions (si connecté)
+- répétitions (connecté)
 
-## Actions :
-- membre → présence
-- chef/admin → CRUD événements
+Actions :
 
----
-
-# 🧑‍🤝‍🧑 Modèle métier
-
-- Utilisateur = Appwrite Auth
-- Profil = collection `profiles`
-- Pupitre = instrument section
+- member → présence
+- chef/admin → CRUD
 
 ---
 
-# 🏗️ Architecture
+# 🏗️ Architecture projet
 
 ```txt
-src/
-├── lib/
-│   ├── appwrite/
-│   ├── auth/
-│   ├── data/
-│   ├── components/
-│   ├── utils.ts
-│   └── types.ts
+bagad-penhars/
+├── src/
+│   ├── app.html
+│   ├── app.d.ts
+│   ├── app.css
+│   ├── hooks.server.ts
+│   │
+│   ├── lib/
+│   │   ├── appwrite/
+│   │   │   ├── client.ts
+│   │   │   ├── server.ts
+│   │   │   └── config.ts
+│   │   │
+│   │   ├── auth/
+│   │   │   ├── roles.ts
+│   │   │   └── guards.ts
+│   │   │
+│   │   ├── data/
+│   │   │   ├── events.ts
+│   │   │   ├── members.ts
+│   │   │   ├── documents.ts
+│   │   │   └── attendance.ts
+│   │   │
+│   │   ├── components/
+│   │   │   ├── ui/
+│   │   │   ├── layout/
+│   │   │   ├── events/
+│   │   │   ├── documents/
+│   │   │   └── members/
+│   │   │
+│   │   ├── utils.ts
+│   │   └── types.ts
+│   │
+│   ├── routes/
+│   │   ├── auth/
+│   │   ├── (public)/
+│   │   ├── (adherent)/
+│   │   ├── (chef)/
+│   │   └── (admin)/
+│   │
+│   └── static/
+│       ├── favicon.png
+│       ├── logo.svg
+│       └── robots.txt
 │
-└── routes/
-    ├── (public)
-    └── dashboard
+├── .env.example
+├── package.json
+├── svelte.config.js
+├── vite.config.ts
+├── tailwind.config.js
+├── tsconfig.json
+└── README.md
 ```
 
 ---
 
 # 🗄️ Appwrite
 
-## Database: bagad_db
+Database: `bagad_db`
 
-### Collections
+Collections :
 
 - profiles
 - events
 - attendance
 - documents
 - invitations
-- news (optionnel)
 
-### Buckets
+Buckets :
 
 - avatars
 - documents
@@ -145,32 +165,30 @@ src/
 
 # 🔐 Invitation flow
 
-1. Admin invite par email
-2. Création user Appwrite
-3. Email envoyé
-4. Création profil vide
-5. Complétion utilisateur
-6. Validation admin
+1. admin invite email
+2. création user Appwrite
+3. email invitation
+4. profil créé vide
+5. utilisateur complète profil
+6. validation admin
 
 ---
 
 # ⚡ Realtime
 
-Utilisé uniquement pour :
-
 - présence
-- notifications UI
 - agenda live
+- notifications UI
 
 ---
 
 # 🧠 Philosophie
 
-✔ simple
-✔ pas SaaS
-✔ pas microservices
-✔ Appwrite unique backend
-✔ logique métier côté SvelteKit
+- simple
+- pas SaaS
+- Appwrite unique backend
+- logique côté SvelteKit
+- dashboard unique
 
 ---
 
