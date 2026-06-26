@@ -4,12 +4,12 @@ Site web du Bagad Penhars avec une zone adhérents sécurisée basée sur **Svel
 
 ---
 
-# 🧭 Objectif du projet
+## 🧭 Objectif du projet
 
-Un projet volontairement SIMPLE (pas un SaaS) :
+Un projet volontairement **simple** (pas un SaaS) :
 
-- Site public vitrine
-- Zone adhérents (dashboard unique)
+- Site public vitrine multilingue
+- Zone adhérents avec dashboard unique
 - Agenda des répétitions / événements
 - Gestion des documents internes
 - Gestion des membres par invitation
@@ -17,74 +17,65 @@ Un projet volontairement SIMPLE (pas un SaaS) :
 
 ---
 
-# 🌐 Pages publiques
+## 🌐 Pages publiques
 
-Accessible sans connexion :
+Accessibles sans connexion, disponibles en FR / BR / EN.
 
-- `/` Home (news + infos + chiffres clés)
-- `/bagad`
-- `/formation`
-- `/agenda` (lecture publique)
-- `/media`
-- `/partenaires`
-- `/contact`
-
-### 🌐 i18n
-- FR / BR / EN
-- uniquement côté public
+| Route | Description |
+|-------|-------------|
+| `/` | Home — news, infos, chiffres clés |
+| `/bagad` | Présentation du bagad |
+| `/formation` | École de formation |
+| `/agenda` | Agenda public (lecture seule) |
+| `/media` | Photos, vidéos, enregistrements |
+| `/partenaires` | Partenaires |
+| `/contact` | Formulaire de contact |
 
 ---
 
-# 🔐 Zone privée
+## 🔐 Zone privée
 
-Accessible via Appwrite Auth
+Accessible via Appwrite Auth — route unique `/dashboard`.
 
-## Rôles
+### Rôles
 
-- member
-- chef_pupitre
-- admin
+| Rôle | Accès |
+|------|-------|
+| `member` | agenda, présence, documents, profil |
+| `chef_pupitre` | + gestion membres pupitre, docs pupitre |
+| `admin` | + gestion globale, membres, invitations |
 
-Les permissions sont gérées par :
+Les permissions sont portées par le champ `permissions[]` du profil Appwrite.
 
-```ts
-permissions[]
-```
+### Dashboard
 
----
+Une seule route `/dashboard` avec affichage conditionnel selon le rôle :
 
-# 📊 Dashboard (SIMPLE)
-
-Une seule route :
-
-```
+```txt
 /dashboard
+  ├── agenda + présence        (tous)
+  ├── documents                (tous)
+  ├── profil                   (tous)
+  ├── gestion pupitre          (chef_pupitre + admin)
+  └── administration           (admin)
 ```
 
-Affichage conditionnel selon rôle :
+---
 
-- agenda (événements + répétitions)
-- présence
-- documents
-- profil
-- gestion pupitre (chef)
-- administration (admin)
+## 📅 Agenda
+
+| Contexte | Accès |
+|----------|-------|
+| Public `/agenda` | lecture seule, événements publics |
+| Dashboard | répétitions + événements, gestion présence |
+
+Actions selon rôle :
+- `member` → déclarer sa présence
+- `chef_pupitre` / `admin` → CRUD événements
 
 ---
 
-# 📅 Agenda
-
-- événements publics
-- répétitions (connecté)
-
-Actions :
-
-- member → présence
-- chef/admin → CRUD
-
----
-
-# 🏗️ Architecture projet
+## 🏗️ Architecture projet
 
 ```txt
 bagad-penhars/
@@ -108,6 +99,7 @@ bagad-penhars/
 │   │   │   ├── events.ts
 │   │   │   ├── members.ts
 │   │   │   ├── documents.ts
+│   │   │   ├── profiles.ts
 │   │   │   └── attendance.ts
 │   │   │
 │   │   ├── components/
@@ -117,21 +109,21 @@ bagad-penhars/
 │   │   │   ├── documents/
 │   │   │   └── members/
 │   │   │
-│   │   ├── utils.ts
-│   │   └── types.ts
+│   │   ├── i18n/
+│   │   │   ├── fr.ts
+│   │   │   ├── br.ts
+│   │   │   └── en.ts
+│   │   │
+│   │   ├── types.ts
+│   │   └── utils.ts
 │   │
-│   ├── routes/
-│   │   ├── auth/
-│   │   ├── (public)/
-│   │   ├── (adherent)/
-│   │   ├── (chef)/
-│   │   └── (admin)/
-│   │
-│   └── static/
-│       ├── favicon.png
-│       ├── logo.svg
-│       └── robots.txt
+│   └── routes/
+│       ├── auth/
+│       ├── [lang]/
+│       └── dashboard/
 │
+├── static/
+├── tests/
 ├── .env.example
 ├── package.json
 ├── svelte.config.js
@@ -143,58 +135,64 @@ bagad-penhars/
 
 ---
 
-# 🗄️ Appwrite
+## 🗄️ Appwrite
 
-Database: `bagad_db`
+**Database** : `bagad_db`
 
-Collections :
+| Collection | Description |
+|------------|-------------|
+| `profiles` | profil membre (rôle, pupitre, infos) |
+| `events` | répétitions et événements |
+| `attendance` | présences par événement |
+| `documents` | documents internes |
+| `invitations` | invitations en attente |
 
-- profiles
-- events
-- attendance
-- documents
-- invitations
+**Buckets** :
 
-Buckets :
-
-- avatars
-- documents
-- media
-
----
-
-# 🔐 Invitation flow
-
-1. admin invite email
-2. création user Appwrite
-3. email invitation
-4. profil créé vide
-5. utilisateur complète profil
-6. validation admin
+| Bucket | Contenu |
+|--------|---------|
+| `avatars` | photos de profil |
+| `documents` | fichiers PDF internes |
+| `media` | photos et vidéos publiques |
 
 ---
 
-# ⚡ Realtime
+## 🔐 Invitation flow
 
-- présence
-- agenda live
-- notifications UI
-
----
-
-# 🧠 Philosophie
-
-- simple
-- pas SaaS
-- Appwrite unique backend
-- logique côté SvelteKit
-- dashboard unique
+1. Admin saisit un email dans `/dashboard/admin/invitations`
+2. Création du compte Appwrite
+3. Envoi email d'invitation
+4. Profil créé vide en base
+5. L'utilisateur complète son profil à la première connexion
+6. Validation admin (activation du rôle `member`)
 
 ---
 
-# 🚀 Stack
+## ⚡ Realtime (Appwrite)
 
-- SvelteKit
-- Appwrite
-- TailwindCSS
-- NodeJS 22
+| Événement | Usage |
+|-----------|-------|
+| `attendance` | mise à jour présence en live |
+| `events` | agenda live (ajout/modif) |
+| `invitations` | notification admin |
+
+---
+
+## 🧠 Philosophie
+
+- Simple
+- Pas de SaaS
+- Appwrite comme backend unique
+- Dashboard unique
+- i18n public uniquement
+
+---
+
+## 🚀 Stack
+
+| Outil | Usage |
+|-------|-------|
+| SvelteKit | framework fullstack |
+| Appwrite | auth, base de données, stockage, realtime |
+| TailwindCSS | styles |
+| Node.js 22 | runtime |
