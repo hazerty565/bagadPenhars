@@ -83,19 +83,19 @@ bagad-penhars/
 │   ├── app.html
 │   ├── app.d.ts
 │   ├── app.css
-│   ├── hooks.server.ts
+│   ├── hooks.server.ts              # session Appwrite + résolution rôle
 │   │
 │   ├── lib/
 │   │   ├── appwrite/
-│   │   │   ├── client.ts
-│   │   │   ├── server.ts
-│   │   │   └── config.ts
+│   │   │   ├── client.ts            # SDK browser
+│   │   │   ├── server.ts            # SDK server (API key)
+│   │   │   └── config.ts            # IDs collections, buckets, endpoint
 │   │   │
 │   │   ├── auth/
-│   │   │   ├── roles.ts
-│   │   │   └── guards.ts
+│   │   │   ├── roles.ts             # types Role, constantes
+│   │   │   └── guards.ts            # requireAuth, requireChef, requireAdmin
 │   │   │
-│   │   ├── data/
+│   │   ├── data/                    # accès Appwrite direct
 │   │   │   ├── events.ts
 │   │   │   ├── members.ts
 │   │   │   ├── documents.ts
@@ -118,9 +118,40 @@ bagad-penhars/
 │   │   └── utils.ts
 │   │
 │   └── routes/
+│       ├── +layout.svelte
+│       ├── +layout.server.ts
+│       ├── +error.svelte
+│       │
 │       ├── auth/
-│       ├── [lang]/
-│       └── dashboard/
+│       │   ├── login/
+│       │   └── logout/
+│       │
+│       ├── [lang]/                  # pages publiques FR / BR / EN
+│       │   ├── +page.svelte         # home
+│       │   ├── bagad/
+│       │   ├── formation/
+│       │   ├── agenda/
+│       │   ├── media/
+│       │   ├── partenaires/
+│       │   └── contact/
+│       │
+│       └── dashboard/               # 🔒 zone privée
+│           ├── +layout.server.ts    # guard requireAuth
+│           ├── +layout.svelte
+│           ├── +page.svelte
+│           ├── agenda/
+│           ├── documents/
+│           ├── profil/
+│           ├── pupitre/             # 🔒 chef_pupitre + admin
+│           │   ├── +layout.server.ts  # guard requireChef
+│           │   ├── membres/
+│           │   └── documents/
+│           └── admin/               # 🔒 admin uniquement
+│               ├── +layout.server.ts  # guard requireAdmin
+│               ├── membres/
+│               ├── agenda/
+│               ├── invitations/
+│               └── settings/
 │
 ├── static/
 ├── tests/
@@ -180,11 +211,11 @@ bagad-penhars/
 
 ## 🧠 Philosophie
 
-- Simple
-- Pas de SaaS
-- Appwrite comme backend unique
-- Dashboard unique
-- i18n public uniquement
+- **Simple** — pas de SaaS, pas d'over-engineering
+- **Appwrite** — unique backend (auth, db, stockage, realtime)
+- **Logique côté SvelteKit** — load functions + form actions
+- **Dashboard unique** — affichage conditionnel selon rôle, pas de routes séparées par rôle
+- **i18n public uniquement** — la zone privée est en français uniquement
 
 ---
 
