@@ -141,6 +141,121 @@ Dans `/dashboard/admin/invitations`, l'admin voit les profils `pending` et chois
 Implémentation : action de formulaire → webhook → OneSignal ou Appwrite → notification push.
 
 ---
+## 🏗️ Architecture du projet
+
+```
+bagad-penhars/
+├── src/
+│   ├── app.html                       # <html lang="%lang%"> ← modifié
+│   ├── app.d.ts
+│   ├── app.css
+│   ├── hooks.server.ts                # Session, rôle, blocage pending ← modifié
+│   │
+│   ├── params/
+│   │   └── lang.ts                    # Matcher : fr | en | br ← nouveau
+│   │
+│   ├── lib/
+│   │   ├── appwrite/
+│   │   │   ├── client.ts              # SDK browser
+│   │   │   ├── server.ts              # SDK serveur (clé d'API), un client par requête
+│   │   │   └── config.ts
+│   │   │
+│   │   ├── auth/
+│   │   │   ├── roles.ts               # Types Role, can()
+│   │   │   └── guards.ts              # requireMember, requireChef, requireAdmin ← modifié
+│   │   │
+│   │   ├── data/
+│   │   │   ├── events.ts
+│   │   │   ├── profiles.ts            # + updateProfileRole (serveur uniquement) ← modifié
+│   │   │   ├── documents.ts
+│   │   │   ├── attendance.ts
+│   │   │   ├── invitations.ts
+│   │   │   └── notifications.ts
+│   │   │
+│   │   ├── components/
+│   │   │   ├── ui/
+│   │   │   ├── layout/
+│   │   │   │   └── LanguageSwitcher.svelte   ← nouveau
+│   │   │   ├── events/
+│   │   │   ├── documents/
+│   │   │   ├── members/
+│   │   │   └── auth/
+│   │   │
+│   │   ├── i18n/
+│   │   │   ├── index.ts               # messages, Lang, LANGS ← modifié
+│   │   │   ├── types.ts               # type Messages (dérivé de fr.ts) ← nouveau
+│   │   │   ├── fr.ts                  # Référence, zone publique + privée
+│   │   │   ├── en.ts                  # Public uniquement
+│   │   │   └── br.ts                  # Public uniquement
+│   │   │
+│   │   ├── types.ts
+│   │   └── utils.ts
+│   │
+│   └── routes/
+│       ├── +layout.svelte
+│       ├── +layout.server.ts
+│       ├── +error.svelte
+│       │
+│       ├── (public)/
+│       │   ├── +page.server.ts        # Redirige / vers la langue détectée ← modifié
+│       │   └── [lang=lang]/           # ← modifié (matcher)
+│       │       ├── +layout.server.ts  # Langue, traductions, cookie ← modifié
+│       │       ├── +layout.svelte
+│       │       ├── +page.svelte       # Accueil
+│       │       ├── bagad/
+│       │       ├── formation/
+│       │       ├── agenda/
+│       │       ├── media/
+│       │       ├── partenaires/
+│       │       └── contact/
+│       │
+│       ├── auth/                      # Pas de préfixe de langue
+│       │   ├── login/
+│       │   ├── logout/
+│       │   ├── forgot-password/
+│       │   ├── reset-password/
+│       │   ├── invitation/
+│       │   └── pending/               # Compte en attente d'approbation ← nouveau
+│       │
+│       └── dashboard/                 # Français uniquement, pas de préfixe de langue
+│           ├── +layout.server.ts      # requireMember
+│           ├── +layout.svelte
+│           ├── +page.svelte
+│           ├── agenda/
+│           ├── documents/
+│           ├── profil/
+│           ├── pupitre/
+│           │   ├── +layout.server.ts  # requireChef
+│           │   ├── membres/
+│           │   └── documents/
+│           └── admin/
+│               ├── +layout.server.ts  # requireAdmin
+│               ├── invitations/       # Création + approbation des pending
+│               ├── membres/
+│               └── settings/
+│
+├── migrations/
+│   ├── 001_initial_schema.json
+│   └── README.md
+│
+├── scripts/
+│   ├── reset-agenda.js
+│   ├── export-appwrite.js
+│   └── import-appwrite.js
+│
+├── static/
+├── tests/
+│   ├── guards.test.ts                 # Tests des rôles pending/member/chef/admin ← nouveau
+│   └── i18n.test.ts                   # Mêmes clés dans fr, en, br ← nouveau
+├── .env.example
+├── .gitignore
+├── package.json
+├── svelte.config.js                   # adapter-netlify ← modifié
+├── vite.config.ts
+├── tailwind.config.js
+├── tsconfig.json
+└── README.md
+```
 
 ## 🗄️ Schéma Appwrite
 
@@ -329,119 +444,6 @@ Le projet utilise `@sveltejs/adapter-netlify`. Netlify gère la publication, il 
 
 Authentification et base prêtes pour la production, après application des règles d'accès de la collection `profiles`.
 
----
-### structure du projet
-bagad-penhars/
-├── src/
-│   ├── app.html                       # <html lang="%lang%"> ← modifié
-│   ├── app.d.ts
-│   ├── app.css
-│   ├── hooks.server.ts                # Session, rôle, blocage pending ← modifié
-│   │
-│   ├── params/
-│   │   └── lang.ts                    # Matcher : fr | en | br ← nouveau
-│   │
-│   ├── lib/
-│   │   ├── appwrite/
-│   │   │   ├── client.ts              # SDK browser
-│   │   │   ├── server.ts              # SDK serveur (clé d'API), un client par requête
-│   │   │   └── config.ts
-│   │   │
-│   │   ├── auth/
-│   │   │   ├── roles.ts               # Types Role, can()
-│   │   │   └── guards.ts              # requireMember, requireChef, requireAdmin ← modifié
-│   │   │
-│   │   ├── data/
-│   │   │   ├── events.ts
-│   │   │   ├── profiles.ts            # + updateProfileRole (serveur uniquement) ← modifié
-│   │   │   ├── documents.ts
-│   │   │   ├── attendance.ts
-│   │   │   ├── invitations.ts
-│   │   │   └── notifications.ts
-│   │   │
-│   │   ├── components/
-│   │   │   ├── ui/
-│   │   │   ├── layout/
-│   │   │   │   └── LanguageSwitcher.svelte   ← nouveau
-│   │   │   ├── events/
-│   │   │   ├── documents/
-│   │   │   ├── members/
-│   │   │   └── auth/
-│   │   │
-│   │   ├── i18n/
-│   │   │   ├── index.ts               # messages, Lang, LANGS ← modifié
-│   │   │   ├── types.ts               # type Messages (dérivé de fr.ts) ← nouveau
-│   │   │   ├── fr.ts                  # Référence, zone publique + privée
-│   │   │   ├── en.ts                  # Public uniquement
-│   │   │   └── br.ts                  # Public uniquement
-│   │   │
-│   │   ├── types.ts
-│   │   └── utils.ts
-│   │
-│   └── routes/
-│       ├── +layout.svelte
-│       ├── +layout.server.ts
-│       ├── +error.svelte
-│       │
-│       ├── (public)/
-│       │   ├── +page.server.ts        # Redirige / vers la langue détectée ← modifié
-│       │   └── [lang=lang]/           # ← modifié (matcher)
-│       │       ├── +layout.server.ts  # Langue, traductions, cookie ← modifié
-│       │       ├── +layout.svelte
-│       │       ├── +page.svelte       # Accueil
-│       │       ├── bagad/
-│       │       ├── formation/
-│       │       ├── agenda/
-│       │       ├── media/
-│       │       ├── partenaires/
-│       │       └── contact/
-│       │
-│       ├── auth/                      # Pas de préfixe de langue
-│       │   ├── login/
-│       │   ├── logout/
-│       │   ├── forgot-password/
-│       │   ├── reset-password/
-│       │   ├── invitation/
-│       │   └── pending/               # Compte en attente d'approbation ← nouveau
-│       │
-│       └── dashboard/                 # Français uniquement, pas de préfixe de langue
-│           ├── +layout.server.ts      # requireMember
-│           ├── +layout.svelte
-│           ├── +page.svelte
-│           ├── agenda/
-│           ├── documents/
-│           ├── profil/
-│           ├── pupitre/
-│           │   ├── +layout.server.ts  # requireChef
-│           │   ├── membres/
-│           │   └── documents/
-│           └── admin/
-│               ├── +layout.server.ts  # requireAdmin
-│               ├── invitations/       # Création + approbation des pending
-│               ├── membres/
-│               └── settings/
-│
-├── migrations/
-│   ├── 001_initial_schema.json
-│   └── README.md
-│
-├── scripts/
-│   ├── reset-agenda.js
-│   ├── export-appwrite.js
-│   └── import-appwrite.js
-│
-├── static/
-├── tests/
-│   ├── guards.test.ts                 # Tests des rôles pending/member/chef/admin ← nouveau
-│   └── i18n.test.ts                   # Mêmes clés dans fr, en, br ← nouveau
-├── .env.example
-├── .gitignore
-├── package.json
-├── svelte.config.js                   # adapter-netlify ← modifié
-├── vite.config.ts
-├── tailwind.config.js
-├── tsconfig.json
-└── README.md
 ---
 ## 📋 État d'avancement
 
