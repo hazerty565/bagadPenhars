@@ -10,7 +10,7 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
   et Storage.
 - Netlify sert à héberger l'application.
 - OneSignal est le service prévu pour les notifications push.
-- L'interface adhérent est en français; le brief ne tranche pas encore les
+- L'interface adhérent est en français/anglais; le brief ne tranche pas encore les
   langues du site public.
 
 ## P0 — À décider avant de développer les fonctions concernées
@@ -45,8 +45,7 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    créer les représentations publiques et les événements communs?
 
 6. **Présences et sondages** — les réponses à un événement sont décrites comme
-   oui/non/ne sait pas, tandis que le sondage utilise présent/absent/ne sait
-   pas. S'agit-il de deux types de réponse distincts ou d'une seule
+   oui/non, tandis que le sondage utilise présent/absent. S'agit-il de deux types de réponse distincts ou d'une seule
    fonctionnalité? À quel moment un sondage crée-t-il l'événement : dès sa
    création, à sa clôture ou après validation? Que devient l'événement si le
    sondage est annulé?
