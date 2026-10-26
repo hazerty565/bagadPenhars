@@ -2,6 +2,28 @@
 
 ## 2026-10-26
 
+### Mise à jour de la spécification développeur
+
+#### Fait
+
+- Lecture du README, du brief, de l'architecture, de la spécification et des
+  réponses renseignées dans `docs/questions.md`.
+- Mise à jour de `Spec.md` pour intégrer les décisions confirmées : langues
+  publiques, rôle secrétaire, invitations de sept jours, audiences
+  d'événements, sondages, fuseau horaire, médias, notifications, contact,
+  environnements Supabase et données vierges.
+- Ajout des questions complémentaires 20 à 26 dans `docs/questions.md` pour
+  les ambiguïtés encore bloquantes, notamment les profils, la langue privée,
+  la publication des événements par un chef, les sondages, les notifications,
+  la conservation et les limites de fichiers.
+
+#### Reste à faire
+
+- Obtenir les réponses aux questions 20 à 26 avant d'implémenter les
+  comportements concernés.
+- Harmoniser le README avec les décisions documentées, notamment les droits
+  d'invitation/approbation, le nombre de pupitres par membre et les rôles.
+
 ### Spécification développeur
 
 #### Choix Supabase uniquement

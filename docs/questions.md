@@ -19,12 +19,16 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    français, anglais et breton? Le dépôt contient déjà un routage `fr/en/br`,
    mais le brief laisse la décision ouverte.
 
+   Décision : français, anglais et breton (fr/en/br).
+
 2. **Rôle secrétaire** — la secrétaire est-elle un rôle applicatif autonome
    (`secretaire`) ou un titre de bureau? Le brief dit que les titres du bureau
    ne donnent aucun droit, mais le schéma historique ne contient pas de rôle
    `secretaire`. Confirmer aussi si une secrétaire peut modifier/consulter
    toutes les données de membres nécessaires aux invitations et validations,
    sans avoir les droits globaux de l'admin.
+
+   Décision : la secrétaire est un rôle applicatif autonome (secretaire). Elle peut gérer les membres, invitations et validations nécessaires à sa fonction, sans disposer des droits globaux de l'admin.
 
 3. **Invitations et approbation** — le brief autorise l'admin et la secrétaire
    à inviter et approuver, tandis que d'anciens écrans/documentations semblent
@@ -33,16 +37,22 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    un autre rôle. Quelle durée d'expiration faut-il appliquer? Une ancienne
    documentation indique sept jours, mais ce délai n'est pas dans le brief.
 
+   Décision : l'admin et la secrétaire peuvent inviter et approuver les adhérents. Toute approbation attribue le rôle member. Les invitations expirent après 7 jours.
+
 4. **Visibilité des partitions** — le brief précise que tous les membres
    approuvés peuvent consulter les partitions de tous les pupitres; une autre
    phrase dit « visibles selon le pupitre ». Confirmer la règle d'accès en
    lecture. Les droits de dépôt (chef sur son pupitre, secrétaire et admin)
    sont-ils bien distincts des droits de lecture?
 
+   Décision : un événement peut cibler un ou plusieurs pupitres. Les événements communs et les événements publics sont créés par l'admin ou la secrétaire. Un chef de pupitre ne peut créer que des événements concernant son pupitre, avec le choix de publier pour tout le monde avec un select.
+
 5. **Événements par pupitre** — les chefs créent des événements pour leur
    pupitre, mais le modèle historique d'événement n'a pas de champ
    d'audience/pupitre. Un événement peut-il cibler plusieurs pupitres? Qui peut
    créer les représentations publiques et les événements communs?
+
+   Décision : un événement peut cibler un ou plusieurs pupitres. Les événements communs et les événements publics sont créés par l'admin ou la secrétaire. Un chef de pupitre ne peut créer que des événements concernant son pupitre.
 
 6. **Présences et sondages** — les réponses à un événement sont décrites comme
    oui/non, tandis que le sondage utilise présent/absent. S'agit-il de deux types de réponse distincts ou d'une seule
@@ -50,14 +60,20 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    création, à sa clôture ou après validation? Que devient l'événement si le
    sondage est annulé?
 
+    Les sondages utilisent présent/absent. Un sondage ne crée pas automatiquement un événement : la création nécessite une validation explicite. 
+
 7. **Notifications** — OneSignal est confirmé, mais faut-il envoyer des push
    uniquement ou aussi des emails? Quel événement déclenche des notifications
    automatiques (nouvel événement, rappel, nouvelle partition), et les membres
    peuvent-ils gérer leurs préférences ou se désabonner?
 
+Décision : notifications push via OneSignal uniquement pour la première version. Notifications automatiques pour les nouveaux événements. Les membres peuvent gérer leurs préférences de notification.
+
 8. **Contact** — quelle adresse reçoit les formulaires? Faut-il envoyer une
    confirmation à l'expéditeur? Les pièces jointes sont-elles interdites? Qui
    traite les messages et combien de temps sont-ils conservés?
+
+   Décision : les messages sont envoyés à l'adresse officielle de l'association, à configurer. Une confirmation est envoyée à l'expéditeur. Pas de pièces jointes. Les responsables du bureau traitent les messages. 
 
 ## P1 — À décider avant mise en production ou import de données
 
@@ -66,28 +82,38 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    depuis le système historique? Si une migration est requise, quelle source
    est la référence et quelles données doivent être conservées?
 
+   Décision : démarrage avec une base Supabase vierge. Aucune migration historique prévue.
+
 10. **Comptes et suppressions** — un membre peut-il demander la suppression de
     son compte? Quelle durée de conservation appliquer aux réponses de
     présence, invitations utilisées et journaux d'audit après son départ?
+
+Décision : un membre peut demander la suppression de son compte. Les données personnelles sont supprimées ou anonymisées selon les obligations légales. Les durées de conservation des présences et journaux d'audit restent à définir.
 
 11. **Fuseau horaire et récurrence** — confirmer le fuseau de référence
     (probablement Europe/Paris), la gestion des changements d'heure, les
     exceptions aux répétitions récurrentes et les modifications d'une seule
     occurrence.
+Décision : fuseau Europe/Paris. Les changements d'heure sont gérés automatiquement. Les occurrences récurrentes peuvent être modifiées individuellement sans modifier toute la série.
 
 12. **Photos et vie privée** — qui peut publier/supprimer un album? Quel
     processus de retrait appliquer si une personne demande la suppression
     d'une photo? Les médias publics seront-ils accessibles sans connexion
     après publication?
 
+    Décision : l'admin et la secrétaire peuvent publier et supprimer les albums. Toute demande de retrait d'une photo est traitée rapidement par un responsable habilité. Les médias publics publiés sont accessibles sans connexion.
+
 13. **OneSignal et PWA** — le document PWA signale le conflit potentiel entre
     son service worker et celui de OneSignal. Quelle approche faut-il valider,
     et quelles plateformes/navigateurs sont requis pour la première version?
+
+Décision : utiliser une configuration compatible avec le service worker de l'application et celui de OneSignal. La compatibilité des navigateurs et plateformes sera validée avant mise en production.
 
 14. **Environnements Supabase** — prévoir un projet distinct pour développement,
     preview et production, ou utiliser des branches Supabase? Qui gère les
     accès et sauvegardes de production? Ne jamais inscrire de clés ou secrets
     dans ce fichier.
+    Décision : environnements distincts pour le développement, la preview et la production. Accès à la production réservé aux personnes autorisées. Sauvegardes régulières obligatoires. Aucun secret dans le dépôt.
 
 ## P2 — À préciser lors de la définition UI
 
@@ -96,25 +122,90 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
     contenu des cours, horaires, lieu, enseignant, prêt d'instrument, tarif et
     modalités d'inscription? Quel canal de contact doit être proposé?
 
+    Décision : présenter les quatre instruments, les niveaux requis, le contenu des cours, les horaires, le lieu, les modalités de prêt d'instrument. Les informations manquantes seront complétées par le bureau.
+
 16. **Page Bagad** — quels éléments doivent présenter l'association (histoire,
     dates clés, effectif, valeurs, photos, palmarès)? Qui valide les textes et
     les chiffres publiés?
+
+   Décision : présenter l'histoire, les valeurs, les dates clés, l'effectif, les photos et les principaux événements ou palmarès. Les contenus sont validés par le bureau. 
 
 17. **Profil membre** — quels champs le membre peut-il modifier lui-même
     (téléphone, photo, email, nom), et lesquels ne peuvent être modifiés que
     par l'admin ou la secrétaire?
 
+    tout sauf sont pupitre peuvent être modifiés que
+    par l'admin ou la secrétaire.
+
 18. **Contenus publics** — quels champs composent un article et un album
     (titre, texte, date, auteur, légende, ordre des photos)? Une publication
     nécessite-t-elle une prévisualisation ou une confirmation?
+
+    Décision : articles avec titre, texte, date et auteur ; albums avec titre, description, date, légendes et ordre des photos. Une prévisualisation est requise avant publication.
 
 19. **Capacités fichiers** — quelle taille maximale et quels formats accepter
     pour les partitions, avatars et médias? Le brief indique PDF pour les
     partitions; les limites pour les images et vidéos restent à fixer.
 
+    Décision : partitions en PDF uniquement. Les formats et tailles maximales des avatars, images et vidéos seront définis avant l'implémentation de l'upload.
+
+## Questions complémentaires avant les fonctions concernées
+
+20. **Langue de l'espace adhérents** — le brief et le README indiquent le
+    français uniquement, tandis que la section « Décisions déjà prises »
+    ci-dessus indique français/anglais. Quelle règle faut-il appliquer?
+
+    Décision : pour la partie public, c'est français, anglais et breton, et la partie membre en français uniquement.
+
+21. **Modification du profil** — la réponse à la question 17 (« tout sauf son
+    pupitre peuvent être modifiés que par l'admin ou la secrétaire ») peut
+    signifier que tous les champs sauf le pupitre sont réservés à ces rôles,
+    ou que le membre peut modifier son pupitre. Quels champs le membre peut-il
+    modifier? La secrétaire peut-elle modifier les mêmes champs que l'admin?
+
+    decision: le membre peux  modifier tout ses informations sauf son pupitre, qui sont réservé par l'admin et secretaire.
+
+22. **Publication des événements par un chef** — la réponse saisie sous la
+    question 4 indique qu'un chef peut choisir de publier « pour tout le monde »,
+    tandis que la réponse à la question 5 réserve les événements publics à
+    l'admin et à la secrétaire. « Tout le monde » désigne-t-il tous les membres
+    ou le site public? Un chef peut-il publier un événement sur le site public?
+
+    decision: l'agenda pour les evenement public sont public pour tous, l'agenda par pupitre est visible pour tous les membres, et le chef pupitre eux creer pour son pupitre un evenement. un admin et un secretaire peuvent creer des evenement interne de type 'repas, repetition general privée.'
+
+23. **Validation d'un sondage** — la création de l'événement associé demande
+    une validation explicite. Qui peut valider, à quelle étape, et que devient
+    le sondage si la validation est refusée ou si le sondage est annulé?
+
+    il n'y a pas de validation de sondage, on creer un sondage de type evenement, ensuite l'admin et secretaire peuvent modifier ou supprimer. 
+
+24. **Préférences et audiences OneSignal** — quelles préférences un membre
+    peut-il gérer (désactivation globale, rappels, types d'événements)? À quels
+    membres sont envoyées les notifications automatiques d'un événement selon
+    son audience?
+
+    decision : le membre peux configurer ses preferences, en globale, rappels et événements, ou si il n'a pas répondu au sondage de l'evenement.
+
+25. **Conservation et suppression** — quelles durées appliquer aux présences,
+    journaux d'audit et messages de contact? Quel processus permet de traiter
+    la demande de suppression d'un membre tout en respectant les obligations
+    légales?
+
+    Decision : le formulaire de contact, se fera pour le moment uniquement par netlify form.
+
+26. **Limites des fichiers médias** — quelles tailles maximales et quels
+    formats accepter pour les avatars, photos et vidéos? (Les partitions sont
+    limitées au PDF.)
+
+    Statut : À VALIDER avant l'implémentation des téléversements concernés. cependant, il n'y aura pas d'avatar pour le moment, uniquement du type lettre du prénom - nom ( pierre lupin - 'PL'). Et les photos seront unqiement en .webp, avec la possibilité de changer de *.jpg en *.webp.
+
 ## Point de cohérence documentaire
 
-`AGENTS.md` référence `docs/pwa.md`, mais le fichier présent s'appelle
+`AGENTS.md` référence `docs/Pwa.md`, mais le fichier présent s'appelle
 `docs/Pwa.MD`. Les chemins étant sensibles à la casse dans l'environnement de
 développement, faut-il renommer le fichier ou corriger la référence dans les
 consignes?
+
+## Règle de validation
+
+Chaque décision est validée par le responsable du projet et datée lors de son approbation. Toute décision non confirmée reste explicitement marquée À VALIDER et ne doit pas être considérée comme une exigence produit définitive.

@@ -52,15 +52,19 @@ Principes obligatoires :
   ou de métadonnées de session modifiables.
 - Une action reçoit l'identité de l'acteur depuis la session vérifiée; elle ne
   fait pas confiance à un identifiant d'utilisateur soumis dans le formulaire.
+- La secrétaire est un rôle applicatif autonome. Elle peut gérer les membres,
+  invitations et validations nécessaires à sa fonction, ainsi que les contenus
+  et notifications prévus dans le brief; elle ne reçoit pas implicitement les
+  droits globaux de l'admin.
 - La secrétaire et les chefs ne peuvent agir que dans le périmètre accordé par
-  leur rôle et leurs pupitres. Toute opération globale est réservée à l'admin,
-  sauf décision explicite dans le brief.
+  leur rôle et leurs pupitres. Toute opération globale non explicitement
+  attribuée à ces rôles est réservée à l'admin.
 - Aucun écran ou endpoint ne fournit d'annuaire des membres. Les titres du
   bureau ne sont pas visibles publiquement.
 
-La matrice détaillée des permissions par ressource et l'articulation entre
-secrétariat, pupitres multiples et rôles actuellement définis dans le schéma
-restent à confirmer dans `docs/questions.md`.
+Les permissions détaillées sont précisées dans les exigences par ressource
+ci-dessous. Le schéma Supabase devra prendre en charge plusieurs pupitres par
+membre et le rôle applicatif `secretaire`.
 
 ## 4. Exigences fonctionnelles
 
@@ -68,20 +72,26 @@ restent à confirmer dans `docs/questions.md`.
 
 - **Accueil (`/`)** : page principale du site, qui présente le Bagad et
   oriente vers ses pages publiques et ses activités.
-- **Page Bagad** : présenter le Bagad, son identité, son histoire et son
-  activité. Les éléments précis à publier sont à confirmer dans
-  `docs/questions.md`.
+- **Page Bagad** : présenter l'histoire, les valeurs, les dates clés,
+  l'effectif, les photos et les principaux événements ou palmarès. Le bureau
+  valide les contenus avant publication.
 - **Page Formation** : présenter les formations proposées pour chacun des
   instruments/pupitres : bombarde, cornemuse, caisse claire et percussion.
-  Chaque instrument doit avoir une section identifiable et son propre contenu;
-  ne pas inventer les détails pédagogiques manquants.
+  Chaque instrument doit avoir une section identifiable avec les niveaux
+  requis, le contenu des cours, les horaires, le lieu et les modalités de prêt
+  d'instrument. Le bureau complète les informations manquantes.
 - Afficher les représentations publiques en lecture seule.
 - Publier les actualités et les albums photo explicitement destinés au public.
+- Les articles contiennent un titre, un texte, une date et un auteur; les
+  albums contiennent un titre, une description, une date, des légendes et
+  l'ordre des photos. Une prévisualisation est requise avant publication.
 - Proposer un formulaire de contact qui transmet le message par email.
 - Ne jamais exposer les profils privés, les coordonnées des membres, les
   partitions privées ni les titres du bureau.
-- La langue du site public reste à décider. Ne pas ajouter ou retirer une
-  langue sans décision consignée dans `docs/questions.md`.
+- Le site public est disponible en français, anglais et breton (`fr`, `en`,
+  `br`). L'espace adhérents est en français selon le brief; la documentation
+  comporte aussi une mention français/anglais, à clarifier avant de traduire
+  ou modifier les routes privées.
 
 **Critères d'acceptation des pages publiques :**
 
@@ -99,14 +109,16 @@ restent à confirmer dans `docs/questions.md`.
 2. Le lien permet à son destinataire de définir un mot de passe; il ne donne
    pas accès au dashboard avant cette étape et la validation requise.
 3. Le compte est créé avec le rôle `pending`.
-4. Un admin ou une secrétaire valide le compte, qui obtient le rôle `member`.
+4. Un admin ou une secrétaire valide le compte; toute approbation attribue le
+   rôle `member`. L'attribution ultérieure d'un rôle applicatif supérieur relève
+   de l'administration.
 5. Le pupitre attribué n'est pas modifiable par l'invité.
-6. Une invitation doit être à usage unique, expirer et ne pas stocker son
-   secret en clair.
+6. Une invitation est à usage unique, expire après sept jours et ne stocke pas
+   son secret en clair.
 
-Le détail de l'expiration, de la révocation et du renvoi d'invitation doit être
-défini lors de l'implémentation. Les opérations doivent être auditées lorsque
-le modèle de données le permet.
+Le processus de révocation et de renvoi reste à définir avant son
+implémentation. Les opérations doivent être auditées lorsque le modèle de
+données le permet.
 
 ### 4.3 Espace adhérents
 
@@ -118,6 +130,18 @@ le modèle de données le permet.
   présence.
 - Les rôles et pupitres sont modifiés uniquement par les actions
   d'administration autorisées.
+- Les rôles `admin` et `secretaire` peuvent inviter et approuver les comptes.
+  La secrétaire ne peut pas attribuer un rôle supérieur à `member` lors de
+  l'approbation.
+- La modification des champs du profil par le membre, la secrétaire ou l'admin
+  n'est pas spécifiée sans ambiguïté; appliquer la règle conservatrice
+  d'interdire au membre de modifier son pupitre, son rôle ou les champs
+  d'identité jusqu'à clarification. Le détail est suivi dans
+  `docs/questions.md`.
+- Un membre peut demander la suppression de son compte. Les données
+  personnelles sont supprimées ou anonymisées selon les obligations légales;
+  les durées de conservation des présences et journaux d'audit restent à
+  décider.
 
 ### 4.4 Agenda, présences et sondages
 
@@ -127,17 +151,23 @@ le modèle de données le permet.
   représentations.
 - Les réponses possibles sont présent, absent, ne sait pas ou aucune réponse.
 - L'identité de la personne qui répond vient de la session serveur.
-- Les sondages de répétition permettent de recueillir la disponibilité des
-  membres et créent l'événement d'agenda correspondant selon le flux métier
-  défini par le produit.
+- Les sondages de répétition proposent présent ou absent. Ils ne créent pas
+  automatiquement un événement; la création de l'événement associé exige une
+  validation explicite.
+- Un événement peut cibler un ou plusieurs pupitres. Un chef ne peut créer que
+  des événements concernant son ou ses pupitres. Les événements communs et
+  les représentations publiques sont créés par l'admin ou la secrétaire.
 - La création et la modification d'événements respectent le rôle et le
   périmètre du pupitre; leur visibilité publique est explicite, jamais
   implicite.
+- Le fuseau de référence est `Europe/Paris`; les changements d'heure sont
+  gérés automatiquement et une occurrence récurrente peut être modifiée sans
+  changer toute la série.
 
 ### 4.5 Documents et médias
 
-- Les partitions sont des PDF privés, accessibles à tous les membres approuvés
-  selon le brief actuel, quel que soit leur pupitre.
+- Les partitions sont des PDF privés, accessibles à tous les membres approuvés,
+  quel que soit leur pupitre.
 - Le dépôt d'une partition est réservé aux chefs de pupitre pour leur
   périmètre, à la secrétaire et à l'admin.
 - Les fichiers ne sont pas servis depuis une URL publique non protégée.
@@ -145,6 +175,9 @@ le modèle de données le permet.
   serveur avant de lire le stockage.
 - Les photos et albums destinés au public sont explicitement publiés; les
   fichiers non publics restent protégés.
+- L'admin et la secrétaire peuvent publier et supprimer les albums. Une demande
+  de retrait d'une photo est traitée rapidement par un responsable habilité;
+  les médias publiés comme publics sont accessibles sans connexion.
 - Tous les fichiers sont stockés dans Supabase Storage, dans des buckets
   privés ou publics uniquement selon les règles de visibilité décidées. Les
   policies de `storage.objects` font partie de la livraison.
@@ -156,8 +189,20 @@ le modèle de données le permet.
 - L'admin peut gérer globalement les notifications.
 - OneSignal est le fournisseur prévu; sa clé REST reste exclusivement côté
   serveur.
-- Le canal (push seul ou push et email), les préférences d'abonnement et les
-  règles de ciblage restent à confirmer avant l'implémentation.
+- La première version utilise les notifications push OneSignal uniquement.
+  L'arrivée d'un nouvel événement déclenche une notification automatique.
+- Les membres peuvent gérer leurs préférences de notification. Les règles
+  détaillées de ciblage et de consentement restent à préciser dans
+  `docs/questions.md`.
+
+### 4.7 Contact
+
+- Le formulaire envoie les messages à l'adresse officielle de l'association,
+  configurée hors du code.
+- Une confirmation est envoyée à l'expéditeur; les pièces jointes sont
+  interdites.
+- Les responsables du bureau traitent les messages. La durée de conservation
+  et les modalités opérationnelles de suppression restent à définir.
 
 ## 5. Exigences de sécurité et de confidentialité
 
@@ -197,6 +242,10 @@ dans `docs/questions.md`.
   serveur.
 - Toute évolution de schéma se fait par une nouvelle migration; une migration
   déjà appliquée ne se modifie pas.
+- Les environnements Supabase de développement, preview et production sont
+  distincts. L'accès à la production est réservé aux personnes autorisées et
+  des sauvegardes régulières sont obligatoires.
+- Le fuseau des événements est `Europe/Paris`.
 - Toute modification du manifest ou du service worker doit être répercutée
   dans `docs/Pwa.MD` (nom actuel du fichier dans le dépôt).
 - Les accès métier utilisent exclusivement Supabase; Netlify est réservé à
@@ -223,20 +272,15 @@ Une fonctionnalité est livrable lorsque :
 8. les vérifications `npm run check`, `npm run lint` et `npm run build`
    passent, ou les échecs préexistants et non liés sont signalés clairement.
 
-## 8. Questions de conception
+## 8. Décisions à compléter
 
-Les décisions suivantes ne doivent pas être supposées par les développeurs :
-
-- les détails d'intégration Supabase SSR et de renouvellement de session;
-- les policies RLS précises et leur couverture des buckets Supabase Storage;
-- langue(s) du site public;
-- canaux et règles de consentement des notifications;
-- matrice exacte des droits de la secrétaire et des comptes ayant plusieurs
-  pupitres.
-
-Consigner toute nouvelle ambiguïté ou décision dans
-[`docs/questions.md`](./docs/questions.md), puis synchroniser cette
-spécification une fois la décision prise.
+Les décisions validées dans [`docs/questions.md`](./docs/questions.md) sont
+appliquées dans cette spécification. Les questions complémentaires 20 à 26 de
+ce fichier restent à trancher avant les fonctions concernées : langue de
+l'espace adhérents, champs de profil modifiables, visibilité publique des
+événements créés par un chef, validation et annulation des sondages, ciblage et
+préférences OneSignal, durées de conservation et limites des médias. Ne pas
+interpréter ces sujets ouverts à la place du responsable produit.
 
 ## 9. État du dépôt à la préparation
 
@@ -287,8 +331,9 @@ d'une réponse inscrite dans `docs/questions.md` ne commence qu'après décision
 - Écrire des tests de policies dans `supabase/tests/` pour accès anonyme,
   membre, chef de pupitre, secrétaire et administrateur selon la matrice
   approuvée.
-- Avant toute importation, faire confirmer s'il existe des données ou comptes
-  à conserver. Ne jamais supprimer ni importer de données sans décision.
+- La base démarre vierge; aucune migration historique de comptes ou de données
+  n'est prévue. Ne pas appliquer le schéma historique Better Auth comme schéma
+  Supabase.
 
 **Livrable :** installation locale documentée, migrations applicables à une
 base Supabase neuve, RLS activée sur chaque table et Storage, tests de policies
@@ -313,13 +358,13 @@ autorisés.
 ### Étape C — Invitations, profils et membres
 
 - Mettre en place les invitations email à usage unique, expirantes et dont le
-  jeton n'est stocké qu'empreinté.
+  jeton n'est stocké qu'empreinté; leur durée de validité est de sept jours.
 - Créer le profil `pending` après acceptation; l'invité ne choisit ni son rôle
   ni ses pupitres.
-- Permettre aux rôles autorisés d'approuver un compte selon les décisions de
-  `docs/questions.md`.
-- Permettre à un membre de modifier uniquement les champs autorisés de son
-  propre profil; ne pas créer d'annuaire.
+- Autoriser l'admin et la secrétaire à approuver un compte, en lui attribuant
+  le rôle `member`.
+- Permettre à un membre de modifier uniquement les champs de son propre profil
+  qui auront été approuvés; ne pas créer d'annuaire.
 - Journaliser les changements de rôle et les actions d'administration sans
   enregistrer de secrets.
 
@@ -336,8 +381,9 @@ incluant jeton invalide, expiré, déjà utilisé et email non concordant.
 - Enregistrer au plus une réponse par membre et événement. L'identité du
   répondant vient de la session; la réponse est modifiable ou supprimable
   uniquement par son propriétaire.
-- Implémenter le flux de sondage et sa création d'événement liée après
-  clarification des règles métier.
+- Implémenter les sondages avec les réponses présent/absent. La création
+  d'événement associée est séparée et nécessite une validation explicite; ne
+  créer aucun événement automatiquement.
 - Valider les dates, fuseaux horaires, heures de fin et événements récurrents.
 
 **Livrable :** tests de visibilité public/privé, permissions par rôle,
@@ -351,6 +397,8 @@ propriété des réponses et cas de dates invalides.
 - Servir les partitions depuis un bucket privé avec autorisation serveur et
   RLS; ne jamais exposer une URL publique pour un document privé.
 - Publier les albums et médias uniquement après action d'un rôle autorisé.
+- Prévoir la prévisualisation avant publication; seuls l'admin et la secrétaire
+  publient ou suppriment un album.
 - Protéger le formulaire de contact contre les entrées invalides et les envois
   abusifs; envoyer uniquement aux destinataires approuvés.
 
@@ -363,8 +411,13 @@ les droits, refus d'upload non autorisé et validation du formulaire.
   et clés REST ne sont jamais inclus côté client.
 - Appliquer les audiences autorisées à chaque envoi; ne pas faire confiance
   aux identifiants de pupitre ou de destinataire soumis par le navigateur.
+- Pour la première version, envoyer des notifications push uniquement et
+  déclencher une notification automatique lors de la création d'un nouvel
+  événement. Respecter les préférences configurées par les membres.
 - Concilier le worker de la PWA avec le worker OneSignal avant activation des
   notifications en production.
+- Valider la compatibilité des navigateurs et plateformes cibles avant la mise
+  en production.
 - Le cache PWA ne contient que les fichiers statiques et `/offline`; aucune
   requête Supabase ou page adhérent n'est mise en cache.
 - Compléter tests, observabilité d'erreurs, variables Netlify et guide de
@@ -393,7 +446,8 @@ mobiles, parcours hors-ligne sans fuite de données privées, CI verte.
   documents autorisés.
 - Je crée ou modifie ma propre réponse de présence sans pouvoir répondre à la
   place d'une autre personne.
-- Je modifie mon profil sans pouvoir changer mon rôle ni mes pupitres.
+- Je modifie uniquement les champs de mon profil autorisés par la décision
+  produit; je ne peux jamais changer mon rôle ni mon pupitre.
 - En tant que compte `pending`, j'accède uniquement au parcours d'attente et
   aux actions nécessaires à l'activation du compte.
 
@@ -431,7 +485,7 @@ Une livraison développeur doit fournir :
 
 ## 13. Questions bloquantes
 
-Les questions listées dans [`docs/questions.md`](./docs/questions.md) sont des
-entrées de travail. Pour chacune, le responsable produit consigne la réponse,
-la date et les conséquences sur cette spécification. Le développeur ne met
-pas en production le comportement correspondant avant décision.
+Les questions encore ouvertes dans [`docs/questions.md`](./docs/questions.md)
+sont des entrées de travail. Pour chacune, le responsable produit consigne la
+réponse, la date et les conséquences sur cette spécification. Le développeur
+ne met pas en production le comportement correspondant avant décision.
