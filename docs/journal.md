@@ -18,8 +18,9 @@
 
 - Relecture des formulations de la question 22, de `Spec.md` et de la policy
   documentée pour vérifier leur cohérence.
-- Documentation uniquement : aucune commande de validation applicative
-  exécutée.
+- `git diff --check` réussit. `npm run check` et `npm run build` échouent sur
+  des erreurs Svelte/TypeScript préexistantes; `npm run lint` s'arrête sur des
+  écarts Prettier dans de nombreux fichiers du dépôt.
 
 ### Harmonisation du nom du document PWA
 
@@ -83,8 +84,7 @@
 
 - Confirmer l'audience des notifications de sondage et le calendrier
   d'intégration Netlify Forms; définir les durées de conservation et le
-  processus de suppression de compte. Valider également la cohérence entre la
-  visibilité des événements par pupitre et le modèle RLS documenté.
+  processus de suppression de compte.
 
 ### Spécification développeur
 

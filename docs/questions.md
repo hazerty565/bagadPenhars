@@ -253,8 +253,6 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     JPG/JPEG jusqu'à 20 Mo et les convertir en WebP. Aucun avatar téléversé
     pour la première version; afficher les initiales.
 
-    Statut : À VALIDER avant l'implémentation des règles d'accès aux événements.
-
 ## Règle de validation
 
 Chaque décision est validée par le responsable du projet et datée lors de son
