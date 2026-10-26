@@ -22,17 +22,23 @@ Ce document est destiné à expliquer le contexte global du projet **Bagad Penha
 
 ## 🏗️ Stack technique
 
-| Composant | Technologie | Rôle |
-|-----------|-------------|------|
-| **Frontend** | SvelteKit 2.x | Framework fullstack |
+| Composant | Technologie cible | Rôle |
+|-----------|------------------|------|
+| **Frontend** | SvelteKit 5 (runes) | Framework fullstack |
 | **Backend** | SvelteKit + Node.js | Serveurs, form actions, load functions |
-| **Auth** | Appwrite | Authentification, gestion sessions |
-| **Base de données** | Appwrite Databases | Stockage collections (profiles, events, etc.) |
-| **Stockage fichiers** | Appwrite Storage | Partitions, avatars, média |
+| **Authentification** | Supabase Auth | Comptes et sessions |
+| **Base de données** | Supabase PostgreSQL | Données relationnelles et RLS |
+| **Stockage fichiers** | Supabase Storage | Partitions, avatars et médias |
 | **Styling** | TailwindCSS | CSS utility-first |
 | **i18n** | Fichiers TS custom | Traductions (fr.ts, en.ts, br.ts) |
-| **Notifications** | OneSignal ou Appwrite Realtime | Push notifications |
-| **Déploiement** | Netlify + Appwrite Cloud | Hosting |
+| **Notifications** | OneSignal | Notifications push |
+| **Déploiement** | Netlify | Hébergement de l'application |
+
+Supabase est l'unique fournisseur de données applicatives : Auth, PostgreSQL
+et Storage. Netlify sert uniquement à héberger l'application. Le code et la
+migration historiques du dépôt n'ont pas encore tous été portés vers cette
+cible; ne pas réintroduire d'autre fournisseur de base de données ou de
+stockage.
 
 ---
 
@@ -119,10 +125,11 @@ Stockés par pupitre ou globaux.
 
 ```typescript
 // hooks.server.ts lit le cookie CHAQUE requête
-const session = event.cookies.get('appwrite-session');
-const user = await account.get(); // Vérifier auprès d'Appwrite
+const { data: { user }, error } = await supabase.auth.getUser();
+if (error) throw error;
 event.locals.user = user;
-event.locals.role = profile.role; // Lecture depuis BDD, jamais depuis client
+// Charger le rôle depuis public.profiles, jamais depuis user_metadata.
+event.locals.role = profile.role;
 ```
 
 **JAMAIS faire confiance au client.** Le rôle est toujours lu en BDD.
@@ -214,7 +221,7 @@ src/lib/data/
 **Convention** :
 - Une fonction par action
 - Pas de logique métier complexe
-- Appels Appwrite uniquement
+- Accès aux données via le client Supabase serveur et des policies RLS
 
 ### Composants
 
@@ -309,25 +316,35 @@ export const fr = {
 
 ---
 
-## 📊 Schéma Appwrite — Résumé
+## 📊 Schéma Supabase — Résumé
 
-### Collections principales
-
-```
-profiles        → Utilisateurs (email, nom, pupitre, rôle)
-invitations     → Invitations (token, expiration)
-events          → Événements (agenda)
-attendance      → Présences (qui est venu)
-documents       → Partitions (par pupitre)
-```
-
-### Buckets
+### Tables PostgreSQL cibles
 
 ```
-avatars         → Photos de profil
-documents       → Partitions PDF/MP3
-media           → Photos/vidéos publiques
+public.profiles          → Profil et rôle, lié à auth.users
+public.invitations       → Invitations (token haché, expiration)
+public.events            → Événements (agenda et visibilité)
+public.attendance        → Présences
+public.documents         → Métadonnées des partitions
 ```
+
+Ce schéma est la cible fonctionnelle; il n'est pas encore intégralement
+implémenté dans le dépôt. Les tables métier seront définies par des migrations
+versionnées dans
+`supabase/migrations/`. La base gérée par Supabase fournit les comptes dans
+`auth.users`. Toute table exposée par l'API doit avoir RLS et des policies
+explicites.
+
+### Buckets Supabase Storage
+
+```
+bagad-avatars      → Photos de profil, accès protégé
+bagad-partitions   → Partitions privées, accès contrôlé par rôle
+bagad-medias       → Médias destinés au public
+```
+
+Les médias doivent être servis depuis le bucket Supabase Storage configuré
+pour leur visibilité; ne pas utiliser de blob ou CDN de stockage externe.
 
 ---
 
@@ -364,7 +381,7 @@ export const actions = {
     if (!title || !date) return fail(400, { error: 'Données invalides' });
 
     // Créer l'événement
-    await createEvent({ title, date, createdBy: locals.user.$id });
+    await createEvent({ title, date, createdBy: locals.user.id });
     
     return { success: true };
   }
@@ -374,9 +391,14 @@ export const actions = {
 ### 4. **Accès à la donnée** (`lib/data/events.ts`)
 ```typescript
 export async function createEvent(data) {
-  return await databases.createDocument(
-    DB_ID, EVENTS_COLLECTION, ID.unique(), data
-  );
+  const { data: event, error } = await supabase
+    .from('events')
+    .insert(data)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return event;
 }
 ```
 
@@ -496,17 +518,21 @@ console.log('Role:', event.locals.role);
 console.log('Pupitre:', event.locals.pupitre);
 ```
 
-### Vérifier une query Appwrite
+### Vérifier une query Supabase
 ```typescript
-const docs = await databases.listDocuments(DB_ID, COLLECTION_ID);
-console.log('Docs:', docs);
+const { data, error } = await supabase
+  .from('events')
+  .select('id, title, starts_at');
+
+if (error) throw error;
+console.log('Events:', data);
 ```
 
 ### Erreur 401/403 ?
 ```
 1. Vérifier le guard dans +layout.server.ts
 2. Vérifier la session dans hooks.server.ts
-3. Vérifier le rôle en BDD (collection profiles)
+3. Vérifier le rôle en base (`public.profiles`)
 ```
 
 ### i18n manquante ?
@@ -525,7 +551,7 @@ console.log('Docs:', docs);
 | `hooks.server.ts` | Session + rôles | Exécuté à CHAQUE requête |
 | `lib/auth/guards.ts` | Protection routes | Utilisé dans load() |
 | `lib/auth/roles.ts` | Permissions | Fonctions can.manageAgenda() |
-| `lib/data/*.ts` | Appwrite | Où sont les données |
+| `src/lib/server/data/*.ts` | Supabase | Accès serveur aux données |
 | `lib/i18n/index.ts` | Traductions | Comment les utiliser |
 | `+layout.server.ts` | Guard section | Bloque si pas autorisé |
 | `+page.server.ts` | Load + Actions | Données + traitements |
@@ -607,6 +633,6 @@ Si une IA contribue au projet, elle doit :
 
 ---
 
-**Dernière mise à jour** : 11/08/2026 
-**Maintainer** : hazerty565  
-**Stack** : SvelteKit 2.x + Appwrite + TailwindCSS
+**Dernière mise à jour** : 26/10/2026
+**Maintainer** : hazerty565
+**Stack cible** : SvelteKit 5 + Supabase (Auth, PostgreSQL, Storage) + TailwindCSS + Netlify

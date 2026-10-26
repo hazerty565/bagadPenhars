@@ -3,6 +3,12 @@
 > Source de vérité : les migrations `supabase/migrations/NNN_*.sql`.
 > Ce document les résume. Toute modification du schéma met à jour ce fichier **dans le même commit**.
 
+Le dépôt ne contient pas encore le dossier `supabase/migrations/`. La migration
+présente sous `migrations/` est historique et dépend d'un schéma
+d'authentification différent; elle n'est pas prête à être appliquée à Supabase.
+Créer et valider les migrations Supabase avant d'utiliser ce schéma en
+développement ou en production.
+
 ## 1. Principes
 
 1. **RLS activée sur toutes les tables du schéma `public`, sans exception**, y compris les tables publiques (agenda, articles). Une table publique a une policy de lecture explicite, filtrée sur une colonne (`visibility`, `published`).

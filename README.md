@@ -2,7 +2,7 @@
 
 Site du Bagad Penhars : un site public multilingue (français, anglais, breton) et une zone adhérents privée, en français, réservée aux membres approuvés.
 
-**Stack** : SvelteKit 5 · Runes ·Netlify (hébergement, fonctions, Blobs) · Supabase · TailwindCSS
+**Stack cible** : SvelteKit 5 · Supabase (Auth, PostgreSQL/RLS, Storage) · Netlify (hébergement) · TailwindCSS
 
 ---
 
@@ -88,7 +88,7 @@ Le navigateur **n'accède jamais directement à la base**. Toutes les lectures e
 
 ## 📑 Partitions
 
-Les fichiers sont stockés dans **Netlify Blobs**. La base ne garde que la clé du blob (`blob_key`).
+Les fichiers sont stockés dans **Supabase Storage**. PostgreSQL conserve les métadonnées et les clés des objets; les accès aux fichiers privés sont protégés par des policies Storage et des contrôles côté serveur.
 
 Les fichiers ne sont **jamais servis directement** : une route serveur vérifie le rôle et le pupitre avant de renvoyer le fichier.
 
@@ -100,7 +100,9 @@ Les fichiers ne sont **jamais servis directement** : une route serveur vérifie 
 | Ajouter partition globale | ❌ | ❌ | ✅ |
 | Supprimer | ❌ | ✅ son pupitre | ✅ |
 
-Les médias publics (photos et vidéos du site) sont dans un blob séparé, servi directement par le CDN.
+Les médias publics (photos et vidéos du site) sont dans le bucket Supabase
+Storage configuré pour une lecture publique; les contenus privés restent
+protégés par des policies.
 
 ---
 
@@ -130,7 +132,7 @@ L'admin renseigne **prénom**, **nom**, **email** et **pupitre**. Le serveur :
 Le serveur calcule l'empreinte du token reçu et vérifie qu'une invitation correspond, non expirée et non utilisée. Le formulaire pré-remplit email, prénom, nom et pupitre (lecture seule), et demande un mot de passe.
 
 Le serveur vérifie que l'email de l'inscription correspond à celui de l'invitation. Puis, **dans une même transaction** :
-- création du compte Better Auth ;
+- création du compte Supabase Auth ;
 - création du profil avec `role = 'pending'` ;
 - marquage de l'invitation avec `used_at`.
 
@@ -165,9 +167,9 @@ bagad-penhars/
 │ │
 │ ├── lib/
 │ │ ├── server/ # Code serveur uniquement (jamais importé côté client)
-│ │ │ ├── auth.ts # Configuration Better Auth
+│ │ │ ├── auth.ts # Intégration Supabase Auth (à finaliser)
 │ │ │ ├── db.ts # Connexion Postgres, requêtes
-│ │ │ ├── blobs.ts # Accès Netlify Blobs
+│ │ │ ├── blobs.ts # Accès Storage (à migrer vers Supabase)
 │ │ │ ├── email.ts # Envoi d’emails
 │ │ │ └── data/
 │ │ │ ├── events.ts
@@ -227,7 +229,7 @@ bagad-penhars/
 │ │
 │ ├── api/
 │ │ ├── files/[...key]/ # Accès aux partitions (vérifie le rôle)
-│ │ └── auth/[...all]/ # Routes Better Auth
+│ │ └── auth/ # Pages et callback Supabase Auth
 │ │
 │ └── dashboard/ # Français uniquement, noindex
 │ ├── +layout.server.ts # requireMember
@@ -271,17 +273,19 @@ bagad-penhars/
 
 ---
 
-## 🗄️ Base de données (Netlify DB / Neon)
+## 🗄️ Base de données (Supabase PostgreSQL)
 
-Schéma complet dans `migrations/001_initial_schema.sql`. Les tables `user`, `session`, `account` et `verification` sont créées par Better Auth ; ne pas les modifier à la main.
+Supabase fournit PostgreSQL et les tables de comptes dans `auth.users`. Le schéma métier cible est versionné dans `supabase/migrations/`; les policies RLS doivent être définies dans ces migrations.
+
+> **État de migration** : `migrations/001_initial_schema.sql` est un schéma historique lié à Better Auth et ne doit pas être appliqué tel quel à Supabase. Il doit être porté vers `auth.users`, les identifiants UUID Supabase, les migrations versionnées et les policies RLS avant le déploiement.
 
 | Table | Rôle |
 |-------|------|
-| `profiles` | Un profil par utilisateur Better Auth : pupitre, rôle, avatar |
+| `profiles` | Un profil lié à `auth.users` : pupitre, rôle, avatar |
 | `invitations` | Invitations, avec token haché, expiration et `used_at` |
 | `events` | Répétitions, sorties, réunions, événements externes |
 | `attendance` | Présence : une seule réponse par personne et par événement (clé composite) |
-| `documents` | Métadonnées des partitions, avec `blob_key` vers Netlify Blobs |
+| `documents` | Métadonnées des partitions, avec la clé d'objet Supabase Storage |
 
 ### Enums
 
@@ -298,15 +302,16 @@ Schéma complet dans `migrations/001_initial_schema.sql`. Les tables `user`, `se
 
 ---
 
-## 🔑 Authentification (Better Auth)
+## 🔑 Authentification (Supabase Auth)
 
-- **Connexion** (`/auth/login`) : email et mot de passe, session gérée par Better Auth dans un cookie `HttpOnly`, `Secure` et `SameSite=Lax`.
-- **Déconnexion** (`/auth/logout`) : invalidation de la session et suppression du cookie.
-- **Mot de passe oublié** : Better Auth envoie un lien vers `/auth/reset-password?token=...` (fonction `sendResetPassword`).
+- **Connexion** (`/auth/login`) : email et mot de passe via Supabase Auth; utiliser l'intégration serveur SSR pour gérer les cookies de session.
+- **Déconnexion** (`/auth/logout`) : invalider la session Supabase.
+- **Mot de passe oublié** : utiliser le flux de récupération Supabase Auth et une URL de retour autorisée.
 
-Better Auth est configuré dans `src/lib/server/auth.ts`, avec la connexion Postgres fournie par Netlify DB.
-
-> **Choix à confirmer** : ce README suppose **Better Auth auto-hébergé sur Neon**, qui permet le plugin `admin` et les routes serveur personnalisées. **Neon Auth** (managé, en bêta) est une alternative plus simple, mais avec un SDK différent et sans plugins personnalisés. Le choix doit être fait avant d'écrire les routes d'authentification.
+Les rôles et pupitres sont stockés dans les tables publiques, notamment
+`public.profiles`; ils ne doivent jamais être lus depuis `user_metadata`.
+L'intégration Supabase Auth et la synchronisation du profil restent à
+implémenter dans le code.
 
 ---
 
@@ -318,7 +323,7 @@ Better Auth est configuré dans `src/lib/server/auth.ts`, avec la connexion Post
 - Tokens d'invitation : aléatoires, hachés en base, à usage unique et expirants.
 - Validation côté serveur de toutes les valeurs de formulaire (rôle, pupitre, type, statut de présence).
 - Aucune action ne modifie `role` ou `pupitre` hors des actions réservées à l'admin.
-- Variables sensibles (`DATABASE_URL`, clés d'API, identifiants SMTP) uniquement côté serveur.
+- Les clés secrètes Supabase et les identifiants SMTP restent côté serveur; ne jamais exposer la clé `service_role`.
 
 ---
 
@@ -343,7 +348,8 @@ Les traductions en breton doivent être **relues par une personne qui pratique l
 ### Prérequis
 
 - Node.js 22+
-- Un compte Netlify, avec un plan permettant Netlify DB
+- Un projet Supabase
+- Un compte Netlify pour l'hébergement
 - Netlify CLI : `npm install -g netlify-cli`
 
 ### Mise en route
@@ -353,27 +359,23 @@ git clone https://github.com/hazerty565/bagadPenhars.git
 cd bagadPenhars
 npm install
 
-# Base de données (crée une base Neon via Netlify DB)
+# Lier le site d'hébergement
 netlify login
 netlify link
-netlify init db
 
-# Migrations
-npm run db:migrate
-
-cp .env.example .env.local   # puis renseigner les valeurs
+# Configurer le projet Supabase et appliquer les migrations avec Supabase CLI
+# (la procédure de migrations du dépôt reste à finaliser)
+cp .env.example .env.local   # puis renseigner les valeurs Supabase et email
 npm run dev                  # http://localhost:5173
 ```
 
 ### Variables d'environnement
 
 ```env
-# Base de données : fournie par Netlify DB (vérifier le nom exact dans la console Netlify)
-DATABASE_URL=postgres://...
-
-# Better Auth
-BETTER_AUTH_SECRET=une_longue_chaine_aleatoire
-BETTER_AUTH_URL=http://localhost:5173
+# Projet Supabase (noms à aligner avec l'intégration serveur retenue)
+PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=<publishable-key>
+SUPABASE_SERVICE_ROLE_KEY=<secret-server-only>
 
 # Email (invitations, réinitialisation de mot de passe)
 EMAIL_HOST=smtp.example.com
@@ -382,11 +384,13 @@ EMAIL_USER=contact@bagad-penhars.com
 EMAIL_PASS=your_app_password
 EMAIL_FROM="Bagad Penhars <contact@bagad-penhars.com>"
 
-# Netlify Blobs (en local, via netlify dev)
-# Aucune variable publique n'est nécessaire.
+# Les fichiers sont stockés dans Supabase Storage.
 ```
 
-Toutes ces variables sont **côté serveur**. Aucune ne doit être préfixée par `PUBLIC_`.
+Les clés Supabase publiables (`PUBLIC_SUPABASE_URL` et
+`PUBLIC_SUPABASE_ANON_KEY`) peuvent être utilisées par le client avec des
+policies RLS strictes. La clé `SUPABASE_SERVICE_ROLE_KEY` et les identifiants
+SMTP sont exclusivement côté serveur; ne jamais les préfixer par `PUBLIC_`.
 
 ---
 
@@ -399,8 +403,11 @@ Toutes ces variables sont **côté serveur**. Aucune ne doit être préfixée pa
 | `npm run preview` | Aperçu du build |
 | `npm run check` | Vérification TypeScript et Svelte |
 | `npm test` | Tests (guards, traductions, invitations) |
-| `npm run db:migrate` | Applique `migrations/*.sql` |
 | `npm run reset:agenda` | Vide l'agenda (usage annuel) |
+
+Les migrations Supabase ne sont pas encore configurées dans le dépôt. Ne pas
+exécuter `migrations/001_initial_schema.sql` directement; voir
+[`docs/database.md`](./docs/database.md).
 
 ---
 
@@ -412,10 +419,10 @@ Le projet utilise `@sveltejs/adapter-netlify`. Netlify gère la publication : ne
 2. Connecter le dépôt dans Netlify (*Add new site → Import an existing project*).
 3. Build : `npm run build` (détecté automatiquement).
 4. Ajouter les variables d'environnement dans *Site configuration → Environment variables*.
-5. Vérifier que la base Netlify DB est rattachée au site.
+5. Configurer le projet Supabase, ses variables d'environnement et ses policies RLS.
 6. Configurer le domaine personnalisé (`bagadpenhars.fr`) et le HTTPS.
 
-Chaque pull request génère une **preview** avec sa propre branche de base, grâce à Netlify DB.
+Chaque pull request génère une preview Netlify. La base Supabase de preview doit être configurée séparément ou utiliser une branche Supabase dédiée.
 
 ---
 
@@ -425,25 +432,23 @@ Les quotas actuels (vérifier sur les pages tarifaires avant chaque décision) :
 
 | Ressource | Limite | Usage prévu |
 |-----------|--------|-------------|
-| Utilisateurs actifs mensuels (Better Auth / Neon Auth) | 60 000 | Quelques dizaines de membres |
-| Temps de calcul de la base | 100 CU-heures / mois / projet | Principal point de vigilance |
-| Stockage de la base | 1 Go / projet | Quelques Mo de texte |
-| Stockage objet (partitions, médias) | 5 Go | Partitions PDF et médias |
+| Authentification, base et stockage objet | Quotas selon le plan Supabase choisi | À vérifier avant le déploiement |
+| Hébergement de l'application | Quotas selon le plan Netlify choisi | À vérifier avant le déploiement |
 
 **Précautions** :
-- Cache des pages publiques pour limiter les requêtes à la base.
-- Mise en veille de la base par inactivité, pour ne pas consommer les CU-heures hors usage.
+- Cache des pages publiques pour limiter les requêtes à Supabase.
+- Vérifier les quotas, sauvegardes et règles de rétention du projet Supabase.
 - Partitions compressées avant upload si elles deviennent volumineuses.
 
 ---
 
 ## 📋 État d'avancement
 
-- [x] Choix de la stack : Netlify, Netlify DB, Better Auth
-- [x] Schéma SQL initial
+- [x] Choix de la stack cible : Supabase (Auth, PostgreSQL, Storage) et Netlify (hébergement)
+- [ ] Migration du schéma historique vers Supabase et activation de RLS
 - [x] Routage multilingue FR / EN / BR (conception)
 - [x] Règle de blocage des comptes `pending` (conception)
-- [ ] Configuration Better Auth et routes d'authentification
+- [ ] Configuration Supabase Auth et routes d'authentification
 - [ ] Flow d'invitation (création, acceptation, validation)
 - [ ] Routes de fichiers (`/api/files`)
 - [ ] Dashboard : agenda, partitions, profil
@@ -462,7 +467,5 @@ Les quotas actuels (vérifier sur les pages tarifaires avant chaque décision) :
 
 MIT, voir [LICENSE](./LICENSE).
 
-**Dernière mise à jour** : 13/10/2026
-**Stack** : SvelteKit 2 · Netlify · Netlify DB (Neon) · Better Auth · TailwindCSS · Node.js 22+
-
-
+**Dernière mise à jour** : 26/10/2026
+**Stack cible** : SvelteKit 5 · Supabase (Auth, PostgreSQL, Storage) · Netlify · TailwindCSS · Node.js 22+

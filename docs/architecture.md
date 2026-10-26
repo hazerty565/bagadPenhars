@@ -2,11 +2,14 @@
 
 ## Stack et déploiement
 
-L'application est un projet SvelteKit avec Svelte, TypeScript et TailwindCSS.
-Le dépôt prévoit Netlify pour l'hébergement et les Blobs, PostgreSQL pour les
-données et Better Auth pour les comptes. Les choix d'hébergement de base de
-données et d'authentification restent à confirmer; voir
-[`questions.md`](./questions.md).
+L'application cible SvelteKit 5, TypeScript et TailwindCSS. Supabase est
+l'unique fournisseur de services de données : Auth, PostgreSQL avec RLS et
+Storage. Netlify sert à héberger l'application; OneSignal est prévu pour les
+notifications push.
+
+Cette architecture est la cible, pas encore l'état complet du dépôt : les
+fichiers d'authentification et le schéma historiques doivent être migrés vers
+Supabase. Voir [`database.md`](./database.md).
 
 ## Routes
 
@@ -19,7 +22,8 @@ fonction soit complète.
   médias, les partenaires et le contact.
 - `/auth/...` : connexion, déconnexion, invitation, attente, mot de passe
   oublié et réinitialisation.
-- `/api/auth/[...all]` : point d'entrée prévu pour Better Auth.
+- `/auth/...` : pages d'authentification s'appuyant sur Supabase Auth et son
+  intégration SSR; aucun serveur d'authentification distinct n'est prévu.
 - `/api/files/[...key]` : point d'entrée prévu pour le téléchargement des
   fichiers.
 - `/dashboard/...` : espace adhérent et pages d'administration : agenda,
@@ -35,15 +39,16 @@ Les pages publiques acceptent les langues `fr`, `en` et `br` selon le matcher
 1. Le navigateur appelle une page ou une action SvelteKit.
 2. Les lectures et écritures de données sont réalisées côté serveur via les
    routes, les actions et les modules de `src/lib/server/`.
-3. Better Auth doit gérer les sessions via les routes API d'authentification.
-4. Les règles d'accès doivent vérifier l'identité, le rôle et, pour les
-   documents de pupitre, l'appartenance au pupitre avant toute opération.
-5. Les fichiers sont stockés séparément des métadonnées PostgreSQL; la base
-   conserve leurs clés de stockage.
+3. Supabase Auth gère l'identité; SvelteKit lit et renouvelle la session avec
+   le client serveur SSR.
+4. Les policies RLS protègent les lignes dans PostgreSQL et les objets de
+   Storage. Les actions serveur appliquent aussi les règles métier et
+   vérifient le rôle et les pupitres.
+5. Les fichiers sont stockés dans Supabase Storage; PostgreSQL conserve leurs
+   métadonnées et clés.
 
-Ce flux est la cible décrite par le README. Les hooks et guards repérés dans le
-dépôt sont actuellement vides; ne pas supposer que ces contrôles sont déjà
-effectifs.
+Ce flux est la cible. Les modules historiques du dépôt ne sont pas encore
+migrés; ne pas supposer que ces contrôles sont déjà effectifs.
 
 ## Organisation des dossiers
 
@@ -60,8 +65,8 @@ effectifs.
 
 ## Sécurité des données
 
-Les données privées doivent être lues et modifiées depuis le serveur, après
-vérification des droits. La migration initiale ne déclare pas de politiques
-RLS PostgreSQL. La stratégie entre contrôles applicatifs et RLS doit être
-tranchée avant d'exposer les accès en production; voir
-[`database.md`](./database.md) et [`questions.md`](./questions.md).
+Les données privées doivent être protégées par des policies RLS Supabase et
+des contrôles côté serveur. La migration historique dans `migrations/` ne
+déclare pas ces policies et dépend de l'ancien système d'authentification;
+elle doit être portée vers `supabase/migrations/` avant d'être utilisée avec
+la cible.

@@ -7,25 +7,28 @@ Stack : SvelteKit 5 (runes), Tailwind, Motion, Supabase, OneSignal, Netlify.
 
 ## 1. Ordre de lecture
 
-| Fichier | Pourquoi |
-|---|---|
-| `docs/brief.md` | Besoin, rôles, décisions de visibilité |
-| `docs/architecture.md` | Routes, flux d'auth, arborescence |
-| `docs/database.md` | Schéma, RLS, migrations |
-| `docs/pwa.md` | Manifest, service worker, notifications |
-| `docs/roadmap.md` | Jalons et « Focus actuel » |
-| `docs/backlog.md` | Tâches classées |
-| `docs/journal.md` | Où la dernière session s'est arrêtée |
+| Fichier                | Pourquoi                                                     |
+| ---------------------- | ------------------------------------------------------------ |
+| `docs/brief.md`        | Besoin, rôles, décisions de visibilité                       |
+| `Spec.md`              | Exigences fonctionnelles et techniques pour les développeurs |
+| `docs/architecture.md` | Routes, flux d'auth, arborescence                            |
+| `docs/database.md`     | Schéma, RLS, migrations                                      |
+| `docs/pwa.md`          | Manifest, service worker, notifications                      |
+| `docs/roadmap.md`      | Jalons et « Focus actuel »                                   |
+| `docs/backlog.md`      | Tâches classées                                              |
+| `docs/journal.md`      | Où la dernière session s'est arrêtée                         |
 
 Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` en début de session.
 
 ## 2. Règles d'or
 
 ### Svelte 5
+
 - Runes uniquement : `$state`, `$derived`, `$effect`, `$props`.
 - Interdits : `export let`, `$:`, `on:click` (utiliser `onclick`), stores legacy pour l'état local.
 
 ### Supabase et sécurité
+
 - RLS activée sur **toute** table, y compris les tables publiques (policy de lecture explicite, filtrée sur `published` ou `visibility`).
 - Jamais de `using (true)` sans commentaire qui justifie.
 - Les rôles se lisent dans `profiles.role`, **jamais** dans `user_metadata`.
@@ -34,21 +37,25 @@ Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` 
 - Une migration appliquée n'est jamais modifiée : on en ajoute une nouvelle.
 
 ### OneSignal
+
 - La clé REST reste côté serveur.
 - L'envoi vérifie le rôle : secrétaire (plusieurs pupitres), chef de pupitre (son pupitre), admin.
 
 ### PWA
+
 - Le service worker ne met en cache **que** les fichiers statiques et la page `/offline`.
 - Jamais d'appel Supabase ni de page HTML d'espace adhérents en cache.
 - Tout changement du manifest ou du service worker est consigné dans `docs/pwa.md`.
 
 ### UI
+
 - Tailwind uniquement, couleurs et espacements via les tokens du thème.
 - Motion : respecter `prefers-reduced-motion`.
 - Mobile first, accessibilité (labels, contrastes, focus visible).
 - Interface en français.
 
 ### Général
+
 - Aucun secret committé (`.env` ignoré, `.env.example` à jour).
 - Pas de nouvelle dépendance sans la justifier dans `docs/journal.md`.
 - Pas d'annuaire des membres, pas de titres du bureau publics (voir `docs/brief.md`).

@@ -2,6 +2,39 @@
 
 ## 2026-10-26
 
+### Spécification développeur
+
+#### Choix Supabase uniquement
+
+#### Fait
+
+- Alignement du README, de `Context.MD` et des documents d'architecture sur
+  Supabase Auth, PostgreSQL/RLS et Storage; Netlify reste l'hébergeur.
+- Suppression des anciennes références de fournisseurs dans les documents
+  concernés et remplacement par la cible Supabase.
+- Avertissement sur le schéma et les intégrations historiques qui doivent
+  encore être migrés vers Supabase.
+- Remplacement des questions de choix fournisseur par des tâches de migration
+  et de définition des policies RLS.
+
+#### Reste à faire
+
+- Migrer le code d'authentification, le schéma PostgreSQL et les fichiers vers
+  Supabase; définir puis tester les policies RLS.
+
+### Fait
+
+- Création de `Spec.md` avec les exigences fonctionnelles, les rôles, la
+  sécurité et les critères d'acceptation.
+- Ajout de `Spec.md` à l'ordre de lecture dans `AGENTS.md`.
+- Consignation des divergences de fournisseurs et du rôle secrétaire dans
+  `docs/questions.md`.
+
+#### Reste à faire
+
+- Trancher les fournisseurs cibles et le modèle de permissions avant de
+  développer les flux concernés.
+
 ### Fait
 
 - Ajout des consignes communes et des renvois pour Claude, Gemini et Copilot.

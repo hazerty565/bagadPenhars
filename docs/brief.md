@@ -83,4 +83,5 @@ Les comptes ne se créent pas librement :
 
 - Le site public doit-il être multilingue (fr / en / br) ou seulement en français ?
 - Les notifications OneSignal : push navigateur uniquement, ou aussi email ?
-- Les albums photo : stockés où (Supabase Storage, Google Drive) ?
+- Les albums photo sont stockés dans Supabase Storage; définir leurs buckets et
+  policies selon les règles de visibilité.
