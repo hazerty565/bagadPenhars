@@ -253,12 +253,7 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     JPG/JPEG jusqu'à 20 Mo et les convertir en WebP. Aucun avatar téléversé
     pour la première version; afficher les initiales.
 
-## Point de cohérence documentaire
-
-`AGENTS.md` référence `docs/Pwa.md`, mais le fichier présent s'appelle
-`docs/Pwa.MD`. Les chemins étant sensibles à la casse dans l'environnement de
-développement, faut-il renommer le fichier ou corriger la référence dans les
-consignes?
+    Statut : À VALIDER avant l'implémentation des règles d'accès aux événements.
 
 ## Règle de validation
 

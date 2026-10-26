@@ -2,6 +2,63 @@
 
 ## 2026-10-26
 
+### Alignement des policies documentées pour les événements
+
+#### Fait
+
+- Confirmation : tous les membres approuvés peuvent lire les événements
+  ciblés par pupitre; un chef ne crée et gère que ceux de son ou ses pupitres.
+- Alignement de la matrice des droits, de la policy de lecture et de l'exemple
+  de test dans `docs/database.md`; seuls l'admin et la secrétaire créent les
+  événements communs internes et ceux de l'agenda public.
+- Retrait de la question 30, désormais résolue. La spécification décrivait déjà
+  ce comportement.
+
+#### Validation
+
+- Relecture des formulations de la question 22, de `Spec.md` et de la policy
+  documentée pour vérifier leur cohérence.
+- Documentation uniquement : aucune commande de validation applicative
+  exécutée.
+
+### Harmonisation du nom du document PWA
+
+#### Fait
+
+- Renommage de `docs/Pwa.MD` en `docs/pwa.md`, conformément aux références
+  dans `AGENTS.md`.
+- Mise à jour des liens et références dans `README.md` et `Spec.md`, puis
+  retrait de la question documentaire désormais résolue.
+
+#### Validation
+
+- Vérification des références au nom du document PWA et de l'état Git.
+- Documentation uniquement : aucune commande de validation applicative
+  exécutée.
+
+### Harmonisation du README
+
+#### Fait
+
+- Réécriture du README pour refléter les décisions validées sur les langues,
+  rôles, invitations, pupitres, événements, documents, médias et notifications.
+- Distinction entre la cible Supabase/Netlify et les éléments historiques
+  encore présents dans le dépôt; correction des instructions d'installation
+  et des commandes selon `package.json` et `pnpm-lock.yaml`.
+- Évaluation des réponses : les décisions produit principales sont lisibles;
+  les notifications de sondage, le calendrier et la confirmation Netlify
+  Forms, ainsi que la conservation et la suppression restent à préciser.
+- Signalement d'une divergence entre la décision de visibilité des événements
+  par pupitre et le modèle RLS proposé dans `docs/database.md`; ajout d'une
+  question à valider dans `docs/questions.md`.
+
+#### Validation
+
+- Relecture croisée du README avec `Spec.md`, `docs/questions.md`,
+  `docs/architecture.md`, `docs/database.md` et `package.json`.
+- Documentation uniquement : aucune commande de validation applicative
+  exécutée.
+
 ### Mise à jour de la spécification développeur
 
 #### Fait
@@ -26,10 +83,8 @@
 
 - Confirmer l'audience des notifications de sondage et le calendrier
   d'intégration Netlify Forms; définir les durées de conservation et le
-  processus de suppression de compte.
-- Harmoniser le README avec les décisions documentées, notamment les droits
-  d'invitation/approbation, le nombre de pupitres par membre, les rôles et le
-  canal de notification.
+  processus de suppression de compte. Valider également la cohérence entre la
+  visibilité des événements par pupitre et le modèle RLS documenté.
 
 ### Spécification développeur
 

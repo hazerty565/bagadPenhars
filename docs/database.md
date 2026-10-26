@@ -92,7 +92,7 @@ L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses prop
 | `profile_pupitres` | – | L soi | L pup. | L/E | L/E |
 | `bureau_positions` | – | L soi | L soi | L/E | L/E |
 | `invitations` | – | – | – | L/E | L/E |
-| `events` | L si `public` | L `public`, `members`, son pup. | + E pour son pup. | L/E tous | L/E tous |
+| `events` | L si `public` | L `public`, `members`, `pupitre` | L mêmes événements; + E pour son pup. | L/E tous | L/E tous |
 | `event_responses` | – | L/E soi | L pup. | L tous | L tous |
 | `polls` | – | L | L, E pour son pup. | L/E | L/E |
 | `poll_responses` | – | L/E soi | L pup. | L tous | L tous |
@@ -143,10 +143,7 @@ on public.events for select
 to authenticated
 using (
   public.my_role_level() >= 1
-  and (
-    visibility = 'members'
-    or (visibility = 'pupitre' and pupitre_id in (select public.my_pupitre_ids()))
-  )
+  and visibility in ('members', 'pupitre')
 );
 
 create policy "events: écriture secrétaire+"
@@ -238,7 +235,7 @@ insert into public.events (...) values (...);  -- doit échouer
 -- Membre
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "<uuid-membre>"}';
-select count(*) from public.events;        -- publiques + members + son pupitre
+select count(*) from public.events;        -- publiques + membres + tous les événements par pupitre
 update public.profiles set role = 'admin' where id = '<uuid-membre>';  -- doit échouer
 ```
 
@@ -248,4 +245,5 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
 
 - **Pas d'annuaire** : un membre ne voit pas la liste des autres membres. `profiles` n'est lisible que par son propriétaire et par la secrétaire / l'admin. Un chef de pupitre voit les réponses de son pupitre via `event_responses` et `profile_pupitres` (nom et réponse uniquement), sans accès au reste des profils.
 - **Titres du bureau non publics** : aucune policy de lecture pour `anon`. Un membre ne voit que ses propres titres.
+- **Événements par pupitre** : tous les membres approuvés peuvent lire les événements ciblés par pupitre. Un chef ne peut créer et gérer des événements que pour son ou ses pupitres; seuls l'admin et la secrétaire créent les événements communs internes ou destinés à l'agenda public.
 - **Documents partagés entre pupitres** : tous les membres lisent tous les documents ; seul le chef de pupitre (son pupitre), la secrétaire et l'admin peuvent écrire.

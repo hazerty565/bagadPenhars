@@ -258,7 +258,7 @@ dans `docs/questions.md`.
   des sauvegardes régulières sont obligatoires.
 - Le fuseau des événements est `Europe/Paris`.
 - Toute modification du manifest ou du service worker doit être répercutée
-  dans `docs/Pwa.MD` (nom actuel du fichier dans le dépôt).
+  dans `docs/pwa.md`.
 - Les données métier sont gérées dans Supabase. Netlify sert à l'hébergement
   et au formulaire de contact Netlify Forms; OneSignal sert aux notifications
   push.
@@ -280,7 +280,7 @@ Une fonctionnalité est livrable lorsque :
 6. les tests couvrent les cas normaux, les refus d'accès et les entrées
    invalides pertinents;
 7. les documents concernés (`docs/architecture.md`, `docs/database.md`,
-   `docs/Pwa.MD`) sont mis à jour;
+   `docs/pwa.md`) sont mis à jour;
 8. les vérifications `npm run check`, `npm run lint` et `npm run build`
    passent, ou les échecs préexistants et non liés sont signalés clairement.
 
