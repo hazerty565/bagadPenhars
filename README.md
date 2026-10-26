@@ -2,7 +2,7 @@
 
 Site du Bagad Penhars : un site public multilingue (français, anglais, breton) et une zone adhérents privée, en français, réservée aux membres approuvés.
 
-**Stack** : SvelteKit 2 · Netlify (hébergement, fonctions, Blobs) · Netlify DB (Postgres, propulsé par Neon) · Better Auth · TailwindCSS
+**Stack** : SvelteKit 5 · Runes ·Netlify (hébergement, fonctions, Blobs) · Supabase · TailwindCSS
 
 ---
 
@@ -83,7 +83,6 @@ Le navigateur **n'accède jamais directement à la base**. Toutes les lectures e
 - **Public** (`/[lang]/agenda`) : événements marqués `is_public`, lecture seule.
 - **Dashboard** (`/dashboard/agenda`) : tous les événements. Chaque membre ne modifie **que sa propre présence** (`present`, `absent`, `unknown`). L'identifiant vient de la session, jamais du formulaire.
 - **Gestion** (chef et admin) : ajouter, modifier, supprimer un événement.
-- **Reset annuel** : l'agenda est vidé le 31 décembre, avec `scripts/reset-agenda.js` (tâche planifiée).
 
 ---
 
