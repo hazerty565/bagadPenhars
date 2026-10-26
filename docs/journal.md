@@ -14,14 +14,19 @@
   notifications, contact Netlify Forms, environnements Supabase et données
   vierges.
 - Mise à jour des décisions 20 à 26 dans `docs/questions.md`; ajout des
-  questions 27 à 29 sur les rôles créant les sondages et leurs audiences de
-  notification, la conservation/suppression et les limites/transformations
-  des médias.
+  décisions 27 à 29 sur les droits de gestion des sondages par rôle, Netlify
+  Forms et les conversions/limites des images; conservation et suppression
+  restent à préciser.
+- Synchronisation de `Spec.md` avec ces réponses : les chefs gèrent les
+  événements de leur pupitre, les vidéos sont refusées, les photos JPG/JPEG
+  de 20 Mo maximum sont converties en WebP, et l'intégration du formulaire
+  Netlify reste en attente de confirmation de calendrier.
 
 #### Reste à faire
 
-- Obtenir les réponses aux questions 27 à 29 avant d'implémenter les
-  comportements concernés.
+- Confirmer l'audience des notifications de sondage et le calendrier
+  d'intégration Netlify Forms; définir les durées de conservation et le
+  processus de suppression de compte.
 - Harmoniser le README avec les décisions documentées, notamment les droits
   d'invitation/approbation, le nombre de pupitres par membre, les rôles et le
   canal de notification.

@@ -150,9 +150,12 @@ données le permet.
   représentations.
 - Les réponses possibles sont présent, absent, ne sait pas ou aucune réponse.
 - L'identité de la personne qui répond vient de la session serveur.
-- Les sondages sont des événements auxquels les membres répondent présent ou
-  absent. Ils ne nécessitent pas de validation avant création. L'admin et la
-  secrétaire peuvent les modifier ou les supprimer.
+- Un sondage est lui-même l'événement correspondant dans l'agenda; il est créé
+  sans étape de validation ni création différée d'un second événement. Les
+  réponses au sondage sont présent ou absent. L'admin et la secrétaire peuvent
+  créer, modifier et supprimer des sondages publics ou privés. Un chef peut
+  gérer les événements, y compris les sondages, de son ou ses pupitres
+  uniquement.
 - Les événements par pupitre sont visibles par tous les membres approuvés.
   Un chef ne peut créer que des événements pour son ou ses pupitres. L'admin
   et la secrétaire peuvent créer les événements internes communs, notamment
@@ -177,9 +180,9 @@ données le permet.
 - Les photos et albums destinés au public sont explicitement publiés; les
   fichiers non publics restent protégés.
 - Aucun avatar n'est téléversé dans la première version : afficher les
-  initiales du prénom et du nom. Les photos publiées sont au format WebP; le
-  mode de conversion des fichiers JPG et la prise en charge des vidéos restent
-  à préciser.
+  initiales du prénom et du nom. Les photos téléversées au format JPG/JPEG,
+  jusqu'à 20 Mo par fichier source, sont converties au format WebP avant
+  stockage. Les vidéos ne sont pas acceptées.
 - L'admin et la secrétaire peuvent publier et supprimer les albums. Une demande
   de retrait d'une photo est traitée rapidement par un responsable habilité;
   les médias publiés comme publics sont accessibles sans connexion.
@@ -202,9 +205,11 @@ données le permet.
 
 ### 4.7 Contact
 
-- Le formulaire public utilise Netlify Forms pour recevoir les soumissions.
-  L'adresse officielle de destination est configurée dans Netlify, pas dans le
-  code.
+- Le formulaire public utilise Netlify Forms pour recevoir les soumissions;
+  la configuration Netlify existe déjà et l'adresse officielle de destination
+  est configurée hors du code. Le branchement du formulaire côté application
+  et sa validation restent à effectuer lorsque le responsable confirme le
+  démarrage de cette tâche.
 - Les pièces jointes sont interdites. Le besoin de confirmation à l'expéditeur
   est conservé; son mécanisme avec Netlify Forms reste à définir.
 - Les responsables du bureau traitent les messages. La durée de conservation
@@ -284,10 +289,10 @@ Une fonctionnalité est livrable lorsque :
 Les décisions validées dans [`docs/questions.md`](./docs/questions.md) sont
 appliquées dans cette spécification. Les questions complémentaires qui restent
 ouvertes sont identifiées dans ce fichier et doivent être tranchées avant les
-fonctions concernées : rôles autorisés à créer les sondages et audience de
-leurs notifications, configuration effective et rétention des formulaires
-Netlify, durées de conservation des données de membres et d'audit, et
-limites/traitement des médias.
+fonctions concernées : audience des notifications de sondage, calendrier du
+branchement Netlify Forms et son mécanisme de confirmation à l'expéditeur,
+durées de conservation des données et traitement des demandes de suppression
+de compte.
 
 ## 9. État du dépôt à la préparation
 
@@ -391,8 +396,8 @@ incluant jeton invalide, expiré, déjà utilisé et email non concordant.
   uniquement par son propriétaire.
 - Implémenter les sondages comme des événements avec réponses présent/absent,
   sans étape de validation préalable. L'admin et la secrétaire peuvent les
-  modifier et les supprimer. La matrice de création et les autres états de
-  réponse restent à préciser.
+  créer, modifier et supprimer dans les audiences publique ou privée; un chef
+  a ces droits uniquement pour les événements de son ou ses pupitres.
 - Valider les dates, fuseaux horaires, heures de fin et événements récurrents.
 
 **Livrable :** tests de visibilité public/privé, permissions par rôle,
@@ -403,15 +408,18 @@ propriété des réponses et cas de dates invalides.
 - Séparer contenu brouillon et publié; le public ne lit que le contenu publié.
 - Stocker les fichiers dans les buckets Supabase prévus; contrôler type,
   taille, nom et droits avant écriture.
+- N'accepter aucune vidéo. Limiter chaque fichier photo source JPG/JPEG à
+  20 Mo, le convertir en WebP avant stockage et n'accepter aucun téléversement
+  d'avatar.
 - Servir les partitions depuis un bucket privé avec autorisation serveur et
   RLS; ne jamais exposer une URL publique pour un document privé.
 - Publier les albums et médias uniquement après action d'un rôle autorisé.
 - Prévoir la prévisualisation avant publication; seuls l'admin et la secrétaire
   publient ou suppriment un album.
-- Recevoir le formulaire de contact avec Netlify Forms, configurer la
-  notification de soumission vers l'adresse officielle et protéger le
-  formulaire contre les entrées invalides et les envois abusifs. Ne pas
-  accepter de pièces jointes.
+- Quand le branchement Netlify Forms sera autorisé, connecter le formulaire
+  public à la configuration déjà présente, vérifier le parcours de soumission
+  et la notification vers l'adresse officielle. Ne pas reconfigurer Netlify
+  ni accepter de pièces jointes.
 
 **Livrable :** tests de brouillon/publication, accès aux objets Storage selon
 les droits, refus d'upload non autorisé et validation du formulaire.

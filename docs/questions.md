@@ -152,11 +152,9 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
 
     Décision : articles avec titre, texte, date et auteur ; albums avec titre, description, date, légendes et ordre des photos. Une prévisualisation est requise avant publication.
 
-19. **Capacités fichiers** — quelle taille maximale et quels formats accepter
-    pour les partitions, avatars et médias? Le brief indique PDF pour les
-    partitions; les limites pour les images et vidéos restent à fixer.
-
-    Décision : partitions en PDF uniquement. Les formats et tailles maximales des avatars, images et vidéos seront définis avant l'implémentation de l'upload.
+19. **Capacités fichiers** — partitions PDF uniquement. Voir la décision 29
+    pour le traitement et les limites des photos; aucun avatar ni vidéo pour
+    la première version.
 
 ## Questions complémentaires avant les fonctions concernées
 
@@ -193,8 +191,10 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
 23. **Sondages** — les sondages sont-ils des événements et nécessitent-ils une
     validation préalable? Qui peut les modifier ou les supprimer?
 
-    Décision : un sondage est un événement et ne nécessite pas de validation
-    préalable. L'admin et la secrétaire peuvent le modifier ou le supprimer.
+    Décision : le sondage est lui-même l'événement d'agenda; il est créé sans
+    validation préalable ni création différée d'un second événement. L'admin
+    et la secrétaire peuvent le modifier ou le supprimer; les droits des chefs
+    sur les événements de leur pupitre sont précisés à la question 27.
 
 24. **Préférences et audiences OneSignal** — quelles préférences un membre
     peut-il gérer (désactivation globale, rappels, types d'événements)? À quels
@@ -220,18 +220,19 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
 
     Décision : pas d'avatar téléversé pour la première version; afficher les
     initiales du prénom et du nom. Les photos publiées sont au format WebP.
-    Reste à préciser si les fichiers JPG seront convertis automatiquement en
-    WebP et si les vidéos sont dans le périmètre.
+    Voir la décision 29 : les fichiers JPG/JPEG jusqu'à 20 Mo sont convertis
+    en WebP; les vidéos sont interdites.
 
 ## Questions restantes
 
-27. **Création et audience des sondages** — quels rôles peuvent créer un
-    sondage-événement? À quels membres la notification push d'un sondage est-
-    elle envoyée : tous les membres, les membres du pupitre ciblé, ou seulement
-    ceux qui ont activé cette préférence?
+27. **Audience des notifications de sondage** — à quels membres la notification
+    push d'un sondage est-elle envoyée : tous les membres, les membres du
+    pupitre ciblé, ou seulement ceux qui ont activé cette préférence?
 
-    Statut : À VALIDER. Les réponses restent présent ou absent; l'admin et la
-    secrétaire peuvent creer/modifier/supprimer le sondage public ou privé, et chaque chef pupitre peux creer/modifier/supprimer pour son pupitre un evenement.
+    Décision : l'admin et la secrétaire peuvent créer, modifier et supprimer
+    des sondages publics ou privés. Un chef peut créer, modifier et supprimer
+    les événements, y compris les sondages, de son ou ses pupitres.
+    Statut : l'audience des notifications de sondage reste À VALIDER.
 
 28. **Conservation et suppression** — quelle durée de conservation appliquer
     aux soumissions Netlify Forms, présences et journaux d'audit? Quel processus
@@ -240,13 +241,17 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     décidées; il reste à confirmer leur configuration effective avec Netlify
     Forms.
 
-    decision:  netlify form est configurer, il y a juste a ajouter un code pour le connecter et valider( ne rien pour faire le moment).
+    Décision : la configuration Netlify Forms existe déjà; seul le code
+    d'intégration et sa validation sont à effectuer. La consigne « ne rien
+    faire pour le moment » rend le calendrier ambigu.
+    Statut : À VALIDER — faut-il différer l'intégration ou l'inclure dans la
+    prochaine tâche? Le mécanisme de confirmation à l'expéditeur, les durées
+    de conservation et le traitement des demandes de suppression restent
+    également à préciser.
 
-29. **Médias** — quelle taille maximale accepter pour les photos WebP? Les
-    vidéos sont-elles incluses? Si une photo JPG est fournie, faut-il la
-    convertir automatiquement en WebP ou refuser le téléversement?
-
-   decision: il faut convertir en webP les photos, et les videos sont interdite, la taille max en jpg sont de 20mo.
+29. **Médias** — décision : refuser les vidéos; accepter les photos source
+    JPG/JPEG jusqu'à 20 Mo et les convertir en WebP. Aucun avatar téléversé
+    pour la première version; afficher les initiales.
 
 ## Point de cohérence documentaire
 
