@@ -89,9 +89,8 @@ membre et le rôle applicatif `secretaire`.
 - Ne jamais exposer les profils privés, les coordonnées des membres, les
   partitions privées ni les titres du bureau.
 - Le site public est disponible en français, anglais et breton (`fr`, `en`,
-  `br`). L'espace adhérents est en français selon le brief; la documentation
-  comporte aussi une mention français/anglais, à clarifier avant de traduire
-  ou modifier les routes privées.
+  `br`). L'espace adhérents et les pages d'authentification sont en français
+  uniquement.
 
 **Critères d'acceptation des pages publiques :**
 
@@ -128,16 +127,16 @@ données le permet.
   liste de membres.
 - Chaque membre ne modifie que son propre profil et sa propre réponse de
   présence.
-- Les rôles et pupitres sont modifiés uniquement par les actions
-  d'administration autorisées.
+- Le membre peut modifier ses propres informations de profil, à l'exception
+  de son rôle et de son ou ses pupitres. L'admin et la secrétaire peuvent
+  modifier les pupitres; l'attribution des rôles applicatifs supérieurs reste
+  réservée à l'admin.
 - Les rôles `admin` et `secretaire` peuvent inviter et approuver les comptes.
   La secrétaire ne peut pas attribuer un rôle supérieur à `member` lors de
   l'approbation.
-- La modification des champs du profil par le membre, la secrétaire ou l'admin
-  n'est pas spécifiée sans ambiguïté; appliquer la règle conservatrice
-  d'interdire au membre de modifier son pupitre, son rôle ou les champs
-  d'identité jusqu'à clarification. Le détail est suivi dans
-  `docs/questions.md`.
+- Les champs de profil modifiables sont ceux du profil du membre, hors rôle et
+  pupitres. Le changement de l'adresse email du compte doit suivre le flux
+  sécurisé de Supabase Auth.
 - Un membre peut demander la suppression de son compte. Les données
   personnelles sont supprimées ou anonymisées selon les obligations légales;
   les durées de conservation des présences et journaux d'audit restent à
@@ -151,12 +150,14 @@ données le permet.
   représentations.
 - Les réponses possibles sont présent, absent, ne sait pas ou aucune réponse.
 - L'identité de la personne qui répond vient de la session serveur.
-- Les sondages de répétition proposent présent ou absent. Ils ne créent pas
-  automatiquement un événement; la création de l'événement associé exige une
-  validation explicite.
-- Un événement peut cibler un ou plusieurs pupitres. Un chef ne peut créer que
-  des événements concernant son ou ses pupitres. Les événements communs et
-  les représentations publiques sont créés par l'admin ou la secrétaire.
+- Les sondages sont des événements auxquels les membres répondent présent ou
+  absent. Ils ne nécessitent pas de validation avant création. L'admin et la
+  secrétaire peuvent les modifier ou les supprimer.
+- Les événements par pupitre sont visibles par tous les membres approuvés.
+  Un chef ne peut créer que des événements pour son ou ses pupitres. L'admin
+  et la secrétaire peuvent créer les événements internes communs, notamment
+  les repas et répétitions générales privées, ainsi que les événements destinés
+  à l'agenda public.
 - La création et la modification d'événements respectent le rôle et le
   périmètre du pupitre; leur visibilité publique est explicite, jamais
   implicite.
@@ -175,6 +176,10 @@ données le permet.
   serveur avant de lire le stockage.
 - Les photos et albums destinés au public sont explicitement publiés; les
   fichiers non publics restent protégés.
+- Aucun avatar n'est téléversé dans la première version : afficher les
+  initiales du prénom et du nom. Les photos publiées sont au format WebP; le
+  mode de conversion des fichiers JPG et la prise en charge des vidéos restent
+  à préciser.
 - L'admin et la secrétaire peuvent publier et supprimer les albums. Une demande
   de retrait d'une photo est traitée rapidement par un responsable habilité;
   les médias publiés comme publics sont accessibles sans connexion.
@@ -191,16 +196,17 @@ données le permet.
   serveur.
 - La première version utilise les notifications push OneSignal uniquement.
   L'arrivée d'un nouvel événement déclenche une notification automatique.
-- Les membres peuvent gérer leurs préférences de notification. Les règles
-  détaillées de ciblage et de consentement restent à préciser dans
-  `docs/questions.md`.
+- Chaque membre peut configurer les notifications globalement, pour les
+  rappels et pour les événements, et choisir de recevoir un rappel lorsqu'il
+  n'a pas répondu au sondage d'un événement.
 
 ### 4.7 Contact
 
-- Le formulaire envoie les messages à l'adresse officielle de l'association,
-  configurée hors du code.
-- Une confirmation est envoyée à l'expéditeur; les pièces jointes sont
-  interdites.
+- Le formulaire public utilise Netlify Forms pour recevoir les soumissions.
+  L'adresse officielle de destination est configurée dans Netlify, pas dans le
+  code.
+- Les pièces jointes sont interdites. Le besoin de confirmation à l'expéditeur
+  est conservé; son mécanisme avec Netlify Forms reste à définir.
 - Les responsables du bureau traitent les messages. La durée de conservation
   et les modalités opérationnelles de suppression restent à définir.
 
@@ -248,8 +254,9 @@ dans `docs/questions.md`.
 - Le fuseau des événements est `Europe/Paris`.
 - Toute modification du manifest ou du service worker doit être répercutée
   dans `docs/Pwa.MD` (nom actuel du fichier dans le dépôt).
-- Les accès métier utilisent exclusivement Supabase; Netlify est réservé à
-  l'hébergement et OneSignal aux notifications push.
+- Les données métier sont gérées dans Supabase. Netlify sert à l'hébergement
+  et au formulaire de contact Netlify Forms; OneSignal sert aux notifications
+  push.
 - Documenter les décisions et écarts au brief au lieu de masquer un état
   incomplet derrière une implémentation partielle.
 
@@ -275,12 +282,12 @@ Une fonctionnalité est livrable lorsque :
 ## 8. Décisions à compléter
 
 Les décisions validées dans [`docs/questions.md`](./docs/questions.md) sont
-appliquées dans cette spécification. Les questions complémentaires 20 à 26 de
-ce fichier restent à trancher avant les fonctions concernées : langue de
-l'espace adhérents, champs de profil modifiables, visibilité publique des
-événements créés par un chef, validation et annulation des sondages, ciblage et
-préférences OneSignal, durées de conservation et limites des médias. Ne pas
-interpréter ces sujets ouverts à la place du responsable produit.
+appliquées dans cette spécification. Les questions complémentaires qui restent
+ouvertes sont identifiées dans ce fichier et doivent être tranchées avant les
+fonctions concernées : rôles autorisés à créer les sondages et audience de
+leurs notifications, configuration effective et rétention des formulaires
+Netlify, durées de conservation des données de membres et d'audit, et
+limites/traitement des médias.
 
 ## 9. État du dépôt à la préparation
 
@@ -364,7 +371,8 @@ autorisés.
 - Autoriser l'admin et la secrétaire à approuver un compte, en lui attribuant
   le rôle `member`.
 - Permettre à un membre de modifier uniquement les champs de son propre profil
-  qui auront été approuvés; ne pas créer d'annuaire.
+  hors rôle et pupitres; le changement d'adresse email suit le flux Supabase
+  Auth. Ne pas créer d'annuaire.
 - Journaliser les changements de rôle et les actions d'administration sans
   enregistrer de secrets.
 
@@ -381,9 +389,10 @@ incluant jeton invalide, expiré, déjà utilisé et email non concordant.
 - Enregistrer au plus une réponse par membre et événement. L'identité du
   répondant vient de la session; la réponse est modifiable ou supprimable
   uniquement par son propriétaire.
-- Implémenter les sondages avec les réponses présent/absent. La création
-  d'événement associée est séparée et nécessite une validation explicite; ne
-  créer aucun événement automatiquement.
+- Implémenter les sondages comme des événements avec réponses présent/absent,
+  sans étape de validation préalable. L'admin et la secrétaire peuvent les
+  modifier et les supprimer. La matrice de création et les autres états de
+  réponse restent à préciser.
 - Valider les dates, fuseaux horaires, heures de fin et événements récurrents.
 
 **Livrable :** tests de visibilité public/privé, permissions par rôle,
@@ -399,8 +408,10 @@ propriété des réponses et cas de dates invalides.
 - Publier les albums et médias uniquement après action d'un rôle autorisé.
 - Prévoir la prévisualisation avant publication; seuls l'admin et la secrétaire
   publient ou suppriment un album.
-- Protéger le formulaire de contact contre les entrées invalides et les envois
-  abusifs; envoyer uniquement aux destinataires approuvés.
+- Recevoir le formulaire de contact avec Netlify Forms, configurer la
+  notification de soumission vers l'adresse officielle et protéger le
+  formulaire contre les entrées invalides et les envois abusifs. Ne pas
+  accepter de pièces jointes.
 
 **Livrable :** tests de brouillon/publication, accès aux objets Storage selon
 les droits, refus d'upload non autorisé et validation du formulaire.
@@ -413,7 +424,8 @@ les droits, refus d'upload non autorisé et validation du formulaire.
   aux identifiants de pupitre ou de destinataire soumis par le navigateur.
 - Pour la première version, envoyer des notifications push uniquement et
   déclencher une notification automatique lors de la création d'un nouvel
-  événement. Respecter les préférences configurées par les membres.
+  événement. Respecter les préférences globales, de rappels et d'événements,
+  y compris le choix de rappel en l'absence de réponse au sondage.
 - Concilier le worker de la PWA avec le worker OneSignal avant activation des
   notifications en production.
 - Valider la compatibilité des navigateurs et plateformes cibles avant la mise

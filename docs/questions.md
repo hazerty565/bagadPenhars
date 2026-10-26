@@ -10,8 +10,8 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
   et Storage.
 - Netlify sert à héberger l'application.
 - OneSignal est le service prévu pour les notifications push.
-- L'interface adhérent est en français/anglais; le brief ne tranche pas encore les
-  langues du site public.
+- L'interface adhérent est en français; les langues publiques ont été tranchées
+  en français, anglais et breton.
 
 ## P0 — À décider avant de développer les fonctions concernées
 
@@ -39,13 +39,17 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
 
    Décision : l'admin et la secrétaire peuvent inviter et approuver les adhérents. Toute approbation attribue le rôle member. Les invitations expirent après 7 jours.
 
-4. **Visibilité des partitions** — le brief précise que tous les membres
-   approuvés peuvent consulter les partitions de tous les pupitres; une autre
-   phrase dit « visibles selon le pupitre ». Confirmer la règle d'accès en
-   lecture. Les droits de dépôt (chef sur son pupitre, secrétaire et admin)
-   sont-ils bien distincts des droits de lecture?
+4. **Visibilité des partitions et événements** — le brief précise que tous les
+   membres approuvés peuvent consulter les partitions de tous les pupitres;
+   une autre phrase dit « visibles selon le pupitre ». Confirmer la règle
+   d'accès en lecture. Les droits de dépôt (chef sur son pupitre, secrétaire
+   et admin) sont-ils bien distincts des droits de lecture?
 
-   Décision : un événement peut cibler un ou plusieurs pupitres. Les événements communs et les événements publics sont créés par l'admin ou la secrétaire. Un chef de pupitre ne peut créer que des événements concernant son pupitre, avec le choix de publier pour tout le monde avec un select.
+   Décision : les partitions sont visibles par tous les membres approuvés,
+   quel que soit leur pupitre. Un événement peut cibler un ou plusieurs
+   pupitres. Les événements communs et les événements publics sont créés par
+   l'admin ou la secrétaire. Un chef de pupitre ne crée que des événements
+   concernant son pupitre.
 
 5. **Événements par pupitre** — les chefs créent des événements pour leur
    pupitre, mais le modèle historique d'événement n'a pas de champ
@@ -60,20 +64,25 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    création, à sa clôture ou après validation? Que devient l'événement si le
    sondage est annulé?
 
-    Les sondages utilisent présent/absent. Un sondage ne crée pas automatiquement un événement : la création nécessite une validation explicite. 
+    Décision : les réponses aux sondages sont présent ou absent. Un sondage
+    n'a pas d'étape de validation préalable.
 
 7. **Notifications** — OneSignal est confirmé, mais faut-il envoyer des push
    uniquement ou aussi des emails? Quel événement déclenche des notifications
    automatiques (nouvel événement, rappel, nouvelle partition), et les membres
    peuvent-ils gérer leurs préférences ou se désabonner?
 
-Décision : notifications push via OneSignal uniquement pour la première version. Notifications automatiques pour les nouveaux événements. Les membres peuvent gérer leurs préférences de notification.
+Décision : notifications push via OneSignal uniquement pour la première
+version. Les nouveaux événements déclenchent une notification automatique.
+Les membres peuvent gérer leurs préférences de notification.
 
 8. **Contact** — quelle adresse reçoit les formulaires? Faut-il envoyer une
    confirmation à l'expéditeur? Les pièces jointes sont-elles interdites? Qui
    traite les messages et combien de temps sont-ils conservés?
 
-   Décision : les messages sont envoyés à l'adresse officielle de l'association, à configurer. Une confirmation est envoyée à l'expéditeur. Pas de pièces jointes. Les responsables du bureau traitent les messages. 
+   Décision : les messages sont envoyés à l'adresse officielle de l'association,
+   à configurer. Une confirmation est envoyée à l'expéditeur. Pas de pièces
+   jointes. Les responsables du bureau traitent les messages.
 
 ## P1 — À décider avant mise en production ou import de données
 
@@ -155,7 +164,8 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     français uniquement, tandis que la section « Décisions déjà prises »
     ci-dessus indique français/anglais. Quelle règle faut-il appliquer?
 
-    Décision : pour la partie public, c'est français, anglais et breton, et la partie membre en français uniquement.
+     Décision : le site public est en français, anglais et breton; l'espace
+     adhérents est en français uniquement.
 
 21. **Modification du profil** — la réponse à la question 17 (« tout sauf son
     pupitre peuvent être modifiés que par l'admin ou la secrétaire ») peut
@@ -163,7 +173,10 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     ou que le membre peut modifier son pupitre. Quels champs le membre peut-il
     modifier? La secrétaire peut-elle modifier les mêmes champs que l'admin?
 
-    decision: le membre peux  modifier tout ses informations sauf son pupitre, qui sont réservé par l'admin et secretaire.
+    Décision : le membre peut modifier ses informations de profil sauf son
+    rôle et son ou ses pupitres. L'admin et la secrétaire peuvent modifier les
+    pupitres. L'attribution des rôles applicatifs supérieurs reste réservée à
+    l'admin.
 
 22. **Publication des événements par un chef** — la réponse saisie sous la
     question 4 indique qu'un chef peut choisir de publier « pour tout le monde »,
@@ -171,33 +184,69 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     l'admin et à la secrétaire. « Tout le monde » désigne-t-il tous les membres
     ou le site public? Un chef peut-il publier un événement sur le site public?
 
-    decision: l'agenda pour les evenement public sont public pour tous, l'agenda par pupitre est visible pour tous les membres, et le chef pupitre eux creer pour son pupitre un evenement. un admin et un secretaire peuvent creer des evenement interne de type 'repas, repetition general privée.'
+    Décision : l'agenda public est consultable sans connexion. Les événements
+    ciblés par pupitre sont visibles par tous les membres approuvés; un chef ne
+    crée que des événements concernant son ou ses pupitres. L'admin et la
+    secrétaire créent les événements communs internes (par exemple repas ou
+    répétition générale privée) et les événements destinés à l'agenda public.
 
-23. **Validation d'un sondage** — la création de l'événement associé demande
-    une validation explicite. Qui peut valider, à quelle étape, et que devient
-    le sondage si la validation est refusée ou si le sondage est annulé?
+23. **Sondages** — les sondages sont-ils des événements et nécessitent-ils une
+    validation préalable? Qui peut les modifier ou les supprimer?
 
-    il n'y a pas de validation de sondage, on creer un sondage de type evenement, ensuite l'admin et secretaire peuvent modifier ou supprimer. 
+    Décision : un sondage est un événement et ne nécessite pas de validation
+    préalable. L'admin et la secrétaire peuvent le modifier ou le supprimer.
 
 24. **Préférences et audiences OneSignal** — quelles préférences un membre
     peut-il gérer (désactivation globale, rappels, types d'événements)? À quels
     membres sont envoyées les notifications automatiques d'un événement selon
     son audience?
 
-    decision : le membre peux configurer ses preferences, en globale, rappels et événements, ou si il n'a pas répondu au sondage de l'evenement.
+    Décision : le membre peut régler ses préférences globales, les rappels et
+    les notifications d'événements, dont les rappels lorsqu'il n'a pas répondu
+    au sondage d'un événement.
 
 25. **Conservation et suppression** — quelles durées appliquer aux présences,
     journaux d'audit et messages de contact? Quel processus permet de traiter
     la demande de suppression d'un membre tout en respectant les obligations
     légales?
 
-    Decision : le formulaire de contact, se fera pour le moment uniquement par netlify form.
+    Décision : le formulaire de contact utilise Netlify Forms pour le moment.
+    Cette réponse ne fixe pas les durées de conservation des présences et
+    journaux d'audit, ni le traitement des demandes de suppression de compte.
 
 26. **Limites des fichiers médias** — quelles tailles maximales et quels
     formats accepter pour les avatars, photos et vidéos? (Les partitions sont
     limitées au PDF.)
 
-    Statut : À VALIDER avant l'implémentation des téléversements concernés. cependant, il n'y aura pas d'avatar pour le moment, uniquement du type lettre du prénom - nom ( pierre lupin - 'PL'). Et les photos seront unqiement en .webp, avec la possibilité de changer de *.jpg en *.webp.
+    Décision : pas d'avatar téléversé pour la première version; afficher les
+    initiales du prénom et du nom. Les photos publiées sont au format WebP.
+    Reste à préciser si les fichiers JPG seront convertis automatiquement en
+    WebP et si les vidéos sont dans le périmètre.
+
+## Questions restantes
+
+27. **Création et audience des sondages** — quels rôles peuvent créer un
+    sondage-événement? À quels membres la notification push d'un sondage est-
+    elle envoyée : tous les membres, les membres du pupitre ciblé, ou seulement
+    ceux qui ont activé cette préférence?
+
+    Statut : À VALIDER. Les réponses restent présent ou absent; l'admin et la
+    secrétaire peuvent creer/modifier/supprimer le sondage public ou privé, et chaque chef pupitre peux creer/modifier/supprimer pour son pupitre un evenement.
+
+28. **Conservation et suppression** — quelle durée de conservation appliquer
+    aux soumissions Netlify Forms, présences et journaux d'audit? Quel processus
+    suivre pour une demande de suppression de compte? La destination des
+    notifications de formulaire et la confirmation à l'expéditeur sont déjà
+    décidées; il reste à confirmer leur configuration effective avec Netlify
+    Forms.
+
+    decision:  netlify form est configurer, il y a juste a ajouter un code pour le connecter et valider( ne rien pour faire le moment).
+
+29. **Médias** — quelle taille maximale accepter pour les photos WebP? Les
+    vidéos sont-elles incluses? Si une photo JPG est fournie, faut-il la
+    convertir automatiquement en WebP ou refuser le téléversement?
+
+   decision: il faut convertir en webP les photos, et les videos sont interdite, la taille max en jpg sont de 20mo.
 
 ## Point de cohérence documentaire
 
@@ -208,4 +257,6 @@ consignes?
 
 ## Règle de validation
 
-Chaque décision est validée par le responsable du projet et datée lors de son approbation. Toute décision non confirmée reste explicitement marquée À VALIDER et ne doit pas être considérée comme une exigence produit définitive.
+Chaque décision est validée par le responsable du projet et datée lors de son
+approbation. Toute décision non confirmée reste explicitement marquée À VALIDER
+et ne doit pas être considérée comme une exigence produit définitive.

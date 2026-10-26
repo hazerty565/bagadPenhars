@@ -9,20 +9,22 @@
 - Lecture du README, du brief, de l'architecture, de la spécification et des
   réponses renseignées dans `docs/questions.md`.
 - Mise à jour de `Spec.md` pour intégrer les décisions confirmées : langues
-  publiques, rôle secrétaire, invitations de sept jours, audiences
-  d'événements, sondages, fuseau horaire, médias, notifications, contact,
-  environnements Supabase et données vierges.
-- Ajout des questions complémentaires 20 à 26 dans `docs/questions.md` pour
-  les ambiguïtés encore bloquantes, notamment les profils, la langue privée,
-  la publication des événements par un chef, les sondages, les notifications,
-  la conservation et les limites de fichiers.
+  publiques et privées, rôle secrétaire, invitations de sept jours, droits
+  sur les profils et événements, sondages, fuseau horaire, médias,
+  notifications, contact Netlify Forms, environnements Supabase et données
+  vierges.
+- Mise à jour des décisions 20 à 26 dans `docs/questions.md`; ajout des
+  questions 27 à 29 sur les rôles créant les sondages et leurs audiences de
+  notification, la conservation/suppression et les limites/transformations
+  des médias.
 
 #### Reste à faire
 
-- Obtenir les réponses aux questions 20 à 26 avant d'implémenter les
+- Obtenir les réponses aux questions 27 à 29 avant d'implémenter les
   comportements concernés.
 - Harmoniser le README avec les décisions documentées, notamment les droits
-  d'invitation/approbation, le nombre de pupitres par membre et les rôles.
+  d'invitation/approbation, le nombre de pupitres par membre, les rôles et le
+  canal de notification.
 
 ### Spécification développeur
 
