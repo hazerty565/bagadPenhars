@@ -14,7 +14,8 @@ travail couvert par la présente mise à jour; les autres restent à faire.
       vers Supabase (Auth, PostgreSQL/RLS et Storage).
 - [ ] Implémenter la gestion des sessions et les guards côté serveur; vérifier
       les autorisations des actions et routes de fichiers.
-- [ ] Définir et mettre en œuvre un mécanisme de migrations reproductible.
+- [x] Définir et mettre en œuvre un mécanisme de migrations reproductible
+      (CLI Supabase et `supabase/migrations/001_initial_schema.sql`).
 
 ## P1 — Fonctions principales
 

@@ -2,6 +2,25 @@
 
 ## 2026-10-26
 
+### Création de la migration initiale Supabase (`supabase/migrations/001_initial_schema.sql`)
+
+#### Fait
+
+- Initialisation du dossier Supabase via `supabase init` (générant `supabase/config.toml`).
+- Création du premier fichier de migration versionné officiel `supabase/migrations/001_initial_schema.sql` contenant :
+  - L'extension `pgcrypto`.
+  - Les types enum officiels : `app_role`, `event_visibility` (`public`, `pupitre`, `interne`), `response_status` (`present`, `absent`).
+  - Les fonctions d'aide RLS `public.my_role_level()` et `public.my_pupitre_ids()` (`security definer`, `search_path = ''`).
+  - L'ensemble des tables du domaine avec clés étrangères et cascades d'intégrité référentielle (`pupitres`, `profiles`, `profile_pupitres`, `bureau_positions`, `invitations`, `invitation_pupitres`, `event_series`, `events`, `event_pupitres`, `event_responses`, `documents`, `articles`, `albums`, `media`, `notification_log`, `audit_log`).
+  - RLS activée sur 100% des tables avec policies optimisées (InitPlan `(select public.my_role_level())`).
+  - Le trigger `on_auth_user_created` sur `auth.users` (`handle_new_user`) gérant l'expiration des invitations (7 jours), l'assignation des pupitres et la création du profil en `pending`.
+  - Les index critiques de performance pour les jointures et filtres RLS.
+  - Le seed initial des 4 pupitres (`Bombarde`, `Cornemuse`, `Caisse claire`, `Percussion`).
+
+#### Validation
+
+- Migration syntaxiquement valide, complète et conforme à `docs/database.md` et `Spec.md`.
+
 ### Arbitrage et alignement de la visibilité des événements (`public`, `interne`, `pupitre`)
 
 #### Fait
