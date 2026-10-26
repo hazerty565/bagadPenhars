@@ -49,15 +49,11 @@ l'admin. Le pupitre ne peut pas être modifié par la personne invitée.
 - L'agenda public est en lecture seule. L'admin et la secrétaire peuvent créer
   des événements communs et des événements destinés au public. Un chef ne
   crée que des événements de son ou ses pupitres.
-- Les événements par pupitre sont indiqués comme visibles par tous les
-  membres approuvés dans la décision produit. La règle de lecture décrite dans
-  [la documentation de la base](./docs/database.md) limite toutefois cette
-  visibilité aux pupitres concernés. Cette divergence doit être tranchée et
-  répercutée dans les règles RLS avant l'implémentation.
-- Pour les événements, une réponse peut être « présent », « absent »,
-  « ne sait pas » ou rester sans réponse. Un sondage est lui-même l'événement
-  d'agenda, sans validation préalable, et ses réponses sont « présent » ou
-  « absent ».
+- La visibilité des événements comprend trois niveaux distincts :
+  `public` (visible par tous), `interne` (visible par tous les membres approuvés),
+  et `pupitre` (visible uniquement par les membres du ou des pupitres concernés).
+- Pour les événements et sondages, une réponse est obligatoirement « présent »
+  ou « absent » (ou reste sans réponse en l'absence de saisie).
 - Les partitions sont des PDF privés consultables par tous les membres
   approuvés, quel que soit leur pupitre. Les chefs déposent des partitions
   pour leur périmètre; la secrétaire et l'admin peuvent en déposer pour tous
@@ -87,17 +83,13 @@ notifications de sondage reste à valider.
 ## Points encore à décider
 
 Les réponses sont suffisamment claires pour les langues, les rôles,
-l'invitation, les profils, les formats de médias et le fournisseur de
-notifications. Les points suivants ne doivent pas être supposés :
+l'invitation, les profils, les formats de médias, la visibilité des événements
+(`public`, `interne`, `pupitre`) et les notifications de sondage. Les points
+suivants ne doivent pas être supposés :
 
-1. **Événements par pupitre :** choisir entre la décision « visibles par tous
-   les membres approuvés » et la règle RLS actuelle « visibles par les
-   pupitres concernés ».
-2. **Notifications de sondage :** confirmer les destinataires des notifications
-   automatiques.
-3. **Netlify Forms :** confirmer le calendrier de branchement et le mécanisme
+1. **Netlify Forms :** confirmer le calendrier de branchement et le mécanisme
    de confirmation à l'expéditeur.
-4. **Conservation et suppression :** fixer les durées de conservation des
+2. **Conservation et suppression :** fixer les durées de conservation des
    soumissions de contact, présences et journaux d'audit, ainsi que le
    processus de traitement d'une demande de suppression de compte.
 

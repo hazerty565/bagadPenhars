@@ -148,16 +148,19 @@ données le permet.
   publication; il est en lecture seule.
 - L'agenda privé comprend les répétitions et événements internes ainsi que les
   représentations.
-- Les réponses possibles sont présent, absent, ne sait pas ou aucune réponse.
+- Les réponses possibles sont `present` ou `absent` (ou aucune réponse).
 - L'identité de la personne qui répond vient de la session serveur.
-- Un sondage est lui-même l'événement correspondant dans l'agenda; il est créé
-  sans étape de validation ni création différée d'un second événement. Les
-  réponses au sondage sont présent ou absent. L'admin et la secrétaire peuvent
-  créer, modifier et supprimer des sondages publics ou privés. Un chef peut
-  gérer les événements, y compris les sondages, de son ou ses pupitres
-  uniquement.
-- Les événements par pupitre sont visibles par tous les membres approuvés.
-  Un chef ne peut créer que des événements pour son ou ses pupitres. L'admin
+- Un sondage est lui-même l'événement correspondant dans l'agenda; il est matérialisé
+  directement dans la table `events` au moyen d'un champ `is_poll BOOLEAN NOT NULL DEFAULT FALSE`
+  (la table `polls` est supprimée). Les réponses sont centralisées dans `event_responses`
+  avec les statuts uniques `present` ou `absent`. L'admin et la secrétaire peuvent créer,
+  modifier et supprimer des sondages publics ou privés. Un chef peut gérer les événements,
+  y compris les sondages, de son ou ses pupitres uniquement.
+- Les niveaux de visibilité d'un événement (`visibility`) sont stricts :
+  - `public` : visible par tout le monde (public non connecté et membres connectés).
+  - `interne` : visible par tous les membres connectés approuvés.
+  - `pupitre` : visible **uniquement** par les membres du ou des pupitres ciblés (ainsi que la secrétaire et l'admin).
+- Un chef ne peut créer et gérer que des événements pour son ou ses pupitres. L'admin
   et la secrétaire peuvent créer les événements internes communs, notamment
   les repas et répétitions générales privées, ainsi que les événements destinés
   à l'agenda public.
@@ -199,6 +202,11 @@ données le permet.
   serveur.
 - La première version utilise les notifications push OneSignal uniquement.
   L'arrivée d'un nouvel événement déclenche une notification automatique.
+- L'audience des notifications push de sondage dépend de sa portée :
+  - Sondage ciblé par pupitre : seuls les membres du ou des pupitres ciblés sont notifiés.
+  - Sondage interne commun : tous les membres du Bagad sont notifiés.
+  - Sondage public : tous les membres du Bagad sont notifiés.
+  - Seuls les membres ayant activé les notifications push sur leur appareil et n'ayant pas désactivé la préférence correspondante reçoivent le push.
 - Chaque membre peut configurer les notifications globalement, pour les
   rappels et pour les événements, et choisir de recevoir un rappel lorsqu'il
   n'a pas répondu au sondage d'un événement.
@@ -243,27 +251,23 @@ l'implémentation présentes : le dépôt peut contenir des choix antérieurs ou
 incomplets. Ne pas changer de fournisseur ni ajouter de service sans décision
 dans `docs/questions.md`.
 
-- Svelte 5 : utiliser `$state`, `$derived`, `$effect` et `$props`; ne pas
-  introduire `export let`, `$:` ou `on:click`.
-- Interface en français, mobile first, accessible au clavier et avec focus
-  visible; respecter `prefers-reduced-motion`.
-- Utiliser les composants, schémas de validation et conventions déjà présents
-  lorsque ceux-ci sont compatibles avec le brief.
-- Garder les accès base, stockage, emails et services tiers dans des modules
-  serveur.
-- Toute évolution de schéma se fait par une nouvelle migration; une migration
-  déjà appliquée ne se modifie pas.
-- Les environnements Supabase de développement, preview et production sont
-  distincts. L'accès à la production est réservé aux personnes autorisées et
-  des sauvegardes régulières sont obligatoires.
-- Le fuseau des événements est `Europe/Paris`.
-- Toute modification du manifest ou du service worker doit être répercutée
-  dans `docs/pwa.md`.
-- Les données métier sont gérées dans Supabase. Netlify sert à l'hébergement
-  et au formulaire de contact Netlify Forms; OneSignal sert aux notifications
-  push.
-- Documenter les décisions et écarts au brief au lieu de masquer un état
-  incomplet derrière une implémentation partielle.
+- Svelte 5 : utiliser exclusivement les runes (`$state`, `$derived`, `$effect`, `$props`). Ne pas introduire `export let`, `$:`, `on:click` (utiliser `onclick`), ni de stores Svelte legacy pour l'état local.
+- Formulaires et mutations : privilégier les actions SvelteKit (`+page.server.ts`) avec progressive enhancement (`use:enhance`), validation serveur systématique (schémas Zod/Standard Schema) et retours typés (`fail`, `success`).
+- Supabase SSR : intégration canonique via `@supabase/ssr` dans `src/hooks.server.ts` :
+  - Client serveur initialisé avec gestion complète des cookies (`getAll` / `setAll`).
+  - Helper `safeGetSession()` pour valider le JWT et charger l'utilisateur.
+  - Résolution du profil et des rôles en base (`public.profiles`) attachés à `event.locals.profile` et `event.locals.role`.
+  - Guards centralisés dans `src/lib/auth/guards.ts` appliqués dans `+layout.server.ts` ou `+page.server.ts`.
+  - La clé `service_role` est strictement confinée dans `src/lib/server/` pour les opérations administratives (`auth.admin`, logs d'audit).
+- Typage strict : génération et utilisation systématique des types Supabase (`Database`) via le CLI Supabase pour un typage de bout en bout.
+- Tailwind CSS : respect strict des tokens de thème du projet (couleurs, rayons, espacements). Approche mobile-first systématique (`sm:`, `md:`, `lg:`), focus rings visibles pour l'accessibilité clavier (`focus-visible:ring-2`), et gestion du mouvement réduit (`motion-reduce:`).
+- Interface : en français, mobile-first, conforme aux critères d'accessibilité (labels explicites, contrastes WCAG AA).
+- Dépendances & nettoyage : suppression immédiate des paquets et fichiers obsolètes (Better Auth, Kysely, pg, Netlify Blobs) afin de débloquer la CI (`check`, `lint`, `build`).
+- Données métier : entièrement gérées dans Supabase. Netlify sert uniquement à l'hébergement et aux Netlify Forms (contact); OneSignal aux notifications push.
+- Évolution du schéma : uniquement via de nouvelles migrations `supabase/migrations/NNN_*.sql`. Chaque migration active RLS et pose des policies explicites.
+- Environnements : séparation stricte de dev, preview et production. Aucun secret committé.
+- Fuseau horaire : `Europe/Paris` avec gestion automatique des décalages été/hiver.
+- PWA : service worker restreint aux assets statiques du build et à `/offline`. Aucune page privée ni requête Supabase en cache. Modification consignée dans `docs/pwa.md`.
 
 ## 7. Critères d'acceptation transversaux
 
@@ -289,10 +293,9 @@ Une fonctionnalité est livrable lorsque :
 Les décisions validées dans [`docs/questions.md`](./docs/questions.md) sont
 appliquées dans cette spécification. Les questions complémentaires qui restent
 ouvertes sont identifiées dans ce fichier et doivent être tranchées avant les
-fonctions concernées : audience des notifications de sondage, calendrier du
-branchement Netlify Forms et son mécanisme de confirmation à l'expéditeur,
-durées de conservation des données et traitement des demandes de suppression
-de compte.
+fonctions concernées : calendrier du branchement Netlify Forms et son mécanisme
+de confirmation à l'expéditeur, durées de conservation des données et
+traitement des demandes de suppression de compte.
 
 ## 9. État du dépôt à la préparation
 
@@ -394,10 +397,11 @@ incluant jeton invalide, expiré, déjà utilisé et email non concordant.
 - Enregistrer au plus une réponse par membre et événement. L'identité du
   répondant vient de la session; la réponse est modifiable ou supprimable
   uniquement par son propriétaire.
-- Implémenter les sondages comme des événements avec réponses présent/absent,
-  sans étape de validation préalable. L'admin et la secrétaire peuvent les
-  créer, modifier et supprimer dans les audiences publique ou privée; un chef
-  a ces droits uniquement pour les événements de son ou ses pupitres.
+- Implémenter les sondages directement dans la table `events` avec `is_poll: boolean`
+  et enregistrer les réponses dans `event_responses` avec le statut strict `present` ou `absent`
+  (type `response_status`), sans table `polls` distincte ni étape de validation préalable.
+  L'admin et la secrétaire peuvent les créer, modifier et supprimer dans les audiences publique
+  ou privée; un chef a ces droits uniquement pour les événements de son ou ses pupitres.
 - Valider les dates, fuseaux horaires, heures de fin et événements récurrents.
 
 **Livrable :** tests de visibilité public/privé, permissions par rôle,

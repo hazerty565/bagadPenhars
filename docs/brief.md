@@ -57,8 +57,8 @@ Les comptes ne se créent pas librement :
 
 - **Connexion** et **Dashboard** avec profil de l'utilisateur.
 - **Agenda privé** : répétitions et événements internes, en plus des représentations.
-- **Réponse aux événements** : oui / non / ne sait pas, ou pas de réponse.
-- **Sondages de répétition** : chaque membre répond présent / absent / ne sait pas ; un sondage crée automatiquement l'événement d'agenda correspondant.
+- **Réponse aux événements** : présent / absent (ou pas de réponse).
+- **Sondages de répétition** : chaque membre répond présent / absent ; le sondage est directement l'événement d'agenda.
 - **Partitions / documents** : PDF déposés par les chefs de pupitre, visibles selon le pupitre.
 - **Notifications** (OneSignal) : envoyées par la secrétaire (plusieurs pupitres) ou un chef de pupitre (son pupitre).
 

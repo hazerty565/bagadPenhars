@@ -23,8 +23,8 @@ développement ou en production.
 
 ```sql
 create type app_role as enum ('pending', 'member', 'chef_pupitre', 'secretaire', 'admin');
-create type event_visibility as enum ('public', 'members', 'pupitre');
-create type response_status as enum ('yes', 'no', 'maybe');
+create type event_visibility as enum ('public', 'pupitre', 'interne');
+create type response_status as enum ('present', 'absent');
 ```
 
 Niveaux utilisés par `my_role_level()` :
@@ -70,11 +70,12 @@ Un utilisateur sans profil obtient `null` : toute comparaison `>= n` est fausse,
 | `pupitres` | bombarde, cornemuse, caisse claire, percussion |
 | `profile_pupitres` | Liaison membre ↔ pupitres (plusieurs possibles) |
 | `bureau_positions` | Titres du bureau historisés (honorifiques, aucun droit) |
-| `invitations` | Invitation envoyée : email, nom, prénom, pupitre, auteur |
+| `invitations` | Invitation envoyée : email, nom, prénom, auteur, validité 7 jours |
+| `invitation_pupitres` | Pupitres attribués à l'invité |
 | `event_series` | Séries récurrentes (règle `rrule`) |
-| `events` | Représentations et répétitions, avec `visibility` et `pupitre_id` |
-| `event_responses` | Réponse d'un membre à un événement (`yes` / `no` / `maybe`) |
-| `polls`, `poll_responses` | Sondages de répétition ; un sondage crée l'événement d'agenda |
+| `events` | Représentations, répétitions et sondages (`is_poll`), avec `visibility` |
+| `event_pupitres` | Liaison événement ↔ pupitres ciblés (quand `visibility = 'pupitre'`) |
+| `event_responses` | Réponse d'un membre à un événement ou sondage (`present` / `absent`) |
 | `documents` | Partitions PDF, rattachées à un pupitre |
 | `articles` | Actualités, avec `published` |
 | `albums`, `media` | Albums photo et médias |
@@ -92,10 +93,10 @@ L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses prop
 | `profile_pupitres` | – | L soi | L pup. | L/E | L/E |
 | `bureau_positions` | – | L soi | L soi | L/E | L/E |
 | `invitations` | – | – | – | L/E | L/E |
-| `events` | L si `public` | L `public`, `members`, `pupitre` | L mêmes événements; + E pour son pup. | L/E tous | L/E tous |
-| `event_responses` | – | L/E soi | L pup. | L tous | L tous |
-| `polls` | – | L | L, E pour son pup. | L/E | L/E |
-| `poll_responses` | – | L/E soi | L pup. | L tous | L tous |
+| `invitation_pupitres` | – | – | – | L/E | L/E |
+| `events` | L si `public` | L si `public`, `interne`, ou son pupitre | L idem membre; + E pour son pup. | L/E tous | L/E tous |
+| `event_pupitres` | – | L si événement accessible | L si événement accessible | L/E | L/E |
+| `event_responses` | – | L/E soi | L pup. | L tous, E présences | L tous, E présences |
 | `documents` | – | L tous | L tous, E son pup. | L/E tous | L/E tous |
 | `articles` | L si `published` | L si `published` | L si `published` | L/E tous | L/E tous |
 | `albums`, `media` | L si public | L | L | L/E | L/E |
@@ -105,6 +106,8 @@ L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses prop
 Les écritures de `notification_log` et `audit_log` passent uniquement par le serveur (`service_role`) : aucune policy d'écriture pour les rôles `anon` et `authenticated`.
 
 ## 6. Policies : modèles à suivre
+
+> **Règle de performance d'expert** : toujours encapsuler les appels de fonctions de rôle sous forme de sous-requête scalaire `(select public.my_role_level())`. Cela permet à l'optimiseur de requêtes PostgreSQL de l'évaluer une seule fois pour toute la requête (InitPlan) plutôt que tuple par tuple (SubPlan).
 
 ### Table publique filtrée (`articles`)
 
@@ -119,13 +122,13 @@ using (published = true);
 create policy "articles: lecture complète secrétaire+"
 on public.articles for select
 to authenticated
-using (public.my_role_level() >= 3);
+using ((select public.my_role_level()) >= 3);
 
 create policy "articles: écriture secrétaire+"
 on public.articles for all
 to authenticated
-using (public.my_role_level() >= 3)
-with check (public.my_role_level() >= 3);
+using ((select public.my_role_level()) >= 3)
+with check ((select public.my_role_level()) >= 3);
 ```
 
 ### Table mixte public / privé (`events`)
@@ -133,48 +136,112 @@ with check (public.my_role_level() >= 3);
 ```sql
 alter table public.events enable row level security;
 
+-- 1. Événements publics : consultables par tous (visiteurs et membres connectés)
 create policy "events: représentations publiques"
 on public.events for select
 to anon, authenticated
 using (visibility = 'public');
 
-create policy "events: membres"
+-- 2. Événements internes : consultables par tous les membres connectés approuvés
+create policy "events: lecture interne membres"
 on public.events for select
 to authenticated
 using (
-  public.my_role_level() >= 1
-  and visibility in ('members', 'pupitre')
+  visibility = 'interne'
+  and (select public.my_role_level()) >= 1
+);
+
+-- 3. Événements par pupitre : uniquement les membres du/des pupitre(s) ciblés, ou secrétaire/admin
+create policy "events: lecture pupitre ciblé"
+on public.events for select
+to authenticated
+using (
+  visibility = 'pupitre'
+  and (
+    (select public.my_role_level()) >= 3
+    or (
+      (select public.my_role_level()) >= 1
+      and exists (
+        select 1 from public.event_pupitres ep
+        where ep.event_id = events.id
+        and ep.pupitre_id in (select public.my_pupitre_ids())
+      )
+    )
+  )
 );
 
 create policy "events: écriture secrétaire+"
 on public.events for all
 to authenticated
-using (public.my_role_level() >= 3)
-with check (public.my_role_level() >= 3);
+using ((select public.my_role_level()) >= 3)
+with check ((select public.my_role_level()) >= 3);
 
 create policy "events: écriture chef de pupitre sur son pupitre"
 on public.events for all
 to authenticated
 using (
-  public.my_role_level() = 2
+  (select public.my_role_level()) = 2
   and visibility = 'pupitre'
-  and pupitre_id in (select public.my_pupitre_ids())
+  and exists (
+    select 1 from public.event_pupitres ep
+    where ep.event_id = events.id
+    and ep.pupitre_id in (select public.my_pupitre_ids())
+  )
 )
 with check (
-  public.my_role_level() = 2
+  (select public.my_role_level()) = 2
   and visibility = 'pupitre'
-  and pupitre_id in (select public.my_pupitre_ids())
+  and exists (
+    select 1 from public.event_pupitres ep
+    where ep.event_id = events.id
+    and ep.pupitre_id in (select public.my_pupitre_ids())
+  )
 );
 ```
 
-### Lignes personnelles (`event_responses`)
+### Réponses aux événements et sondages (`event_responses`)
 
 ```sql
-create policy "responses: lecture et écriture de soi"
-on public.event_responses for all
+alter table public.event_responses enable row level security;
+
+-- Lecture : soi-même, secrétaire/admin, ou chef pour les événements de son pupitre
+create policy "responses: lecture soi, chef et secretaire"
+on public.event_responses for select
 to authenticated
-using (profile_id = (select auth.uid()) and public.my_role_level() >= 1)
-with check (profile_id = (select auth.uid()) and public.my_role_level() >= 1);
+using (
+  profile_id = (select auth.uid())
+  or (select public.my_role_level()) >= 3
+  or (
+    (select public.my_role_level()) = 2
+    and exists (
+      select 1 from public.event_pupitres ep
+      where ep.event_id = event_responses.event_id
+      and ep.pupitre_id in (select public.my_pupitre_ids())
+    )
+  )
+);
+
+-- Insertion : le membre enregistre sa propre réponse
+create policy "responses: insertion soi"
+on public.event_responses for insert
+to authenticated
+with check (
+  profile_id = (select auth.uid())
+  and (select public.my_role_level()) >= 1
+);
+
+-- Modification : le membre modifie sa réponse, ou la secrétaire/admin pointe les présences réelles
+create policy "responses: modification soi ou secretaire"
+on public.event_responses for update
+to authenticated
+using (
+  (profile_id = (select auth.uid()) and (select public.my_role_level()) >= 1)
+  or (select public.my_role_level()) >= 3
+)
+with check (
+  (profile_id = (select auth.uid()) and (select public.my_role_level()) >= 1)
+  or (select public.my_role_level()) >= 3
+);
 ```
 
 ### Profils : protéger la colonne `role`
@@ -183,41 +250,56 @@ Un membre peut modifier son profil, **pas son rôle**.
 
 ```sql
 revoke update on public.profiles from authenticated;
-grant update (first_name, last_name, avatar_path, phone) on public.profiles to authenticated;
+grant update (first_name, last_name, phone) on public.profiles to authenticated;
 ```
 
-Le changement de rôle passe par une policy ou une fonction réservée à l'admin (niveau 4), jamais par un `update` libre.
+Le changement de rôle passe par une fonction réservée à l'admin (niveau 4), jamais par un `update` libre.
 
-## 7. Création de compte
+## 7. Création de compte et trigger d'invitation
 
-1. Un admin ou une secrétaire crée une ligne dans `invitations` (email, nom, prénom, pupitre) puis déclenche l'invitation côté serveur (`auth.admin.inviteUserByEmail`).
-2. Un trigger sur `auth.users` crée le profil en `pending` et lit le nom et le pupitre dans **`invitations`** (jamais dans `user_metadata`).
+1. Un admin ou une secrétaire crée une ligne dans `invitations` (email, nom, prénom) et y associe un ou plusieurs pupitres dans `invitation_pupitres`, puis déclenche l'invitation côté serveur (`auth.admin.inviteUserByEmail`).
+2. Un trigger `after insert` sur `auth.users` :
+   - Vérifie la présence d'une invitation valide pour `new.email` (`used_at is null` et `created_at > now() - interval '7 days'`). Si aucune invitation valide n'existe, lève une exception (`raise exception 'Invitation invalide ou expirée'`).
+   - Crée le profil dans `public.profiles` (`id = new.id`, `role = 'pending'`).
+   - Associe l'utilisateur à ses pupitres dans `public.profile_pupitres` en copiant ceux de `invitation_pupitres`.
+   - Marque l'invitation comme utilisée (`used_at = now()`).
 3. L'invité crée son mot de passe. Il reste `pending`, sans accès à l'espace adhérents.
 4. Un admin ou une secrétaire passe le profil à `member`.
 
 ## 8. Storage
 
+> **Règle V1** : aucun avatar n'est téléversé (affichage des initiales du prénom et nom). Le bucket `bagad-avatars` est exclu de la V1 pour éviter tout stockage inutile.
+
 | Bucket | Accès |
 |---|---|
-| `bagad-avatars` | Lecture : membres ; écriture : propriétaire dans son dossier (`<uid>/…`) |
-| `bagad-partitions` | **Privé** ; lecture : tous les membres (tous pupitres) ; écriture : chef de pupitre (son pup.), secrétaire+ |
+| `bagad-partitions` | **Privé** ; lecture : tous les membres approuvés (tous pupitres) ; écriture : chef de pupitre (son pup.), secrétaire+ |
 | `bagad-medias` | Lecture publique ; écriture : secrétaire+ |
 
 Chaque bucket a ses policies sur `storage.objects`, avec la même rigueur que les tables.
 
 ## 9. Migrations
 
-- Dossier `supabase/migrations/`, fichiers numérotés et horodatés.
+- Dossier `supabase/migrations/`, fichiers numérotés et horodatés (`NNN_*.sql`).
 - Une migration = un sujet (ex. `006_events_rls.sql`).
 - Chaque `create table` est suivi, **dans la même migration**, de `enable row level security` et de ses policies.
+- Clés étrangères avec `on delete cascade` explicite sur les tables enfants (`event_pupitres`, `event_responses`, `profile_pupitres`) et `on delete restrict` sur les tables de référence (`pupitres`).
 - Jamais d'édition manuelle en production sans migration correspondante.
 
 ## 10. Checklist : ajouter une table
 
 - [ ] `enable row level security`
-- [ ] Policies de lecture et d'écriture écrites explicitement
+- [ ] Policies de lecture et d'écriture écrites explicitement (scinder `select`, `insert`, `update` si les droits diffèrent)
+- [ ] Encapsuler les fonctions RLS dans `(select public.my_role_level())` pour l'optimisation InitPlan
 - [ ] Table publique : filtre sur une colonne (`published`, `visibility`)
-- [ ] Index sur les colonnes utilisées dans les policies (`profile_id`, `pupitre_id`)
+- [ ] Index sur les colonnes utilisées dans les policies :
+  ```sql
+  create index idx_profiles_role on public.profiles(role);
+  create index idx_profile_pupitres on public.profile_pupitres(profile_id, pupitre_id);
+  create index idx_event_pupitres on public.event_pupitres(event_id, pupitre_id);
+  create index idx_events_lookup on public.events(visibility, is_poll);
+  create index idx_event_responses on public.event_responses(event_id, profile_id);
+  create index idx_invitations_email on public.invitations(email);
+  ```
 - [ ] `(select auth.uid())` plutôt que `auth.uid()` nu (meilleures performances)
 - [ ] Ligne ajoutée dans la matrice (§5) et dans la liste des tables (§4)
 - [ ] Test ci-dessous ajouté
@@ -245,5 +327,8 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
 
 - **Pas d'annuaire** : un membre ne voit pas la liste des autres membres. `profiles` n'est lisible que par son propriétaire et par la secrétaire / l'admin. Un chef de pupitre voit les réponses de son pupitre via `event_responses` et `profile_pupitres` (nom et réponse uniquement), sans accès au reste des profils.
 - **Titres du bureau non publics** : aucune policy de lecture pour `anon`. Un membre ne voit que ses propres titres.
-- **Événements par pupitre** : tous les membres approuvés peuvent lire les événements ciblés par pupitre. Un chef ne peut créer et gérer des événements que pour son ou ses pupitres; seuls l'admin et la secrétaire créent les événements communs internes ou destinés à l'agenda public.
+- **Événements et visibilité (`public`, `interne`, `pupitre`)** :
+  - `public` : visible par tous (visiteurs non connectés et membres).
+  - `interne` : visible par tous les membres connectés approuvés.
+  - `pupitre` : visible **uniquement** par les membres du ou des pupitres ciblés (ainsi que la secrétaire et l'admin). Un chef de pupitre ne crée et ne gère que les événements de son ou ses pupitres.
 - **Documents partagés entre pupitres** : tous les membres lisent tous les documents ; seul le chef de pupitre (son pupitre), la secrétaire et l'admin peuvent écrire.

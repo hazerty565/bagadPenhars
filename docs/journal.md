@@ -2,6 +2,100 @@
 
 ## 2026-10-26
 
+### Arbitrage et alignement de la visibilité des événements (`public`, `interne`, `pupitre`)
+
+#### Fait
+
+- Intégration de la règle de visibilité décidée par le client :
+  - `public` : visible par tous (visiteurs non connectés et membres connectés).
+  - `interne` : visible par tous les membres connectés approuvés.
+  - `pupitre` : visible **exclusivement** par les membres du ou des pupitres ciblés (et la secrétaire/admin).
+- Alignement du type enum PostgreSQL `event_visibility as enum ('public', 'pupitre', 'interne')`.
+- Mise à jour des policies RLS de lecture dans `docs/database.md` scindant distinctement ces 3 cas.
+- Résolution définitive de l'ancienne divergence dans `README.md`, `Spec.md` (§4.4), `docs/brief.md` et `docs/questions.md` (Question 22).
+
+#### Validation
+
+- Chaîne documentaire entièrement alignée et sans ambiguïté.
+
+### Simplification stricte de `response_status` (`present` / `absent`)
+
+#### Fait
+
+- Mise à jour du type enum PostgreSQL `response_status` dans `docs/database.md` pour restreindre strictement les valeurs autorisées à `('present', 'absent')` (suppression de `yes`, `no`, `maybe`).
+- Harmonisation corrélative dans `Spec.md` (§4.4 et §10 Étape D) et `docs/questions.md` (Question 30).
+
+#### Validation
+
+- Cohérence vérifiée sur l'ensemble de la documentation.
+
+### Améliorations expertes de l'architecture de données (`docs/database.md`)
+
+#### Fait
+
+- Mise à jour de `docs/database.md` suite à l'audit senior Supabase & PostgreSQL :
+  - **Multi-pupitres** : Ajout formel de la table de liaison `event_pupitres` (au lieu d'un `pupitre_id` unique) et de `invitation_pupitres` dans le schéma et la matrice des droits.
+  - **RLS `event_responses`** : Découpage complet des policies (`select`, `insert`, `update`) pour autoriser la lecture par le chef de pupitre (`my_pupitre_ids()`) et la secrétaire/admin, et permettre le pointage des présences réelles.
+  - **Performance InitPlan** : Encapsulation systématique des fonctions de rôle dans `(select public.my_role_level())` dans toutes les policies.
+  - **Storage V1** : Retrait du bucket `bagad-avatars` de la V1 conformément aux décisions validées (initiales uniquement).
+  - **Trigger d'inscription** : Précision du contrôle d'expiration d'invitation (7 jours) et de la copie des pupitres vers `profile_pupitres`.
+  - **Indexation & Cascades** : Ajout de la checklist des index critiques RLS et des directives `ON DELETE CASCADE` / `RESTRICT`.
+
+#### Validation
+
+- `docs/database.md` complet, rigoureux et prêt pour l'écriture des migrations Supabase.
+
+### Validation de la question 30 (Modélisation des sondages dans `events`)
+
+#### Fait
+
+- Intégration de la décision validée par le client pour la Question 30 dans `docs/questions.md`.
+- Unification du modèle : suppression de la table `polls` au profit du champ `is_poll BOOLEAN NOT NULL DEFAULT FALSE` dans la table `events`.
+- Centralisation des réponses dans `event_responses`, avec distinction des intentions de présence (`yes` / `no` / `maybe`) et des présences réelles (`present` / `absent`).
+- Mise à jour corrélative de `docs/database.md` (§2 types, §4 tables, §5 matrice des droits) et de `Spec.md` (§4.4 et §10 Étape D).
+
+#### Validation
+
+- Cohérence vérifiée sur l'ensemble de la chaîne documentaire (`questions.md`, `database.md`, `Spec.md`).
+
+### Validation de la question 27 (Audience des notifications de sondage)
+
+#### Fait
+
+- Intégration de la décision validée par le client pour la Question 27 dans `docs/questions.md`.
+- L'audience des push dépend désormais formellement de la portée du sondage : pupitre ciblé uniquement pour les sondages de pupitre, tous les membres pour les sondages internes et publics, sous réserve des préférences activées.
+- Mise à jour corrélative de `Spec.md` (§4.6 et §8).
+
+#### Validation
+
+- Alignement complet entre `docs/questions.md` et `Spec.md`.
+
+### Nettoyage et réinitialisation de `package.json`
+
+#### Fait
+
+- Réinitialisation et assainissement de `package.json` : suppression de 12+ dépendances obsolètes ou inutilisées (`better-auth`, `kysely`, `pg`, `@types/pg`, `@netlify/blobs`, `nodemailer`, `@types/nodemailer`, `@tiptap/*`, `leaflet`, `svelte-i18n`, `sveltekit-superforms`, `@sveltejs/adapter-static`).
+- Ajout des dépendances officielles de la stack cible : `@supabase/supabase-js`, `@supabase/ssr`, et conservation de `lucide-svelte` et `zod`.
+- Déplacement de `@sveltejs/adapter-netlify` dans `devDependencies` conformément aux conventions SvelteKit.
+- Neutralisation de l'import erroné de `@better-auth/infra` dans `src/lib/auth/auth.ts`.
+
+#### Validation
+
+- `package.json` valide, minimal et aligné sur les règles de `AGENTS.md` et `Spec.md`.
+
+### Revue des spécifications pour développeur senior & ouverture des arbitrages
+
+#### Fait
+
+- Revue complète de `Spec.md`, `README.md`, `AGENTS.md` et de l'ensemble du dossier `docs/` dans une posture de Chef de Projet pour un développeur senior (5 ans d'expérience SvelteKit 5 runes, Tailwind, Supabase).
+- Enrichissement de la section 6 de `Spec.md` avec des directives techniques concrètes : contrats `@supabase/ssr` dans les hooks, gestion rigoureuse des runes (`$state`, `$derived`, `$props`), formulaires avec `use:enhance`, tokens Tailwind et A11y (`focus-visible`, `motion-reduce`).
+- Ajout des questions 30 (unification des sondages dans la table `events`) et 31 (purge des dépendances legacy Better Auth / Kysely / pg / Netlify Blobs) dans `docs/questions.md`.
+
+#### Validation
+
+- `git diff --check` vérifié sans incohérence.
+- Aucune régression sur les documents de référence.
+
 ### Alignement des policies documentées pour les événements
 
 #### Fait

@@ -1,9 +1,2 @@
-import { dash } from "@better-auth/infra";
-
-export const auth = betterAuth({
-  // ... your existing config
-  plugins: [
-    // ... other plugins
-    dash()
-  ]
-})
+// Ce module accueillera les utilitaires d'authentification Supabase SSR.
+export {};

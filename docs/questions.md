@@ -182,11 +182,13 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     l'admin et à la secrétaire. « Tout le monde » désigne-t-il tous les membres
     ou le site public? Un chef peut-il publier un événement sur le site public?
 
-    Décision : l'agenda public est consultable sans connexion. Les événements
-    ciblés par pupitre sont visibles par tous les membres approuvés; un chef ne
-    crée que des événements concernant son ou ses pupitres. L'admin et la
-    secrétaire créent les événements communs internes (par exemple repas ou
-    répétition générale privée) et les événements destinés à l'agenda public.
+    Décision : La visibilité est structurée en 3 niveaux stricts (`public`, `interne`, `pupitre`) :
+    - `public` : visible par tout le monde (visiteurs non connectés et membres connectés).
+    - `interne` : visible par tous les membres connectés approuvés.
+    - `pupitre` : visible **uniquement** par les membres du ou des pupitres ciblés (ainsi que secrétaire et admin).
+    Un chef ne crée que des événements concernant son ou ses pupitres. L'admin et la
+    secrétaire créent les événements internes communs (repas, répétition générale privée)
+    et les représentations destinées à l'agenda public. Validé le 2026-10-26.
 
 23. **Sondages** — les sondages sont-ils des événements et nécessitent-ils une
     validation préalable? Qui peut les modifier ou les supprimer?
@@ -229,10 +231,19 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     push d'un sondage est-elle envoyée : tous les membres, les membres du
     pupitre ciblé, ou seulement ceux qui ont activé cette préférence?
 
-    Décision : l'admin et la secrétaire peuvent créer, modifier et supprimer
-    des sondages publics ou privés. Un chef peut créer, modifier et supprimer
-    les événements, y compris les sondages, de son ou ses pupitres.
-    Statut : l'audience des notifications de sondage reste À VALIDER.
+    Décision : VALIDÉE (le 2026-10-26)
+
+    L'audience des notifications push dépend de la portée du sondage :
+
+    - **Sondage de pupitre :** seuls les membres du ou des pupitres ciblés sont notifiés.
+    - **Sondage interne :** tous les membres du Bagad sont notifiés.
+    - **Sondage public :** tous les membres du Bagad sont notifiés.
+
+    Les notifications push sont envoyées uniquement aux membres concernés qui ont activé les notifications sur leur appareil et n'ont pas désactivé la préférence correspondante.
+
+    Les droits de consultation du sondage restent distincts des préférences de notification : la notification ne confère aucun droit d'accès supplémentaire.
+
+    Les règles de création, de modification et de suppression restent celles définies dans les décisions relatives aux rôles et aux événements.
 
 28. **Conservation et suppression** — quelle durée de conservation appliquer
     aux soumissions Netlify Forms, présences et journaux d'audit? Quel processus
@@ -252,6 +263,34 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
 29. **Médias** — décision : refuser les vidéos; accepter les photos source
     JPG/JPEG jusqu'à 20 Mo et les convertir en WebP. Aucun avatar téléversé
     pour la première version; afficher les initiales.
+
+30. **Modélisation des sondages (`events` vs `polls`)** — la décision 23 indique
+    que « le sondage est lui-même l'événement d'agenda ». Pourtant, la
+    documentation de la base (`docs/database.md`) mentionnait encore deux tables
+    distinctes `polls` et `poll_responses`.
+
+    **Statut : VALIDÉE** (le 2026-10-26)
+
+    **Décision :** le sondage est lui-même un événement d'agenda. Les sondages et les événements classiques sont donc regroupés dans la table `events`, au moyen d'un champ `is_poll BOOLEAN NOT NULL DEFAULT FALSE`.
+
+    La table `polls` est supprimée au profit de `events`. La table `poll_responses` est remplacée par `event_responses`, sous réserve de vérifier la compatibilité des données et des contraintes existantes.
+
+    Les réponses utilisent exclusivement les statuts `present` et `absent` (`create type response_status as enum ('present', 'absent');`).
+
+    La portée du sondage (pupitre, interne ou public) est distincte de son type (`is_poll`) et détermine son audience et ses règles d'accès :
+
+    - **Pupitre :** notification aux membres des pupitres ciblés.
+    - **Interne :** notification à tous les membres du Bagad.
+    - **Public :** notification à tous les membres du Bagad.
+
+    Les règles de permissions et de notifications définies dans les autres décisions restent applicables.
+
+    **Consignes techniques :** avant toute migration, le développeur doit examiner `docs/database.md`, le schéma réel, les données existantes, les clés étrangères, les contraintes, les policies RLS et le code applicatif. Il doit mettre à jour la documentation et proposer une migration cohérente, sans perte de données ni régression fonctionnelle.
+31. **Nettoyage immédiat du socle technique (legacy)** — le dépôt contenait
+    encore les packages et fichiers de Better Auth, Kysely, pg et Netlify
+    Blobs.
+    Décision : package.json nettoyé et réinitialisé comme un projet vierge avec
+    les dépendances officielles Supabase SSR, et purge du legacy. Validé le 2026-10-26.
 
 ## Règle de validation
 

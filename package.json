@@ -1,5 +1,5 @@
 {
-	"name": "bagadPenhars",
+	"name": "bagad-penhars",
 	"private": true,
 	"version": "1.0.0",
 	"type": "module",
@@ -18,13 +18,10 @@
 	"devDependencies": {
 		"@eslint/compat": "^2.0.4",
 		"@eslint/js": "^10.0.1",
-		"@sveltejs/adapter-static": "^2.0.0",
+		"@sveltejs/adapter-netlify": "^7.0.1",
 		"@sveltejs/kit": "^2.57.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
-		"@types/leaflet": "^1.9.0",
-		"@types/nodemailer": "^7.0.4",
 		"@types/node": "^22",
-		"@types/pg": "^8.15.5",
 		"@vitest/browser-playwright": "^4.1.3",
 		"autoprefixer": "^10.4.16",
 		"eslint": "^10.2.0",
@@ -41,27 +38,13 @@
 		"typescript": "^6.0.2",
 		"typescript-eslint": "^8.58.1",
 		"vite": "^8.0.7",
-		"vite-plugin-pwa": "^0.17.0",
 		"vitest": "^4.1.3",
 		"vitest-browser-svelte": "^2.1.0"
 	},
 	"dependencies": {
-		"@netlify/blobs": "^11.1.4",
-		"@sveltejs/adapter-netlify": "^7.0.1",
-		"@tiptap/extension-link": "^2.0.0",
-		"@tiptap/extension-placeholder": "^2.0.0",
-		"@tiptap/extension-task-item": "^2.0.0",
-		"@tiptap/extension-task-list": "^2.0.0",
-		"@tiptap/pm": "^2.0.0",
-		"@tiptap/starter-kit": "^2.0.0",
-		"better-auth": "^1.7.7",
-		"kysely": "^0.28.9",
-		"leaflet": "^1.9.0",
+		"@supabase/ssr": "^0.5.2",
+		"@supabase/supabase-js": "^2.49.1",
 		"lucide-svelte": "^1.0.1",
-		"nodemailer": "^10.1.0",
-		"pg": "^8.16.3",
-		"svelte-i18n": "^4.0.0",
-		"sveltekit-superforms": "^2.30.1",
-		"zod": "^4.4.3"
+		"zod": "^3.24.2"
 	}
 }
