@@ -74,22 +74,28 @@ end;
 $$;
 
 -- 3. Demandes de suppression de compte : la trace survit au compte.
--- La demande est la preuve de traitement (journal RGPD) : le profil est
--- détaché (set null) au lieu d'être supprimé en cascade, et un snapshot
--- d'identité est copié à la création.
+-- La demande est détachée du profil (profile_id devient NULL) lors de sa
+-- suppression, tandis que le snapshot d'identité conserve la trace.
 alter table public.account_deletion_requests
   add column if not exists snapshot_email text,
   add column if not exists snapshot_name text;
 
+-- Autorise profile_id à devenir NULL lorsque le profil est supprimé.
+alter table public.account_deletion_requests
+  alter column profile_id drop not null;
+
+-- Recrée la clé étrangère avec ON DELETE SET NULL.
 alter table public.account_deletion_requests
   drop constraint if exists account_deletion_requests_profile_id_fkey;
 
 alter table public.account_deletion_requests
   add constraint account_deletion_requests_profile_id_fkey
-  foreign key (profile_id) references public.profiles(id) on delete set null;
+  foreign key (profile_id)
+  references public.profiles(id)
+  on delete set null;
 
 -- 3b. Snapshot automatique à la création de la demande.
--- Interdit aussi à l'utilisateur de fournir lui-même les valeurs du snapshot.
+-- Écrase les valeurs fournies par le client lorsque profile_id est renseigné.
 create or replace function public.fill_account_deletion_snapshot()
 returns trigger
 language plpgsql
@@ -110,6 +116,7 @@ $$;
 
 drop trigger if exists account_deletion_requests_fill_snapshot
   on public.account_deletion_requests;
+
 create trigger account_deletion_requests_fill_snapshot
   before insert on public.account_deletion_requests
   for each row execute function public.fill_account_deletion_snapshot();
