@@ -8,7 +8,7 @@ répondre aux événements et gérer son profil.
 > **État du projet :** les décisions ci-dessous décrivent la cible produit,
 > pas nécessairement des fonctions déjà opérationnelles. L'intégration
 > Supabase et plusieurs parcours restent à développer. Consultez
-> [la spécification](./Spec.md) et [l'architecture](./docs/architecture.md)
+> [la spécification](./docs/Spec.md) et [l'architecture](./docs/architecture.md)
 > avant de considérer un parcours comme livré.
 
 ## Décisions produit
@@ -160,8 +160,10 @@ Consultez [la feuille de route](./docs/roadmap.md) et
 ## Documents de référence
 
 - [Brief produit](./docs/brief.md) — besoin et périmètre.
-- [Spécification développeur](./Spec.md) — rôles, règles fonctionnelles et
+- [Spécification développeur](./docs/Spec.md) — rôles, règles fonctionnelles et
   critères d'acceptation.
+- [Spécification UI](./docs/Spec_UI.md) — structure des pages et composants de
+  l'interface.
 - [Architecture](./docs/architecture.md) — routes et flux.
 - [Base de données](./docs/database.md) — schéma cible, RLS et droits.
 - [PWA](./docs/pwa.md) — cache et notifications.

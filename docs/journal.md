@@ -1,5 +1,30 @@
 # Journal
 
+## 2026-10-27
+
+### Référencement de la spécification UI
+
+#### Fait
+
+- Ajout de `docs/Spec_UI.md` aux documents de référence du README pour
+  distinguer la spécification de l'interface de la spécification développeur.
+- Aucun changement apporté au contenu de la spécification UI.
+
+#### Validation
+
+- Vérification du lien vers `docs/Spec_UI.md` dans le README.
+
+### Déplacement de la spécification développeur
+
+#### Fait
+
+- Déplacement de `Spec.md` vers `docs/Spec.md`.
+- Mise à jour des références dans `AGENTS.md`, `README.md` et ce journal.
+
+#### Validation
+
+- Vérification des références au nouvel emplacement et de l'état Git.
+
 ## 2026-10-26
 
 ### Création de la migration initiale Supabase (`supabase/migrations/001_initial_schema.sql`)
@@ -129,7 +154,7 @@
 
 #### Validation
 
-- Relecture des formulations de la question 22, de `Spec.md` et de la policy
+- Relecture des formulations de la question 22, de `docs/Spec.md` et de la policy
   documentée pour vérifier leur cohérence.
 - `git diff --check` réussit. `npm run check` et `npm run build` échouent sur
   des erreurs Svelte/TypeScript préexistantes; `npm run lint` s'arrête sur des
@@ -141,7 +166,7 @@
 
 - Renommage de `docs/Pwa.MD` en `docs/pwa.md`, conformément aux références
   dans `AGENTS.md`.
-- Mise à jour des liens et références dans `README.md` et `Spec.md`, puis
+- Mise à jour des liens et références dans `README.md` et `docs/Spec.md`, puis
   retrait de la question documentaire désormais résolue.
 
 #### Validation
@@ -168,7 +193,7 @@
 
 #### Validation
 
-- Relecture croisée du README avec `Spec.md`, `docs/questions.md`,
+- Relecture croisée du README avec `docs/Spec.md`, `docs/questions.md`,
   `docs/architecture.md`, `docs/database.md` et `package.json`.
 - Documentation uniquement : aucune commande de validation applicative
   exécutée.
@@ -179,7 +204,7 @@
 
 - Lecture du README, du brief, de l'architecture, de la spécification et des
   réponses renseignées dans `docs/questions.md`.
-- Mise à jour de `Spec.md` pour intégrer les décisions confirmées : langues
+- Mise à jour de `docs/Spec.md` pour intégrer les décisions confirmées : langues
   publiques et privées, rôle secrétaire, invitations de sept jours, droits
   sur les profils et événements, sondages, fuseau horaire, médias,
   notifications, contact Netlify Forms, environnements Supabase et données
@@ -188,7 +213,7 @@
   décisions 27 à 29 sur les droits de gestion des sondages par rôle, Netlify
   Forms et les conversions/limites des images; conservation et suppression
   restent à préciser.
-- Synchronisation de `Spec.md` avec ces réponses : les chefs gèrent les
+- Synchronisation de `docs/Spec.md` avec ces réponses : les chefs gèrent les
   événements de leur pupitre, les vidéos sont refusées, les photos JPG/JPEG
   de 20 Mo maximum sont converties en WebP, et l'intégration du formulaire
   Netlify reste en attente de confirmation de calendrier.
@@ -221,9 +246,9 @@
 
 ### Fait
 
-- Création de `Spec.md` avec les exigences fonctionnelles, les rôles, la
+- Création de `docs/Spec.md` avec les exigences fonctionnelles, les rôles, la
   sécurité et les critères d'acceptation.
-- Ajout de `Spec.md` à l'ordre de lecture dans `AGENTS.md`.
+- Ajout de `docs/Spec.md` à l'ordre de lecture dans `AGENTS.md`.
 - Consignation des divergences de fournisseurs et du rôle secrétaire dans
   `docs/questions.md`.
 

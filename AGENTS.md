@@ -10,7 +10,7 @@ Stack : SvelteKit 5 (runes), Tailwind, Motion, Supabase, OneSignal, Netlify.
 | Fichier                | Pourquoi                                                     |
 | ---------------------- | ------------------------------------------------------------ |
 | `docs/brief.md`        | Besoin, rôles, décisions de visibilité                       |
-| `Spec.md`              | Exigences fonctionnelles et techniques pour les développeurs |
+| `docs/Spec.md`         | Exigences fonctionnelles et techniques pour les développeurs |
 | `docs/architecture.md` | Routes, flux d'auth, arborescence                            |
 | `docs/database.md`     | Schéma, RLS, migrations                                      |
 | `docs/pwa.md`          | Manifest, service worker, notifications                      |
