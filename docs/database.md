@@ -340,3 +340,10 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
 - Les buckets Storage sont `bagad-partitions` (privé, PDF, lecture par tous les membres approuvés) et `bagad-medias` (public, WebP, écriture secrétaire/admin). Les fichiers de partition sont rangés sous le slug du pupitre.
 - Les photos JPG/JPEG sources jusqu'à 20 Mo doivent être converties côté serveur en WebP avant stockage dans `bagad-medias`. La migration configure le bucket de sortie, mais ne réalise pas elle-même la conversion.
 - Le formulaire de contact reste géré par Netlify Forms : aucune table `contact` n'est créée dans le nouveau schéma.
+
+## 14. Compléments de la migration 003
+
+- **Une seule invitation active par email** : index unique partiel sur `invitations(lower(email))` filtré `where used_at is null`. Pour relancer un invité non encore inscrit, la secrétaire supprime l'invitation en attente ou attend l'expiration des 7 jours. L'ancien index `idx_invitations_email` est supprimé (le trigger filtre sur `lower(email)`, l'index partiel le sert aussi).
+- **Trigger `handle_new_user` verrouillant** : `select ... for update` sur l'invitation consommée. Deux inscriptions simultanées avec la même invitation ne peuvent plus créer deux profils.
+- **Traçabilité RGPD des suppressions de compte** : `account_deletion_requests.profile_id` passe en `on delete set null` (la demande survit à la suppression du profil). Un snapshot d'identité (`snapshot_email`, `snapshot_name`) est copié automatiquement à la création par le trigger `account_deletion_requests_fill_snapshot` ; l'utilisateur ne peut pas fournir ces valeurs. Ordre de traitement attendu : passer la demande en `completed` **avant** de supprimer le compte.
+- **Storage manuel** (décision, sans changement de schéma) : la suppression d'une ligne `documents` ou `media` n'efface pas le fichier dans le bucket ; suppression manuelle requise.
