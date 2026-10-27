@@ -77,8 +77,8 @@ Un utilisateur sans profil obtient `null` : toute comparaison `>= n` est fausse,
 | `documents` | Partitions PDF, rattachées à un pupitre |
 | `articles` | Actualités, avec `published` |
 | `albums`, `media` | Albums photo et médias |
-| `notification_log` | Trace des envois OneSignal |
-| `audit_log` | Journal d'audit des actions sensibles |
+| `notification_preferences` | Préférences push globales, événements et rappels par membre |\n| `notification_log` | Trace des envois OneSignal |
+| `audit_log` | Journal d'audit des actions sensibles |\n| `account_deletion_requests` | Demandes de suppression de compte, avec suivi de traitement |
 
 ## 5. Matrice des droits
 
@@ -98,7 +98,7 @@ L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses prop
 | `documents` | – | L tous | L tous, E son pup. | L/E tous | L/E tous |
 | `articles` | L si `published` | L si `published` | L si `published` | L/E tous | L/E tous |
 | `albums`, `media` | L si public | L | L | L/E | L/E |
-| `notification_log` | – | – | L soi | L soi | L tous |
+| `notification_preferences` | – | L/E soi | L/E soi | L/E soi | L/E soi |\n| `account_deletion_requests` | – | Créer/L soi | Créer/L soi | L/E traitement | L/E traitement |\n| `notification_log` | – | – | L soi | L soi | L tous |
 | `audit_log` | – | – | – | – | L |
 
 Les écritures de `notification_log` et `audit_log` passent uniquement par le serveur (`service_role`) : aucune policy d'écriture pour les rôles `anon` et `authenticated`.
@@ -330,3 +330,13 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
   - `interne` : visible par tous les membres connectés approuvés.
   - `pupitre` : visible **uniquement** par les membres du ou des pupitres ciblés (ainsi que la secrétaire et l'admin). Un chef de pupitre ne crée et ne gère que les événements de son ou ses pupitres.
 - **Documents partagés entre pupitres** : tous les membres lisent tous les documents ; seul le chef de pupitre (son pupitre), la secrétaire et l'admin peuvent écrire.
+
+## 13. Compléments de la migration 002
+
+- `notification_preferences` conserve les préférences OneSignal de chaque membre : activation globale, notifications d'événements et rappels de sondage. Les abonnements d'appareils restent gérés par OneSignal.
+- `account_deletion_requests` enregistre les demandes de suppression de compte. Les durées de conservation et les règles finales d'anonymisation restent à définir.
+- `articles.summary` et `articles.image_url` conservent les capacités éditoriales présentes dans l'ancien schéma. Le corps de l'article cible reste dans `articles.content`.
+- Les fonctions `approve_member(uuid)` (secrétaire/admin, attribution du rôle `member` uniquement) et `set_profile_role(uuid, app_role)` (admin uniquement) sont les voies prévues pour modifier le rôle applicatif.
+- Les buckets Storage sont `bagad-partitions` (privé, PDF, lecture par tous les membres approuvés) et `bagad-medias` (public, WebP, écriture secrétaire/admin). Les fichiers de partition sont rangés sous le slug du pupitre.
+- Les photos JPG/JPEG sources jusqu'à 20 Mo doivent être converties côté serveur en WebP avant stockage dans `bagad-medias`. La migration configure le bucket de sortie, mais ne réalise pas elle-même la conversion.
+- Le formulaire de contact reste géré par Netlify Forms : aucune table `contact` n'est créée dans le nouveau schéma.
