@@ -24,7 +24,7 @@ Ce document est destiné à expliquer le contexte global du projet **Bagad Penha
 
 | Composant | Technologie cible | Rôle |
 |-----------|------------------|------|
-| **Frontend** | SvelteKit 5 (runes) | Framework fullstack |
+| **Frontend** | SvelteKit 5 (runes) | Framework fullstack | typescript
 | **Backend** | SvelteKit + Node.js | Serveurs, form actions, load functions |
 | **Authentification** | Supabase Auth | Comptes et sessions |
 | **Base de données** | Supabase PostgreSQL | Données relationnelles et RLS |

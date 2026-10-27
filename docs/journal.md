@@ -27,6 +27,30 @@
 
 ## 2026-10-26
 
+### Création du suivi du projet
+
+#### Fait
+
+- Création de `docs/suivi.md` pour regrouper les éléments terminés, ceux qui
+  restent à faire et les décisions ouvertes, à partir de la feuille de route,
+  du backlog et du journal.
+- Intégration de l'ancienne liste de suivi du README, notamment des tâches de
+  traduction, d'invitation, de dashboard, de notifications, de tests et de
+  déploiement.
+- Ajout de cases `[x]` pour les éléments faits et `[o]` pour ceux à faire.
+- Conservation des statuts de l'ancienne liste fournie : structure SvelteKit,
+  routage public FR / EN / BR et blocage des comptes `pending` marqués faits.
+- Échéance globale laissée « à définir »; aucune date n'a été inventée.
+
+#### Reste à faire
+
+- Confirmer la date limite du projet et la reporter dans `docs/suivi.md`.
+
+#### Validation
+
+- Vérification de cohérence avec `docs/roadmap.md`, `docs/backlog.md` et les
+  entrées récentes du journal. Documentation uniquement.
+
 ### Création de la migration initiale Supabase (`supabase/migrations/001_initial_schema.sql`)
 
 #### Fait
@@ -44,7 +68,7 @@
 
 #### Validation
 
-- Migration syntaxiquement valide, complète et conforme à `docs/database.md` et `Spec.md`.
+- Migration syntaxiquement valide, complète et conforme à `docs/database.md` et `docs/Spec.md`.
 
 ### Arbitrage et alignement de la visibilité des événements (`public`, `interne`, `pupitre`)
 
@@ -56,7 +80,7 @@
   - `pupitre` : visible **exclusivement** par les membres du ou des pupitres ciblés (et la secrétaire/admin).
 - Alignement du type enum PostgreSQL `event_visibility as enum ('public', 'pupitre', 'interne')`.
 - Mise à jour des policies RLS de lecture dans `docs/database.md` scindant distinctement ces 3 cas.
-- Résolution définitive de l'ancienne divergence dans `README.md`, `Spec.md` (§4.4), `docs/brief.md` et `docs/questions.md` (Question 22).
+- Résolution définitive de l'ancienne divergence dans `README.md`, `docs/Spec.md` (§4.4), `docs/brief.md` et `docs/questions.md` (Question 22).
 
 #### Validation
 
@@ -67,7 +91,7 @@
 #### Fait
 
 - Mise à jour du type enum PostgreSQL `response_status` dans `docs/database.md` pour restreindre strictement les valeurs autorisées à `('present', 'absent')` (suppression de `yes`, `no`, `maybe`).
-- Harmonisation corrélative dans `Spec.md` (§4.4 et §10 Étape D) et `docs/questions.md` (Question 30).
+- Harmonisation corrélative dans `docs/Spec.md` (§4.4 et §10 Étape D) et `docs/questions.md` (Question 30).
 
 #### Validation
 
@@ -96,11 +120,11 @@
 - Intégration de la décision validée par le client pour la Question 30 dans `docs/questions.md`.
 - Unification du modèle : suppression de la table `polls` au profit du champ `is_poll BOOLEAN NOT NULL DEFAULT FALSE` dans la table `events`.
 - Centralisation des réponses dans `event_responses`, avec distinction des intentions de présence (`yes` / `no` / `maybe`) et des présences réelles (`present` / `absent`).
-- Mise à jour corrélative de `docs/database.md` (§2 types, §4 tables, §5 matrice des droits) et de `Spec.md` (§4.4 et §10 Étape D).
+- Mise à jour corrélative de `docs/database.md` (§2 types, §4 tables, §5 matrice des droits) et de `docs/Spec.md` (§4.4 et §10 Étape D).
 
 #### Validation
 
-- Cohérence vérifiée sur l'ensemble de la chaîne documentaire (`questions.md`, `database.md`, `Spec.md`).
+- Cohérence vérifiée sur l'ensemble de la chaîne documentaire (`questions.md`, `database.md`, `docs/Spec.md`).
 
 ### Validation de la question 27 (Audience des notifications de sondage)
 
@@ -108,11 +132,11 @@
 
 - Intégration de la décision validée par le client pour la Question 27 dans `docs/questions.md`.
 - L'audience des push dépend désormais formellement de la portée du sondage : pupitre ciblé uniquement pour les sondages de pupitre, tous les membres pour les sondages internes et publics, sous réserve des préférences activées.
-- Mise à jour corrélative de `Spec.md` (§4.6 et §8).
+- Mise à jour corrélative de `docs/Spec.md` (§4.6 et §8).
 
 #### Validation
 
-- Alignement complet entre `docs/questions.md` et `Spec.md`.
+- Alignement complet entre `docs/questions.md` et `docs/Spec.md`.
 
 ### Nettoyage et réinitialisation de `package.json`
 
@@ -125,21 +149,20 @@
 
 #### Validation
 
-- `package.json` valide, minimal et aligné sur les règles de `AGENTS.md` et `Spec.md`.
+- `package.json` valide, minimal et aligné sur les règles de `AGENTS.md` et `docs/Spec.md`.
 
 ### Revue des spécifications pour développeur senior & ouverture des arbitrages
 
 #### Fait
 
-- Revue complète de `Spec.md`, `README.md`, `AGENTS.md` et de l'ensemble du dossier `docs/` dans une posture de Chef de Projet pour un développeur senior (5 ans d'expérience SvelteKit 5 runes, Tailwind, Supabase).
-- Enrichissement de la section 6 de `Spec.md` avec des directives techniques concrètes : contrats `@supabase/ssr` dans les hooks, gestion rigoureuse des runes (`$state`, `$derived`, `$props`), formulaires avec `use:enhance`, tokens Tailwind et A11y (`focus-visible`, `motion-reduce`).
+- Revue complète de `docs/Spec.md`, `README.md`, `AGENTS.md` et de l'ensemble du dossier `docs/` dans une posture de Chef de Projet pour un développeur senior (5 ans d'expérience SvelteKit 5 runes, Tailwind, Supabase).
+- Enrichissement de la section 6 de `docs/Spec.md` avec des directives techniques concrètes : contrats `@supabase/ssr` dans les hooks, gestion rigoureuse des runes (`$state`, `$derived`, `$props`), formulaires avec `use:enhance`, tokens Tailwind et A11y (`focus-visible`, `motion-reduce`).
 - Ajout des questions 30 (unification des sondages dans la table `events`) et 31 (purge des dépendances legacy Better Auth / Kysely / pg / Netlify Blobs) dans `docs/questions.md`.
 
 #### Validation
 
 - `git diff --check` vérifié sans incohérence.
 - Aucune régression sur les documents de référence.
-
 ### Alignement des policies documentées pour les événements
 
 #### Fait
