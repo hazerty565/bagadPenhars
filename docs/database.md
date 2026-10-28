@@ -23,6 +23,7 @@ doit plus être utilisé.
 create type app_role as enum ('pending', 'member', 'chef_pupitre', 'secretaire', 'admin');
 create type event_visibility as enum ('public', 'pupitre', 'interne');
 create type response_status as enum ('present', 'absent');
+create type musician_level as enum ('skolaj', 'bagadig', 'bagad');
 ```
 
 Niveaux utilisés par `my_role_level()` :
@@ -64,10 +65,11 @@ Un utilisateur sans profil obtient `null` : toute comparaison `>= n` est fausse,
 
 | Table | Rôle |
 |---|---|
-| `profiles` | Un profil par utilisateur (`id` = `auth.users.id`), nom, prénom, `role` |
+| `profiles` | Un profil par utilisateur (`id` = `auth.users.id`), nom, prénom, pseudo, date de naissance, téléphone, `musician_level`, `costume_complete`, `role` |
 | `pupitres` | bombarde, cornemuse, caisse claire, percussion |
 | `profile_pupitres` | Liaison membre ↔ pupitres (plusieurs possibles) |
 | `bureau_positions` | Titres du bureau historisés (honorifiques, aucun droit) |
+| `member_loans` | Suivi simplifié des prêts de matériel et costumes par adhérent |
 | `invitations` | Invitation envoyée : email, nom, prénom, auteur, validité 7 jours |
 | `invitation_pupitres` | Pupitres attribués à l'invité |
 | `event_series` | Séries récurrentes (règle `rrule`) |
@@ -77,8 +79,10 @@ Un utilisateur sans profil obtient `null` : toute comparaison `>= n` est fausse,
 | `documents` | Partitions PDF, rattachées à un pupitre |
 | `articles` | Actualités, avec `published` |
 | `albums`, `media` | Albums photo et médias |
-| `notification_preferences` | Préférences push globales, événements et rappels par membre |\n| `notification_log` | Trace des envois OneSignal |
-| `audit_log` | Journal d'audit des actions sensibles |\n| `account_deletion_requests` | Demandes de suppression de compte, avec suivi de traitement |
+| `notification_preferences` | Préférences push globales, événements et rappels par membre |
+| `notification_log` | Trace des envois OneSignal |
+| `audit_log` | Journal d'audit des actions sensibles |
+| `account_deletion_requests` | Demandes de suppression de compte, avec suivi de traitement |
 
 ## 5. Matrice des droits
 
@@ -90,6 +94,7 @@ L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses prop
 | `pupitres` | L | L | L | L | L/E |
 | `profile_pupitres` | – | L soi | L pup. | L/E | L/E |
 | `bureau_positions` | – | L soi | L soi | L/E | L/E |
+| `member_loans` | – | L soi | L pup. | L/E | L/E |
 | `invitations` | – | – | – | L/E | L/E |
 | `invitation_pupitres` | – | – | – | L/E | L/E |
 | `events` | L si `public` | L si `public`, `interne`, ou son pupitre | L idem membre; + E pour son pup. | L/E tous | L/E tous |
@@ -98,7 +103,9 @@ L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses prop
 | `documents` | – | L tous | L tous, E son pup. | L/E tous | L/E tous |
 | `articles` | L si `published` | L si `published` | L si `published` | L/E tous | L/E tous |
 | `albums`, `media` | L si public | L | L | L/E | L/E |
-| `notification_preferences` | – | L/E soi | L/E soi | L/E soi | L/E soi |\n| `account_deletion_requests` | – | Créer/L soi | Créer/L soi | L/E traitement | L/E traitement |\n| `notification_log` | – | – | L soi | L soi | L tous |
+| `notification_preferences` | – | L/E soi | L/E soi | L/E soi | L/E soi |
+| `account_deletion_requests` | – | Créer/L soi | Créer/L soi | L/E traitement | L/E traitement |
+| `notification_log` | – | – | L soi | L soi | L tous |
 | `audit_log` | – | – | – | – | L |
 
 Les écritures de `notification_log` et `audit_log` passent uniquement par le serveur (`service_role`) : aucune policy d'écriture pour les rôles `anon` et `authenticated`.
@@ -242,16 +249,16 @@ with check (
 );
 ```
 
-### Profils : protéger la colonne `role`
+### Profils : protéger la colonne `role`, `musician_level` et `costume_complete`
 
-Un membre peut modifier son profil, **pas son rôle**.
+Un membre peut modifier ses informations personnelles (`first_name`, `last_name`, `phone`, `nickname`, `birthdate`), mais **pas son rôle, son niveau, ni la validation de son costume**.
 
 ```sql
 revoke update on public.profiles from authenticated;
-grant update (first_name, last_name, phone) on public.profiles to authenticated;
+grant update (first_name, last_name, phone, nickname, birthdate) on public.profiles to authenticated;
 ```
 
-Le changement de rôle passe par une fonction réservée à l'admin (niveau 4), jamais par un `update` libre.
+Le changement de rôle passe par une fonction réservée à l'admin (niveau 4), et la modification du niveau / statut costume par une fonction réservée à la secrétaire ou à l'admin (niveau >= 3 : `update_member_status`).
 
 ## 7. Création de compte et trigger d'invitation
 
@@ -340,3 +347,10 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
 - Les buckets Storage sont `bagad-partitions` (privé, PDF, lecture par tous les membres approuvés) et `bagad-medias` (public, WebP, écriture secrétaire/admin). Les fichiers de partition sont rangés sous le slug du pupitre.
 - Les photos JPG/JPEG sources jusqu'à 20 Mo doivent être converties côté serveur en WebP avant stockage dans `bagad-medias`. La migration configure le bucket de sortie, mais ne réalise pas elle-même la conversion.
 - Le formulaire de contact reste géré par Netlify Forms : aucune table `contact` n'est créée dans le nouveau schéma.
+
+## 14. Compléments de la migration 004
+
+- `musician_level` catégorise le niveau musical du membre : `skolaj` (École de musique), `bagadig`, `bagad`.
+- `profiles` s'enrichit de `nickname`, `birthdate`, `musician_level` et `costume_complete`.
+- `member_loans` permet un suivi nominatif simplifié des équipements et costumes prêtés aux membres (`materiel` ou `costume`), avec dates d'emprunt et de retour.
+- Seuls les administrateurs et secrétaires peuvent enregistrer des prêts ou modifier le niveau/costume via `update_member_status`.
