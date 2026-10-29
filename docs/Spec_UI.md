@@ -1,7 +1,7 @@
 # SpecUI.md - Bagad Penhars Website
 
 **Auteur:** hazerty565  
-**Date:** 2024  
+**Date:** 2026  
 **Stack:** Svelte 5 + SvelteKit + Tailwind CSS + Motion + shadcn
 
 ---
