@@ -427,56 +427,73 @@ bagadPenhars/
 │                           └── +page.server.ts
 │
 │
+
 supabase/
-|   ├── config.toml
-|   └── migrations/
-│      ├── 001_extensions.sql
-│      ├── 010_enums.sql
-│      ├── 020_reference_site_roles.sql
-│      ├── 021_reference_association_roles.sql
-│      ├── 022_reference_sections.sql
-│      ├── 023_reference_music_levels.sql
-│      ├── 030_profiles.sql
-│      ├── 031_profile_association_roles.sql
-│      ├── 032_profile_sections.sql
-│      ├── 033_invitations.sql
-│      ├── 040_events.sql
-│      ├── 041_event_attendances.sql
-│      ├── 050_polls.sql
-│      ├── 051_poll_options.sql
-│      ├── 052_poll_responses.sql
-│      ├── 060_articles.sql
-│      ├── 061_albums.sql
-│      ├── 062_media.sql
-│      ├── 063_documents.sql
-│      ├── 070_items.sql
-│      ├── 071_loans.sql
-│      ├── 080_partners.sql
-│      ├── 081_contacts.sql
-│      ├── 082_notifications.sql
-│      ├── 090_storage_buckets.sql
-│      ├── 100_functions_updated_at.sql
-│      ├── 101_functions_profiles.sql
-│      ├── 102_functions_notifications.sql
-│      ├── 110_rls_profiles.sql
-│      ├── 111_rls_events.sql
-│      ├── 112_rls_polls.sql
-│      ├── 113_rls_documents.sql
-│      ├── 114_rls_media.sql
-│      ├── 115_rls_items.sql
-│      ├── 116_rls_loans.sql
-│      ├── 117_rls_notifications.sql
-│      ├── 120_seeds_site_roles.sql  -- Optionnel : garder ici ou dans seeds/
-│      ├── 121_seeds_association_roles.sql
-│      ├── 122_seeds_sections.sql
-│      ├── 123_seeds_music_levels.sql
-│      └── 999_indexes.sql
+├── config.toml
+├── seed.sql
 │
-└── seeds/
-    ├── site_roles.sql
-    ├── association_roles.sql
-    ├── sections.sql
-    └── music_levels.sql
+├── migrations/
+│   ├── 001_extensions.sql
+│   ├── 002_types_and_enums.sql
+│   ├── 003_profiles.sql
+│   ├── 004_pupitres.sql
+│   ├── 005_profile_pupitres.sql
+│   ├── 006_bureau_positions.sql
+│   ├── 007_invitations.sql
+│   ├── 008_events.sql
+│   ├── 009_event_pupitres.sql
+│   ├── 010_event_responses.sql
+│   ├── 011_event_series.sql
+│   ├── 012_documents.sql
+│   ├── 013_articles.sql
+│   ├── 014_albums.sql
+│   ├── 015_media.sql
+│   ├── 016_member_loans.sql
+│   ├── 017_notification_preferences.sql
+│   ├── 018_notification_log.sql
+│   ├── 019_account_deletion_requests.sql
+│   ├── 020_audit_log.sql
+│   │
+│   ├── 021_security_helpers.sql
+│   ├── 022_profiles_rls.sql
+│   ├── 023_pupitres_rls.sql
+│   ├── 024_memberships_rls.sql
+│   ├── 025_invitations_rls.sql
+│   ├── 026_events_rls.sql
+│   ├── 027_event_pupitres_rls.sql
+│   ├── 028_event_responses_rls.sql
+│   ├── 029_documents_rls.sql
+│   ├── 030_articles_rls.sql
+│   ├── 031_albums_media_rls.sql
+│   ├── 032_member_loans_rls.sql
+│   ├── 033_notifications_rls.sql
+│   ├── 034_account_deletion_rls.sql
+│   ├── 035_audit_log_rls.sql
+│   ├── 036_storage_policies.sql
+│   │
+│   ├── 037_auth_triggers.sql
+│   ├── 038_invitation_functions.sql
+│   ├── 039_event_management_functions.sql
+│   ├── 040_profile_management_functions.sql
+│   ├── 041_account_deletion_functions.sql
+│   ├── 042_integrity_constraints.sql
+│   └── 043_indexes.sql
+│
+└── tests/
+    ├── rls/
+    │   ├── profiles.test.sql
+    │   ├── memberships.test.sql
+    │   ├── invitations.test.sql
+    │   ├── events.test.sql
+    │   ├── event_responses.test.sql
+    │   ├── documents.test.sql
+    │   ├── storage.test.sql
+    │   └── account_deletion.test.sql
+    └── integrity/
+        ├── roles.test.sql
+        ├── events.test.sql
+        └── foreign_keys.test.sql
+
 │
 ├── netlify/
 │   └── functions/
