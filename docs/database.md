@@ -1,10 +1,10 @@
 # Base de données : schéma, rôles et RLS
 
-> Source de vérité : les migrations `supabase/migrations/NNN_*.sql`.
+> Source de vérité : les migrations `supabase/migrations/NNN_*.sql`.  
 > Ce document les résume. Toute modification du schéma met à jour ce fichier **dans le même commit**.
 
-Le schéma officiel est versionné sous `supabase/migrations/` (la première migration
-étant `001_initial_schema.sql`). L'ancien dossier `migrations/` est obsolète et ne
+Le schéma officiel est versionné sous `supabase/migrations/` (la première migration  
+étant `001_initial_schema.sql`). L'ancien dossier `migrations/` est obsolète et ne  
 doit plus être utilisé.
 
 ## 1. Principes
@@ -28,19 +28,21 @@ create type musician_level as enum ('skolaj', 'bagadig', 'bagad');
 
 Niveaux utilisés par `my_role_level()` :
 
-| Rôle | Niveau |
-|---|---|
-| pending | 0 |
-| member | 1 |
-| chef_pupitre | 2 |
-| secretaire | 3 |
-| admin | 4 |
+
+| Rôle          | Niveau |
+| ------------- | ------ |
+| pending       | 0      |
+| member        | 1      |
+| chef\_pupitre | 2      |
+| secretaire    | 3      |
+| admin         | 4      |
+
 
 Un niveau plus haut englobe les droits des niveaux plus bas. Si un droit ne suit pas cette échelle, tester le rôle explicitement plutôt que le niveau.
 
 ## 3. Fonctions d'aide
 
-Elles sont `security definer` avec `search_path` vide, pour **éviter la récursion RLS** sur `profiles` (déjà rencontrée sur ce projet).
+Elles sont `security definer` avec `search_path` vide, pour **éviter la récursion RLS** sur `profiles` (déjà rencontrée sur ce projet) et empêcher toute attaque par détournement de `search_path` (search\_path hijacking).
 
 ```sql
 create function public.my_role_level() returns int
@@ -63,52 +65,58 @@ Un utilisateur sans profil obtient `null` : toute comparaison `>= n` est fausse,
 
 ## 4. Tables
 
-| Table | Rôle |
-|---|---|
-| `profiles` | Un profil par utilisateur (`id` = `auth.users.id`), nom, prénom, pseudo, date de naissance, téléphone, `musician_level`, `costume_complete`, `role` |
-| `pupitres` | bombarde, cornemuse, caisse claire, percussion |
-| `profile_pupitres` | Liaison membre ↔ pupitres (plusieurs possibles) |
-| `bureau_positions` | Titres du bureau historisés (honorifiques, aucun droit) |
-| `member_loans` | Suivi simplifié des prêts de matériel et costumes par adhérent |
-| `invitations` | Invitation envoyée : email, nom, prénom, auteur, validité 7 jours |
-| `invitation_pupitres` | Pupitres attribués à l'invité |
-| `event_series` | Séries récurrentes (règle `rrule`) |
-| `events` | Représentations, répétitions et sondages (`is_poll`), avec `visibility` |
-| `event_pupitres` | Liaison événement ↔ pupitres ciblés (quand `visibility = 'pupitre'`) |
-| `event_responses` | Réponse d'un membre à un événement ou sondage (`present` / `absent`) |
-| `documents` | Partitions PDF, rattachées à un pupitre |
-| `articles` | Actualités, avec `published` |
-| `albums`, `media` | Albums photo et médias |
-| `notification_preferences` | Préférences push globales, événements et rappels par membre |
-| `notification_log` | Trace des envois OneSignal |
-| `audit_log` | Journal d'audit des actions sensibles |
-| `account_deletion_requests` | Demandes de suppression de compte, avec suivi de traitement |
+
+| Table                       | Rôle                                                                                                                                                |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles`                  | Un profil par utilisateur (`id` = `auth.users.id`), nom, prénom, pseudo, date de naissance, téléphone, `musician_level`, `costume_complete`, `role` |
+| `pupitres`                  | bombarde, cornemuse, caisse claire, percussion                                                                                                      |
+| `profile_pupitres`          | Liaison membre ↔ pupitres (plusieurs possibles)                                                                                                     |
+| `bureau_positions`          | Titres du bureau historisés (honorifiques, aucun droit)                                                                                             |
+| `member_loans`              | Suivi simplifié des prêts de matériel et costumes par adhérent                                                                                      |
+| `invitations`               | Invitation envoyée : email, nom, prénom, auteur, validité 7 jours                                                                                   |
+| `invitation_pupitres`       | Pupitres attribués à l'invité                                                                                                                       |
+| `event_series`              | Séries récurrentes (règle `rrule`)                                                                                                                  |
+| `events`                    | Représentations, répétitions et sondages (`is_poll`), avec `visibility`                                                                             |
+| `event_pupitres`            | Liaison événement ↔ pupitres ciblés (quand `visibility = 'pupitre'`)                                                                                |
+| `event_responses`           | Réponse d'un membre à un événement ou sondage (`present` / `absent`)                                                                                |
+| `documents`                 | Partitions PDF, rattachées à un pupitre                                                                                                             |
+| `articles`                  | Actualités, avec `published`                                                                                                                        |
+| `albums`, `media`           | Albums photo et médias                                                                                                                              |
+| `notification_preferences`  | Préférences push globales, événements et rappels par membre                                                                                         |
+| `notification_log`          | Trace des envois OneSignal                                                                                                                          |
+| `activity_log`              | Journal applicatif des actions (trace interne, sans valeur probante, ne constitue pas une piste d'audit légale)                                     |
+| `account_deletion_requests` | Demandes de suppression de compte, avec suivi de traitement                                                                                         |
+
+
+> **Note** : la table `audit_log` a été renommée `activity_log` : il s'agit d'une simple trace applicative, pas d'une piste d'audit au sens légal. Le renommage passe par une migration dédiée (`alter table ... rename` + recréation des policies et index).
 
 ## 5. Matrice des droits
 
 L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses propres lignes, « pup. » = son ou ses pupitres.
 
-| Table | Visiteur | Membre | Chef de pupitre | Secrétaire | Admin |
-|---|---|---|---|---|---|
-| `profiles` | – | L/E soi | L/E soi | L tous | L/E tous |
-| `pupitres` | L | L | L | L | L/E |
-| `profile_pupitres` | – | L soi | L pup. | L/E | L/E |
-| `bureau_positions` | – | L soi | L soi | L/E | L/E |
-| `member_loans` | – | L soi | L pup. | L/E | L/E |
-| `invitations` | – | – | – | L/E | L/E |
-| `invitation_pupitres` | – | – | – | L/E | L/E |
-| `events` | L si `public` | L si `public`, `interne`, ou son pupitre | L idem membre; + E pour son pup. | L/E tous | L/E tous |
-| `event_pupitres` | – | L si événement accessible | L si événement accessible | L/E | L/E |
-| `event_responses` | – | L/E soi | L pup. | L tous, E présences | L tous, E présences |
-| `documents` | – | L tous | L tous, E son pup. | L/E tous | L/E tous |
-| `articles` | L si `published` | L si `published` | L si `published` | L/E tous | L/E tous |
-| `albums`, `media` | L si public | L | L | L/E | L/E |
-| `notification_preferences` | – | L/E soi | L/E soi | L/E soi | L/E soi |
-| `account_deletion_requests` | – | Créer/L soi | Créer/L soi | L/E traitement | L/E traitement |
-| `notification_log` | – | – | L soi | L soi | L tous |
-| `audit_log` | – | – | – | – | L |
 
-Les écritures de `notification_log` et `audit_log` passent uniquement par le serveur (`service_role`) : aucune policy d'écriture pour les rôles `anon` et `authenticated`.
+| Table                       | Visiteur         | Membre                                   | Chef de pupitre                  | Secrétaire          | Admin               |
+| --------------------------- | ---------------- | ---------------------------------------- | -------------------------------- | ------------------- | ------------------- |
+| `profiles`                  | –                | L/E soi                                  | L/E soi                          | L tous              | L/E tous            |
+| `pupitres`                  | L                | L                                        | L                                | L                   | L/E                 |
+| `profile_pupitres`          | –                | L soi                                    | L pup.                           | L/E                 | L/E                 |
+| `bureau_positions`          | –                | L soi                                    | L soi                            | L/E                 | L/E                 |
+| `member_loans`              | –                | L soi                                    | L pup.                           | L/E                 | L/E                 |
+| `invitations`               | –                | –                                        | –                                | L/E                 | L/E                 |
+| `invitation_pupitres`       | –                | –                                        | –                                | L/E                 | L/E                 |
+| `events`                    | L si `public`    | L si `public`, `interne`, ou son pupitre | L idem membre; + E pour son pup. | L/E tous            | L/E tous            |
+| `event_pupitres`            | –                | L si événement accessible                | L si événement accessible        | L/E                 | L/E                 |
+| `event_responses`           | –                | L/E soi (pas de delete)                  | L pup.                           | L tous, E présences | L tous, E présences |
+| `documents`                 | –                | L tous                                   | L tous, E son pup.               | L/E tous            | L/E tous            |
+| `articles`                  | L si `published` | L si `published`                         | L si `published`                 | L/E tous            | L/E tous            |
+| `albums`, `media`           | L si public      | L                                        | L                                | L/E                 | L/E                 |
+| `notification_preferences`  | –                | L/E soi                                  | L/E soi                          | L/E soi             | L/E soi             |
+| `account_deletion_requests` | –                | Créer/L soi                              | Créer/L soi                      | L/E traitement      | L/E traitement      |
+| `notification_log`          | –                | –                                        | L soi                            | L soi               | L tous              |
+| `activity_log`              | –                | –                                        | –                                | –                   | L                   |
+
+
+Les écritures de `notification_log` et `activity_log` passent uniquement par le serveur (`service_role`) : aucune policy d'écriture pour les rôles `anon` et `authenticated`.
 
 ## 6. Policies : modèles à suivre
 
@@ -249,6 +257,8 @@ with check (
 );
 ```
 
+> **Aucune policy `delete`, volontairement** : un membre ne supprime pas sa réponse, il la modifie (présent → absent, etc., par exemple présent quelques jours avant puis absent le jour même). Les réponses ne disparaissent qu'avec le compte (cf. §9, décision RGPD).
+
 ### Profils : protéger la colonne `role`, `musician_level` et `costume_complete`
 
 Un membre peut modifier ses informations personnelles (`first_name`, `last_name`, `phone`, `nickname`, `birthdate`), mais **pas son rôle, son niveau, ni la validation de son costume**.
@@ -258,29 +268,115 @@ revoke update on public.profiles from authenticated;
 grant update (first_name, last_name, phone, nickname, birthdate) on public.profiles to authenticated;
 ```
 
-Le changement de rôle passe par une fonction réservée à l'admin (niveau 4), et la modification du niveau / statut costume par une fonction réservée à la secrétaire ou à l'admin (niveau >= 3 : `update_member_status`).
+Le changement de rôle passe par une fonction réservée à l'admin (niveau 4), et la modification du niveau / statut costume par une fonction réservée à la secrétaire ou à l'admin (niveau &gt;= 3 : `update_member_status`).
+
+### Fonctions de modification de rôle : modèle standard Supabase
+
+Toutes les fonctions `security definer` qui modifient des données suivent le même modèle que `my_role_level()` : `set search_path = ''` (sinon un attaquant peut détourner la résolution des noms vers ses propres objets), objets toujours qualifiés en `public.`, vérification du rôle **à l'intérieur** de la fonction, et permissions `execute` explicites.
+
+```sql
+create function public.set_profile_role(target uuid, new_role public.app_role)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if (select public.my_role_level()) < 4 then
+    raise exception 'Réservé aux administrateurs';
+  end if;
+
+  update public.profiles set role = new_role where id = target;
+end;
+$$;
+
+revoke execute on function public.set_profile_role(uuid, public.app_role) from anon, public;
+grant execute on function public.set_profile_role(uuid, public.app_role) to authenticated;
+```
+
+```sql
+create function public.approve_member(target uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if (select public.my_role_level()) < 3 then
+    raise exception 'Réservé à la secrétaire et à l''admin';
+  end if;
+
+  update public.profiles set role = 'member'
+  where id = target and role = 'pending';
+end;
+$$;
+
+revoke execute on function public.approve_member(uuid) from anon, public;
+grant execute on function public.approve_member(uuid) to authenticated;
+```
+
+> `approve_member` ne peut attribuer **que** le rôle `member`, et uniquement depuis `pending`. `update_member_status` (niveau musical, costume) suit le même modèle avec un garde `>= 3`.
 
 ## 7. Création de compte et trigger d'invitation
 
 1. Un admin ou une secrétaire crée une ligne dans `invitations` (email, nom, prénom) et y associe un ou plusieurs pupitres dans `invitation_pupitres`, puis déclenche l'invitation côté serveur (`auth.admin.inviteUserByEmail`).
-2. Un trigger `after insert` sur `auth.users` :
-   - Vérifie la présence d'une invitation valide pour `new.email` (`used_at is null` et `created_at > now() - interval '7 days'`). Si aucune invitation valide n'existe, lève une exception (`raise exception 'Invitation invalide ou expirée'`).
-   - Crée le profil dans `public.profiles` (`id = new.id`, `role = 'pending'`).
-   - Associe l'utilisateur à ses pupitres dans `public.profile_pupitres` en copiant ceux de `invitation_pupitres`.
-   - Marque l'invitation comme utilisée (`used_at = now()`).
-3. L'invité crée son mot de passe. Il reste `pending`, sans accès à l'espace adhérents.
-4. Un admin ou une secrétaire passe le profil à `member`.
+2. **Unicité garantie en base** : un email ne peut avoir qu'une seule invitation valide à la fois.
+  ```sql
+   create unique index idx_invitations_email_active
+   on public.invitations (lower(email))
+   where used_at is null;
+  ```
+
+   Si l'invitation a expiré ou a déjà été utilisée, le serveur **invalide d'abord l'ancienne ligne** (`used_at = now()`), puis crée une nouvelle invitation et renvoie le mail. L'index unique partiel garantit l'unicité même en cas d'erreur applicative.
+3. Un trigger `after insert` sur `auth.users` :
+  - Vérifie la présence d'une invitation valide pour `new.email` (`used_at is null` et `created_at > now() - interval '7 days'`). Si aucune invitation valide n'existe, lève une exception (`raise exception 'Invitation invalide ou expirée'`).
+  - Crée le profil dans `public.profiles` (`id = new.id`, `role = 'pending'`).
+  - Associe l'utilisateur à ses pupitres dans `public.profile_pupitres` en copiant ceux de `invitation_pupitres`.
+  - Marque l'invitation comme utilisée (`used_at = now()`).
+4. L'invité crée son mot de passe. Il reste `pending`, sans accès à l'espace adhérents.
+5. Un admin ou une secrétaire passe le profil à `member` via `approve_member`.
 
 ## 8. Storage
 
 > **Règle V1** : aucun avatar n'est téléversé (affichage des initiales du prénom et nom). Le bucket `bagad-avatars` est exclu de la V1 pour éviter tout stockage inutile.
 
-| Bucket | Accès |
-|---|---|
-| `bagad-partitions` | **Privé** ; lecture : tous les membres approuvés (tous pupitres) ; écriture : chef de pupitre (son pup.), secrétaire+ |
-| `bagad-medias` | Lecture publique ; écriture : secrétaire+ |
 
-Chaque bucket a ses policies sur `storage.objects`, avec la même rigueur que les tables.
+| Bucket             | Accès                                                                                                                 |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `bagad-partitions` | **Privé** ; lecture : tous les membres approuvés (tous pupitres) ; écriture : chef de pupitre (son pup.), secrétaire+ |
+| `bagad-medias`     | Lecture publique ; écriture : secrétaire+                                                                             |
+
+
+Chaque bucket a ses policies sur `storage.objects`, avec la même rigueur que les tables. Les fichiers de partition sont rangés sous le slug du pupitre : la policy d'écriture du chef de pupitre vérifie donc le dossier racine du fichier.
+
+```sql
+-- Exemple : lecture des partitions par tout membre approuvé
+create policy "partitions: lecture membres"
+on storage.objects for select
+to authenticated
+using (
+  bucket_id = 'bagad-partitions'
+  and (select public.my_role_level()) >= 1
+);
+
+-- Exemple : écriture limitée au dossier du pupitre du chef, ou secrétaire+
+create policy "partitions: écriture chef (son pupitre) et secrétaire+"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'bagad-partitions'
+  and (
+    (select public.my_role_level()) >= 3
+    or (
+      (select public.my_role_level()) = 2
+      and (storage.foldername(name))[1]
+        in (select pupitre_slug_from_ids())
+    )
+  )
+);
+```
+
+> Le helper `pupitre_slug_from_ids()` (renvoyant les slugs des pupitres de l'utilisateur courant, même modèle `security definer`, `search_path = ''`) est à créer avec la migration Storage.
 
 ## 9. Migrations
 
@@ -288,7 +384,9 @@ Chaque bucket a ses policies sur `storage.objects`, avec la même rigueur que le
 - Une migration = un sujet (ex. `006_events_rls.sql`).
 - Chaque `create table` est suivi, **dans la même migration**, de `enable row level security` et de ses policies.
 - Clés étrangères avec `on delete cascade` explicite sur les tables enfants (`event_pupitres`, `event_responses`, `profile_pupitres`) et `on delete restrict` sur les tables de référence (`pupitres`).
+- **Décision RGPD (`event_responses.profile_id` → `profiles`) : `on delete cascade`.** Les réponses d'un membre disparaissent avec son compte lors d'une suppression. L'historique de présence des membres supprimés n'est **pas** conservé ; les stats de présence passées en tiendront compte. Si un jour des stats intemporelles deviennent nécessaires, la migration vers `set null` + anonymisation restera possible.
 - Jamais d'édition manuelle en production sans migration correspondante.
+- Le renommage d'un objet existant (ex. `audit_log` → `activity_log`) passe par une **nouvelle migration** : `alter table ... rename` + recréation des policies, index et grants liés.
 
 ## 10. Checklist : ajouter une table
 
@@ -304,8 +402,12 @@ Chaque bucket a ses policies sur `storage.objects`, avec la même rigueur que le
   create index idx_events_lookup on public.events(visibility, is_poll);
   create index idx_event_responses on public.event_responses(event_id, profile_id);
   create index idx_invitations_email on public.invitations(email);
+  create unique index idx_invitations_email_active
+    on public.invitations (lower(email)) where used_at is null;
   ```
 - [ ] `(select auth.uid())` plutôt que `auth.uid()` nu (meilleures performances)
+- [ ] Fonctions `security definer` : `set search_path = ''`, objets qualifiés, garde de rôle interne, `grant execute` explicite
+- [ ] Choix `on delete` de chaque FK explicité (cascade / restrict / set null) selon les décisions RGPD
 - [ ] Ligne ajoutée dans la matrice (§5) et dans la liste des tables (§4)
 - [ ] Test ci-dessous ajouté
 
@@ -324,6 +426,7 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub": "<uuid-membre>"}';
 select count(*) from public.events;        -- publiques + membres + tous les événements par pupitre
 update public.profiles set role = 'admin' where id = '<uuid-membre>';  -- doit échouer
+delete from public.event_responses where profile_id = '<uuid-membre>';  -- doit échouer (aucune policy delete)
 ```
 
 Un test par rôle et par table sensible. Une policy non testée est considérée comme absente.
@@ -337,13 +440,15 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
   - `interne` : visible par tous les membres connectés approuvés.
   - `pupitre` : visible **uniquement** par les membres du ou des pupitres ciblés (ainsi que la secrétaire et l'admin). Un chef de pupitre ne crée et ne gère que les événements de son ou ses pupitres.
 - **Documents partagés entre pupitres** : tous les membres lisent tous les documents ; seul le chef de pupitre (son pupitre), la secrétaire et l'admin peuvent écrire.
+- **Réponses jamais supprimées individuellement** : un membre modifie sa réponse au fil du temps (présent → absent le jour même par exemple) ; la suppression n'intervient qu'à la suppression du compte (RGPD).
+- **`activity_log` (ex-`audit_log`)** : trace applicative interne, sans valeur probante ; elle n'est **pas** une piste d'audit au sens légal et ne doit pas être présentée comme telle.
 
 ## 13. Compléments de la migration 002
 
 - `notification_preferences` conserve les préférences OneSignal de chaque membre : activation globale, notifications d'événements et rappels de sondage. Les abonnements d'appareils restent gérés par OneSignal.
-- `account_deletion_requests` enregistre les demandes de suppression de compte. Les durées de conservation et les règles finales d'anonymisation restent à définir.
+- `account_deletion_requests` enregistre les demandes de suppression de compte. À la suppression effective (côté serveur, via `auth.admin.deleteUser` avec `service_role`), le `on delete cascade` sur `event_responses.profile_id` efface les réponses du membre.
 - `articles.summary` et `articles.image_url` conservent les capacités éditoriales présentes dans l'ancien schéma. Le corps de l'article cible reste dans `articles.content`.
-- Les fonctions `approve_member(uuid)` (secrétaire/admin, attribution du rôle `member` uniquement) et `set_profile_role(uuid, app_role)` (admin uniquement) sont les voies prévues pour modifier le rôle applicatif.
+- Les fonctions `approve_member(uuid)` (secrétaire/admin, attribution du rôle `member` uniquement) et `set_profile_role(uuid, app_role)` (admin uniquement) sont les voies prévues pour modifier le rôle applicatif. Elles suivent le modèle standard Supabase du §6 (`security definer`, `search_path = ''`, garde de rôle interne, `grant execute` explicite).
 - Les buckets Storage sont `bagad-partitions` (privé, PDF, lecture par tous les membres approuvés) et `bagad-medias` (public, WebP, écriture secrétaire/admin). Les fichiers de partition sont rangés sous le slug du pupitre.
 - Les photos JPG/JPEG sources jusqu'à 20 Mo doivent être converties côté serveur en WebP avant stockage dans `bagad-medias`. La migration configure le bucket de sortie, mais ne réalise pas elle-même la conversion.
 - Le formulaire de contact reste géré par Netlify Forms : aucune table `contact` n'est créée dans le nouveau schéma.
