@@ -52,6 +52,9 @@ Les comptes ne se créent pas librement :
 - **Actualités** (articles).
 - **Albums photo** (médias publics).
 - **Contacts** : formulaire qui envoie un email. Pas d'annuaire des membres.
+- **Référencement naturel (SEO)** : rendre les pages et contenus publics
+  découvrables par les moteurs de recherche, avec des métadonnées adaptées et
+  sans exposer ni faire indexer l'espace privé.
 
 ### Espace adhérents (connexion requise)
 

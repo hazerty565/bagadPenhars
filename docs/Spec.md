@@ -86,6 +86,14 @@ membre et le rôle applicatif `secretaire`.
   albums contiennent un titre, une description, une date, des légendes et
   l'ordre des photos. Une prévisualisation est requise avant publication.
 - Proposer un formulaire de contact qui transmet le message par email.
+- Optimiser le référencement naturel des pages publiques : chaque page dispose
+  d'un titre et d'une description adaptés à son contenu et à sa langue; les
+  URL canoniques et les métadonnées de partage sont cohérentes avec la page.
+- Fournir un sitemap à jour qui ne référence que les pages publiques et les
+  contenus publiés, ainsi qu'un `robots.txt` cohérent avec les règles
+  d'indexation. Les pages d'authentification, l'espace adhérents et les routes
+  privées ne doivent pas être indexés; `robots.txt` ne remplace jamais les
+  contrôles d'accès.
 - Ne jamais exposer les profils privés, les coordonnées des membres, les
   partitions privées ni les titres du bureau.
 - Le site public est disponible en français, anglais et breton (`fr`, `en`,
@@ -100,6 +108,9 @@ membre et le rôle applicatif `secretaire`.
   ci-dessus, avec un contenu éditorial fourni ou validé par l'association.
 - Ces pages sont consultables sans compte et ne révèlent aucune information
   privée sur les membres ou les titres du bureau.
+- Chaque page publique fournit des métadonnées SEO propres à sa langue; le
+  sitemap ne contient que les URL publiques publiées et les pages privées
+  restent exclues de l'indexation.
 
 ### 4.2 Invitations et validation des comptes
 
