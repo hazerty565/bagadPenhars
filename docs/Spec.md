@@ -226,13 +226,11 @@ données le permet.
 
 - Le formulaire public utilise Netlify Forms pour recevoir les soumissions;
   la configuration Netlify existe déjà et l'adresse officielle de destination
-  est configurée hors du code. Le branchement du formulaire côté application
-  et sa validation restent à effectuer lorsque le responsable confirme le
-  démarrage de cette tâche.
-- Les pièces jointes sont interdites. Le besoin de confirmation à l'expéditeur
-  est conservé; son mécanisme avec Netlify Forms reste à définir.
-- Les responsables du bureau traitent les messages. La durée de conservation
-  et les modalités opérationnelles de suppression restent à définir.
+  est configurée hors du code. Les responsables du bureau consultent et
+  traitent manuellement les soumissions dans le dashboard Netlify.
+- Les pièces jointes sont interdites et une confirmation est envoyée à
+  l'expéditeur. Le branchement du formulaire côté application reste une tâche
+  d'implémentation.
 
 ## 5. Exigences de sécurité et de confidentialité
 
@@ -304,9 +302,10 @@ Une fonctionnalité est livrable lorsque :
 Les décisions validées dans [`docs/questions.md`](./docs/questions.md) sont
 appliquées dans cette spécification. Les questions complémentaires qui restent
 ouvertes sont identifiées dans ce fichier et doivent être tranchées avant les
-fonctions concernées : calendrier du branchement Netlify Forms et son mécanisme
-de confirmation à l'expéditeur, durées de conservation des données et
-traitement des demandes de suppression de compte.
+fonctions concernées : durées de conservation des présences et journaux d'audit,
+ainsi que les modalités du traitement des demandes de suppression de compte.
+Les soumissions de contact sont traitées manuellement dans le dashboard
+Netlify; leur intégration dans l'application est une tâche d'implémentation.
 
 ## 9. État du dépôt à la préparation
 
@@ -431,10 +430,10 @@ propriété des réponses et cas de dates invalides.
 - Publier les albums et médias uniquement après action d'un rôle autorisé.
 - Prévoir la prévisualisation avant publication; seuls l'admin et la secrétaire
   publient ou suppriment un album.
-- Quand le branchement Netlify Forms sera autorisé, connecter le formulaire
-  public à la configuration déjà présente, vérifier le parcours de soumission
-  et la notification vers l'adresse officielle. Ne pas reconfigurer Netlify
-  ni accepter de pièces jointes.
+- Connecter le formulaire public à la configuration Netlify déjà présente et
+  vérifier le parcours de soumission, la confirmation à l'expéditeur et la
+  réception des messages dans le dashboard pour traitement manuel. Ne pas
+  reconfigurer Netlify ni accepter de pièces jointes.
 
 **Livrable :** tests de brouillon/publication, accès aux objets Storage selon
 les droits, refus d'upload non autorisé et validation du formulaire.

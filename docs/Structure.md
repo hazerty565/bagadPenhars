@@ -433,51 +433,10 @@ supabase/
 ├── seed.sql
 │
 ├── migrations/
-│   ├── 001_extensions.sql
-│   ├── 002_types_and_enums.sql
-│   ├── 003_profiles.sql
-│   ├── 004_pupitres.sql
-│   ├── 005_profile_pupitres.sql
-│   ├── 006_bureau_positions.sql
-│   ├── 007_invitations.sql
-│   ├── 008_events.sql
-│   ├── 009_event_pupitres.sql
-│   ├── 010_event_responses.sql
-│   ├── 011_event_series.sql
-│   ├── 012_documents.sql
-│   ├── 013_articles.sql
-│   ├── 014_albums.sql
-│   ├── 015_media.sql
-│   ├── 016_member_loans.sql
-│   ├── 017_notification_preferences.sql
-│   ├── 018_notification_log.sql
-│   ├── 019_account_deletion_requests.sql
-│   ├── 020_audit_log.sql
-│   │
-│   ├── 021_security_helpers.sql
-│   ├── 022_profiles_rls.sql
-│   ├── 023_pupitres_rls.sql
-│   ├── 024_memberships_rls.sql
-│   ├── 025_invitations_rls.sql
-│   ├── 026_events_rls.sql
-│   ├── 027_event_pupitres_rls.sql
-│   ├── 028_event_responses_rls.sql
-│   ├── 029_documents_rls.sql
-│   ├── 030_articles_rls.sql
-│   ├── 031_albums_media_rls.sql
-│   ├── 032_member_loans_rls.sql
-│   ├── 033_notifications_rls.sql
-│   ├── 034_account_deletion_rls.sql
-│   ├── 035_audit_log_rls.sql
-│   ├── 036_storage_policies.sql
-│   │
-│   ├── 037_auth_triggers.sql
-│   ├── 038_invitation_functions.sql
-│   ├── 039_event_management_functions.sql
-│   ├── 040_profile_management_functions.sql
-│   ├── 041_account_deletion_functions.sql
-│   ├── 042_integrity_constraints.sql
-│   └── 043_indexes.sql
+│   ├── 001_initial_schema.sql
+│   ├── 002_initial_schema.sql
+│   ├── 003_schema.sql
+│   └── 004_equipment_loans_and_profile_fields.sql
 │
 └── tests/
     ├── rls/

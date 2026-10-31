@@ -78,11 +78,12 @@ Les membres peuvent gérer leurs préférences de notification.
 
 8. **Contact** — quelle adresse reçoit les formulaires? Faut-il envoyer une
    confirmation à l'expéditeur? Les pièces jointes sont-elles interdites? Qui
-   traite les messages et combien de temps sont-ils conservés?
+   traite les messages?
 
    Décision : les messages sont envoyés à l'adresse officielle de l'association,
-   à configurer. Une confirmation est envoyée à l'expéditeur. Pas de pièces
-   jointes. Les responsables du bureau traitent les messages.
+   configurée dans Netlify. Une confirmation est envoyée à l'expéditeur. Pas
+   de pièces jointes. Les responsables du bureau traitent manuellement les
+   soumissions dans le dashboard Netlify.
 
 ## P1 — À décider avant mise en production ou import de données
 
@@ -143,8 +144,10 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     (téléphone, photo, email, nom), et lesquels ne peuvent être modifiés que
     par l'admin ou la secrétaire?
 
-    tout sauf sont pupitre peuvent être modifiés que
-    par l'admin ou la secrétaire.
+    **Question close — voir la décision validée à la question 21.** Le membre
+    peut modifier ses informations de profil, mais pas son rôle ni ses
+    pupitres. L'admin et la secrétaire peuvent modifier les pupitres; seuls
+    les admins peuvent attribuer les rôles applicatifs supérieurs.
 
 18. **Contenus publics** — quels champs composent un article et un album
     (titre, texte, date, auteur, légende, ordre des photos)? Une publication
@@ -158,12 +161,12 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
 
 ## Questions complémentaires avant les fonctions concernées
 
-20. **Langue de l'espace adhérents** — le brief et le README indiquent le
-    français uniquement, tandis que la section « Décisions déjà prises »
-    ci-dessus indique français/anglais. Quelle règle faut-il appliquer?
+20. **Langue de l'espace adhérents** — décision confirmée : le site public est
+    disponible en français, anglais et breton (`fr`, `en`, `br`); l'espace
+    adhérents et les pages d'authentification sont en français uniquement.
 
-     Décision : le site public est en français, anglais et breton; l'espace
-     adhérents est en français uniquement.
+    **Question close.** Cette décision est également reprise dans
+    [`docs/brief.md`](./brief.md) et [`docs/Spec.md`](./Spec.md).
 
 21. **Modification du profil** — la réponse à la question 17 (« tout sauf son
     pupitre peuvent être modifiés que par l'admin ou la secrétaire ») peut
@@ -207,14 +210,12 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     les notifications d'événements, dont les rappels lorsqu'il n'a pas répondu
     au sondage d'un événement.
 
-25. **Conservation et suppression** — quelles durées appliquer aux présences,
-    journaux d'audit et messages de contact? Quel processus permet de traiter
-    la demande de suppression d'un membre tout en respectant les obligations
-    légales?
+25. **Conservation et suppression** — quelles durées appliquer aux présences
+    et journaux d'audit? Quel processus permet de traiter la demande de
+    suppression d'un membre tout en respectant les obligations légales?
 
-    Décision : le formulaire de contact utilise Netlify Forms pour le moment.
-    Cette réponse ne fixe pas les durées de conservation des présences et
-    journaux d'audit, ni le traitement des demandes de suppression de compte.
+    Décision : voir la décision 10 pour la suppression du compte. Les durées
+    de conservation des présences et journaux d'audit restent à définir.
 
 26. **Limites des fichiers médias** — quelles tailles maximales et quels
     formats accepter pour les avatars, photos et vidéos? (Les partitions sont
@@ -245,20 +246,13 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
 
     Les règles de création, de modification et de suppression restent celles définies dans les décisions relatives aux rôles et aux événements.
 
-28. **Conservation et suppression** — quelle durée de conservation appliquer
-    aux soumissions Netlify Forms, présences et journaux d'audit? Quel processus
-    suivre pour une demande de suppression de compte? La destination des
-    notifications de formulaire et la confirmation à l'expéditeur sont déjà
-    décidées; il reste à confirmer leur configuration effective avec Netlify
-    Forms.
-
-    Décision : la configuration Netlify Forms existe déjà; seul le code
-    d'intégration et sa validation sont à effectuer. La consigne « ne rien
-    faire pour le moment » rend le calendrier ambigu.
-    Statut : À VALIDER — faut-il différer l'intégration ou l'inclure dans la
-    prochaine tâche? Le mécanisme de confirmation à l'expéditeur, les durées
-    de conservation et le traitement des demandes de suppression restent
-    également à préciser.
+28. **Netlify Forms** — les soumissions du formulaire de contact sont gérées
+    manuellement par les responsables du bureau dans le dashboard Netlify.
+    **Question close :** leur traitement opérationnel relève de Netlify et ne
+    nécessite pas de règle de conservation dans cette documentation produit.
+    L'intégration du formulaire dans l'application reste une tâche
+    d'implémentation, pas une décision produit. Les durées de conservation des
+    présences et journaux d'audit restent suivies à la question 25.
 
 29. **Médias** — décision : refuser les vidéos; accepter les photos source
     JPG/JPEG jusqu'à 20 Mo et les convertir en WebP. Aucun avatar téléversé

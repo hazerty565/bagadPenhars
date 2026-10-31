@@ -63,13 +63,13 @@ Les comptes ne se créent pas librement :
 - **Réponse aux événements** : présent / absent (ou pas de réponse).
 - **Sondages de répétition** : chaque membre répond présent / absent ; le sondage est directement l'événement d'agenda.
 - **Partitions / documents** : PDF déposés par les chefs de pupitre, visibles selon le pupitre.
-- **Notifications** (OneSignal) : envoyées par la secrétaire (plusieurs pupitres) ou un chef de pupitre (son pupitre).
+- **Notifications push** (OneSignal, première version uniquement) : envoyées par la secrétaire (plusieurs pupitres) ou un chef de pupitre (son pupitre).
 
 ## 5. Contraintes
 
 - **Stack** : SvelteKit 5 (runes), Tailwind, Motion, Supabase, OneSignal, hébergement Netlify.
 - **Sécurité** : association privée, données personnelles de membres. RLS sur toutes les tables, validation des droits côté serveur.
-- **Langue** : interface en français.
+- **Langue** : site public disponible en français, anglais et breton (`fr`, `en`, `br`) ; espace adhérents et authentification en français.
 - **Usage** : surtout sur téléphone. Mobile first.
 - **Maintenance** : un seul mainteneur. Préférer le simple au sophistiqué.
 
@@ -79,12 +79,3 @@ Les comptes ne se créent pas librement :
 - Affichage public des titres du bureau.
 - Paiement / cotisations en ligne.
 - Inscription libre.
-
-## 7. Questions ouvertes
-
-À trancher avant d'implémenter les points concernés :
-
-- Le site public doit-il être multilingue (fr / en / br) ou seulement en français ?
-- Les notifications OneSignal : push navigateur uniquement, ou aussi email ?
-- Les albums photo sont stockés dans Supabase Storage; définir leurs buckets et
-  policies selon les règles de visibilité.

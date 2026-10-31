@@ -88,7 +88,7 @@ Un utilisateur sans profil obtient `null` : toute comparaison `>= n` est fausse,
 | `account_deletion_requests` | Demandes de suppression de compte, avec suivi de traitement                                                                                         |
 
 
-> **Note** : la table `audit_log` a été renommée `activity_log` : il s'agit d'une simple trace applicative, pas d'une piste d'audit au sens légal. Le renommage passe par une migration dédiée (`alter table ... rename` + recréation des policies et index).
+> **Note** : la table `audit_log` doit être renommée `activity_log` dans une migration dédiée : il s'agit d'une simple trace applicative, pas d'une piste d'audit au sens légal.
 
 ## 5. Matrice des droits
 

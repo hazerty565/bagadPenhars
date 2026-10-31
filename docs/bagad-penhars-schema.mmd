@@ -1,0 +1,217 @@
+---
+title: Bagad Penhars — Schéma relationnel Supabase
+---
+erDiagram
+    %% Schéma consolidé des migrations 001 à 004.
+    %% Les services externes auth.users et storage.objects ne sont pas détaillés.
+    %% Les cardinalités représentent les FK ; les tables de jointure matérialisent les N:N.
+
+    PUPITRES {
+        uuid id PK
+        text name UK
+        text slug UK
+        timestamptz created_at
+    }
+
+    PROFILES {
+        uuid id PK "FK logique vers auth.users.id"
+        text first_name
+        text last_name
+        text phone
+        app_role role
+        timestamptz created_at
+        timestamptz updated_at
+        text nickname
+        date birthdate
+        musician_level musician_level
+        boolean costume_complete
+    }
+
+    PROFILE_PUPITRES {
+        uuid profile_id PK, FK
+        uuid pupitre_id PK, FK
+        timestamptz created_at
+    }
+
+    BUREAU_POSITIONS {
+        uuid id PK
+        uuid profile_id FK
+        text title
+        date start_date
+        date end_date
+        timestamptz created_at
+    }
+
+    INVITATIONS {
+        uuid id PK
+        text email
+        text first_name
+        text last_name
+        uuid author_id FK
+        timestamptz created_at
+        timestamptz used_at
+    }
+
+    INVITATION_PUPITRES {
+        uuid invitation_id PK, FK
+        uuid pupitre_id PK, FK
+    }
+
+    EVENT_SERIES {
+        uuid id PK
+        text rrule
+        timestamptz created_at
+    }
+
+    EVENTS {
+        uuid id PK
+        uuid series_id FK
+        text title
+        text description
+        text location
+        timestamptz start_at
+        timestamptz end_at
+        event_visibility visibility
+        boolean is_poll
+        uuid author_id FK
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    EVENT_PUPITRES {
+        uuid event_id PK, FK
+        uuid pupitre_id PK, FK
+    }
+
+    EVENT_RESPONSES {
+        uuid id PK
+        uuid event_id FK
+        uuid profile_id FK
+        response_status status
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    DOCUMENTS {
+        uuid id PK
+        text title
+        text storage_path
+        uuid pupitre_id FK
+        uuid author_id FK
+        timestamptz created_at
+    }
+
+    ARTICLES {
+        uuid id PK
+        text title
+        text slug UK
+        text content
+        boolean published
+        timestamptz published_at
+        uuid author_id FK
+        timestamptz created_at
+        timestamptz updated_at
+        text summary
+        text image_url
+    }
+
+    ALBUMS {
+        uuid id PK
+        text title
+        text description
+        boolean is_public
+        uuid author_id FK
+        timestamptz created_at
+    }
+
+    MEDIA {
+        uuid id PK
+        uuid album_id FK
+        text storage_path
+        text caption
+        int sort_order
+        timestamptz created_at
+    }
+
+    NOTIFICATION_PREFERENCES {
+        uuid profile_id PK, FK
+        boolean enabled
+        boolean event_notifications
+        boolean poll_reminders
+        timestamptz updated_at
+    }
+
+    NOTIFICATION_LOG {
+        uuid id PK
+        uuid sender_id FK
+        text title
+        text body
+        jsonb audience
+        timestamptz sent_at
+    }
+
+    AUDIT_LOG {
+        uuid id PK
+        uuid actor_id FK
+        text action
+        text target_table
+        uuid target_id
+        jsonb details
+        timestamptz created_at
+    }
+
+    ACCOUNT_DELETION_REQUESTS {
+        uuid id PK
+        uuid profile_id FK "nullable, ON DELETE SET NULL"
+        text status
+        timestamptz requested_at
+        uuid processed_by FK
+        timestamptz processed_at
+        text notes
+        text snapshot_email
+        text snapshot_name
+    }
+
+    MEMBER_LOANS {
+        uuid id PK
+        uuid profile_id FK
+        text item_type
+        text item_name
+        text details
+        date loaned_at
+        date returned_at
+        text notes
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    %% Profils et pupitres
+    PROFILES ||--o{ PROFILE_PUPITRES : "affectations"
+    PUPITRES ||--o{ PROFILE_PUPITRES : "membres"
+    PROFILES ||--o{ BUREAU_POSITIONS : "mandats / titres"
+    PROFILES ||--o{ INVITATIONS : "auteur"
+    INVITATIONS ||--o{ INVITATION_PUPITRES : "pupitres invités"
+    PUPITRES ||--o{ INVITATION_PUPITRES : "pupitres proposés"
+
+    %% Agenda
+    EVENT_SERIES o|--o{ EVENTS : "série"
+    PROFILES o|--o{ EVENTS : "auteur"
+    EVENTS ||--o{ EVENT_PUPITRES : "ciblage"
+    PUPITRES ||--o{ EVENT_PUPITRES : "événements ciblés"
+    EVENTS ||--o{ EVENT_RESPONSES : "réponses"
+    PROFILES ||--o{ EVENT_RESPONSES : "participations"
+
+    %% Contenus
+    PUPITRES ||--o{ DOCUMENTS : "partitions"
+    PROFILES o|--o{ DOCUMENTS : "auteur"
+    PROFILES o|--o{ ARTICLES : "auteur"
+    PROFILES o|--o{ ALBUMS : "auteur"
+    ALBUMS ||--o{ MEDIA : "photos / médias"
+
+    %% Notifications et suivi
+    PROFILES ||--o| NOTIFICATION_PREFERENCES : "préférences"
+    PROFILES o|--o{ NOTIFICATION_LOG : "expéditeur"
+    PROFILES o|--o{ AUDIT_LOG : "acteur"
+    PROFILES o|--o{ ACCOUNT_DELETION_REQUESTS : "demandeur (nullable)"
+    PROFILES o|--o{ ACCOUNT_DELETION_REQUESTS : "traitée par"
+    PROFILES ||--o{ MEMBER_LOANS : "prêts"
