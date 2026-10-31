@@ -15,7 +15,8 @@ travail couvert par la présente mise à jour; les autres restent à faire.
 - [ ] Implémenter la gestion des sessions et les guards côté serveur; vérifier
       les autorisations des actions et routes de fichiers.
 - [x] Définir et mettre en œuvre un mécanisme de migrations reproductible
-      (CLI Supabase et `supabase/migrations/001_initial_schema.sql`).
+      (CLI Supabase et migration initiale autonome
+      `supabase/migrations/005_bagadPenhars_final.sql`).
 
 ## P1 — Fonctions principales
 

@@ -433,10 +433,14 @@ supabase/
 ├── seed.sql
 │
 ├── migrations/
-│   ├── 001_initial_schema.sql
-│   ├── 002_initial_schema.sql
-│   ├── 003_schema.sql
-│   └── 004_equipment_loans_and_profile_fields.sql
+│   └── 005_bagadPenhars_final.sql         # Schéma initial autonome (projet vierge)
+│
+├── deprecated_migrations/                 # Références historiques, jamais exécutées
+│   ├── README.md
+│   ├── 001_initial_schema.sql.deprecated
+│   ├── 002_initial_schema.sql.deprecated
+│   ├── 003_schema.sql.deprecated
+│   └── 004_equipment_loans_and_profile_fields.sql.deprecated
 │
 └── tests/
     ├── rls/

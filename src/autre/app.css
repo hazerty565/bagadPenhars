@@ -1,0 +1,303 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-gold-dim: var(--gold-dim);
+  --color-forest: var(--forest);
+  --color-stone: var(--stone);
+}
+
+/* ================================================================
+   BAGAD PENHARS — BRETON PATRIMOINE THEME
+   Inspired by Breton culture: Rich blue, black, and floral embroidery
+   ================================================================ */
+:root {
+  --radius: 0.5rem;
+
+  /* Lighter black background — more luminous */
+  --background: oklch(0.15 0.01 265);
+  --foreground: oklch(0.95 0.01 78);
+
+  /* Lighter card surface */
+  --card: oklch(0.22 0.02 265);
+  --card-foreground: oklch(0.95 0.01 78);
+
+  --popover: oklch(0.25 0.02 265);
+  --popover-foreground: oklch(0.95 0.01 78);
+
+  /* Rich blue — brighter */
+  --primary: oklch(0.60 0.16 258);
+  --primary-foreground: oklch(0.95 0.01 78);
+
+  /* Bright yellow for floral accents */
+  --secondary: oklch(0.85 0.17 95);
+  --secondary-foreground: oklch(0.15 0.01 265);
+
+  --muted: oklch(0.25 0.02 265);
+  --muted-foreground: oklch(0.65 0.04 78);
+
+  /* Warm orange/red for floral accents */
+  --accent: oklch(0.72 0.18 25);
+  --accent-foreground: oklch(0.95 0.01 78);
+
+  --destructive: oklch(0.577 0.245 27);
+  --border: oklch(0.60 0.16 258 / 25%);
+  --input: oklch(0.60 0.16 258 / 20%);
+  --ring: oklch(0.60 0.16 258 / 50%);
+
+  /* Breton patrimoine palette — lighter */
+  --blue: oklch(0.60 0.16 258);
+  --blue-dim: oklch(0.45 0.11 258);
+  --yellow-flower: oklch(0.85 0.17 95);
+  --orange-fruit: oklch(0.72 0.18 25);
+  --black: oklch(0.15 0.01 265);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+  }
+
+  ::selection {
+    background: oklch(0.74 0.155 75 / 30%);
+    color: oklch(0.96 0.01 78);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--background);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.74 0.155 75 / 40%);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.74 0.155 75 / 60%);
+  }
+}
+
+/* ================================================================
+   BRETON DECORATIVE UTILITIES — Floral & Blue Theme
+   ================================================================ */
+
+.celtic-border {
+  border: 2px solid var(--blue);
+  box-shadow:
+    0 0 0 1px oklch(0.52 0.15 258 / 15%),
+    inset 0 1px 0 oklch(0.52 0.15 258 / 20%);
+}
+
+.gold-glow {
+  box-shadow:
+    0 0 20px oklch(0.52 0.15 258 / 30%),
+    0 0 60px oklch(0.52 0.15 258 / 15%);
+}
+
+.gold-text-glow {
+  text-shadow:
+    0 0 30px oklch(0.82 0.16 95 / 60%),
+    0 0 60px oklch(0.52 0.15 258 / 40%);
+}
+
+/* Floral border pattern — mimics the costume embroidery */
+.floral-border {
+  position: relative;
+  border-top: 3px solid var(--blue);
+  padding-top: 1.5rem;
+}
+
+.floral-border::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    var(--blue) 0%,
+    var(--blue) 8%,
+    var(--yellow-flower) 8%,
+    var(--yellow-flower) 12%,
+    var(--blue) 12%,
+    var(--blue) 16%,
+    var(--orange-fruit) 16%,
+    var(--orange-fruit) 20%,
+    var(--blue) 20%,
+    var(--blue) 24%,
+    var(--yellow-flower) 24%,
+    var(--yellow-flower) 28%,
+    var(--blue) 28%,
+    var(--blue) 32%,
+    var(--orange-fruit) 32%,
+    var(--orange-fruit) 36%,
+    var(--blue) 36%
+  );
+  background-size: 200px 100%;
+  background-repeat: repeat-x;
+}
+
+.floral-divider {
+  height: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--blue) 0%,
+    var(--blue) 30%,
+    var(--yellow-flower) 30%,
+    var(--yellow-flower) 35%,
+    var(--blue) 35%,
+    var(--blue) 50%,
+    var(--orange-fruit) 50%,
+    var(--orange-fruit) 55%,
+    var(--blue) 55%,
+    var(--blue) 70%,
+    var(--yellow-flower) 70%,
+    var(--yellow-flower) 75%,
+    var(--blue) 75%
+  );
+  background-size: 300px 100%;
+  background-repeat: repeat-x;
+  margin: 1rem 0;
+}
+
+/* Blue highlight for hover states */
+.blue-highlight:hover {
+  color: var(--yellow-flower);
+  text-shadow: 0 0 10px oklch(0.52 0.15 258 / 50%);
+}
+
+.section-gradient {
+  background: radial-gradient(
+    ellipse 80% 50% at 50% -10%,
+    var(--blue) / 12% 0%,
+    transparent 70%
+  );
+}
+
+.hero-gradient {
+  background:
+    radial-gradient(ellipse 60% 80% at 30% 50%, var(--yellow-flower) / 15% 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 75% 30%, var(--blue) / 20% 0%, transparent 60%),
+    linear-gradient(180deg, oklch(0.06 0.01 265) 0%, oklch(0.10 0.02 265) 100%);
+}
+
+.glass-card {
+  background: oklch(0.12 0.02 265 / 85%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--blue) / 20%;
+}
+
+.glass-dark {
+  background: oklch(0.08 0.01 265 / 95%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--blue) / 25%;
+}
+
+/* Animated gradient text — now with blue and yellow */
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    var(--blue) 0%,
+    var(--yellow-flower) 40%,
+    var(--orange-fruit) 70%,
+    var(--blue) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Pulse glow animation for active elements */
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 10px var(--blue) / 40%; }
+  50% { box-shadow: 0 0 25px var(--blue) / 70%, 0 0 50px var(--yellow-flower) / 30%; }
+}
+
+.pulse-gold {
+  animation: pulse-gold 2s ease-in-out infinite;
+}
+
+/* Breton floral knot divider */
+.knot-divider {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--blue) / 30% 20%,
+    var(--yellow-flower) / 60% 40%,
+    var(--blue) / 80% 50%,
+    var(--orange-fruit) / 60% 60%,
+    var(--blue) / 30% 80%,
+    transparent 100%
+  );
+}
+
+/* Noise texture overlay */
+.noise-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.4;
+}

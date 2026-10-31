@@ -199,10 +199,11 @@ données le permet.
   stockage. Les vidéos ne sont pas acceptées.
 - L'admin et la secrétaire peuvent publier et supprimer les albums. Une demande
   de retrait d'une photo est traitée rapidement par un responsable habilité;
-  les médias publiés comme publics sont accessibles sans connexion.
-- Tous les fichiers sont stockés dans Supabase Storage, dans des buckets
-  privés ou publics uniquement selon les règles de visibilité décidées. Les
-  policies de `storage.objects` font partie de la livraison.
+  les médias d'albums publics sont accessibles sans connexion via une URL
+  signée après vérification de leur visibilité.
+- Tous les fichiers sont stockés dans des buckets Supabase privés. Les policies
+  de `storage.objects` contrôlent l'accès selon la visibilité de l'album ou le
+  rôle du membre; aucune URL publique ne doit contourner ces règles.
 
 ### 4.6 Notifications
 
@@ -320,8 +321,10 @@ fonctionnelle :
   `src/lib/auth/guards.ts`, `src/lib/auth/roles.ts`,
   `src/lib/server/auth.ts`, `src/lib/server/db.ts`,
   `src/lib/server/blobs.ts` et plusieurs modules `src/lib/server/data/`.
-- La seule migration métier est `migrations/001_initial_schema.sql`. Elle
-  référence les tables de Better Auth et n'active pas RLS.
+- Le schéma Supabase de départ est consolidé dans
+  `supabase/migrations/005_bagadPenhars_final.sql`; les migrations 001–004
+  sont archivées sous `supabase/deprecated_migrations/` et ne doivent pas être
+  appliquées.
 - Au moment de cette lecture, il n'y a pas de dossier `supabase/`, de
   migration Supabase, de fichier `.env.example` ni de dépendance Supabase dans
   `package.json`. Le dépôt contient encore Better Auth, `pg`, Kysely et
@@ -332,9 +335,9 @@ fonctionnelle :
 - La présence de tests dans certains répertoires ne signifie pas que tous les
   scénarios produit ou les règles d'autorisation sont couverts.
 
-Le périmètre demandé est la cible Supabase décrite plus haut. Le développeur
-doit confirmer cet état avec le dépôt au début de l'implémentation et ne pas
-appliquer la migration historique comme schéma Supabase.
+Le schéma 005 est prévu pour une base Supabase vierge. Un projet ayant déjà
+appliqué les migrations historiques doit faire l'objet d'une réconciliation
+dédiée avant déploiement.
 
 ## 10. Plan de réalisation recommandé
 
