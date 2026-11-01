@@ -1,5 +1,11 @@
 # SpecUI.md - Bagad Penhars Website
 
+> **Passages obsolètes :** certaines règles de pupitres et de responsabilités
+> ont été précisées depuis la rédaction de cette spécification. Consulter les
+> arbitrages datés de [`questions.md`](./questions.md) et ne pas prendre en
+> compte les passages qui y sont marqués **OBsolète — ne plus prendre en
+> compte**.
+
 **Auteur:** hazerty565  
 **Date:** 2026  
 **Stack:** Svelte 5 + SvelteKit + Tailwind CSS + Motion + shadcn
@@ -15,24 +21,74 @@ Site vitrine pour le Bagad Penhars avec présentation de l'association, actualit
 ## Page d'accueil
 
 **HEADER**
+
 - Logo + "Bagad Penhars" (logo caché mobile < md)
 - Menu centré: Accueil / Bagad / Formation / Agenda / Médias / Partenaires / Contact (desktop only > lg)
 - Réseaux: Facebook, Instagram
 - Dropdown langue: FR / EN / BR
-- Bouton "Écouter" avec lecteur audio (caché mobile < md)
+- Bouton « Écouter » avec une icône Lucide `Music2` (deux croches), qui ouvre le lecteur flottant ; sur mobile, l'accès reste disponible dans le menu burger.
 - Bouton Connexion (caché mobile < sm)
 - Menu burger mobile (< lg)
 
+**LECTEUR AUDIO FLOTTANT GLOBAL**
+
+- Le lecteur est disponible depuis toutes les pages publiques et reste monté
+  dans la structure partagée du site ; naviguer entre les pages ne ferme pas la
+  lecture et ne réinitialise ni le morceau en cours ni sa position.
+- Le bouton « Écouter » du header ouvre ou réaffiche le lecteur sans démarrer
+  un autre morceau. Le lecteur peut être réduit ou fermé ; le rouvrir conserve
+  la lecture en cours.
+- Le bouton reste identifiable avec son libellé accessible « Écouter », même
+  lorsque le texte est masqué visuellement sur un petit écran.
+
 **HERO**
+
 - Image/vidéo full width
 - Overlay semi-transparent
 - Titre centré + sous-titre + CTA
 
-**ENCART BIENVENUE**
-- Grille 1 col (mobile) / 2 col (desktop)
-- Colonne 1: Card avec texte présentation + bouton CTA
-- Colonne 2: Image hero (hidden mobile)
-- Animations au scroll
+**CONTENU — PAGE D'ACCUEIL SYNTHÉTIQUE**
+
+La page d'accueil donne un aperçu du Bagad et de ses activités. Elle réutilise
+les pistes visuelles du prototype `src/autre/src/components/`, sans reprendre
+ses données de démonstration ni dupliquer le contenu complet des pages
+dédiées. Chaque aperçu comporte un lien vers sa page de référence.
+
+1. **Hero** — image, titre, présentation courte et appel à l'action.
+2. **Le Bagad** — résumé issu de la présentation de l'association, avec image
+   et lien « Découvrir le Bagad » vers la page dédiée.
+3. **Formation** — aperçu des quatre pupitres (bombarde, cornemuse, caisse
+   claire et percussion), sous forme de cartes courtes avec visuel et lien vers
+   la page Formation détaillée.
+4. **Agenda** — afficher les deux prochaines représentations publiques à
+   venir, triées par date croissante, en lecture seule. Si moins de deux dates
+   sont disponibles, afficher celles qui existent. Les événements internes ou
+   ciblés sur un pupitre ne sont jamais affichés sur la page publique. Un lien
+   ouvre l'agenda public complet, qui liste toutes les dates publiques.
+5. **Galerie** — afficher trois photos distinctes choisies au hasard parmi
+   les photos publiées et accessibles publiquement, ou toutes les photos
+   disponibles s'il y en a moins de trois. La sélection est fournie au rendu
+   initial et conservée pendant l'hydratation. Ne jamais sélectionner de
+   document ou de photo privée. Un lien ouvre la galerie complète.
+
+Les aperçus ne remplacent pas les pages dédiées :
+
+- **Bagad** : contenu complet sur l'histoire, les valeurs, les dates clés,
+  l'effectif, les photos et les principaux événements ou palmarès validés par
+  le bureau ;
+- **Formation** : présentation complète des quatre pupitres, avec niveaux,
+  contenu des cours, horaires, lieu et modalités de prêt d'instrument ; les
+  informations manquantes sont fournies ou validées par le bureau ;
+- **Agenda** : toutes les dates publiques, accessibles sans connexion et en
+  lecture seule ; les membres connectés retrouvent les événements internes ou
+  de pupitre dans l'espace adhérent selon leurs droits ;
+- **Médias** : galerie complète des albums explicitement publiés pour le
+  public.
+
+L'ordre visuel proposé s'inspire de `HeroSection`, `AboutSection`,
+`FormationSection`, `EventsSection` et `GallerySection` dans le prototype. Le
+contenu de production est alimenté par les données publiques réelles, pas par
+les tableaux statiques de la maquette.
 
 ---
 
@@ -104,31 +160,35 @@ Aucun compte `pending` ou `suspended` ne reçoit les actions d'un membre actif.
 
 ## Composants clés
 
-| Composant | Description | Notes |
-|-----------|-------------|-------|
-| Header.svelte | Navigation + actions | Responsive, sticky |
-| Hero.svelte | Section hero | Animations fade |
-| WelcomeCard.svelte | Card bienvenue | Animations scroll |
-| AudioPlayer.svelte | Lecteur audio | Desktop/mobile versions |
-| LanguageDropdown.svelte | Sélecteur langue | Store persisté |
+| Composant               | Description             | Notes                             |
+| ----------------------- | ----------------------- | --------------------------------- |
+| Header.svelte           | Navigation + actions    | Responsive, sticky                |
+| Hero.svelte             | Section hero            | Animations fade                   |
+| WelcomeCard.svelte      | Card bienvenue          | Animations scroll                 |
+| FloatingPlayer.svelte   | Lecteur flottant global | Lecture conservée entre les pages |
+| LanguageDropdown.svelte | Sélecteur langue        | Store persisté                    |
 
 ---
 
 ## Responsive Design
 
 **Mobile (< 640px)**
+
 - Menu burger au clic
 - Logo seul dans header
-- Full width sans lecteur audio
+- Accès au lecteur flottant depuis le menu ; le lecteur conserve le morceau
+  pendant la navigation
 - Stack vertical pour grille
 
 **Tablette (640px - 1024px)**
+
 - Menu burger
 - Texte "Bagad Penhars" visible
-- Lecteur audio visible
+- Accès au lecteur flottant depuis le header
 - Grille 2 col
 
 **Desktop (> 1024px)**
+
 - Menu centré complet
 - Tous les éléments visibles
 - Animations hover
@@ -162,7 +222,7 @@ Aucun compte `pending` ou `suspended` ne reçoit les actions d'un membre actif.
 ✓ Tailwind CSS responsive  
 ✓ Svelte Transitions (fade, slide, scale)  
 ✓ Store persisté pour langue  
-✓ Audio API native HTML5  
+✓ Audio API native HTML5
 
 ---
 

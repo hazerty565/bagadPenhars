@@ -1,5 +1,10 @@
 # Brief : site Bagad Penhars
 
+> **Passages obsolètes :** certaines règles de rôle et de périmètre ont été
+> précisées depuis la rédaction de ce brief. Consulter les arbitrages datés de
+> [`questions.md`](./questions.md) et ne pas prendre en compte les passages qui
+> y sont marqués **OBsolète — ne plus prendre en compte**.
+
 > Document de référence du besoin. À lire avant toute fonctionnalité.
 > Si un point est flou ou manquant, ne pas deviner : l'écrire dans `docs/questions.md`.
 

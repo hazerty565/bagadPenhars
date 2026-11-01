@@ -2,7 +2,7 @@
   import { onMount } from "svelte"
   import { gsap } from "gsap"
   import { ScrollTrigger } from "gsap/ScrollTrigger"
-  import { Play, Pause, Music, Disc3 } from "lucide-svelte"
+  import { Play, Pause, Disc3 } from "lucide-svelte"
   import { tracks, albums } from "../lib/tracks.js"
   import { formatTime } from "../lib/utils.js"
 
@@ -42,21 +42,17 @@
   id="musique"
   bind:this={sectionEl}
   class="relative py-28 lg:py-40 overflow-hidden"
-  style="background: linear-gradient(180deg, transparent 0%, oklch(0.08 0.03 265 / 50%) 50%, transparent 100%);"
+  style="background: oklch(0.94 0.02 235);"
 >
-  <!-- Floral border divider -->
-  <div class="floral-divider absolute top-0 left-0 right-0 h-3"></div>
-
-  <!-- Decorative element with blue-to-yellow gradient -->
-  <div class="absolute left-1/2 top-0 -translate-x-1/2 w-px h-24 opacity-20"
-    style="background: linear-gradient(180deg, transparent, var(--blue));">
+  <!-- Decorative top line -->
+  <div class="absolute left-1/2 top-0 -translate-x-1/2 w-px h-24 opacity-30"
+    style="background: linear-gradient(180deg, transparent, oklch(0.40 0.22 240));">
   </div>
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <!-- Section header -->
     <div class="text-center mb-20 animate-in">
-      <p class="text-xs font-semibold tracking-widest uppercase mb-3" style="color: var(--blue);">
+      <p class="text-xs font-semibold tracking-widest uppercase mb-3" style="color: oklch(0.40 0.22 240);">
         Discographie
       </p>
       <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6" style="font-family: var(--font-serif);">
@@ -75,37 +71,37 @@
           onclick={() => { activeAlbum = i }}
           class="px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300"
           style={activeAlbum === i
-            ? "background: var(--blue); color: white; box-shadow: 0 0 20px var(--blue) / 50%;"
-            : "background: var(--blue) / 12%; color: var(--blue); border: 1px solid var(--blue) / 35%;"}
+            ? "background: oklch(0.40 0.22 240); color: oklch(0.98 0.005 235); box-shadow: 0 4px 16px oklch(0.40 0.22 240 / 35%);"
+            : "background: oklch(1 0 0); color: oklch(0.40 0.22 240); border: 1px solid oklch(0.40 0.22 240 / 25%);"}
         >
           {album.title}
         </button>
       {/each}
     </div>
 
-    <!-- Album detail -->
     <div class="grid lg:grid-cols-[380px_1fr] gap-12 items-start">
 
       <!-- Album cover -->
       <div class="animate-in">
-        <div class="relative rounded-2xl overflow-hidden aspect-square celtic-border" style="box-shadow: 0 0 20px var(--blue) / 30%;">
+        <div class="relative rounded-2xl overflow-hidden aspect-square gold-glow"
+          style="border: 1px solid oklch(0.74 0.155 75 / 25%); box-shadow: 0 20px 60px oklch(0.40 0.22 240 / 15%);">
           <img
             src={albums[activeAlbum].cover}
             alt={`Album ${albums[activeAlbum].title}`}
             class="w-full h-full object-cover transition-all duration-500"
           />
           <div class="absolute inset-0"
-            style="background: linear-gradient(to bottom, transparent 60%, oklch(0.10 0.025 265 / 80%));">
+            style="background: linear-gradient(to bottom, transparent 60%, oklch(0.13 0.045 240 / 75%));">
           </div>
           <div class="absolute bottom-0 left-0 right-0 p-6">
             <div class="text-xs font-semibold tracking-widest uppercase mb-1"
-              style="color: var(--yellow-flower);">
+              style="color: oklch(0.74 0.155 75);">
               {albums[activeAlbum].year}
             </div>
-            <h3 class="text-xl font-bold text-foreground" style="font-family: var(--font-serif);">
+            <h3 class="text-xl font-bold" style="font-family: var(--font-serif); color: oklch(0.98 0.005 235);">
               {albums[activeAlbum].title}
             </h3>
-            <p class="text-xs text-muted-foreground mt-1">{albums[activeAlbum].trackCount} morceaux</p>
+            <p class="text-xs mt-1" style="color: oklch(0.75 0.04 235);">{albums[activeAlbum].trackCount} morceaux</p>
           </div>
         </div>
 
@@ -124,39 +120,36 @@
             class="w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200 group text-left
                    hover:-translate-x-1"
             style={active
-              ? "background: var(--blue) / 18%; border: 1px solid var(--blue) / 40%;"
-              : "background: oklch(0.155 0.025 265 / 50%); border: 1px solid transparent;"}
+              ? "background: oklch(0.40 0.22 240 / 10%); border: 1px solid oklch(0.40 0.22 240 / 25%);"
+              : "background: oklch(1 0 0); border: 1px solid oklch(0.40 0.22 240 / 8%);"}
           >
-            <!-- Track number / play icon -->
             <div class="w-10 h-10 flex items-center justify-center flex-shrink-0">
               {#if active && isPlaying}
                 <div class="w-8 h-8 rounded-full flex items-center justify-center"
-                  style="background: var(--blue);">
-                  <Pause size={14} fill="currentColor" style="color: white;" />
+                  style="background: oklch(0.74 0.155 75);">
+                  <Pause size={14} fill="currentColor" style="color: oklch(0.13 0.045 240);" />
                 </div>
               {:else if active}
                 <div class="w-8 h-8 rounded-full flex items-center justify-center"
-                  style="background: var(--blue) / 25%;">
-                  <Play size={14} fill="currentColor" style="color: var(--blue);" />
+                  style="background: oklch(0.40 0.22 240 / 15%);">
+                  <Play size={14} fill="currentColor" style="color: oklch(0.40 0.22 240);" />
                 </div>
               {:else}
                 <span class="text-sm text-muted-foreground group-hover:hidden font-mono">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <Play size={16} class="hidden group-hover:block" style="color: var(--blue);" />
+                <Play size={16} class="hidden group-hover:block" style="color: oklch(0.40 0.22 240);" />
               {/if}
             </div>
 
-            <!-- Track info -->
             <div class="flex-1 min-w-0">
               <div class="font-medium text-sm truncate"
-                style={active ? "color: var(--blue);" : ""}>
+                style={active ? "color: oklch(0.40 0.22 240);" : "color: oklch(0.13 0.045 240);"}>
                 {track.title}
               </div>
               <div class="text-xs text-muted-foreground truncate mt-0.5">{track.subtitle}</div>
             </div>
 
-            <!-- Meta -->
             <div class="flex items-center gap-4 text-xs text-muted-foreground flex-shrink-0">
               <span class="hidden sm:block">{track.instruments.split(",")[0]}</span>
               <span class="font-mono">{formatTime(track.duration)}</span>

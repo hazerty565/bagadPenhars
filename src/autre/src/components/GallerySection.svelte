@@ -52,14 +52,12 @@
   id="galerie"
   bind:this={sectionEl}
   class="relative py-28 lg:py-40 overflow-hidden"
+  style="background: oklch(0.94 0.02 235);"
 >
-  <!-- Floral border divider -->
-  <div class="floral-divider absolute top-0 left-0 right-0 h-3"></div>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <!-- Header -->
     <div class="text-center mb-20">
-      <p class="text-xs font-semibold tracking-widest uppercase mb-3" style="color: var(--blue);">
+      <p class="text-xs font-semibold tracking-widest uppercase mb-3" style="color: oklch(0.40 0.22 240);">
         Souvenirs
       </p>
       <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6" style="font-family: var(--font-serif);">
@@ -68,13 +66,11 @@
       <div class="knot-divider w-24 mx-auto"></div>
     </div>
 
-    <!-- Masonry grid -->
     <div class="gallery-grid columns-2 lg:columns-3 gap-4 space-y-4">
       {#each photos as photo, i}
         <button
           onclick={() => openLightbox(photo)}
-          class="gallery-item block w-full rounded-xl overflow-hidden relative group cursor-zoom-in break-inside-avoid"
-          class:mb-4={true}
+          class="gallery-item block w-full rounded-xl overflow-hidden relative group cursor-zoom-in break-inside-avoid mb-4"
         >
           <div
             class="overflow-hidden rounded-xl"
@@ -91,11 +87,11 @@
             <div
               class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100
                      transition-all duration-300"
-              style="background: oklch(0.10 0.025 265 / 50%);"
+              style="background: oklch(0.13 0.045 240 / 50%);"
             >
               <div class="w-12 h-12 rounded-full flex items-center justify-center"
-                style="background: var(--blue) / 90%;">
-                <ZoomIn size={20} style="color: white;" />
+                style="background: oklch(0.74 0.155 75 / 90%);">
+                <ZoomIn size={20} style="color: oklch(0.13 0.045 240);" />
               </div>
             </div>
           </div>
@@ -107,12 +103,11 @@
   </div>
 </section>
 
-<!-- Lightbox -->
 {#if lightboxOpen}
   <!-- svelte-ignore a11y_interactive_supports_focus -->
   <div
     class="fixed inset-0 z-[60] flex items-center justify-center p-4"
-    style="background: oklch(0.08 0.02 265 / 95%); backdrop-filter: blur(8px);"
+    style="background: oklch(0.10 0.05 240 / 93%); backdrop-filter: blur(8px);"
     onclick={closeLightbox}
     onkeydown={(e) => e.key === 'Escape' && closeLightbox()}
     role="dialog"
@@ -124,7 +119,7 @@
       onclick={closeLightbox}
       class="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center
              transition-all duration-200 hover:bg-white/10"
-      style="color: var(--blue);"
+      style="color: oklch(0.74 0.155 75);"
       aria-label="Fermer"
     >
       <X size={22} />

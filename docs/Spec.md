@@ -1,5 +1,11 @@
 # Spécification développeur — Bagad Penhars
 
+> **Passages obsolètes :** certaines règles de rôles, de pupitres, de profils
+> et de réponses ont été précisées depuis la rédaction de cette spécification.
+> Consulter les arbitrages datés de [`questions.md`](./questions.md) et ne pas
+> prendre en compte les passages qui y sont marqués **OBsolète — ne plus
+> prendre en compte**.
+
 ## 1. Objet
 
 Ce document transforme le besoin produit en exigences vérifiables pour la
@@ -38,20 +44,20 @@ confère aucun droit à lui seul. L'attribution d'un titre ne modifie jamais
 automatiquement le rôle applicatif : les deux sont gérés indépendamment. Le
 président et le trésorier n'ont pas de droits métier liés à leur titre.
 
-| Rôle           | Exigences                                                                                                                   |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Rôle           | Exigences                                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------------------------- |
 | `member`       | Consulte l'agenda, les documents et le trombinoscope autorisé; répond aux événements et gère son propre profil. |
-| `chef_pupitre` | Droits d'un membre; gère les événements d'un seul pupitre, et les partitions/notifications de son périmètre. |
-| `secretaire`   | Gère tous les événements, articles et albums; envoie des notifications aux pupitres autorisés. |
-| `admin`        | Gère globalement les utilisateurs, invitations, rôles, contenus et notifications; valide les comptes. |
+| `chef_pupitre` | Droits d'un membre; gère les événements d'un seul pupitre, et les partitions/notifications de son périmètre.    |
+| `secretaire`   | Gère tous les événements, articles et albums; envoie des notifications aux pupitres autorisés.                  |
+| `admin`        | Gère globalement les utilisateurs, invitations, rôles, contenus et notifications; valide les comptes.           |
 
 Le statut de compte est distinct du rôle applicatif :
 
-| `account_status` | Effet |
-|---|---|
-| `pending` | Compte créé sur invitation, en attente d'activation ; aucun accès métier |
-| `active` | Accès autorisé selon `app_role` |
-| `suspended` | Accès métier révoqué temporairement, données conservées |
+| `account_status` | Effet                                                                    |
+| ---------------- | ------------------------------------------------------------------------ |
+| `pending`        | Compte créé sur invitation, en attente d'activation ; aucun accès métier |
+| `active`         | Accès autorisé selon `app_role`                                          |
+| `suspended`      | Accès métier révoqué temporairement, données conservées                  |
 
 Principes obligatoires :
 
@@ -93,8 +99,8 @@ plusieurs affectations de pupitre par membre.
   l'effectif, les photos et les principaux événements ou palmarès. Le bureau
   valide les contenus avant publication.
 - **Page Formation** : présenter les formations proposées pour chacun des
-  instruments/pupitres : bombarde, caisse claire et cornemuse.
-  Chaque instrument doit avoir une section identifiable avec les niveaux
+  quatre pupitres : bombarde, cornemuse, caisse claire et percussion.
+  Chaque pupitre doit avoir une section identifiable avec les niveaux
   requis, le contenu des cours, les horaires, le lieu et les modalités de prêt
   d'instrument. Le bureau complète les informations manquantes.
 - Afficher les représentations publiques en lecture seule.
@@ -121,8 +127,11 @@ plusieurs affectations de pupitre par membre.
 
 - La navigation permet d'atteindre l'accueil, la présentation du Bagad et la
   page Formation.
-- La page Formation présente séparément les trois instruments/pupitres
-  ci-dessus, avec un contenu éditorial fourni ou validé par l'association.
+- La page d'accueil fournit des aperçus du Bagad et de ses quatre formations,
+  des deux prochaines représentations publiques et de trois photos publiques,
+  avec un accès aux pages dédiées.
+- La page Formation présente séparément les quatre pupitres ci-dessus, avec un
+  contenu éditorial fourni ou validé par l'association.
 - Ces pages sont consultables sans compte et ne révèlent aucune information
   privée sur les membres ou les titres du bureau.
 - Chaque page publique fournit des métadonnées SEO propres à sa langue; le
@@ -431,7 +440,7 @@ refus et accès autorisés.
 - Mettre en place les invitations email à usage unique, expirantes après une
   heure et dont le jeton n'est stocké qu'empreinté. Seul l'admin peut inviter;
   le compte Auth et le profil avec `account_status = pending` et `app_role =
-  member` sont créés immédiatement.
+member` sont créés immédiatement.
 - L'invité confirme son adresse et définit son mot de passe dans l'heure.
   La confirmation ne valide pas le compte et l'invité ne choisit ni son rôle ni
   ses pupitres.

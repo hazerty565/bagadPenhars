@@ -1,5 +1,10 @@
 # Architecture
 
+> **Passages obsolètes :** les indications relatives à l'ancienne migration
+> dans `migrations/` ont été remplacées. Consulter les arbitrages datés de
+> [`questions.md`](./questions.md) et ne pas prendre en compte les passages qui
+> y sont marqués **OBsolète — ne plus prendre en compte**.
+
 ## Stack et déploiement
 
 L'application cible SvelteKit 5, TypeScript et TailwindCSS. Supabase est

@@ -215,23 +215,23 @@
   >
     <div
       class="rounded-2xl overflow-hidden"
-      style="background: oklch(0.09 0.028 265 / 96%); backdrop-filter: blur(20px);
+      style="background: oklch(0.12 0.06 240 / 96%); backdrop-filter: blur(20px);
              border: 1px solid oklch(0.74 0.155 75 / 25%);
-             box-shadow: 0 25px 60px oklch(0.05 0.02 265 / 80%), 0 0 0 1px var(--blue) / 8%,
-                         0 0 60px var(--blue) / 15%;"
+             box-shadow: 0 25px 60px oklch(0.08 0.05 240 / 80%), 0 0 0 1px oklch(0.74 0.155 75 / 5%),
+                         0 0 60px oklch(0.74 0.155 75 / 10%);"
     >
       <!-- Title bar (drag handle) -->
       <div
         class="flex items-center justify-between px-4 py-3 cursor-grab active:cursor-grabbing"
-        style="background: var(--blue) / 8%; border-bottom: 1px solid var(--blue) / 20%;"
+        style="background: oklch(0.40 0.22 240 / 25%); border-bottom: 1px solid oklch(0.74 0.155 75 / 15%);"
         onmousedown={startDrag}
         ontouchstart={startDrag}
         role="none"
       >
         <div class="flex items-center gap-2">
-          <Music2 size={14} style="color: var(--yellow-flower);" />
+          <Music2 size={14} style="color: oklch(0.74 0.155 75);" />
           <span class="text-xs font-medium tracking-widest uppercase"
-            style="color: var(--blue) / 85%;">
+            style="color: oklch(0.74 0.155 75 / 80%);">
             Bagad Penhars
           </span>
         </div>
@@ -276,7 +276,7 @@
               />
               {#if !isPlaying}
                 <div class="absolute inset-0 flex items-center justify-center"
-                  style="background: oklch(0.09 0.028 265 / 40%);">
+                  style="background: oklch(0.12 0.06 240 / 40%);">
                   <div class="w-6 h-6 rounded-full"
                     style="border: 2px solid oklch(0.74 0.155 75 / 60%); background: oklch(0.74 0.155 75 / 20%);">
                   </div>
@@ -325,13 +325,13 @@
             >
               <div
                 class="absolute left-0 top-0 h-full rounded-full transition-all"
-                style="width: {progress}%; background: linear-gradient(90deg, var(--blue) / 70%, var(--blue));"
+                style="width: {progress}%; background: linear-gradient(90deg, oklch(0.55 0.11 75), oklch(0.74 0.155 75));"
               ></div>
               <!-- Thumb -->
               <div
                 class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full opacity-0 group-hover:opacity-100
                        transition-opacity -translate-x-1/2"
-                style="left: {progress}%; background: var(--blue); box-shadow: 0 0 8px var(--blue) / 70%;"
+                style="left: {progress}%; background: oklch(0.74 0.155 75); box-shadow: 0 0 8px oklch(0.74 0.155 75 / 60%);"
               ></div>
             </div>
             <div class="flex justify-between text-xs text-muted-foreground font-mono">
@@ -346,7 +346,7 @@
             <button
               onclick={() => { shuffle = !shuffle }}
               class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
-              style="color: {shuffle ? 'var(--blue)' : 'oklch(0.50 0.04 78)'};"
+              style="color: {shuffle ? 'oklch(0.74 0.155 75)' : 'oklch(0.50 0.04 78)'};"
               aria-label="Aléatoire"
               aria-pressed={shuffle}
             >
@@ -369,8 +369,8 @@
               onclick={togglePlay}
               class="w-12 h-12 flex items-center justify-center rounded-full transition-all
                      hover:scale-110 active:scale-95"
-              style="background: var(--blue); color: white;
-                     box-shadow: 0 0 20px var(--blue) / 50%;"
+              style="background: oklch(0.74 0.155 75); color: oklch(0.11 0.025 265);
+                     box-shadow: 0 0 20px oklch(0.74 0.155 75 / 40%);"
               aria-label={isPlaying ? "Pause" : "Lecture"}
             >
               {#if isPlaying}
@@ -395,7 +395,7 @@
             <button
               onclick={() => { repeat = !repeat }}
               class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
-              style="color: {repeat ? 'var(--blue)' : 'oklch(0.50 0.04 78)'};"
+              style="color: {repeat ? 'oklch(0.74 0.155 75)' : 'oklch(0.50 0.04 78)'};"
               aria-label="Répéter"
               aria-pressed={repeat}
             >
@@ -431,12 +431,12 @@
               />
               <div
                 class="h-full rounded-full transition-all"
-                style="width: {muted ? 0 : volume}%; background: linear-gradient(90deg, var(--blue) / 70%, var(--blue));"
+                style="width: {muted ? 0 : volume}%; background: linear-gradient(90deg, oklch(0.55 0.11 75), oklch(0.74 0.155 75));"
               ></div>
               <div
                 class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full opacity-0 group-hover:opacity-100
                        transition-opacity -translate-x-1/2"
-                style="left: {muted ? 0 : volume}%; background: var(--blue);"
+                style="left: {muted ? 0 : volume}%; background: oklch(0.74 0.155 75);"
               ></div>
             </div>
             <span class="text-xs font-mono text-muted-foreground w-7 text-right">
@@ -454,10 +454,10 @@
                 class:active-track={active}
               >
                 <div class="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style="background: {active ? 'var(--blue)' : 'oklch(0.40 0.04 78)'};">
+                  style="background: {active ? 'oklch(0.74 0.155 75)' : 'oklch(0.40 0.04 78)'};">
                 </div>
                 <span class="text-xs flex-1 truncate"
-                  style="color: {active ? 'var(--blue)' : 'oklch(0.70 0.04 78)'};">
+                  style="color: {active ? 'oklch(0.74 0.155 75)' : 'oklch(0.70 0.04 78)'};">
                   {track.title}
                 </span>
                 <span class="text-xs font-mono"
@@ -493,12 +493,12 @@
           </div>
           <div class="flex items-center gap-1 flex-shrink-0">
             <button onclick={prevTrack} class="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded"
-              style="color: var(--blue);" aria-label="Précédent">
+              style="color: oklch(0.74 0.155 75);" aria-label="Précédent">
               <SkipBack size={13} fill="currentColor" />
             </button>
             <button onclick={togglePlay}
               class="w-8 h-8 flex items-center justify-center rounded-full"
-              style="background: var(--blue); color: white;"
+              style="background: oklch(0.74 0.155 75); color: oklch(0.11 0.025 265);"
               aria-label={isPlaying ? "Pause" : "Lecture"}>
               {#if isPlaying}
                 <Pause size={13} fill="currentColor" />
@@ -507,14 +507,14 @@
               {/if}
             </button>
             <button onclick={nextTrack} class="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded"
-              style="color: var(--blue);" aria-label="Suivant">
+              style="color: oklch(0.74 0.155 75);" aria-label="Suivant">
               <SkipForward size={13} fill="currentColor" />
             </button>
           </div>
         </div>
         <!-- Mini progress -->
-        <div class="h-0.5 mx-4 mb-3 rounded-full" style="background: var(--blue) / 20%;">
-          <div class="h-full rounded-full" style="width: {progress}%; background: var(--blue);"></div>
+        <div class="h-0.5 mx-4 mb-3 rounded-full" style="background: oklch(0.74 0.155 75 / 15%);">
+          <div class="h-full rounded-full" style="width: {progress}%; background: oklch(0.74 0.155 75);"></div>
         </div>
       {/if}
     </div>

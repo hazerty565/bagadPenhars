@@ -1,5 +1,11 @@
 # Base de données : schéma, rôles et RLS
 
+> **Relecture en cours :** la migration 005 est relue par des experts en
+> développement. Certaines règles de rôle, de profil et de présence décrites
+> ici sont dépassées ; consulter les arbitrages datés de
+> [`questions.md`](./questions.md) et ne pas prendre en compte les passages qui
+> y sont marqués **OBsolète — ne plus prendre en compte**.
+
 > Source de vérité : les migrations `supabase/migrations/NNN_*.sql`.  
 > Ce document les résume. Toute modification du schéma met à jour ce fichier **dans le même commit**.
 

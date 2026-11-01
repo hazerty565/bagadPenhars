@@ -1,5 +1,11 @@
 # Suivi du projet
 
+> **État partiellement obsolète :** certaines cases de suivi ne reflètent pas
+> les dernières mises à jour et sont en cours de validation par des experts en
+> développement. Consulter [`questions.md`](./questions.md) ; les cases qui y
+> sont indiquées **OBsolète — ne plus prendre en compte** ne décrivent pas
+> l'état actuel.
+
 > État du projet : 26 octobre 2026
 > Échéance globale : **à définir**
 

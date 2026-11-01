@@ -1,490 +1,312 @@
+# Structure du dépôt
+
+Ce document décrit l'organisation réelle du dépôt et le rôle de ses principaux
+répertoires. Il distingue les fichiers présents de la cible fonctionnelle :
+la présence d'une route, d'un module ou d'une migration ne prouve pas que le
+parcours correspondant est complet ou validé.
+
+Pour les règles produit, se référer au [brief](./brief.md), à la
+[spécification](./Spec.md) et aux décisions datées de
+[questions.md](./questions.md). Pour les routes et les flux applicatifs, voir
+[architecture.md](./architecture.md).
+
+## 1. Vue d'ensemble
+
 ```text
 bagadPenhars/
-│
+├── .github/                 # Automatisation du dépôt et CI
+├── docs/                    # Produit, architecture, schéma et suivi
+├── netlify/functions/       # Fonctions serverless Netlify
+├── scripts/                 # Scripts de maintenance et migration
 ├── src/
-│   ├── app.html
-│   ├── app.d.ts                          # Types globaux (App.Locals, App.PageData)
-│   ├── app.css                           # Styles globaux (Tailwind)
-│   ├── hooks.server.ts                   # Session Supabase → event.locals.user
-│   │
-│   ├── lib/
-│   │   ├── supabase.ts                   # Client browser (anon key)
-│   │   ├── config.ts                     # SITE_NAME, DEFAULT_LANG, LANGS, ARTICLES_PER_PAGE…
-│   │   │
-│   │   │
-│   │   ├── schemas/                      # Schémas Zod + types inférés (Structure 1)
-│   │   │   ├── index.ts                  # Réexporte tous les schémas
-│   │   │   ├── article.ts                # ArticleSchema, ArticleFormSchema
-│   │   │   ├── event.ts                  # EventSchema, EventFormSchema
-│   │   │   ├── user.ts                   # UserSchema, ProfileUpdateSchema
-│   │   │   ├── contact.ts                # ContactFormSchema
-│   │   │   ├── notification.ts           # NotificationSchema
-│   │   │   ├── document.ts               # DocumentSchema, UploadSchema
-│   │   │   ├── invitation.ts             # InvitationSchema
-│   │   │   ├── partner.ts                # PartnerSchema, PartnerFormSchema
-│   │   │   └── poll.ts                   # PollSchema, PollResponseSchema
-│   │   │
-│   │   │
-│   │   ├── types/                        # Types TypeScript purs (DB, API responses)
-│   │   │   ├── index.ts
-│   │   │   ├── database.ts               # Types générés par Supabase CLI
-│   │   │   ├── article.ts                # Article, ArticleWithAuthor
-│   │   │   ├── event.ts                  # Event, EventWithAttendees
-│   │   │   ├── user.ts                   # User, Profile, Session
-│   │   │   ├── media.ts                  # Media, Album
-│   │   │   ├── notification.ts           # Notification, NotificationPayload
-│   │   │   ├── partner.ts                # Partner, PartnerWithLogo
-│   │   │   └── poll.ts                   # Poll, PollOption, PollResponse
-│   │   │
-│   │   │
-│   │   ├── auth/                         # Logique d'autorisation centralisée (Structure 2)
-│   │   │   ├── index.ts
-│   │   │   ├── roles.ts                  # enum Role { admin, section_leader, member, anon }
-│   │   │   ├── permissions.ts            # canEdit(), canDelete(), canInvite(), canManagePupitre()
-│   │   │   └── guards.ts                 # requireAuth(), requireAdmin(), requireSectionLeader()
-│   │   │
-│   │   │
-│   │   ├── server/                       # Logique métier — JAMAIS importé côté client
-│   │   │   ├── supabase.ts               # Client service_role key
-│   │   │   ├── articles.ts               # CRUD + getBySlug, getByTag
-│   │   │   ├── events.ts                 # CRUD + getUpcoming, getByMonth
-│   │   │   ├── users.ts                  # CRUD + getMembers, getBySection
-│   │   │   ├── media.ts                  # CRUD + getAlbums
-│   │   │   ├── documents.ts              # CRUD + getByPupitre
-│   │   │   ├── notifications.ts          # CRUD + broadcast
-│   │   │   ├── invitations.ts            # createInvitation, validateToken
-│   │   │   ├── partners.ts               # CRUD partenaires
-│   │   │   ├── polls.ts                  # CRUD sondages
-│   │   │   └── email.ts                  # Envoi emails (Brevo/Resend)
-│   │   │
-│   │   │
-│   │   ├── components/
-│   │   │   │
-│   │   │   ├── ui/                       # Design System (primitives)
-│   │   │   │   ├── Button.svelte
-│   │   │   │   ├── Input.svelte
-│   │   │   │   ├── Textarea.svelte
-│   │   │   │   ├── Select.svelte
-│   │   │   │   ├── Checkbox.svelte
-│   │   │   │   ├── Badge.svelte
-│   │   │   │   ├── Card.svelte
-│   │   │   │   ├── Modal.svelte
-│   │   │   │   ├── Dialog.svelte
-│   │   │   │   ├── Dropdown.svelte
-│   │   │   │   ├── Tabs.svelte
-│   │   │   │   ├── Table.svelte
-│   │   │   │   ├── Pagination.svelte
-│   │   │   │   ├── Spinner.svelte
-│   │   │   │   ├── Toast.svelte
-│   │   │   │   ├── Skeleton.svelte
-│   │   │   │   └── Avatar.svelte
-│   │   │   │
-│   │   │   ├── layout/                   # Mise en page
-│   │   │   │   ├── Nav.svelte            # Navigation adaptative selon rôle
-│   │   │   │   ├── Footer.svelte
-│   │   │   │   ├── Sidebar.svelte        # Admin uniquement
-│   │   │   │   ├── Hero.svelte
-│   │   │   │   └── PageHeader.svelte
-│   │   │   │
-│   │   │   ├── articles/                 # Module articles (partagé)
-│   │   │   │   ├── ArticleList.svelte
-│   │   │   │   ├── ArticleCard.svelte
-│   │   │   │   ├── ArticleForm.svelte
-│   │   │   │   └── ArticleContent.svelte
-│   │   │   │
-│   │   │   ├── events/                   # Module événements (partagé)
-│   │   │   │   ├── EventList.svelte
-│   │   │   │   ├── EventCard.svelte
-│   │   │   │   ├── EventForm.svelte
-│   │   │   │   ├── EventCalendar.svelte
-│   │   │   │   └── EventPresence.svelte
-│   │   │   │
-│   │   │   ├── files/                    # Module fichiers (partagé)
-│   │   │   │   ├── FileList.svelte
-│   │   │   │   ├── FileCard.svelte
-│   │   │   │   ├── FileUpload.svelte
-│   │   │   │   ├── FileActions.svelte
-│   │   │   │   └── FileDownload.svelte
-│   │   │   │
-│   │   │   ├── members/                  # Module membres (partagé)
-│   │   │   │   ├── MemberList.svelte
-│   │   │   │   ├── MemberCard.svelte
-│   │   │   │   ├── MemberForm.svelte
-│   │   │   │   └── InviteForm.svelte
-│   │   │   │
-│   │   │   ├── notifications/            # Module notifications (partagé)
-│   │   │   │   ├── NotificationList.svelte
-│   │   │   │   ├── NotificationCard.svelte
-│   │   │   │   ├── NotificationForm.svelte
-│   │   │   │   └── NotificationBell.svelte
-│   │   │   │
-│   │   │   ├── partners/                 # Module partenaires (partagé)
-│   │   │   │   ├── PartnerGrid.svelte
-│   │   │   │   ├── PartnerCard.svelte
-│   │   │   │   ├── PartnerForm.svelte
-│   │   │   │   └── PartnerActions.svelte
-│   │   │   │
-│   │   │   ├── polls/                    # Module sondages (partagé)
-│   │   │   │   ├── PollList.svelte
-│   │   │   │   ├── PollCard.svelte
-│   │   │   │   ├── PollForm.svelte
-│   │   │   │   ├── PollResults.svelte
-│   │   │   │   └── PollVote.svelte
-│   │   │   │
-│   │   │   ├── media/                    # Composants média
-│   │   │   │   ├── ImageUpload.svelte
-│   │   │   │   ├── MediaGallery.svelte
-│   │   │   │   ├── VideoEmbed.svelte
-│   │   │   │   └── RichEditor.svelte     # TipTap pour articles
-│   │   │   │
-│   │   │   ├── forms/                    # Formulaires génériques
-│   │   │   │   ├── ContactForm.svelte
-│   │   │   │   └── ProfileForm.svelte
-│   │   │   │
-│   │   │   └── shared/                   # Composants utilitaires
-│   │   │       ├── LangSwitcher.svelte   # fr | br | en
-│   │   │       ├── ThemeSwitcher.svelte
-│   │   │       ├── SearchBar.svelte
-│   │   │       ├── Map.svelte
-│   │   │       ├── Calendar.svelte
-│   │   │       └── EmptyState.svelte
-│   │   │
-│   │   │
-│   │   ├── stores/
-│   │   │   ├── user.ts
-│   │   │   ├── lang.ts
-│   │   │   ├── toast.ts
-│   │   │   └── theme.ts
-│   │   │
-│   │   │
-│   │   │  ┌─────────────────────────────────────────────────────────────────┐
-│   │   │  │  i18n PAR PAGE (Structure 6)                                    │
-│   │   │  │  Avantage : fichiers JSON ciblés, chargement à la demande,      │
-│   │   │  │  pas de fichier monolithique ingérable à long terme.            │
-│   │   │  └─────────────────────────────────────────────────────────────────┘
-│   │   │
-│   │   ├── i18n/
-│   │   │   ├── index.ts                  # t(), localizedPath(), loadTranslations()
-│   │   │   ├── store.ts                  # Store langue réactif
-│   │   │   │
-│   │   │   ├── fr/
-│   │   │   │   ├── common.json           # Nav, footer, erreurs, boutons globaux
-│   │   │   │   ├── home.json
-│   │   │   │   ├── bagad.json
-│   │   │   │   ├── formation.json
-│   │   │   │   ├── agenda.json
-│   │   │   │   ├── articles.json
-│   │   │   │   ├── media.json
-│   │   │   │   ├── partenaires.json
-│   │   │   │   ├── contact.json
-│   │   │   │   ├── auth.json             # login, reset-password, invitation
-│   │   │   │   ├── compte.json           # profil, sécurité, notifications, fichiers
-│   │   │   │   ├── pupitre.json          # dashboard chef, membres, sondages
-│   │   │   │   └── admin.json            # toutes les pages admin
-│   │   │   │
-│   │   │   ├── en/
-│   │   │   │   ├── common.json
-│   │   │   │   ├── home.json
-│   │   │   │   ├── bagad.json
-│   │   │   │   ├── formation.json
-│   │   │   │   ├── agenda.json
-│   │   │   │   ├── articles.json
-│   │   │   │   ├── media.json
-│   │   │   │   ├── partenaires.json
-│   │   │   │   ├── contact.json
-│   │   │   │   ├── auth.json
-│   │   │   │   ├── compte.json
-│   │   │   │   ├── pupitre.json
-│   │   │   │   └── admin.json
-│   │   │   │
-│   │   │   └── br/                       # Brezhoneg
-│   │   │       ├── common.json
-│   │   │       ├── home.json
-│   │   │       ├── bagad.json
-│   │   │       ├── formation.json
-│   │   │       ├── agenda.json
-│   │   │       ├── articles.json
-│   │   │       ├── media.json
-│   │   │       ├── partenaires.json
-│   │   │       ├── contact.json
-│   │   │       ├── auth.json
-│   │   │       ├── compte.json
-│   │   │       ├── pupitre.json
-│   │   │       └── admin.json
-│   │   │
-│   │   │
-│   │   ├── data/                         # Données statiques
-│   │   │   ├── formation.ts
-│   │   │   ├── partenaires.ts
-│   │   │   ├── nav.ts
-│   │   │   └── seo.ts
-│   │   │
-│   │   ├── utils/
-│   │   │   ├── slugify.ts
-│   │   │   ├── date.ts
-│   │   │   ├── string.ts
-│   │   │   ├── file.ts
-│   │   │   └── seo.ts
-│   │   │
-│   │   └── notifications/
-│   │       ├── client.ts                 # Logique client (service worker)
-│   │       └── server.ts                 # Logique serveur (envoi)
-│   │
-│   │
-│   └── routes/
-│       ├── +layout.svelte                # Layout racine (Toast global, fonts)
-│       ├── +layout.server.ts             # Redirect / → /fr (detect Accept-Language)
-│       ├── +error.svelte
-│       │
-│       ├── auth/callback/
-│       │   └── +server.ts                # Callback Supabase (invite + reset)
-│       │
-│       ├── sitemap.xml/
-│       │   └── +server.ts
-│       │
-│       ├── api/
-│       │   ├── health/+server.ts
-│       │   └── revalidate/+server.ts
-│       │
-│       │
-│       └── [lang]/
-│           ├── +layout.svelte            # Nav adaptative + Footer
-│           ├── +layout.server.ts         # Valide lang + charge common.json + session
-│           ├── +error.svelte
-│           │
-│           │
-│           │  ── PAGES PUBLIQUES ──────────────────────────────────────────
-│           │
-│           ├── +page.svelte              # Accueil
-│           ├── +page.server.ts           # Charge home.json
-│           │
-│           ├── bagad/
-│           │   ├── +page.svelte
-│           │   └── +page.server.ts       # Charge bagad.json
-│           │
-│           ├── formation/
-│           │   └── +page.svelte          # Charge formation.json (statique)
-│           │
-│           ├── agenda/
-│           │   ├── +page.svelte
-│           │   └── +page.server.ts       # Charge agenda.json
-│           │
-│           ├── articles/
-│           │   ├── +page.svelte
-│           │   ├── +page.server.ts       # Charge articles.json
-│           │   └── [slug]/
-│           │       ├── +page.svelte
-│           │       └── +page.server.ts   # SSR + meta OG
-│           │
-│           ├── media/
-│           │   ├── +page.svelte
-│           │   └── +page.server.ts       # Charge media.json
-│           │
-│           ├── partenaires/
-│           │   └── +page.svelte          # Charge partenaires.json (statique)
-│           │
-│           ├── contact/
-│           │   ├── +page.svelte
-│           │   └── +page.server.ts       # Charge contact.json + Form Action email
-│           │
-│           ├── login/
-│           │   ├── +page.svelte
-│           │   └── +page.server.ts       # Charge auth.json
-│           │
-│           ├── reset-password/
-│           │   ├── +page.svelte
-│           │   └── +page.server.ts       # Charge auth.json
-│           │
-│           ├── invitation/
-│           │   ├── +page.svelte
-│           │   └── +page.server.ts       # Charge auth.json + valide token
-│           │
-│           │
-│           │  ── (compte) — SESSION REQUISE ──────────────────────────────
-│           │  Gardien : requireAuth() → redirect /[lang]/login
-│           │
-│           ├── (compte)/
-│           │   ├── +layout.server.ts     # requireAuth() + charge compte.json
-│           │   ├── +layout.svelte
-│           │   │
-│           │   ├── profil/
-│           │   │   ├── +page.svelte
-│           │   │   └── +page.server.ts
-│           │   │
-│           │   ├── securite/
-│           │   │   ├── +page.svelte
-│           │   │   └── +page.server.ts
-│           │   │
-│           │   ├── notifications/
-│           │   │   ├── +page.svelte
-│           │   │   └── +page.server.ts
-│           │   │
-│           │   ├── presences/
-│           │   │   ├── +page.svelte
-│           │   │   └── +page.server.ts
-│           │   │
-│           │   └── fichiers/
-│           │       ├── +page.svelte
-│           │       └── +page.server.ts
-│           │
-│           │
-│           │  ── (pupitre) — CHEF DE PUPITRE ────────────────────────────
-│           │  Gardien : requireSectionLeader() → 403
-│           │
-│           ├── (pupitre)/
-│           │   └── pupitre/
-│           │       ├── +layout.server.ts # requireSectionLeader() + charge pupitre.json
-│           │       ├── +layout.svelte
-│           │       │
-│           │       ├── +page.svelte      # Dashboard pupitre
-│           │       ├── +page.server.ts
-│           │       │
-│           │       ├── membres/
-│           │       │   ├── +page.svelte
-│           │       │   └── +page.server.ts
-│           │       │
-│           │       ├── fichiers/
-│           │       │   ├── +page.svelte
-│           │       │   └── +page.server.ts  # Upload → bucket pupitre-files
-│           │       │
-│           │       ├── presences/
-│           │       │   ├── +page.svelte
-│           │       │   └── +page.server.ts
-│           │       │
-│           │       ├── notifications/
-│           │       │   ├── +page.svelte
-│           │       │   └── +page.server.ts
-│           │       │
-│           │       └── sondages/
-│           │           ├── +page.svelte
-│           │           └── +page.server.ts
-│           │
-│           │
-│           │  ── (admin) — ADMINISTRATION ──────────────────────────────
-│           │  Gardien : requireAdmin() → 403 · Interface forcée en français
-│           │
-│           └── (admin)/
-│               └── admin/
-│                   ├── +layout.server.ts # requireAdmin() + force lang='fr' + charge admin.json
-│                   ├── +layout.svelte    # Nav + Sidebar
-│                   ├── +error.svelte
-│                   │
-│                   ├── +page.svelte      # Dashboard stats globales
-│                   ├── +page.server.ts
-│                   │
-│                   ├── articles/
-│                   │   ├── +page.svelte
-│                   │   ├── +page.server.ts
-│                   │   ├── new/
-│                   │   │   ├── +page.svelte
-│                   │   │   └── +page.server.ts
-│                   │   └── [id]/edit/
-│                   │       ├── +page.svelte
-│                   │       └── +page.server.ts
-│                   │
-│                   ├── agenda/
-│                   │   ├── +page.svelte
-│                   │   ├── +page.server.ts
-│                   │   └── new/
-│                   │       ├── +page.svelte
-│                   │       └── +page.server.ts
-│                   │
-│                   ├── membres/
-│                   │   ├── +page.svelte
-│                   │   ├── +page.server.ts
-│                   │   ├── [id]/
-│                   │   │   ├── +page.svelte
-│                   │   │   └── +page.server.ts
-│                   │   └── invite/
-│                   │       ├── +page.svelte
-│                   │       └── +page.server.ts
-│                   │
-│                   ├── pupitres/
-│                   │   ├── +page.svelte
-│                   │   └── +page.server.ts
-│                   │
-│                   ├── media/
-│                   │   ├── +page.svelte
-│                   │   └── +page.server.ts
-│                   │
-│                   ├── fichiers/
-│                   │   ├── +page.svelte
-│                   │   └── +page.server.ts
-│                   │
-│                   ├── notifications/
-│                   │   ├── +page.svelte
-│                   │   └── +page.server.ts
-│                   │
-│                   ├── permissions/
-│                   │   ├── +page.svelte
-│                   │   └── +page.server.ts
-│                   │
-│                   └── partenaires/
-│                       ├── +page.svelte
-│                       ├── +page.server.ts
-│                       └── [id]/edit/
-│                           ├── +page.svelte
-│                           └── +page.server.ts
-│
-│
+│   ├── autre/               # Prototype visuel autonome (Vite + Svelte)
+│   │   ├── public/          # Images et ressources visuelles du prototype
+│   │   └── src/
+│   │       ├── App.svelte
+│   │       ├── components/  # Sections de la maquette de page d'accueil
+│   │       └── lib/         # Données de démonstration du prototype
+│   ├── lib/                 # Composants, données, auth, serveur et types partagés
+│   ├── params/              # Matchers de routes SvelteKit
+│   └── routes/              # Pages, actions et endpoints SvelteKit
+├── static/                  # Fichiers servis tels quels
+├── supabase/
+│   ├── deprecated_migrations/ # Anciennes migrations archivées
+│   └── migrations/          # Migration de référence pour une base vierge
+├── tests/                   # Tests Vitest du projet
+├── package.json             # Scripts et dépendances
+├── svelte.config.js         # Configuration SvelteKit / Netlify
+└── vite.config.ts           # Configuration Vite
+```
 
+Le dépôt utilise SvelteKit 5, TypeScript, Tailwind CSS, Supabase et l'adapter
+Netlify. Les dépendances et commandes exactes sont définies dans
+`package.json`.
+
+## 2. Routes SvelteKit
+
+Les fichiers sous `src/routes/` déterminent les URL. Les groupes entre
+parenthèses organisent le code sans apparaître dans l'URL.
+
+```text
+src/routes/
+├── +layout.server.ts
+├── +layout.svelte
+├── +error.svelte
+├── (public)/
+│   ├── +page.server.ts          # Route racine / et redirection d'entrée
+│   └── [lang=lang]/
+│       ├── +layout.server.ts
+│       ├── +layout.svelte
+│       ├── +error.svelte
+│       ├── +page.server.ts
+│       ├── +page.svelte         # Accueil localisé
+│       ├── agenda/
+│       ├── articles/
+│       │   └── [slug]/
+│       ├── bagad/
+│       ├── contact/
+│       ├── formation/
+│       ├── media/
+│       └── partenaires/
+├── auth/
+│   ├── forgot-password/
+│   ├── invitation/
+│   ├── login/
+│   ├── logout/
+│   ├── pending/
+│   └── reset-password/
+├── api/
+│   ├── auth/[...all]/
+│   └── files/[...key]/
+├── dashboard/
+│   ├── +layout.server.ts
+│   ├── +layout.svelte
+│   ├── +page.svelte
+│   ├── admin/
+│   │   ├── agenda/              # Liste et création d'événements
+│   │   ├── articles/            # Liste, création et édition
+│   │   ├── invitations/
+│   │   ├── media/
+│   │   ├── membres/
+│   │   ├── notifications/
+│   │   ├── permissions/
+│   │   └── settings/
+│   ├── agenda/
+│   ├── documents/
+│   ├── notifications/
+│   ├── profil/
+│   ├── pupitre/
+│   │   ├── documents/
+│   │   ├── membres/
+│   │   └── notifications/
+│   └── securite/
+├── public/                      # Ressources utilisées par certaines pages
+└── sitemap.xml/
+```
+
+Les routes publiques localisées utilisent le matcher `src/params/lang.ts` et
+les langues `fr`, `en` et `br`. L'espace adhérent et l'authentification sont
+en français. Les URL du tableau de bord sont sous `/dashboard`; les groupes
+`(public)` et `[lang=lang]` n'ajoutent pas de segment visible au chemin.
+
+Les routes d'administration et de pupitre sont des surfaces distinctes de
+l'agenda et des documents communs. Les gardes doivent être vérifiés côté
+serveur pour chaque chargement, action et endpoint : masquer une action dans
+l'interface ne constitue pas un contrôle d'accès.
+
+Les dossiers contenant des fichiers de test ou des `schema.ts` regroupent les
+tests et validations propres à la route. Leur présence ne signifie pas que tous
+les scénarios métier ou les policies Supabase sont couverts.
+
+## 3. Bibliothèques partagées (`src/lib/`)
+
+```text
+src/lib/
+├── assets/           # Ressources importées par le code
+├── auth/             # Rôles, permissions, guards et helpers d'auth
+├── components/       # Composants d'interface par domaine
+├── data/             # Données éditoriales et de navigation
+├── i18n/             # Traductions fr, en, br et outils associés
+├── notifications/    # Intégration cliente et envoi des notifications
+├── schemas/          # Schémas Zod des formulaires et objets métier
+├── server/           # Accès serveur et modules de données
+├── stores/           # État partagé Svelte
+├── types/            # Types métier et types de base
+├── utils/            # Fonctions utilitaires
+└── vitest-examples/  # Exemples liés aux tests
+```
+
+### Composants d'interface
+
+`src/lib/components/` regroupe les composants selon leur usage :
+
+- `articles/`, `events/`, `documents/`, `members/` et `notifications/` :
+  composants métier ;
+- `forms/` : formulaires de contact et de profil ;
+- `media/` : galerie, téléversement d'images et éditeur ;
+- `layout/` : navigation, pied de page, barre latérale et éléments de page ;
+- `partners/` : composants de partenaires ;
+- `polls/` : composants d'interface historiques ou de présentation des
+  sondages. Le modèle métier courant représente un sondage comme un événement
+  `events` avec `is_poll`, pas comme une table `polls` distincte ;
+- `shared/` et `ui/` : composants génériques réutilisables.
+
+La structure des composants décrit leur emplacement, pas leur état
+d'implémentation ni leur conformité complète aux décisions en cours de revue.
+
+### Modules serveur, données et types
+
+- `src/lib/server/` contient les accès serveur, notamment l'authentification,
+  la base de données, les fichiers et les modules `server/data/` pour les
+  événements, présences, documents, invitations et profils.
+- `src/lib/auth/` centralise les rôles, permissions et gardes.
+- `src/lib/schemas/` contient les schémas de validation ; `src/lib/types/`
+  regroupe les types TypeScript, dont ceux associés au schéma Supabase.
+- `src/lib/data/` contient notamment les données éditoriales de formation,
+  navigation et partenaires.
+- `src/lib/i18n/` contient les dictionnaires français, anglais et breton.
+- `src/lib/notifications/` sépare l'intégration cliente de l'envoi serveur.
+
+Les décisions actuelles sont les suivantes :
+
+- les rôles applicatifs sont `member`, `chef_pupitre`, `secretaire` et `admin`,
+  indépendamment du statut `pending`, `active` ou `suspended` ;
+- seuls la secrétaire et l'admin peuvent inviter et activer les comptes ;
+- il y a quatre pupitres. Le chef de Caisse claire assure également la
+  responsabilité de Percussion ;
+- les types d'événement sont un ENUM de neuf valeurs ; la visibilité
+  (`public`, `interne`, `pupitre`) est indépendante du type ;
+- un événement ou sondage avertit les personnes concernées par OneSignal ;
+- les réponses sont `present` ou `absent`. Le membre peut modifier sa réponse,
+  pas la supprimer ; elles sont supprimées lors d'une suspension ou d'une
+  suppression de compte.
+
+La migration 005 est en cours de relecture par des experts en développement.
+Les règles ci-dessus décrivent la décision produit et ne garantissent pas que
+la migration ou les modules serveur les implémentent déjà tous.
+
+## 4. Services et données
+
+### Supabase
+
+```text
 supabase/
 ├── config.toml
-├── seed.sql
-│
 ├── migrations/
-│   └── 005_bagadPenhars_final.sql         # Schéma initial autonome (projet vierge)
-│
-├── deprecated_migrations/                 # Références historiques, jamais exécutées
-│   ├── README.md
-│   ├── 001_initial_schema.sql.deprecated
-│   ├── 002_initial_schema.sql.deprecated
-│   ├── 003_schema.sql.deprecated
-│   └── 004_equipment_loans_and_profile_fields.sql.deprecated
-│
-└── tests/
-    ├── rls/
-    │   ├── profiles.test.sql
-    │   ├── memberships.test.sql
-    │   ├── invitations.test.sql
-    │   ├── events.test.sql
-    │   ├── event_responses.test.sql
-    │   ├── documents.test.sql
-    │   ├── storage.test.sql
-    │   └── account_deletion.test.sql
-    └── integrity/
-        ├── roles.test.sql
-        ├── events.test.sql
-        └── foreign_keys.test.sql
-
-│
-├── netlify/
-│   └── functions/
-│       ├── invite-user.ts
-│       ├── send-notification.ts
-│       └── scheduled-reminder.ts
-│
-│
-├── static/
-│   ├── favicon.png
-│   ├── favicon.svg
-│   ├── logo-penhars.svg
-│   ├── og-image.png
-│   ├── manifest.json
-│   ├── robots.txt
-│   ├── sw.js                             # Service Worker (notifications push)
-│   └── logos/                            # Logos partenaires
-│
-│
-├── svelte.config.js                      # adapter-netlify
-├── vite.config.ts
-├── tailwind.config.js
-├── postcss.config.js
-├── netlify.toml
-├── tsconfig.json
-├── package.json
-├── pnpm-lock.yaml
-├── .env.example
-├── .gitignore
-└── README.md
+│   └── 005_bagadPenhars_final.sql
+└── deprecated_migrations/
+    ├── README.md
+    └── migrations 001–004 archivées, non applicables
 ```
+
+La migration 005 constitue le schéma consolidé prévu pour une base Supabase
+vierge. Les migrations précédentes sont archivées et ne doivent pas être
+appliquées. La présence d'un dossier ou d'une migration ne prouve pas que
+Supabase a été configuré ou que la migration a été appliquée dans un
+environnement.
+
+Le schéma métier courant utilise notamment `profiles`, `profile_pupitres`,
+`events`, `event_pupitres` et `event_responses`. Les sondages sont représentés
+dans `events` par `is_poll` ; les tables historiques `polls` et
+`poll_responses` ne font pas partie du modèle retenu.
+
+Les buckets prévus sont `bagad-public` pour les médias publiés et
+`bagad-private` pour les avatars et documents privés. Les fichiers privés
+doivent rester protégés par authentification et policies Storage.
+
+### Netlify et notifications
+
+```text
+netlify/functions/
+├── invite-user.ts
+└── send-notification.ts
+```
+
+Netlify héberge l'application et ses fonctions serverless. Le formulaire de
+contact relève de Netlify Forms et de son dashboard ; les soumissions sont
+destinées à `bagadpenhars@gmail.com`. OneSignal est le service de notification
+push pour les personnes concernées par les événements.
+
+Le service worker OneSignal fourni dans `static/OneSignalSDKWorker.js` ne
+signifie pas que la stratégie PWA/cache est finalisée. La compatibilité avec
+un éventuel service worker applicatif reste soumise à la décision décrite dans
+[`pwa.md`](./pwa.md).
+
+## 5. Prototype visuel (`src/autre/`)
+
+`src/autre/` est une petite application Svelte autonome, avec son propre
+`package.json`, son point d'entrée `src/main.ts`, son `App.svelte` et ses
+ressources dans `public/`. Elle sert de référence visuelle pour la page
+d'accueil ; elle n'est pas le routeur de production et ses événements ou
+images de démonstration ne sont pas la source de données du site.
+
+Les composants principaux du prototype sont :
+
+| Composant                 | Idée visuelle réutilisable                                                |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `HeroSection.svelte`      | Hero d'accueil avec image, titre, présentation courte et appel à l'action |
+| `AboutSection.svelte`     | Présentation du Bagad, repères et aperçu des pupitres                     |
+| `FormationSection.svelte` | Cartes de présentation des quatre pupitres                                |
+| `EventsSection.svelte`    | Aperçu des prochaines dates et lien vers l'agenda                         |
+| `GallerySection.svelte`   | Grille de photos et aperçu de la galerie                                  |
+| `FloatingPlayer.svelte`   | Lecteur flottant ; conserve le morceau pendant la navigation              |
+| `NavBar.svelte`           | Navigation et bouton « Écouter » avec icône de notes de musique           |
+| `ContactSection.svelte`   | Repères de contact                                                        |
+
+L'objectif est de reprendre et adapter les idées utiles, pas de recopier
+l'application autonome telle quelle. La page d'accueil de production reste
+dans `src/routes/(public)/[lang=lang]/` et doit résumer le contenu des pages
+publiques dédiées :
+
+- le hero introduit l'association ;
+- le Bagad est présenté brièvement, avec un lien vers sa page complète ;
+- la formation est présentée en aperçu pour les quatre pupitres, avec un lien
+  vers la présentation détaillée ;
+- les deux prochaines représentations publiques sont affichées en lecture
+  seule, avec un lien vers toutes les dates de l'agenda public ;
+- trois photos publiques sont choisies dans la galerie pour l'aperçu, avec un
+  lien vers la galerie complète.
+
+Les pages Bagad, Formation, Agenda et Médias restent les références détaillées
+de leur domaine. La page d'accueil n'en duplique que des extraits et oriente
+vers ces pages. Les règles de sélection et les détails d'interface sont
+précisés dans [`Spec_UI.md`](./Spec_UI.md).
+
+## 6. Tests, scripts et ressources statiques
+
+- `tests/` contient les tests du dépôt exécutés par Vitest.
+- Les fichiers `*.test.ts` présents sous les routes vérifient des parcours ou
+  schémas spécifiques.
+- Aucun dossier `supabase/tests/` n'apparaît actuellement dans l'arborescence ;
+  les tests d'intégration RLS restent à confirmer dans le suivi technique.
+- `scripts/` contient les scripts de migration et de maintenance.
+- `static/` contient les fichiers servis directement, notamment le manifest
+  PWA, `robots.txt` et le worker OneSignal.
+- `src/routes/public/` contient des ressources images rattachées à l'arbre de
+  routes ; ce n'est pas le répertoire global `static/`.
+- `src/autre/public/` contient les ressources propres au prototype visuel ;
+  elles ne sont pas automatiquement les ressources publiques de SvelteKit.
+
+## 7. Documentation du projet
+
+| Fichier                                                                  | Responsabilité                                              |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| `README.md`                                                              | Présentation du dépôt, démarrage et liens documentaires     |
+| `AGENTS.md`                                                              | Conventions et consignes de contribution                    |
+| `Context.MD`                                                             | Contexte historique et concepts du projet                   |
+| `docs/brief.md`                                                          | Besoin et périmètre produit                                 |
+| `docs/Spec.md`                                                           | Exigences fonctionnelles et critères d'acceptation          |
+| `docs/Spec_UI.md`                                                        | Spécification de l'interface                                |
+| `docs/architecture.md`                                                   | Routes, flux applicatifs et architecture                    |
+| `docs/database.md`                                                       | Schéma Supabase, règles RLS et droits                       |
+| `docs/pwa.md`                                                            | Manifest, cache et notifications                            |
+| `docs/questions.md`                                                      | Décisions validées et points ouverts, avec arbitrages datés |
+| `docs/roadmap.md`, `docs/backlog.md`, `docs/suivi.md`                    | Priorités et avancement                                     |
+| `docs/journal.md`                                                        | Historique des changements et validations                   |
+| `docs/bagad-penhars-schema-drawsql.sql`, `docs/bagad-penhars-schema.mmd` | Représentations documentaires du schéma                     |
+
+Une divergence entre un fichier ancien et une décision plus récente ne crée pas
+automatiquement un nouveau besoin. Se reporter aux arbitrages de
+`docs/questions.md` : un passage marqué **OBsolète — ne plus prendre en
+compte** est historique ; une décision client nouvelle y est datée et
+explicitement distinguée.

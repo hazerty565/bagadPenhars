@@ -1,5 +1,10 @@
 # Bagad Penhars — site de l'association
 
+> **Passages obsolètes :** certaines décisions décrites plus bas ont été
+> remplacées ou corrigées. Pour les règles marquées **OBsolète — ne plus
+> prendre en compte**, se référer au registre daté dans
+> [`docs/questions.md`](./docs/questions.md).
+
 Le projet vise à fournir au Bagad Penhars (Quimper) un site public et un
 espace privé pour les adhérents. Le site public présente l'association et ses
 activités; l'espace adhérents sert à consulter l'agenda et les partitions,
@@ -29,13 +34,13 @@ répondre aux événements et gérer son profil.
 
 ### Rôles et comptes
 
-| Rôle | Responsabilités prévues |
-| --- | --- |
-| `pending` | Terminer la création du compte et consulter l'attente de validation; pas d'accès à l'espace adhérents. |
-| `member` | Consulter l'agenda, les partitions et le trombinoscope autorisé, répondre aux événements et modifier son profil, sauf son rôle et ses pupitres. |
-| `chef_pupitre` | Droits d'un membre; gérer les événements, partitions et notifications de son ou ses pupitres. |
-| `secretaire` | Rôle applicatif; gérer les invitations, validations et pupitres, créer les contenus et événements autorisés, et notifier plusieurs pupitres. |
-| `admin` | Gérer globalement les utilisateurs, rôles, contenus, événements et notifications. |
+| Rôle           | Responsabilités prévues                                                                                                                         |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pending`      | Terminer la création du compte et consulter l'attente de validation; pas d'accès à l'espace adhérents.                                          |
+| `member`       | Consulter l'agenda, les partitions et le trombinoscope autorisé, répondre aux événements et modifier son profil, sauf son rôle et ses pupitres. |
+| `chef_pupitre` | Droits d'un membre; gérer les événements, partitions et notifications de son ou ses pupitres.                                                   |
+| `secretaire`   | Rôle applicatif; gérer les invitations, validations et pupitres, créer les contenus et événements autorisés, et notifier plusieurs pupitres.    |
+| `admin`        | Gérer globalement les utilisateurs, rôles, contenus, événements et notifications.                                                               |
 
 L'association compte trois pupitres : bombarde, caisse claire et cornemuse. Un
 membre peut être rattaché à un ou plusieurs pupitres. Le rôle et les pupitres
@@ -140,14 +145,14 @@ sont configurés.
 
 ### Commandes
 
-| Commande | Usage |
-| --- | --- |
-| `pnpm dev` | Démarrer le serveur local |
-| `pnpm run check` | Vérifier Svelte et TypeScript |
-| `pnpm run lint` | Vérifier le formatage et ESLint |
-| `pnpm test` | Exécuter les tests unitaires |
-| `pnpm run build` | Construire l'application |
-| `pnpm run preview` | Prévisualiser le build |
+| Commande           | Usage                           |
+| ------------------ | ------------------------------- |
+| `pnpm dev`         | Démarrer le serveur local       |
+| `pnpm run check`   | Vérifier Svelte et TypeScript   |
+| `pnpm run lint`    | Vérifier le formatage et ESLint |
+| `pnpm test`        | Exécuter les tests unitaires    |
+| `pnpm run build`   | Construire l'application        |
+| `pnpm run preview` | Prévisualiser le build          |
 
 Pour une validation complète avant livraison :
 
@@ -171,6 +176,8 @@ Consultez [la feuille de route](./docs/roadmap.md) et
   critères d'acceptation.
 - [Spécification UI](./docs/Spec_UI.md) — structure des pages et composants de
   l'interface.
+- [Structure du dépôt](./docs/Structure.md) — arborescence réelle, prototype
+  visuel et repères des modules.
 - [Architecture](./docs/architecture.md) — routes et flux.
 - [Base de données](./docs/database.md) — schéma cible, RLS et droits.
 - [PWA](./docs/pwa.md) — cache et notifications.

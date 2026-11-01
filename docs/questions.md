@@ -30,15 +30,16 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
 
    Décision : la secrétaire est un rôle applicatif autonome (`secretaire`). Elle peut gérer les membres, invitations et validations nécessaires à sa fonction, sans disposer des droits globaux de l'admin. L'attribution d'une fonction au bureau n'attribue jamais automatiquement un rôle applicatif : les deux restent indépendants. Président et trésorier sont des titres honorifiques sans droits métier dans l'application. Les statuts du compte (`pending`, `active`, `suspended`) sont distincts du rôle applicatif.
 
-3. **Invitations et approbation** — décision validée le 2026-11-01 :
-   seul l'administrateur envoie l'invitation avec `inviteUserByEmail()`.
-   Le lien Supabase Auth expire après une heure. Le membre confirme son
-   adresse et définit son mot de passe ; `account_status` reste `pending`
-   jusqu'à activation manuelle par l'administrateur après confirmation de
-   l'adresse. L'activation ne change pas `app_role`.
-   Si le lien expire, l'administrateur peut renvoyer une invitation au compte
-   Auth existant. Le rôle initial est `member`; l'activation ne change que
-   `account_status`.
+3. **Invitations et approbation** — décision actualisée le 2026-11-01 :
+   seuls la secrétaire et l'administrateur peuvent envoyer une invitation
+   avec `inviteUserByEmail()` et activer un compte. Le lien Supabase Auth
+   expire après une heure. Le membre confirme son adresse et définit son mot
+   de passe ; `account_status` reste `pending` jusqu'à l'activation après
+   confirmation de l'adresse. L'activation ne change pas `app_role`.
+   Si le lien expire, la secrétaire ou l'administrateur peut renvoyer une
+   invitation au compte Auth existant. Le rôle initial est `member`;
+   l'activation ne change que `account_status`. Cette décision remplace
+   l'ancienne restriction à l'administrateur seul.
    Les paramètres Auth du projet hébergé et les modèles d'e-mails d'invitation
    sont à configurer dans le Dashboard Supabase ; il s'agit d'une opération
    technique, pas d'une décision produit.
@@ -79,8 +80,8 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    création, à sa clôture ou après validation? Que devient l'événement si le
    sondage est annulé?
 
-    Décision : les réponses aux sondages sont présent ou absent. Un sondage
-    n'a pas d'étape de validation préalable.
+   Décision : les réponses aux sondages sont présent ou absent. Un sondage
+   n'a pas d'étape de validation préalable.
 
 7. **Notifications** — OneSignal est confirmé, mais faut-il envoyer des push
    uniquement ou aussi des emails? Quel événement déclenche des notifications
@@ -158,7 +159,7 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     dates clés, effectif, valeurs, photos, palmarès)? Qui valide les textes et
     les chiffres publiés?
 
-   Décision : présenter l'histoire, les valeurs, les dates clés, l'effectif, les photos et les principaux événements ou palmarès. Les contenus sont validés par le bureau. 
+Décision : présenter l'histoire, les valeurs, les dates clés, l'effectif, les photos et les principaux événements ou palmarès. Les contenus sont validés par le bureau.
 
 17. **Profil membre** — quels champs le membre peut-il modifier lui-même
     (téléphone, photo, email, nom), et lesquels ne peuvent être modifiés que
@@ -215,11 +216,11 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     - `interne` : visible par tous les membres connectés approuvés.
     - `pupitre` : visible et ouvert aux réponses uniquement aux membres actifs
       des pupitres ciblés.
-    Une répétition peut avoir chacune des trois visibilités. Un chef crée
-    uniquement des événements `pupitre` pour son pupitre et peut gérer tout
-    événement `pupitre` de son pupitre, même s'il n'en est pas l'auteur. Les
-    événements multi-pupitres ou globaux relèvent exclusivement de l'admin et
-    de la secrétaire. Validé le 2026-11-01.
+      Une répétition peut avoir chacune des trois visibilités. Un chef crée
+      uniquement des événements `pupitre` pour son pupitre et peut gérer tout
+      événement `pupitre` de son pupitre, même s'il n'en est pas l'auteur. Les
+      événements multi-pupitres ou globaux relèvent exclusivement de l'admin et
+      de la secrétaire. Validé le 2026-11-01.
 
 23. **Sondages** — les sondages sont-ils des événements et nécessitent-ils une
     validation préalable? Qui peut les modifier ou les supprimer?
@@ -262,7 +263,6 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     Décision : VALIDÉE (le 2026-10-26)
 
     L'audience des notifications push dépend de la portée du sondage :
-
     - **Sondage de pupitre :** seuls les membres du ou des pupitres ciblés sont notifiés.
     - **Sondage interne :** tous les membres du Bagad sont notifiés.
     - **Sondage public :** tous les membres du Bagad sont notifiés.
@@ -299,7 +299,6 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     Les réponses utilisent exclusivement les statuts `present` et `absent` (`create type response_status as enum ('present', 'absent');`).
 
     La portée du sondage (pupitre, interne ou public) est distincte de son type (`is_poll`) et détermine son audience et ses règles d'accès :
-
     - **Pupitre :** notification aux membres des pupitres ciblés.
     - **Interne :** notification à tous les membres du Bagad.
     - **Public :** notification à tous les membres du Bagad.
@@ -307,6 +306,7 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     Les règles de permissions et de notifications définies dans les autres décisions restent applicables.
 
     **Consignes techniques :** avant toute migration, le développeur doit examiner `docs/database.md`, le schéma réel, les données existantes, les clés étrangères, les contraintes, les policies RLS et le code applicatif. Il doit mettre à jour la documentation et proposer une migration cohérente, sans perte de données ni régression fonctionnelle.
+
 31. **Nettoyage immédiat du socle technique (legacy)** — le dépôt contenait
     encore les packages et fichiers de Better Auth, Kysely, pg et Netlify
     Blobs.
@@ -334,3 +334,85 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
 Chaque décision est validée par le responsable du projet et datée lors de son
 approbation. Toute décision non confirmée reste explicitement marquée À VALIDER
 et ne doit pas être considérée comme une exigence produit définitive.
+
+## Arbitrages documentaires et décisions — 01/11/2026
+
+Lorsqu'une règle actuelle diffère d'un document plus ancien, il faut distinguer
+une nouvelle décision client d'un oubli de mise à jour. Un passage obsolète doit
+être identifié **OBsolète — ne plus prendre en compte** et ne pas être traité
+comme une question encore ouverte. Les présentes décisions ont été données le
+01/11/2026 ; les validations techniques en cours restent à confirmer par les
+experts en développement.
+
+35. **Migration Supabase** — la migration 005 existe dans le dépôt et est en
+    cours de relecture par des experts en développement. Les passages de
+    `README.md`, `Context.MD` et `architecture.md` qui disent que les migrations
+    Supabase n'existent pas ou renvoient à une migration historique sont
+    **OBsolètes — ne plus prendre en compte**. Ne pas déduire de la présence du
+    fichier qu'il a déjà été appliqué dans un environnement.
+
+36. **Suivi des migrations** — l'écart entre `backlog.md` et `suivi.md` est un
+    oubli de mise à jour, en cours de validation par des experts en
+    développement. Les cases de `suivi.md` qui contredisent le statut du
+    `backlog.md` sont **OBsolètes — ne plus prendre en compte** pendant cette
+    validation.
+
+37. **Invitations et activation** — nouvelle décision client : seuls la
+    secrétaire et l'admin peuvent inviter et activer des comptes pour le
+    moment. L'ancienne décision de la question 3 limitant ces actions à
+    l'admin est remplacée. Toute mention contraire dans les autres documents
+    est **OBsolète — ne plus prendre en compte**.
+
+38. **Nombre de pupitres** — il y a quatre pupitres. Percussion est lié à
+    Caisse claire. La mention de trois instruments/pupitres dans `Spec.md` est
+    un oubli du cahier des charges et **OBsolète — ne plus prendre en compte**.
+
+39. **Responsabilité des chefs de pupitre** — il y a un chef par pupitre, sauf
+    Percussion, qui relève du chef de Caisse claire. Le chef de Caisse claire
+    assure donc aussi le rôle de chef de Percussion. La formulation du README
+    « son ou ses pupitres », la règle imposant un chef distinct pour Percussion
+    et les décisions antérieures excluant la gestion de Percussion par le chef
+    de Caisse claire ou limitant chaque chef à un seul pupitre sont
+    **OBsolètes — ne plus prendre en compte**.
+
+40. **Types d'événement** — `event_type` est un ENUM limité à neuf valeurs.
+    L'entrée antérieure du journal disant qu'il n'existe pas de liste fermée
+    n'avait pas été mise à jour : elle est **OBsolète — ne plus prendre en
+    compte** comme règle actuelle.
+
+41. **Modification du profil** — le membre peut modifier son profil, sauf son
+    rôle, son pupitre, son niveau musical et les affaires en location
+    (notamment costume ou instrument). Les listes plus restrictives de champs
+    modifiables dans `database.md` relèvent d'un oubli de mise à jour et sont
+    **OBsolètes — ne plus prendre en compte** comme règle produit.
+
+42. **Réponses de présence** — le membre peut seulement modifier sa réponse
+    entre `present` et `absent`, sans la supprimer directement. Les réponses
+    disparaissent lorsque le compte est suspendu ou supprimé. La règle
+    documentaire indiquant qu'elles ne disparaissent qu'à la suppression du
+    compte est **OBsolète — ne plus prendre en compte** ; la suppression lors
+    d'une suspension est une exigence à intégrer.
+
+43. **Formulaire de contact** — le formulaire et le traitement des soumissions
+    sont gérés uniquement par Netlify Forms et son dashboard ; les soumissions
+    sont envoyées à `bagadpenhars@gmail.com`. Les passages laissant le
+    fournisseur ou le destinataire à définir sont **OBsolètes — ne plus
+    prendre en compte**. Cette décision remplace toute exigence antérieure de
+    traitement ou d'envoi d'e-mail depuis l'application.
+
+44. **Notifications** — les nouveaux événements déclenchent une notification
+    OneSignal destinée aux personnes concernées, selon l'audience déjà définie
+    à la question 27. Les mentions du README et de `suivi.md` présentant
+    l'audience comme non décidée sont **OBsolètes — ne plus prendre en compte**.
+
+45. **Schéma DrawSQL** — `bagadpenhars_SQL_Draw.md` est
+    **OBsolète — ne plus prendre en compte**.
+
+46. **Mise à jour de `Structure.md`** — le fichier n'est pas à supprimer ni à
+    considérer globalement comme obsolète. Il doit représenter l'arborescence
+    réelle du dépôt et les décisions déjà prises. L'ancienne proposition de
+    structure qui ne correspondait pas au dépôt est
+    **OBsolète — ne plus prendre en compte**. Lorsqu'un événement est créé, les
+    personnes concernées sont averties par notification OneSignal. Le fichier
+    a été réécrit pour représenter l'arborescence actuelle et documenter le
+    prototype visuel comme référence pour la page d'accueil.

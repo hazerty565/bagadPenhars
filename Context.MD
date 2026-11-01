@@ -1,5 +1,10 @@
 # 📚 CONTEXT.md — Guide du projet pour les contributeurs
 
+> **Passages obsolètes :** certaines décisions décrites plus bas ont été
+> remplacées ou corrigées. Pour les règles marquées **OBsolète — ne plus
+> prendre en compte**, se référer au registre daté dans
+> [`docs/questions.md`](./docs/questions.md).
+
 Ce document est destiné à expliquer le contexte global du projet **Bagad Penhars** pour faciliter la collaboration (humaine ou IA).
 
 ---

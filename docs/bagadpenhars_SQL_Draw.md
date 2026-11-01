@@ -1,3 +1,6 @@
+> **OBsolète — ne plus prendre en compte.** Ce schéma ne reflète pas la
+> migration Supabase active. Référence actuelle : `supabase/migrations/005_bagadPenhars_final.sql`.
+
 # Schema: bagadpenhars — référence migration active 005
 Database: pgsql
 Tables: voir migration active (les vues de sécurité ne sont pas des tables physiques)
