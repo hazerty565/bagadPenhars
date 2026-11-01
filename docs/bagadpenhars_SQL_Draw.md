@@ -1,20 +1,22 @@
-# Schema: bagadpenhars
+# Schema: bagadpenhars — référence migration active 005
 Database: pgsql
-Tables: 17
+Tables: voir migration active (les vues de sécurité ne sont pas des tables physiques)
 Columns are NOT NULL unless marked nullable.
 
 ## pupitres
 id: uuid PK default:UUID()
 name: text unique
 slug: text unique
+parent_pupitre_id: uuid FK nullable
 created_at: timestamptz default:CURRENT_TIMESTAMP
 
 ## profiles
 id: uuid PK
 first_name: text
 last_name: text
+account_status: account_status default:pending
+role: app_role default:member
 phone: text nullable
-role: int default:pending
 created_at: timestamptz default:CURRENT_TIMESTAMP
 updated_at: timestamptz default:CURRENT_TIMESTAMP
 nickname: text nullable
@@ -55,7 +57,8 @@ description: text nullable
 location: text nullable
 start_at: timestamptz
 end_at: timestamptz
-visibility: int default:interne
+event_type: event_type
+visibility: event_visibility default:interne
 is_poll: boolean
 author_id: uuid FK nullable
 created_at: timestamptz default:CURRENT_TIMESTAMP
@@ -117,7 +120,7 @@ body: text
 audience: jsonb default:'DEFAULT CAST(''''ARRAY[]'''' AS JSONB)'
 sent_at: timestamptz default:CURRENT_TIMESTAMP
 
-## audit_log
+## activity_log
 id: uuid PK default:UUID()
 actor_id: uuid FK nullable
 action: text
@@ -150,6 +153,7 @@ created_at: timestamptz default:CURRENT_TIMESTAMP
 updated_at: timestamptz default:CURRENT_TIMESTAMP
 
 ## Relationships
+pupitres.parent_pupitre_id → pupitres.id (many-to-one, nullable)
 profile_pupitres.profile_id → profiles.id (many-to-one)
 profile_pupitres.pupitre_id → pupitres.id (many-to-one)
 bureau_positions.profile_id → profiles.id (many-to-one)
@@ -166,12 +170,21 @@ albums.author_id → profiles.id (many-to-one)
 media.album_id → albums.id (many-to-one)
 notification_preferences.profile_id → profiles.id (many-to-one)
 notification_log.sender_id → profiles.id (many-to-one)
-audit_log.actor_id → profiles.id (many-to-one)
+activity_log.actor_id → profiles.id (many-to-one)
 account_deletion_requests.profile_id → profiles.id (many-to-one)
 account_deletion_requests.processed_by → profiles.id (many-to-one)
 member_loans.profile_id → profiles.id (many-to-one)
 
+`member_directory` is a security-invoker SQL view, not a physical table. It
+exposes only the V1 directory fields and is readable only by active members.
+
 ## Enums
+account_status: pending, active, suspended
+app_role: member, chef_pupitre, secretaire, admin
+event_type: sortie, concert, fest-noz, festival, concours, gala, repetition, reunion, repas
+event_visibility: public, interne, pupitre
+response_status: present, absent
+musician_level: skolaj, bagadig, bagad
 account_deletion_requests.status: pending, processing, completed, rejected
 member_loans.item_type: materiel, costume
 

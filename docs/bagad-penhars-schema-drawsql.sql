@@ -1,7 +1,7 @@
 -- ============================================================================
 -- BAGAD PENHARS — Schéma relationnel consolidé (documentation / DrawSQL)
--- Source : migrations Supabase 001 à 004 du dépôt hazerty565/bagadPenhars
--- Révision consultée : 2026-10-31
+-- Source : supabase/migrations/005_bagadPenhars_final.sql
+-- Révision : 2026-11-01
 --
 -- IMPORTANT
 -- - Ce fichier est un schéma de référence destiné à l'import/visualisation
@@ -11,21 +11,28 @@
 -- - Les policies RLS, fonctions, triggers, grants et buckets ne sont pas
 --   représentés comme tables relationnelles ; ils restent définis dans les
 --   migrations originales.
--- - Les colonnes account_deletion_requests.profile_id et snapshot_* reflètent
---   la migration 003 (profile_id nullable, ON DELETE SET NULL).
--- - profiles inclut les champs ajoutés par la migration 004.
--- - Le journal est nommé audit_log dans les migrations actuelles consultées.
---   docs/database.md contient aussi une référence historique à activity_log :
---   vérifier cette divergence avant de renommer quoi que ce soit.
+-- - La vue SQL member_directory (trombinoscope V1) n'est pas une table
+--   physique et n'est pas représentée ci-dessous.
+-- - Les tables et colonnes suivent le schéma initial consolidé de la migration
+--   active 005, y compris les décisions de statut, d'événement et de pupitre.
 -- ============================================================================
 
 -- ENUMS
+CREATE TYPE account_status AS ENUM (
+  'pending', 'active', 'suspended'
+);
+
 CREATE TYPE app_role AS ENUM (
-  'pending', 'member', 'chef_pupitre', 'secretaire', 'admin'
+  'member', 'chef_pupitre', 'secretaire', 'admin'
 );
 
 CREATE TYPE event_visibility AS ENUM (
-  'public', 'pupitre', 'interne'
+  'public', 'interne', 'pupitre'
+);
+
+CREATE TYPE event_type AS ENUM (
+  'sortie', 'concert', 'fest-noz', 'festival', 'concours',
+  'gala', 'repetition', 'reunion', 'repas'
 );
 
 CREATE TYPE response_status AS ENUM (
@@ -44,6 +51,7 @@ CREATE TABLE pupitres (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL UNIQUE,
   slug text NOT NULL UNIQUE,
+  parent_pupitre_id uuid REFERENCES pupitres(id) ON DELETE RESTRICT,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -52,8 +60,9 @@ CREATE TABLE profiles (
   id uuid PRIMARY KEY,
   first_name text NOT NULL,
   last_name text NOT NULL,
+  account_status account_status NOT NULL DEFAULT 'pending',
+  role app_role NOT NULL DEFAULT 'member',
   phone text,
-  role app_role NOT NULL DEFAULT 'pending',
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   nickname text,
@@ -111,6 +120,7 @@ CREATE TABLE events (
   location text,
   start_at timestamptz NOT NULL,
   end_at timestamptz NOT NULL,
+  event_type event_type NOT NULL,
   visibility event_visibility NOT NULL DEFAULT 'interne',
   is_poll boolean NOT NULL DEFAULT false,
   author_id uuid REFERENCES profiles(id) ON DELETE SET NULL,
@@ -201,7 +211,7 @@ CREATE TABLE notification_log (
   sent_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE audit_log (
+CREATE TABLE activity_log (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   actor_id uuid REFERENCES profiles(id) ON DELETE SET NULL,
   action text NOT NULL,
@@ -246,7 +256,7 @@ CREATE TABLE member_loans (
 );
 
 -- ============================================================================
--- INDEX additionnels explicitement présents dans les migrations consultées
+-- INDEX additionnels explicitement présents dans la migration 005
 -- (les PK/UNIQUE créent déjà leurs propres index).
 -- ============================================================================
 
@@ -270,4 +280,4 @@ CREATE INDEX idx_member_loans_profile_id
 CREATE INDEX idx_member_loans_item_type
   ON member_loans(item_type);
 
--- FIN — 19 tables applicatives, 4 ENUMs.
+-- FIN — 20 tables applicatives, 5 ENUMs ; member_directory est une vue.

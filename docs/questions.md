@@ -28,15 +28,17 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    toutes les données de membres nécessaires aux invitations et validations,
    sans avoir les droits globaux de l'admin.
 
-   Décision : la secrétaire est un rôle applicatif autonome (`secretaire`). Elle peut gérer les membres, invitations et validations nécessaires à sa fonction, sans disposer des droits globaux de l'admin. L'attribution d'une fonction au bureau n'attribue jamais automatiquement un rôle applicatif : les deux restent indépendants. Président et trésorier sont des titres honorifiques sans droits métier dans l'application.
+   Décision : la secrétaire est un rôle applicatif autonome (`secretaire`). Elle peut gérer les membres, invitations et validations nécessaires à sa fonction, sans disposer des droits globaux de l'admin. L'attribution d'une fonction au bureau n'attribue jamais automatiquement un rôle applicatif : les deux restent indépendants. Président et trésorier sont des titres honorifiques sans droits métier dans l'application. Les statuts du compte (`pending`, `active`, `suspended`) sont distincts du rôle applicatif.
 
 3. **Invitations et approbation** — décision validée le 2026-11-01 :
    seul l'administrateur envoie l'invitation avec `inviteUserByEmail()`.
    Le lien Supabase Auth expire après une heure. Le membre confirme son
-   adresse et définit son mot de passe ; son profil reste `pending` jusqu'à
-   validation manuelle par l'administrateur après confirmation de l'adresse.
+   adresse et définit son mot de passe ; `account_status` reste `pending`
+   jusqu'à activation manuelle par l'administrateur après confirmation de
+   l'adresse. L'activation ne change pas `app_role`.
    Si le lien expire, l'administrateur peut renvoyer une invitation au compte
-   Auth existant. L'approbation attribue toujours le rôle `member`.
+   Auth existant. Le rôle initial est `member`; l'activation ne change que
+   `account_status`.
    Les paramètres Auth du projet hébergé et les modèles d'e-mails d'invitation
    sont à configurer dans le Dashboard Supabase ; il s'agit d'une opération
    technique, pas d'une décision produit.
@@ -47,18 +49,29 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    d'accès en lecture. Les droits de dépôt (chef sur son pupitre, secrétaire
    et admin) sont-ils bien distincts des droits de lecture?
 
-   Décision : les partitions sont visibles par tous les membres approuvés,
-   quel que soit leur pupitre. Un événement peut cibler un ou plusieurs
-   pupitres. Les événements communs et les événements publics sont créés par
-   l'admin ou la secrétaire. Un chef de pupitre ne crée que des événements
-   concernant son pupitre.
+   Décision : les partitions sont visibles par tous les membres actifs,
+   quel que soit leur pupitre. Un chef ne peut gérer que les événements de son
+   pupitre unique, même s'il n'en est pas l'auteur. Les événements publics,
+   globaux ou multi-pupitres sont gérés exclusivement par l'admin ou la
+   secrétaire.
 
 5. **Événements par pupitre** — les chefs créent des événements pour leur
    pupitre, mais le modèle historique d'événement n'a pas de champ
    d'audience/pupitre. Un événement peut-il cibler plusieurs pupitres? Qui peut
    créer les représentations publiques et les événements communs?
 
-   Décision : un événement peut cibler un ou plusieurs pupitres. Les événements communs et les événements publics sont créés par l'admin ou la secrétaire. Un chef de pupitre ne peut créer que des événements concernant son pupitre.
+   Décision validée le 2026-11-01 : la secrétaire et l'administrateur peuvent
+   créer, modifier et supprimer tous les événements, y compris ceux ciblant
+   plusieurs pupitres ou tous les pupitres. Un chef gère uniquement ceux de son
+   pupitre unique, indépendamment de `author_id`; les événements
+   multi-pupitres ou globaux ne sont pas gérables par un chef. Décision
+   actualisée le 2026-11-01 : `event_type` est un ENUM (`sortie`, `concert`,
+   `fest-noz`, `festival`, `concours`, `gala`, `repetition`, `reunion`,
+   `repas`) et `visibility` est un ENUM indépendant (`public`, `interne`,
+   `pupitre`). Les événements `pupitre` ne sont visibles et ouverts aux
+   réponses que pour les membres actifs des pupitres ciblés ; un chef crée
+   toujours un événement ciblé sur son pupitre. Les événements `interne` sont
+   visibles et ouverts aux réponses de tous les membres actifs.
 
 6. **Présences et sondages** — les réponses à un événement sont décrites comme
    oui/non, tandis que le sondage utilise présent/absent. S'agit-il de deux types de réponse distincts ou d'une seule
@@ -117,8 +130,8 @@ Décision : un membre peut demander la suppression de son compte. Les données p
     Décision Storage validée le 2026-11-01 : les médias publics vont dans
     `bagad-public` (`public = true`) ; les photos de profil et documents privés
     vont dans `bagad-private` (`public = false`). Les profils actifs peuvent
-    lire les avatars de tous les membres actifs, mais seul le propriétaire
-    modifie sa photo ; les administrateurs disposent des droits de gestion.
+    lire les avatars de tous les membres actifs ; seul le propriétaire modifie
+    sa photo, administrateurs inclus.
 
 13. **OneSignal et PWA** — le document PWA signale le conflit potentiel entre
     son service worker et celui de OneSignal. Quelle approche faut-il valider,
@@ -152,10 +165,11 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     par l'admin ou la secrétaire?
 
     **Question close — voir la décision validée à la question 21.** Le membre
-    peut modifier ses informations de profil, y compris uniquement sa propre
-    photo, mais pas son rôle ni ses pupitres. L'admin et la secrétaire peuvent
-    modifier les pupitres; seuls les admins peuvent attribuer les rôles
-    applicatifs supérieurs.
+    peut modifier ses informations de profil et uniquement sa propre photo,
+    administrateurs inclus ; il ne peut modifier ni son rôle ni ses pupitres.
+    Le trombinoscope est obligatoire dès la V1 et expose uniquement les champs
+    décidés. L'admin et la secrétaire peuvent modifier les pupitres; seuls les
+    admins peuvent attribuer les rôles applicatifs supérieurs.
 
 18. **Contenus publics** — quels champs composent un article et un album
     (titre, texte, date, auteur, légende, ordre des photos)? Une publication
@@ -183,7 +197,7 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     modifier? La secrétaire peut-elle modifier les mêmes champs que l'admin?
 
     Décision : le membre peut modifier ses informations de profil sauf son
-    rôle et son ou ses pupitres. L'admin et la secrétaire peuvent modifier les
+    rôle et ses pupitres. L'admin et la secrétaire peuvent modifier les
     pupitres. L'attribution des rôles applicatifs supérieurs reste réservée à
     l'admin.
 
@@ -193,13 +207,19 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     l'admin et à la secrétaire. « Tout le monde » désigne-t-il tous les membres
     ou le site public? Un chef peut-il publier un événement sur le site public?
 
-    Décision : La visibilité est structurée en 3 niveaux stricts (`public`, `interne`, `pupitre`) :
+    Décision actualisée le 2026-11-01 : `event_type` est un ENUM de neuf valeurs
+    (`sortie`, `concert`, `fest-noz`, `festival`, `concours`, `gala`,
+    `repetition`, `reunion`, `repas`). `visibility` est un ENUM indépendant
+    avec trois valeurs :
     - `public` : visible par tout le monde (visiteurs non connectés et membres connectés).
     - `interne` : visible par tous les membres connectés approuvés.
-    - `pupitre` : visible **uniquement** par les membres du ou des pupitres ciblés (ainsi que secrétaire et admin).
-    Un chef ne crée que des événements concernant son ou ses pupitres. L'admin et la
-    secrétaire créent les événements internes communs (repas, répétition générale privée)
-    et les représentations destinées à l'agenda public. Validé le 2026-10-26.
+    - `pupitre` : visible et ouvert aux réponses uniquement aux membres actifs
+      des pupitres ciblés.
+    Une répétition peut avoir chacune des trois visibilités. Un chef crée
+    uniquement des événements `pupitre` pour son pupitre et peut gérer tout
+    événement `pupitre` de son pupitre, même s'il n'en est pas l'auteur. Les
+    événements multi-pupitres ou globaux relèvent exclusivement de l'admin et
+    de la secrétaire. Validé le 2026-11-01.
 
 23. **Sondages** — les sondages sont-ils des événements et nécessitent-ils une
     validation préalable? Qui peut les modifier ou les supprimer?
@@ -292,6 +312,22 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     Blobs.
     Décision : package.json nettoyé et réinitialisé comme un projet vierge avec
     les dépendances officielles Supabase SSR, et purge du legacy. Validé le 2026-10-26.
+
+32. **Statut du compte et rôle applicatif** — distinction validée le
+    2026-11-01 : `account_status` vaut `pending`, `active` ou `suspended`;
+    `app_role` vaut `member`, `chef_pupitre`, `secretaire` ou `admin`.
+    L'activation n'attribue pas un rôle et la suspension bloque l'accès sans
+    supprimer les données.
+
+33. **Pupitre Percussion** — Percussion reste distinct, mais toute affectation
+    Percussion donne aussi une appartenance effective à Caisse claire, sans
+    dupliquer la ligne d'affectation. Cette appartenance héritée ouvre les
+    événements Caisse claire ; elle ne confère pas au chef de Percussion les
+    droits de gestion du chef de Caisse claire.
+
+34. **Trombinoscope V1** — exigence obligatoire à la première mise en
+    production. Une vue SQL limitée aux champs autorisés, ses relations et
+    l'accès privé aux avatars doivent être opérationnels avant lancement.
 
 ## Règle de validation
 

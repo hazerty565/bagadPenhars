@@ -40,17 +40,25 @@ président et le trésorier n'ont pas de droits métier liés à leur titre.
 
 | Rôle           | Exigences                                                                                                                   |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `pending`      | Peut terminer la création de son compte et consulter le parcours d'attente; aucun accès aux droits d'un membre actif. |
 | `member`       | Consulte l'agenda, les documents et le trombinoscope autorisé; répond aux événements et gère son propre profil. |
-| `chef_pupitre` | Droits d'un membre; gère les événements associés à son ou ses pupitres, et les partitions/notifications de son périmètre. |
+| `chef_pupitre` | Droits d'un membre; gère les événements d'un seul pupitre, et les partitions/notifications de son périmètre. |
 | `secretaire`   | Gère tous les événements, articles et albums; envoie des notifications aux pupitres autorisés. |
 | `admin`        | Gère globalement les utilisateurs, invitations, rôles, contenus et notifications; valide les comptes. |
+
+Le statut de compte est distinct du rôle applicatif :
+
+| `account_status` | Effet |
+|---|---|
+| `pending` | Compte créé sur invitation, en attente d'activation ; aucun accès métier |
+| `active` | Accès autorisé selon `app_role` |
+| `suspended` | Accès métier révoqué temporairement, données conservées |
 
 Principes obligatoires :
 
 - L'association compte trois pupitres : bombarde, caisse claire et cornemuse.
-  Un membre peut appartenir à un ou plusieurs pupitres, chacun ayant son chef
-  indépendant.
+  Percussion est conservé comme pupitre distinct, dont les membres appartiennent
+  aussi à Caisse claire par une relation d'héritage explicite. Un membre peut
+  avoir plusieurs affectations ; un chef ne gère qu'un seul pupitre.
 - Toute autorisation est vérifiée côté serveur et dérivée du rôle et des
   pupitres fiables en base, jamais d'une valeur de rôle fournie par le client
   ou de métadonnées de session modifiables.
@@ -59,17 +67,21 @@ Principes obligatoires :
 - Les invitations et validations de comptes sont réservées à l'admin. La
   secrétaire gère tous les événements, sans obtenir pour autant les droits
   globaux de l'admin sur les autres ressources.
-- Les chefs sont indépendants : ils gèrent les événements associés à leur(s)
-  pupitre(s), quel qu'en soit l'auteur, mais pas les événements globaux ou les
-  événements d'autres pupitres.
-- Le trombinoscope est réservé aux membres actifs connectés et expose seulement
+- Les chefs sont indépendants : chacun gère uniquement les événements de son
+  pupitre unique, quel qu'en soit l'auteur. Les événements ciblant plusieurs
+  pupitres ou tous les pupitres relèvent exclusivement de la secrétaire ou de
+  l'admin.
+- Le trombinoscope est une exigence V1 obligatoire, opérationnelle dès la
+  première mise en production. Il est réservé aux membres actifs connectés et expose seulement
   le nom, le prénom, la photo, les pupitres, le niveau musical et l'éventuelle
   fonction au bureau. Les coordonnées privées restent inaccessibles. Les titres
-  du bureau ne sont jamais publics et ne déterminent aucun droit.
+  du bureau ne sont jamais publics et ne déterminent aucun droit. La vue
+  dédiée, ses données associées et les photos doivent être accessibles dès la
+  V1, y compris au moyen d'appels directs à Supabase soumis aux mêmes contrôles.
 
 Les permissions détaillées sont précisées dans les exigences par ressource
-ci-dessous. Le schéma Supabase devra prendre en charge plusieurs pupitres par
-membre et le rôle applicatif `secretaire`.
+ci-dessous. Le schéma Supabase prend en charge les états de compte séparés des rôles et
+plusieurs affectations de pupitre par membre.
 
 ## 4. Exigences fonctionnelles
 
@@ -121,14 +133,15 @@ membre et le rôle applicatif `secretaire`.
 
 1. Seul un administrateur envoie une invitation, renseigne l'adresse e-mail,
    l'identité nécessaire et le ou les pupitres. Le compte Auth est créé
-   immédiatement et le profil applicatif est créé avec le rôle `pending`.
+   immédiatement et le profil applicatif a `account_status = 'pending'` et le
+   rôle indépendant `member`.
 2. Dans l'heure, le destinataire ouvre le lien Supabase Auth, confirme son
    adresse e-mail et définit son mot de passe. Le lien ne donne pas accès au
    dashboard.
 3. La confirmation e-mail ne valide pas le compte : il reste `pending` jusqu'à
-   l'approbation manuelle par un administrateur.
-4. L'administrateur ne peut approuver le compte que si l'adresse e-mail est
-   confirmée; l'approbation attribue le rôle `member`.
+   l'activation manuelle par un administrateur.
+4. L'administrateur ne peut activer le compte que si l'adresse e-mail est
+   confirmée; l'activation change le statut en `active`, sans attribuer le rôle.
 5. Le pupitre attribué n'est pas modifiable par l'invité.
 6. Le lien Auth expire après une heure. Si le lien expire, l'administrateur
    peut renvoyer une invitation au compte Auth existant sans créer un second
@@ -144,13 +157,15 @@ de données le permet.
 ### 4.3 Espace adhérents
 
 - Toutes les pages et actions privées exigent une session valide et un rôle
-  approuvé.
+  applicatif valide, et `account_status = 'active'`.
+- Un compte `suspended` ne peut plus accéder aux données ni actions métier ;
+  son profil et ses autres données sont conservés.
 - Le dashboard montre les informations du profil connecté. Le trombinoscope
   distinct est accessible aux membres actifs et ne révèle aucun champ privé.
 - Chaque membre ne modifie que son propre profil et sa propre réponse de
   présence.
 - Le membre peut modifier ses propres informations de profil, à l'exception
-  de son rôle et de son ou ses pupitres. L'admin et la secrétaire peuvent
+  de son rôle et de ses pupitres. L'admin et la secrétaire peuvent
   modifier les pupitres; l'attribution des rôles applicatifs supérieurs reste
   réservée à l'admin.
 - Seul l'admin peut inviter et approuver les comptes; il ne peut approuver un
@@ -167,8 +182,9 @@ de données le permet.
 
 - L'agenda public expose uniquement les représentations sélectionnées pour
   publication; il est en lecture seule.
-- L'agenda privé comprend les événements `interne` et les événements `pupitre`
-  accessibles au membre, en plus des événements `public`.
+- L'agenda privé comprend les événements `interne`, visibles par tous les
+  membres actifs, ainsi que les événements `pupitre` ciblés sur leurs pupitres.
+  Les événements `public` sont visibles par tous.
 - Les réponses possibles sont `present` ou `absent` (ou aucune réponse).
 - L'identité de la personne qui répond vient de la session serveur.
 - Un sondage est lui-même l'événement correspondant dans l'agenda; il est matérialisé
@@ -176,17 +192,22 @@ de données le permet.
   (la table `polls` est supprimée). Les réponses sont centralisées dans `event_responses`
   avec les statuts uniques `present` ou `absent`. L'admin et la secrétaire peuvent créer,
   modifier et supprimer tous les événements, y compris les sondages. Un chef peut
-  gérer les événements associés à son ou ses pupitres, y compris ceux créés par
-  un autre utilisateur, mais ne peut pas gérer d'événement global ni d'un autre
-  pupitre.
-- Chaque événement possède un type choisi dans un référentiel : répétition,
-  concert, sortie, festival, fest-noz, concours, réunion, assemblée générale,
-  gala ou repas. Le type est indépendant de la visibilité.
-- Les niveaux de visibilité d'un événement (`visibility`) sont stricts :
+  gérer les événements de son unique pupitre, y compris ceux créés par un autre
+  utilisateur. Il ne peut pas gérer d'événement multi-pupitres ou global.
+- Chaque événement possède un `event_type` ENUM parmi `sortie`, `concert`,
+  `fest-noz`, `festival`, `concours`, `gala`, `repetition`, `reunion` et
+  `repas`, indépendant de `visibility`.
+- Les niveaux de visibilité d'un événement (`visibility`) sont :
   - `public` : visible par tout le monde (public non connecté et membres connectés).
   - `interne` : visible par tous les membres connectés approuvés.
-  - `pupitre` : visible **uniquement** par les membres du ou des pupitres ciblés (ainsi que la secrétaire et l'admin).
-- Un chef ne peut créer et gérer que des événements pour son ou ses pupitres. L'admin
+- `pupitre` : visible par les membres actifs des pupitres ciblés uniquement.
+- Les membres actifs peuvent répondre aux événements publics et internes ;
+  seuls les membres actifs des pupitres ciblés peuvent voir et répondre aux
+  événements `pupitre`. Une répétition peut être publique, interne ou ciblée.
+- Un chef crée toujours un événement avec la visibilité `pupitre`, ciblé sur
+  son unique pupitre ; les membres des autres pupitres ne le voient pas et ne
+  peuvent pas y répondre. Il peut gérer un événement de son pupitre même s'il
+  n'en est pas l'auteur. L'admin
   et la secrétaire peuvent créer les événements internes communs, notamment
   les repas et répétitions générales privées, ainsi que les événements destinés
   à l'agenda public.
@@ -208,10 +229,11 @@ de données le permet.
   serveur avant de lire le stockage.
 - Les photos et albums destinés au public sont explicitement publiés; les
   fichiers non publics restent protégés.
-- La photo de profil figure dans le trombinoscope réservé aux membres actifs.
+- La photo de profil figure dans le trombinoscope V1 obligatoire dès la
+  première mise en production, réservé aux membres actifs.
   Elle est stockée dans `bagad-private/profiles/{profile_id}/avatar.webp`.
-  Tout membre actif peut la lire; seul son propriétaire peut la modifier et
-  l'administrateur dispose des droits de gestion. Les photos téléversées au
+  Tout membre actif peut la lire; seul son propriétaire peut la modifier,
+  administrateurs inclus. Les photos téléversées au
   format JPG/JPEG, jusqu'à 20 Mo par fichier source, sont converties au format
   WebP avant stockage. Les vidéos ne sont pas acceptées.
 - L'admin et la secrétaire peuvent publier et supprimer les albums. Une demande
@@ -401,19 +423,20 @@ passants.
   mot de passe; prendre en compte les erreurs et les sessions expirées.
 
 **Livrable :** chaque parcours privé refuse côté serveur les utilisateurs
-anonymes et les comptes `pending`; les tests démontrent les refus et accès
-autorisés.
+anonymes et les comptes `pending` ou `suspended`; les tests démontrent les
+refus et accès autorisés.
 
 ### Étape C — Invitations, profils et membres
 
 - Mettre en place les invitations email à usage unique, expirantes après une
-  heure et dont le jeton n'est stocké qu'empreinté. Seul l'admin peut inviter; le compte Auth
-  et le profil `pending` sont créés immédiatement.
+  heure et dont le jeton n'est stocké qu'empreinté. Seul l'admin peut inviter;
+  le compte Auth et le profil avec `account_status = pending` et `app_role =
+  member` sont créés immédiatement.
 - L'invité confirme son adresse et définit son mot de passe dans l'heure.
   La confirmation ne valide pas le compte et l'invité ne choisit ni son rôle ni
   ses pupitres.
-- Seul l'admin peut approuver un compte; l'approbation vérifie que l'adresse
-  e-mail est confirmée et attribue le rôle `member`.
+- Seul l'admin peut activer un compte; l'activation vérifie que l'adresse
+  e-mail est confirmée et change uniquement `account_status` en `active`.
 - Permettre à un membre de modifier uniquement les champs de son propre profil
   hors rôle et pupitres; le changement d'adresse email suit le flux Supabase
   Auth. Le trombinoscope réservé aux membres actifs expose uniquement les champs
@@ -429,7 +452,7 @@ adresse non concordante.
 
 - Servir au public uniquement les événements explicitement publiés et
   autorisés; l'agenda public est en lecture seule.
-- Servir l'agenda privé seulement aux membres approuvés.
+- Servir l'agenda privé seulement aux comptes `active`.
 - Implémenter création, modification et suppression d'événement selon les
   rôles et périmètres décidés.
 - Enregistrer au plus une réponse par membre et événement. L'identité du
@@ -439,10 +462,9 @@ adresse non concordante.
   et enregistrer les réponses dans `event_responses` avec le statut strict `present` ou `absent`
   (type `response_status`), sans table `polls` distincte ni étape de validation préalable.
   L'admin et la secrétaire peuvent les créer, modifier et supprimer dans les audiences publique
-  ou privée; un chef a ces droits uniquement pour les événements de son ou ses pupitres.
-- Associer chaque événement à un type du référentiel maîtrisé (répétition,
-  concert, sortie, festival, fest-noz, concours, réunion, assemblée générale,
-  gala ou repas), indépendamment de sa visibilité.
+  ou privée; un chef a ces droits uniquement pour les événements de son pupitre unique.
+- Utiliser l'ENUM `event_type` avec les neuf valeurs définies, et enregistrer
+  indépendamment la visibilité `public`, `interne` ou `pupitre`.
 - Valider les dates, fuseaux horaires et heures de fin. La première version ne
   comporte aucune structure SQL ni aucun comportement de récurrence.
 
@@ -455,10 +477,11 @@ propriété des réponses et cas de dates invalides.
 - Stocker les fichiers dans les buckets Supabase prévus; contrôler type,
   taille, nom et droits avant écriture.
 - N'accepter aucune vidéo. Limiter chaque fichier photo source JPG/JPEG à
-  20 Mo et le convertir en WebP avant stockage. La photo de profil affichée
-  dans le trombinoscope est stockée dans `bagad-private/profiles/{profile_id}/avatar.webp`,
-  accessible aux membres actifs; seul son propriétaire peut la modifier, avec
-  les droits de gestion de l'administrateur.
+  20 Mo et le convertir en WebP avant stockage. Le trombinoscope V1 est
+  obligatoire et opérationnel à la première mise en production. La photo de
+  profil affichée y est stockée dans
+  `bagad-private/profiles/{profile_id}/avatar.webp`, accessible aux membres
+  actifs; seul son propriétaire peut la modifier, administrateurs inclus.
 - Configurer `bagad-public` (`public = true`) pour les médias publiés et
   `bagad-private` (`public = false`) pour les avatars et documents privés.
   Les fichiers privés sont servis via accès authentifié ou URL signée courte,
@@ -516,21 +539,22 @@ mobiles, parcours hors-ligne sans fuite de données privées, CI verte.
 
 - En tant que membre approuvé, je consulte mon espace, les événements et les
   documents autorisés.
-- Je consulte le trombinoscope et uniquement ses champs autorisés, sans accéder
+- Je consulte le trombinoscope V1 et uniquement ses champs autorisés, sans accéder
   aux coordonnées privées ni au profil complet des autres membres.
 - Je crée ou modifie ma propre réponse de présence sans pouvoir répondre à la
   place d'une autre personne.
 - Je modifie uniquement les champs de mon profil autorisés par la décision
   produit; je ne peux jamais changer mon rôle ni mon pupitre.
-- En tant que compte `pending`, j'accède uniquement au parcours d'attente et
-  aux actions nécessaires à l'activation du compte.
+- En tant que compte `pending` ou `suspended`, je ne peux accéder aux données
+  ni aux actions métier réservées aux comptes actifs.
 
 ### Chef de pupitre
 
-- En tant que chef, je gère uniquement les événements, partitions et
-  notifications de mes pupitres, dans les limites validées.
-- Une requête directe visant un autre pupitre est refusée, même si l'interface
-  masque cette action.
+- En tant que chef, je ne gère que les événements, partitions et notifications
+  de mon unique pupitre.
+- Je peux modifier/supprimer un événement de mon pupitre même si je ne l'ai pas
+  créé ; une requête directe visant un autre pupitre, un événement
+  multi-pupitres ou global est refusée.
 
 ### Secrétaire et administrateur
 

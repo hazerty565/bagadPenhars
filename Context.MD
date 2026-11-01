@@ -87,58 +87,72 @@ un pupitre, la visibilité d'un événement et la validation d'un compte doivent
 
 ### 4. **Pupitres**
 
-Le Bagad a **3 pupitres** (sections musicales) :
-- Bombarde
-- Caisse Claire
-- Cornemuse
-
-Chaque membre peut appartenir à un ou plusieurs pupitres. Chaque pupitre a son
-propre chef ; les chefs sont indépendants et ne gèrent que les événements
-associés à leur(s) pupitre(s), quel qu'en soit l'auteur.
+Le Bagad conserve quatre pupitres distincts : Bombarde, Caisse claire,
+Cornemuse et Percussion. Un membre affecté à Percussion est également membre de
+Caisse claire par une relation explicite, sans duplication d'affectation.
+Chaque pupitre a son propre chef. Un chef ne gère que les événements de son
+pupitre unique, même s'il n'en est pas l'auteur ; les événements multi-pupitres
+ou globaux relèvent uniquement de la secrétaire ou de l'administrateur.
 
 ### 5. **Invitation flow sécurisé**
 
 ```
 Admin crée l'invitation et le compte Auth → Email de confirmation et de définition du mot de passe →
 Profil "pending" → Admin vérifie la confirmation et valide manuellement →
-Profil "member" → Accès à l'espace adhérents
+account_status "active" → Accès selon app_role
 ```
+
+`account_status` (`pending`, `active`, `suspended`) est séparé du rôle
+applicatif (`member`, `chef_pupitre`, `secretaire`, `admin`). Un compte
+suspendu perd l'accès métier sans suppression de ses données.
 
 La création de comptes est réservée aux invitations d'un administrateur via
 `inviteUserByEmail()`. Le lien Supabase Auth est valable une heure. Le membre
 confirme son adresse e-mail et définit son mot de passe ; son profil reste
-`pending` jusqu'à l'approbation administrative, qui vérifie la confirmation.
+`account_status = pending` jusqu'à l'activation administrative, qui vérifie la
+confirmation. Le rôle applicatif initial est `member` et reste indépendant.
 Si le lien expire, l'administrateur peut renvoyer une invitation au compte
 existant sans créer un second compte.
 
 ### 6. **Événements**
 
-Chaque événement a un type (répétition, concert, sortie, festival, fest-noz,
-concours, réunion, assemblée générale, gala ou repas) et une visibilité
-indépendante choisie explicitement :
+Chaque événement a un `event_type` ENUM parmi `sortie`, `concert`, `fest-noz`,
+`festival`, `concours`, `gala`, `repetition`, `reunion` et `repas`, ainsi
+qu'une visibilité indépendante choisie explicitement :
 
 - `public` : accessible à tous, y compris sans compte ;
 - `interne` : accessible aux membres actifs connectés ;
-- `pupitre` : accessible aux membres actifs des pupitres ciblés, à la secrétaire
-  et à l'administrateur.
+- `pupitre` : accessible et ouvert aux réponses uniquement aux membres actifs
+  des pupitres ciblés.
 
-La secrétaire et l'administrateur gèrent tous les événements. Un chef crée,
-consulte, modifie et supprime les événements associés à son ou ses pupitres,
-sans restriction liée à l'auteur ; il ne gère pas les événements globaux ni
-ceux d'autres pupitres. Un membre ne fait que consulter et répondre selon son
-niveau d'accès. Aucune gestion des événements récurrents n'est incluse en V1.
+Une répétition peut être publique, interne ou ciblée sur un pupitre. Un chef
+crée toujours un événement `pupitre` pour son unique pupitre ; les membres des
+autres pupitres ne le voient pas et ne peuvent pas y répondre. Les événements
+publics et internes restent visibles et ouverts aux réponses selon leur
+visibilité.
+La secrétaire et l'administrateur gèrent tous les événements, y compris les
+événements multi-pupitres ou globaux. Un chef crée, modifie et supprime les
+événements `pupitre` de son pupitre unique, sans restriction liée à l'auteur ;
+il ne gère pas les événements globaux ni ceux d'autres pupitres. L'appartenance
+Percussion → Caisse claire est conservée pour les droits liés aux pupitres,
+sans droits de gestion hérités. Un membre ne fait que consulter et répondre
+selon son statut et son rôle. Aucune gestion des
+événements récurrents n'est incluse en V1.
 
 ### 7. **Trombinoscope**
 
-Le trombinoscope est réservé aux membres actifs connectés. Il expose uniquement
+Le trombinoscope est une fonctionnalité obligatoire de la V1, opérationnelle à
+la première mise en production, et réservée aux membres actifs connectés. Il expose uniquement
 le nom, le prénom, la photo de profil, les pupitres, le niveau musical et la
 fonction éventuelle au bureau. Il ne rend pas accessibles les coordonnées
 privées (téléphone, e-mail personnel, adresse postale ou autres données non
 autorisées). La fonction au bureau est informative et ne confère aucun droit.
 
-Une vue SQL dédiée doit limiter les colonnes exposées. Les droits de lecture
-des profils complets restent distincts de ceux du trombinoscope ; les tables
-associées aux pupitres et niveaux doivent également être protégées.
+La vue SQL dédiée `member_directory` limite les colonnes exposées et s'appuie
+sur RLS pour autoriser les seuls membres actifs. Les droits de lecture des
+profils complets restent distincts de ceux du trombinoscope ; les tables
+associées aux pupitres et niveaux sont également protégées. Seul le propriétaire
+peut modifier sa photo, administrateurs inclus.
 
 ### 8. **Système de présence**
 
@@ -331,13 +345,13 @@ export const fr = {
     <button name="status" value="present">Présent</button>
   </form>
 
-  <!-- Modification (chef du/des pupitres ciblés, secrétaire ou admin) -->
+  <!-- Modification (chef de l'unique pupitre cible, secrétaire ou admin) -->
   {#if data.canEditAgenda}
     <button onclick={() => editEvent(event.id)}>Modifier</button>
   {/if}
 {/each}
 
-<!-- Ajouter (chef du/des pupitres ciblés, secrétaire ou admin) -->
+<!-- Ajouter (chef de l'unique pupitre cible, secrétaire ou admin) -->
 {#if data.canEditAgenda}
   <a href="/dashboard/agenda/create">Ajouter</a>
 {/if}

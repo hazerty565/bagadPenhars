@@ -2,6 +2,79 @@
 
 ## 2026-11-01
 
+### Règles V1 du trombinoscope, des événements et des comptes
+
+#### Fait
+
+- Séparation du `account_status` (`pending`, `active`, `suspended`) et de
+  `app_role`; l'activation n'attribue pas le rôle. Les fonctions RLS refusent
+  les opérations métier aux comptes non actifs.
+- Restriction des chefs à leur unique pupitre et aux événements avec une seule
+  cible correspondante, sans contrôle de `author_id`. Les événements globaux
+  et multi-pupitres restent réservés à la secrétaire et à l'admin.
+- Ajout de `events.event_type`, distinct de `visibility` et sans liste SQL
+  fermée, et du lien explicite Percussion → Caisse claire. L'héritage donne aux
+  membres Percussion accès aux événements Caisse claire, sans droit de gestion
+  hérité pour le chef de Percussion.
+- Ajout de la vue RLS `member_directory` pour la V1, avec les seuls champs
+  autorisés. Les grants empêchent la lecture directe des champs privés ;
+  l'avatar est modifiable uniquement par son propriétaire, y compris face à
+  un administrateur.
+- Alignement du brief, des spécifications UI/développeur, de la documentation
+  SQL, des questions produit et des schémas DrawSQL/Mermaid.
+
+#### Validation
+
+- Les contrôles statiques du SQL et du diff restent à exécuter. Le lint
+  Supabase local nécessite Docker, indisponible dans cet environnement.
+- La vue et les policies de base sont décrites et intégrées à la migration ;
+  les écrans applicatifs du trombinoscope restent à implémenter avant la V1.
+- La migration 005 est prévue pour une base vierge. Si elle a déjà été
+  appliquée à un environnement partagé ou de production, utiliser une nouvelle
+  migration additive et migrer les données.
+
+### Mise à jour des types et de la visibilité des événements
+
+#### Décision validée
+
+- `event_type` devient un ENUM limité à `sortie`, `concert`, `fest-noz`,
+  `festival`, `concours`, `gala`, `repetition`, `reunion` et `repas`.
+- `event_visibility` ne contient que `public` et `interne`. Le type et la
+  visibilité restent indépendants ; une répétition peut être publique ou
+  interne.
+- Décision initiale (corrigée dans la section « Rectification » ci-dessous) :
+  le ciblage par pupitre ne filtrait pas la lecture des événements internes.
+- Les réponses restent limitées à l'auteur, aux chefs des pupitres ciblés et
+  aux rôles secrétaire/admin.
+
+#### Validation
+
+- Migration 005, spécifications fonctionnelles et UI, documentation SQL et
+  diagrammes mis à jour. Exécution de la migration à valider sur une base
+  Supabase locale ou distante.
+
+### Rectification : événements privés d'un pupitre
+
+#### Décision validée
+
+- `event_visibility` comporte trois valeurs : `public`, `interne` et
+  `pupitre`, indépendantes de l'ENUM `event_type`.
+- Un événement `public` est visible par tous ; un événement `interne` est
+  visible par tous les membres actifs ; un événement `pupitre` est visible et
+  ouvert aux réponses uniquement pour les membres actifs des pupitres ciblés.
+- Les membres actifs peuvent répondre aux événements publics et internes. Les
+  événements créés par un chef ont toujours la visibilité `pupitre` et sont
+  ciblés uniquement sur son pupitre.
+- Les membres des autres pupitres ne doivent ni voir ni pouvoir répondre à un
+  événement `pupitre`. Les règles s'appliquent aux lectures directes Supabase,
+  aux réponses et aux RPC, pas seulement à l'interface.
+
+#### Validation
+
+- Politiques RLS, `can_access_event()`, RPC de chef et documentation corrigées.
+- Vérification complète de l'exécution SQL requiert une base Supabase locale,
+  indisponible sur le port 54322 dans cet environnement.
+
 ### Clarification des titres du bureau et configuration Auth
 
 #### Fait

@@ -10,18 +10,17 @@ archivées dans `supabase/deprecated_migrations/` et ne doivent pas être appliq
 Un projet ayant déjà exécuté ces anciennes migrations nécessite une stratégie de
 réconciliation distincte avant tout déploiement.
 
-Les décisions métier validées le 1 novembre 2026 ci-dessous décrivent la cible
-fonctionnelle à documenter. Elles ne sont pas toutes implémentées dans la
-migration 005. Cette migration reste la source de vérité du schéma actuellement
-versionné ; aucune nouvelle migration ne doit être écrite avant revue de
-l'architecture SQL et de la compatibilité des données existantes.
+La migration 005 est le schéma cible pour une installation neuve et intègre les
+décisions métier ci-dessous. Elle ne doit pas être réécrite si elle a déjà été
+appliquée à une base partagée ou de production ; dans ce cas, créer une nouvelle
+migration additive et prévoir la migration des données.
 
 ## 1. Principes
 
 1. **RLS activée sur toutes les tables du schéma `public`, sans exception**, y compris les tables publiques (agenda, articles). Une table publique a une policy de lecture explicite, filtrée sur une colonne (`visibility`, `published`).
 2. Sans policy, personne n'a accès : c'est le point de départ.
 3. Jamais de `using (true)` sans commentaire qui justifie.
-4. Les rôles se lisent dans `public.profiles.role`, **jamais** dans `user_metadata` (modifiable par l'utilisateur).
+4. Le statut et le rôle applicatif se lisent dans `public.profiles`, **jamais** dans `user_metadata` (modifiable par l'utilisateur).
 5. La clé `service_role` n'est utilisée que côté serveur (`+server.ts`, `+page.server.ts`), jamais exposée au client.
 6. Une migration appliquée n'est jamais modifiée : on en ajoute une nouvelle.
 7. Identifiants SQL en anglais, `snake_case`, pluriel pour les tables.
@@ -29,31 +28,42 @@ l'architecture SQL et de la compatibilité des données existantes.
 ## 2. Types
 
 ```sql
-create type app_role as enum ('pending', 'member', 'chef_pupitre', 'secretaire', 'admin');
-create type event_visibility as enum ('public', 'pupitre', 'interne');
+create type account_status as enum ('pending', 'active', 'suspended');
+create type app_role as enum ('member', 'chef_pupitre', 'secretaire', 'admin');
+create type event_type as enum (
+  'sortie', 'concert', 'fest-noz', 'festival', 'concours',
+  'gala', 'repetition', 'reunion', 'repas'
+);
+create type event_visibility as enum ('public', 'interne', 'pupitre');
 create type response_status as enum ('present', 'absent');
 create type musician_level as enum ('skolaj', 'bagadig', 'bagad');
 ```
 
-La migration 005 utilise l'ordre `public`, `pupitre`, `interne` pour
-`event_visibility`. La cible validée conserve ces trois valeurs (l'ordre
-souhaité dans la définition cible est `public`, `interne`, `pupitre`). Les types
-d'événement sont distincts de cette visibilité ; leur référentiel cible est
-décrit au §12.
+`account_status` décrit l'état d'accès du compte ; `app_role` décrit ses
+permissions métier. Les deux sont indépendants. Une suspension révoque les
+droits d'accès sans supprimer le profil ni ses données.
+
+`events.event_type` est un ENUM limité aux neuf catégories ci-dessus.
+`event_visibility` est indépendante du type : `public` est visible par tous,
+`interne` par tous les membres actifs et `pupitre` uniquement par les membres
+actifs des pupitres ciblés. Une répétition peut avoir chacune de ces audiences.
+Les événements créés par un chef sont toujours en visibilité `pupitre`.
 
 Niveaux utilisés par `my_role_level()` :
 
 
-| Rôle          | Niveau |
-| ------------- | ------ |
-| pending       | 0      |
-| member        | 1      |
-| chef\_pupitre | 2      |
-| secretaire    | 3      |
-| admin         | 4      |
+| Rôle          | Niveau (compte actif) |
+| ------------- | --------------------- |
+| member        | 1                     |
+| chef\_pupitre | 2                     |
+| secretaire    | 3                     |
+| admin         | 4                     |
 
 
-Un niveau plus haut englobe les droits des niveaux plus bas. Si un droit ne suit pas cette échelle, tester le rôle explicitement plutôt que le niveau.
+Un compte `pending` ou `suspended` a un niveau effectif de 0, quel que soit
+son rôle. Un niveau plus haut englobe les droits des niveaux plus bas. Si un
+droit ne suit pas cette échelle, tester le rôle explicitement plutôt que le
+niveau.
 
 ## 3. Fonctions d'aide
 
@@ -62,9 +72,12 @@ Elles sont `security definer` avec `search_path` vide, pour **éviter la récurs
 ```sql
 create function public.my_role_level() returns int
 language sql stable security definer set search_path = '' as $$
-  select case p.role
-    when 'pending' then 0 when 'member' then 1 when 'chef_pupitre' then 2
-    when 'secretaire' then 3 when 'admin' then 4 end
+  select case when p.account_status <> 'active' then 0 else
+    case p.role
+      when 'member' then 1 when 'chef_pupitre' then 2
+      when 'secretaire' then 3 when 'admin' then 4
+    end
+  end
   from public.profiles p
   where p.id = (select auth.uid())
 $$;
@@ -76,29 +89,41 @@ language sql stable security definer set search_path = '' as $$
 $$;
 ```
 
+`my_pupitre_ids()` renvoie les affectations directes, utilisées pour contrôler
+la gestion du chef. `my_member_pupitre_ids()` ajoute le pupitre parent hérité :
+un membre affecté à Percussion est également membre de Caisse claire.
+
 Un utilisateur sans profil obtient `null` : toute comparaison `>= n` est fausse, donc refus.
 
 La migration 005 ajoute `can_access_event(uuid)` et
 `can_manage_pupitre_event(uuid)`, fonctions `security definer` à
 `search_path` vide utilisées par les policies des événements et de leurs
-liaisons pour vérifier les audiences sans récursion RLS. Les chefs gèrent leurs
-événements ciblés via les RPC atomiques `create_pupitre_event`,
-`update_pupitre_event` et `delete_pupitre_event`.
+liaisons pour vérifier les audiences sans récursion RLS.
+`can_manage_pupitre_event` ne vérifie pas `author_id` : le chef de l'unique
+pupitre ciblé peut gérer l'événement même s'il n'en est pas l'auteur. Les RPC
+des chefs acceptent un seul `target_pupitre_id`; l'écriture multi-pupitres ou
+globale est réservée à la secrétaire et à l'admin. Pour un événement `pupitre`,
+la lecture et la réponse sont limitées aux membres actifs des pupitres ciblés.
+Les événements `interne` restent visibles et accessibles en réponse par tous
+les membres actifs, quel que soit leur ciblage. L'appartenance héritée
+Percussion → Caisse claire donne accès aux événements et réponses Caisse claire,
+sans conférer au chef Percussion les droits de gestion du chef Caisse claire.
 
 ## 4. Tables
 
 
 | Table                       | Rôle                                                                                                                                                |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `profiles`                  | Un profil par utilisateur (`id` = `auth.users.id`), nom, prénom, pseudo, date de naissance, téléphone, `musician_level`, `costume_complete`, `role` |
-| `pupitres`                  | bombarde, cornemuse, caisse claire, percussion                                                                                                      |
+| `profiles`                  | Un profil par utilisateur (`id` = `auth.users.id`), identité, `account_status`, rôle applicatif et données privées |
+| `pupitres`                  | bombarde, cornemuse, caisse claire, percussion ; Percussion référence Caisse claire comme parent |
 | `profile_pupitres`          | Liaison membre ↔ pupitres (plusieurs possibles)                                                                                                     |
+| `member_directory`          | Vue V1 aux champs autorisés, lisible par les membres actifs via RLS |
 | `bureau_positions`          | Titres du bureau historisés (honorifiques, aucun droit)                                                                                             |
 | `member_loans`              | Suivi simplifié des prêts de matériel et costumes par adhérent                                                                                      |
 | `invitations`               | Invitation envoyée : email, nom, prénom, auteur ; lien Supabase Auth valable 1 heure                                                                |
 | `invitation_pupitres`       | Pupitres attribués à l'invité                                                                                                                       |
-| `events`                    | Représentations, répétitions et sondages (`is_poll`), avec `visibility`                                                                             |
-| `event_pupitres`            | Liaison événement ↔ pupitres ciblés (quand `visibility = 'pupitre'`)                                                                                |
+| `events`                    | Événements avec `event_type` indépendant de `visibility`, et sondages (`is_poll`) |
+| `event_pupitres`            | Pupitres concernés par les événements ciblés (visibilité `pupitre`)                                                                                |
 | `event_responses`           | Réponse d'un membre à un événement ou sondage (`present` / `absent`)                                                                                |
 | `documents`                 | Partitions PDF, rattachées à un pupitre                                                                                                             |
 | `articles`                  | Actualités, avec `published`                                                                                                                        |
@@ -113,22 +138,23 @@ liaisons pour vérifier les audiences sans récursion RLS. Les chefs gèrent leu
 
 ## 5. Matrice des droits
 
-L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses propres lignes, « pup. » = son ou ses pupitres.
+L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses propres lignes, « pup. » = son pupitre.
 
-La matrice et les exemples RLS des §5–7 décrivent l'état de la migration 005.
-Le trombinoscope et ses autorisations restent à implémenter ; les décisions
-cibles correspondantes sont précisées au §12.
+La matrice et les exemples RLS des §5–7 décrivent l'état cible de la migration
+005. Le trombinoscope est obligatoire en V1 et livré dès la première mise en
+production.
 
 | Table                       | Visiteur         | Membre                                   | Chef de pupitre                  | Secrétaire          | Admin               |
 | --------------------------- | ---------------- | ---------------------------------------- | -------------------------------- | ------------------- | ------------------- |
-| `profiles`                  | –                | L/E soi (champs autorisés)               | L/E soi (champs autorisés)       | L tous              | L/E champs autorisés |
+| `profiles`                  | –                | L colonnes autorisées/E soi              | L colonnes autorisées/E soi       | L colonnes autorisées| L/E champs autorisés |
+| `member_directory`          | –                | L champs autorisés                        | L champs autorisés               | L champs autorisés   | L champs autorisés   |
 | `pupitres`                  | L                | L                                        | L                                | L                   | L/E                 |
-| `profile_pupitres`          | –                | L soi                                    | L pup.                           | L/E                 | L/E                 |
-| `bureau_positions`          | –                | L soi                                    | L soi                            | L/E                 | L/E                 |
+| `profile_pupitres`          | –                | L toutes affectations                   | L toutes affectations            | L/E                 | L/E                 |
+| `bureau_positions`          | –                | L fonctions actuelles                   | L fonctions actuelles            | L/E                 | L/E                 |
 | `member_loans`              | –                | L soi                                    | L pup.                           | L/E                 | L/E                 |
 | `invitations`               | –                | –                                        | –                                | –                   | L/E                 |
 | `invitation_pupitres`       | –                | –                                        | –                                | –                   | L/E                 |
-| `events`                    | L si `public`    | L public/interne + événements de ses pupitres | L idem membre ; E événements de ses pupitres | L/E tous | L/E tous |
+| `events`                    | L si `public`    | L public/interne + `pupitre` ciblé | L idem membre ; E un seul pupitre ciblé | L/E tous | L/E tous |
 | `event_pupitres`            | –                | L si événement accessible                | L si événement accessible        | L/E                 | L/E                 |
 | `event_responses`           | –                | L/E sa réponse si accès à l'événement ; aucune suppression | L réponses selon l'accès à l'événement | L/E toutes | L/E toutes |
 | `documents`                 | –                | L tous                                   | L tous, E son pup.               | L/E tous            | L/E tous            |
@@ -147,7 +173,7 @@ par les clients : l'approbation et le changement de rôle passent par les RPC
 autorisées. La suppression d'un profil passe par le traitement serveur de
 Supabase Auth.
 
-**Règles métier des événements :** seuls les secrétaires/admins peuvent gérer tous les événements. Un chef de pupitre peut créer, modifier et supprimer uniquement des événements de visibilité `pupitre`, ciblant exclusivement un ou plusieurs pupitres qui lui sont attribués. Les membres ordinaires ne créent, ne modifient et ne suppriment aucun événement. Les visiteurs anonymes ne voient que les événements `public`.
+**Règles métier des événements :** seuls les secrétaires/admins peuvent gérer tous les événements, y compris les événements multi-pupitres ou globaux. Un chef peut créer, modifier et supprimer les événements de son unique pupitre, indépendamment de `author_id`; un événement multi-pupitres n'est jamais gérable par un chef. Les membres ordinaires ne créent, ne modifient et ne suppriment aucun événement. Les visiteurs anonymes ne voient que les événements `public`.
 
 ## 6. Policies : modèles à suivre
 
@@ -195,23 +221,13 @@ using (
   and (select public.my_role_level()) >= 1
 );
 
--- 3. Événements par pupitre : uniquement les membres du/des pupitre(s) ciblés, ou secrétaire/admin
-create policy "events: lecture pupitre ciblé"
+-- 3. Événements ciblés sur un pupitre : membres actifs concernés uniquement
+create policy "events: lecture pupitre cible"
 on public.events for select
 to authenticated
 using (
   visibility = 'pupitre'
-  and (
-    (select public.my_role_level()) >= 3
-    or (
-      (select public.my_role_level()) >= 1
-      and exists (
-        select 1 from public.event_pupitres ep
-        where ep.event_id = events.id
-        and ep.pupitre_id in (select public.my_pupitre_ids())
-      )
-    )
-  )
+  and (select public.can_access_event(id))
 );
 
 create policy "events: gestion secrétaire et admin"
@@ -229,7 +245,7 @@ with check ((select public.my_role_level()) >= 3);
 
 Depuis la migration 005, un membre ne lit et ne modifie que sa propre réponse
 pour un événement auquel il a accès. Un chef de pupitre lit les réponses des
-événements auxquels son pupitre a accès, sans pouvoir modifier les réponses
+événements ciblés sur son pupitre effectif, sans pouvoir modifier les réponses
 d'autrui. La vue `event_response_details` lui fournit seulement le nom, l'ID
 de l'événement et le statut des réponses autorisées; elle ne donne pas accès
 aux autres champs de profil. La secrétaire et l'admin peuvent lire et modifier
@@ -239,7 +255,7 @@ modifiables par les clients, et aucune suppression directe n'est autorisée.
 ```sql
 alter table public.event_responses enable row level security;
 
--- can_access_event() vérifie la visibilité sans provoquer de récursion RLS.
+-- can_access_event() vérifie le compte actif et l'existence de l'événement.
 create policy "event_responses: lecture selon rôle et accès"
 on public.event_responses for select
 to authenticated
@@ -247,7 +263,11 @@ using (
   (select public.my_role_level()) >= 3
   or (
     (select public.my_role_level()) = 2
-    and (select public.can_access_event(event_id))
+    and exists (
+      select 1 from public.event_pupitres ep
+      where ep.event_id = event_responses.event_id
+      and ep.pupitre_id in (select public.my_member_pupitre_ids())
+    )
   )
   or (
     profile_id = (select auth.uid())
@@ -311,6 +331,15 @@ grant update (first_name, last_name, phone, nickname, birthdate) on public.profi
 
 Le changement de rôle passe par une fonction réservée à l'admin (niveau 4), et la modification du niveau / statut costume par une fonction réservée à la secrétaire ou à l'admin (niveau &gt;= 3 : `update_member_status`).
 
+La lecture du trombinoscope passe par la vue V1 `member_directory`, définie
+avec `security_invoker = true`. Les policies RLS des profils, des affectations
+de pupitre et des titres au bureau ne laissent lire que les lignes nécessaires
+aux comptes actifs. Les privilèges `SELECT` sur `profiles` sont limités à
+`id`, prénom, nom et niveau musical ; téléphone et autres données privées ne
+sont pas accessibles par une requête directe. La vue ne renvoie que le prénom,
+le nom, le chemin de l'avatar, les pupitres effectifs, le niveau musical et les
+fonctions actuelles au bureau.
+
 ### Fonctions de modification de rôle : modèle standard Supabase
 
 Toutes les fonctions `security definer` qui modifient des données suivent le même modèle que `my_role_level()` : `set search_path = ''` (sinon un attaquant peut détourner la résolution des noms vers ses propres objets), objets toujours qualifiés en `public.`, vérification du rôle **à l'intérieur** de la fonction, et permissions `execute` explicites.
@@ -327,7 +356,7 @@ begin
     raise exception 'Réservé aux administrateurs';
   end if;
 
-  if new_role <> 'pending' and not exists (
+  if not exists (
     select 1 from auth.users u
     where u.id = target and u.email_confirmed_at is not null
   ) then
@@ -361,8 +390,8 @@ begin
     raise exception 'Adresse e-mail non confirmée';
   end if;
 
-  update public.profiles set role = 'member'
-  where id = target and role = 'pending';
+  update public.profiles set account_status = 'active'
+  where id = target and account_status = 'pending';
 end;
 $$;
 
@@ -370,7 +399,7 @@ revoke execute on function public.approve_member(uuid) from anon, public;
 grant execute on function public.approve_member(uuid) to authenticated;
 ```
 
-> `approve_member` ne peut attribuer **que** le rôle `member`, uniquement depuis `pending` et après confirmation de l'adresse e-mail. `set_profile_role` bloque également l'attribution de tout rôle actif à une adresse non confirmée. `update_member_status` (niveau musical, costume) suit le même modèle avec un garde `>= 3`.
+> `approve_member` active uniquement un compte `pending`, après confirmation de l'adresse e-mail ; le rôle applicatif reste indépendant. `set_profile_role` modifie seulement le rôle. `set_account_status` permet à l'admin de suspendre ou réactiver un compte déjà activé. `update_member_status` (niveau musical, costume) suit le même modèle avec un garde `>= 3`.
 
 ## 7. Création de compte et trigger d'invitation
 
@@ -394,11 +423,11 @@ est le suivant :
   - Sélectionne et verrouille la ligne d'invitation retenue (`FOR UPDATE`) afin que deux inscriptions concurrentes ne puissent pas consommer la même invitation.
   - La validation, la création du profil, la copie des pupitres et le marquage `used_at` doivent appartenir à la même transaction ; toute erreur annule l'ensemble.
   - Vérifie la présence d'une invitation valide pour `new.email` (`used_at is null` et `created_at > now() - interval '1 hour'`). Si aucune invitation valide n'existe, lève une exception (`raise exception 'Invitation invalide ou expirée'`).
-  - Crée le profil dans `public.profiles` (`id = new.id`, `role = 'pending'`).
+  - Crée le profil dans `public.profiles` (`id = new.id`, `account_status = 'pending'`, `role = 'member'`).
   - Associe l'utilisateur à ses pupitres dans `public.profile_pupitres` en copiant ceux de `invitation_pupitres`.
   - Marque l'invitation comme utilisée (`used_at = now()`).
-4. Le membre ouvre le lien Supabase Auth dans l'heure, confirme son adresse e-mail et définit son mot de passe. La confirmation ne change pas le rôle : le profil reste `pending`, sans accès de membre actif.
-5. Un administrateur valide manuellement le profil via une fonction d'approbation ; celle-ci vérifie dans `auth.users` que `email_confirmed_at` est renseigné avant le passage de `pending` à `member`.
+4. Le membre ouvre le lien Supabase Auth dans l'heure, confirme son adresse e-mail et définit son mot de passe. La confirmation seule ne change pas le statut : le compte reste `pending`, sans accès métier.
+5. Un administrateur active manuellement le profil via `approve_member`; celle-ci vérifie dans `auth.users` que `email_confirmed_at` est renseigné avant le passage de `account_status` de `pending` à `active`. Le rôle demeure inchangé.
 
 Le délai d'une heure est appliqué au lien Auth et au contrôle de validité de
 l'invitation en base. La policy RLS, la fonction d'approbation et le contrôle
@@ -431,7 +460,7 @@ document ou à l'album. Les politiques `INSERT`, `UPDATE` et `DELETE` vérifient
 Les photos de profil sont converties en WebP et enregistrées à un chemin
 déterministe `profiles/{profile_id}/avatar.webp` dans `bagad-private`. Un membre
 actif peut lire les avatars de tous les membres actifs et modifier uniquement
-le sien ; l'administrateur dispose des droits nécessaires à leur gestion. Les
+le sien ; aucun administrateur ne peut gérer la photo d'un autre membre. Les
 droits de Storage ne permettent pas de lire ou modifier les autres champs du
 profil. Le trombinoscope utilise un accès authentifié ou une URL signée courte
 pour afficher ces photos.
@@ -499,19 +528,25 @@ insert into public.events (...) values (...);  -- doit échouer
 -- Membre approuvé
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "<uuid-membre>"}';
-select count(*) from public.events;        -- public + interne + pupitres auxquels il appartient
+select count(*) from public.events;        -- public + interne + pupitre ciblé
 select count(*) from public.event_responses; -- uniquement ses réponses; jamais anon
 update public.profiles set role = 'admin' where id = '<uuid-membre>';  -- doit échouer
 delete from public.event_responses where profile_id = '<uuid-membre>';  -- doit échouer (aucune policy delete)
 -- anon lit les médias de bagad-public, mais jamais un objet de bagad-private.
 -- Un membre actif lit les avatars des membres actifs et ses documents autorisés.
--- Un membre actif ne peut ni remplacer ni supprimer l'avatar d'un autre membre.
--- Un compte pending ne peut accéder à aucun objet de bagad-private.
+-- Aucun membre, y compris admin, ne peut remplacer ni supprimer l'avatar d'un autre.
+-- Un membre actif lit member_directory, mais pas les colonnes phone/email personnelles.
+-- Une lecture directe de profiles.phone par authenticated doit échouer (grant absent).
+-- Un compte pending ou suspended ne peut accéder aux données métier privées.
 -- Secrétaire/admin peuvent gérer les objets selon les chemins Storage autorisés.
 -- Tenter une réponse à un événement de pupitre étranger doit échouer.
+-- Le chef modifie un événement de son pupitre créé par un tiers, sans author_id check.
+-- Un chef ne crée/gère pas de cible multi-pupitres ou un autre pupitre.
+-- Un chef Percussion peut lire les réponses ciblées Caisse claire, mais ne
+-- reçoit pas les droits de gestion des événements Caisse claire.
 -- Tenter de modifier profile_id/event_id sur sa réponse doit échouer.
 -- Tenter de lire la réponse d'un autre membre doit échouer.
--- Le chef lit les réponses des événements accessibles à son pupitre,
+-- Le chef lit les réponses des événements ciblés sur son pupitre effectif,
 -- mais ne peut pas modifier la réponse d'un autre membre.
 -- Secrétaire/admin peuvent lire et modifier toutes les réponses, sans les supprimer.
 ```
@@ -520,66 +555,76 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
 
 ## 12. Décisions
 
-- **Trombinoscope privé** : les membres actifs connectés peuvent consulter le trombinoscope, quel que soit leur rôle. Une vue SQL dédiée n'expose que le nom, le prénom, la photo de profil, les pupitres, le niveau musical et la fonction éventuelle au bureau. Les coordonnées privées (téléphone, e-mail personnel, adresse postale et autres champs non autorisés) ne sont jamais exposées. La lecture de cette vue ne donne aucun droit de lecture sur les profils complets. Les droits RLS des profils, des tables de liaison de pupitres et des données de niveau doivent être vérifiés séparément.
+- **Trombinoscope V1 obligatoire** : il doit être opérationnel dès la première mise en production. La vue `member_directory` (security invoker) expose seulement prénom, nom, chemin de photo, pupitres effectifs, niveau musical et fonctions actuelles au bureau. Elle est lisible uniquement par les comptes actifs via RLS sur les profils, les liaisons de pupitres et les fonctions du bureau. Les grants sur `profiles` limitent également les colonnes accessibles ; e-mail, téléphone et adresse personnelle ne sont jamais exposés par le trombinoscope ni par une requête directe.
+- **Photos de profil** : elles sont dans `bagad-private/profiles/{profile_id}/avatar.webp`. Tous les membres actifs peuvent les lire. Seul le propriétaire peut créer, modifier ou supprimer sa photo, administrateurs inclus. Les chemins Storage imposent le format exact du chemin ; accès authentifié ou URL signée courte uniquement.
 - **Titres du bureau non publics** : aucune policy de lecture pour `anon`. Un membre actif peut voir la fonction de présentation exposée dans le trombinoscope ; cela n'accorde aucun droit applicatif supplémentaire.
 - **Événements et visibilité (`public`, `interne`, `pupitre`)** :
   - `public` : événement visible par les visiteurs non connectés et les membres ; les réponses restent privées et sont visibles par leur auteur, les chefs ayant accès à l'événement et la secrétaire/admin.
-  - `interne` : événement visible par tous les membres connectés approuvés; les réponses sont visibles par leur auteur, les chefs ayant accès à l'événement et la secrétaire/admin.
-  - `pupitre` : événement visible uniquement par les membres des pupitres ciblés et par la secrétaire/admin. Les réponses sont visibles par leur auteur, les chefs ayant accès à l'événement et la secrétaire/admin. Un chef peut créer, consulter, modifier et supprimer tout événement associé à son ou ses pupitres, indépendamment de son auteur ; il ne peut gérer ni un événement global ni les événements d'autres pupitres. La secrétaire et l'admin gèrent tous les événements. Un membre ordinaire ne crée, ne modifie et ne supprime aucun événement.
-- **Type d'événement distinct de sa visibilité** : ajouter le champ `event_type` à `events` et un référentiel maîtrisé `event_types` (relation et compatibilité à valider). Catégories initiales : répétition, concert, sortie, festival, fest-noz, concours, réunion, assemblée générale, gala et repas. La visibilité est choisie explicitement ; le type ne la détermine pas.
-- **Pupitres** : la cible métier comporte Bombarde, Caisse claire et Cornemuse, avec un chef indépendant par pupitre. La migration 005 contient aussi Percussion ; la stratégie de compatibilité et le traitement des données liées à ce pupitre restent à valider.
+  - `interne` : événement visible par tous les comptes actifs; les réponses sont visibles par leur auteur, les chefs ayant accès à l'événement et la secrétaire/admin.
+- Les événements ciblés (`visibility = 'pupitre'`) ne sont visibles et accessibles pour réponse que par les membres actifs des pupitres concernés et la secrétaire/l'admin. Les événements `interne` sont visibles et ouverts aux réponses de tous les membres actifs, ciblage ou non. Les événements `public` sont visibles par tous, y compris les visiteurs, et les membres actifs peuvent y répondre.
+- Un chef crée toujours un événement ciblé sur son unique pupitre, même s'il n'en est pas l'auteur lorsqu'il le modifie. Il ne gère aucun événement multi-pupitres ni global. La secrétaire et l'admin gèrent tous les événements et peuvent en créer des publics, internes ou ciblés.
+- **Type d'événement distinct de sa visibilité** : `events.event_type` est un ENUM indépendant de `visibility`, contenant `sortie`, `concert`, `fest-noz`, `festival`, `concours`, `gala`, `repetition`, `reunion` et `repas`. Une répétition peut être publique ou interne.
+- **Pupitres et appartenance héritée** : Bombarde, Caisse claire, Cornemuse et Percussion sont des pupitres distincts. Percussion référence explicitement Caisse claire comme parent ; les membres Percussion sont membres effectifs des deux pupitres sans duplication de `profile_pupitres`. La lecture des événements eux-mêmes ne dépend pas du pupitre ; l'accès aux réponses des événements ciblés tient compte de l'appartenance héritée, tandis que les droits de gestion des chefs utilisent les affectations directes.
 - **Événements récurrents** : aucune gestion des récurrences en V1. La table `event_series`, la colonne `events.series_id` et tous les objets exclusivement liés aux récurrences sont supprimés de la migration 005 et du schéma cible.
-- **Invitations et activation** : seul l'admin crée les invitations avec `inviteUserByEmail()` et les comptes Auth. Le lien Supabase Auth expire après une heure. Le trigger crée le profil applicatif en `pending`. La confirmation de l'adresse e-mail ne valide pas le membre ; l'admin approuve manuellement et la fonction d'approbation vérifie `auth.users.email_confirmed_at` avant de passer à `member`. Un compte non confirmé ou `pending` ne reçoit pas les droits d'un membre actif. Si le lien expire, l'admin peut renvoyer une invitation au compte Auth existant, sans créer un doublon.
+- **État du compte et rôle** : `account_status` (`pending`, `active`, `suspended`) et `app_role` (`member`, `chef_pupitre`, `secretaire`, `admin`) sont indépendants. Une invitation crée un rôle initial `member` en statut `pending`. Après confirmation de l'e-mail, l'admin active le compte via `approve_member`; cette fonction change uniquement le statut. Un statut `suspended` bloque les droits métier sans supprimer les données. Le changement de rôle et la suspension/réactivation passent par des fonctions admin dédiées.
 - **Expiration Auth** : le lien d'invitation a une validité d'une heure (`auth.email.otp_expiry = 3600` dans la configuration locale et dans le projet Supabase hébergé). Le renvoi pour un compte Auth déjà créé doit être testé.
 - **Réponses de présence** : seules les valeurs `present` et `absent` sont admises. Le membre peut modifier sa propre réponse à tout moment avant l'événement. Il ne peut pas supprimer sa réponse individuellement, ni répondre à un événement auquel il n'a pas accès. Un visiteur public ne voit jamais les réponses.
-- **Affectations des chefs** : un profil `chef_pupitre` doit avoir au moins un pupitre attribué ; un pupitre peut temporairement ne pas avoir de chef. Le chef ne peut gérer que ses pupitres.
+- **Affectations des chefs** : chaque pupitre a un chef. Les RPC des chefs n'acceptent qu'un pupitre cible et vérifient l'affectation directe ; la fonction de gestion ne compare jamais `author_id`. Les événements multi-pupitres et globaux sont gérés uniquement par la secrétaire ou l'admin.
 - **Documents partagés entre pupitres** : tous les membres lisent tous les documents ; seul le chef de pupitre (son pupitre), la secrétaire et l'admin peuvent écrire.
 - **Réponses jamais supprimées individuellement** : un membre modifie sa réponse au fil du temps (présent → absent le jour même par exemple) ; la suppression n'intervient qu'à la suppression du compte (RGPD).
 - **`activity_log` (ex-`audit_log`)** : trace applicative interne, sans valeur probante ; elle n'est **pas** une piste d'audit au sens légal et ne doit pas être présentée comme telle.
 
-### 12.1. Cible SQL à valider avant migration
+### 12.1. Contrôles exigés par la migration 005
 
-Les éléments de cette sous-section documentent les changements approuvés, mais
-ne décrivent pas le schéma déjà appliqué. La revue préalable devra notamment :
+- `event_type` et `visibility` sont indépendants. `event_type` est limité aux
+  neuf valeurs documentées ; `visibility` vaut `public`, `interne` ou
+  `pupitre`. Les événements `pupitre` exigent une association de pupitre pour
+  être visibles ou recevoir des réponses.
+- La vue SQL `member_directory` s'exécute avec les permissions de l'appelant,
+  est filtrée par RLS et n'expose que les champs du trombinoscope. Les policies
+  et privilèges de colonnes empêchent l'accès direct aux coordonnées privées.
+- Les photos de profil restent privées ; les policies valident le statut actif,
+  l'identifiant du propriétaire et le chemin exact. Même l'admin ne peut pas
+  modifier la photo d'un autre membre.
+- `can_manage_pupitre_event()` vérifie le rôle actif de chef et l'unique
+  pupitre attribué à l'événement, sans vérifier son auteur. Les RPC de chef ne
+  prennent qu'un identifiant de pupitre ; les policies SQL réservent les
+  opérations multi-pupitres et globales aux rôles secrétaire/admin.
+- `my_member_pupitre_ids()` propage l'appartenance Percussion vers Caisse
+  claire pour l'affichage du trombinoscope et l'accès aux réponses des événements
+  ciblés ; la lecture des événements ne dépend pas du pupitre. La gestion du
+  chef et les dépôts de partitions utilisent les affectations directes.
+- `my_role_level()` retourne 0 pour les comptes `pending` et `suspended`, ce
+  qui bloque les opérations protégées par les policies et fonctions métier.
 
-- définir le type `event_visibility` cible (`public`, `interne`, `pupitre`) sans
-  confondre type et visibilité ;
-- ajouter le champ `event_type` à `events` et décider du schéma du référentiel
-  maîtrisé `event_types` auquel il se rapporte ;
-- conserver la relation `event_pupitres` pour associer un événement `pupitre` à
-  un ou plusieurs pupitres et interdire aux chefs la gestion d'événements
-  globaux ou d'autres pupitres ;
-- définir une vue dédiée au trombinoscope, limitée aux colonnes autorisées et
-  lisible uniquement par les membres actifs. La vue ne doit pas contourner les
-  droits RLS des profils et des tables associées ; le stockage des photos reste
-  à concevoir en cohérence avec la politique de stockage privée ;
-- faire évoluer les RPC de création, modification et suppression afin de
-  vérifier les pupitres autorisés côté serveur/SQL, sans dépendre de l'auteur
-  de l'événement ;
-- tester le renvoi d'une invitation Auth expirée au compte existant, sans
-  créer de doublon ;
-- vérifier la compatibilité des quatre pupitres de la migration 005 avec la
-  cible métier de trois pupitres.
-
-Définition cible de la visibilité (référence documentaire, pas une migration à
-appliquer telle quelle) :
+Définitions cibles des types d'événement et de visibilité :
 
 ```sql
-CREATE TYPE public.event_visibility AS ENUM (
-    'public',
-    'interne',
-    'pupitre'
+CREATE TYPE public.event_type AS ENUM (
+    'sortie', 'concert', 'fest-noz', 'festival', 'concours',
+    'gala', 'repetition', 'reunion', 'repas'
 );
+
+CREATE TYPE public.event_visibility AS ENUM ('public', 'interne', 'pupitre');
 ```
 
-La validation des policies et RPC devra couvrir au minimum les cas suivants :
-un chef bombarde modifie/supprime un événement bombarde créé par un tiers, mais
-ne gère pas un événement caisse claire ; un membre consulte le trombinoscope sans
-accéder aux coordonnées privées ; `anon` ne lit que les événements publics ;
-les membres voient les événements internes et ceux de leurs pupitres ; un chef
-ne crée pas d'événement global ; la secrétaire gère tous les événements ; un
-compte non confirmé ne peut pas être approuvé ; la confirmation seule ne change
-pas le statut `pending`.
+La validation des policies et RPC doit couvrir au minimum les cas suivants :
+un chef gère un événement de son pupitre créé par un tiers, mais ne gère ni un
+événement d'un autre pupitre ni un événement multi-pupitres/global ; les
+événements ciblés ne sont lisibles et ouverts aux réponses que pour les
+membres des pupitres concernés ; la secrétaire crée un événement `public`
+visible par tous et ouvert aux réponses des membres actifs ; la secrétaire crée
+un événement `interne` visible par tous les membres actifs et ouvert à leurs
+réponses ; le chef Caisse claire crée une répétition `pupitre`, invisible et
+sans réponse possible pour les autres pupitres ; un chef Percussion peut
+accéder aux événements et réponses Caisse claire sans hériter de leur gestion ;
+un membre actif consulte le trombinoscope sans accéder aux coordonnées privées ; aucun
+utilisateur, y compris admin, ne modifie la photo d'un autre membre ; `anon` ne
+lit que les événements publics ; Percussion voit les événements Caisse claire
+sans recevoir de droits de gestion de chef Caisse claire ; les rôles secrétaire
+et admin gèrent tous les événements ; les comptes non confirmés ne sont pas
+activés ; la confirmation seule ne change pas `account_status = pending` ;
+un compte suspendu n'accède à aucune donnée ou action métier.
 
 ## 13. Schéma initial consolidé (migration 005)
 
@@ -596,7 +641,7 @@ pas le statut `pending`.
 - `member_loans` permet un suivi nominatif simplifié des équipements et costumes prêtés aux membres (`materiel` ou `costume`), avec dates d'emprunt et de retour.
 - Seuls les administrateurs et secrétaires peuvent enregistrer des prêts ou modifier le niveau/costume via `update_member_status`.
 - Crée `activity_log` comme journal applicatif (sans données historiques à migrer dans une base neuve).
-- Restreint la lecture des réponses aux événements accessibles : le membre ne voit que sa propre réponse; le chef voit les réponses des événements accessibles à son pupitre; la secrétaire et l'admin voient toutes les réponses.
+- Restreint la lecture des réponses aux événements accessibles : le membre ne voit que sa propre réponse; le chef voit les réponses des événements ciblés sur son pupitre effectif; la secrétaire et l'admin voient toutes les réponses.
 - Ajoute `event_response_details`, vue minimale qui donne aux chefs les noms et statuts nécessaires sans ouvrir les profils.
 - Restreint l'ajout et la modification des réponses aux événements accessibles et à l'identité authentifiée. Seul `status` est modifiable; les réponses ne peuvent pas être supprimées individuellement.
 - Les chefs créent, modifient et suppriment leurs événements ciblés via les RPC atomiques `create_pupitre_event`, `update_pupitre_event` et `delete_pupitre_event`.

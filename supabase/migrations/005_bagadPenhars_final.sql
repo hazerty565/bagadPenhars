@@ -13,8 +13,13 @@ begin;
 create extension if not exists "pgcrypto";
 
 -- 2. Types Enum
-create type public.app_role as enum ('pending', 'member', 'chef_pupitre', 'secretaire', 'admin');
-create type public.event_visibility as enum ('public', 'pupitre', 'interne');
+create type public.account_status as enum ('pending', 'active', 'suspended');
+create type public.app_role as enum ('member', 'chef_pupitre', 'secretaire', 'admin');
+create type public.event_type as enum (
+  'sortie', 'concert', 'fest-noz', 'festival', 'concours',
+  'gala', 'repetition', 'reunion', 'repas'
+);
+create type public.event_visibility as enum ('public', 'interne', 'pupitre');
 create type public.response_status as enum ('present', 'absent');
 create type public.musician_level as enum ('skolaj', 'bagadig', 'bagad');
 
@@ -25,6 +30,7 @@ create table public.pupitres (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
   slug text not null unique,
+  parent_pupitre_id uuid references public.pupitres(id) on delete restrict,
   created_at timestamptz not null default now()
 );
 
@@ -33,12 +39,13 @@ create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   first_name text not null,
   last_name text not null,
+  account_status public.account_status not null default 'pending',
+  role public.app_role not null default 'member',
   phone text,
   nickname text,
   birthdate date,
   musician_level public.musician_level not null default 'skolaj',
   costume_complete boolean not null default false,
-  role public.app_role not null default 'pending',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -60,13 +67,14 @@ stable
 security definer
 set search_path = ''
 as $$
-  select case p.role
-    when 'pending' then 0
-    when 'member' then 1
-    when 'chef_pupitre' then 2
-    when 'secretaire' then 3
-    when 'admin' then 4
-    else null
+  select case
+    when p.account_status <> 'active' then 0
+    else case p.role
+      when 'member' then 1
+      when 'chef_pupitre' then 2
+      when 'secretaire' then 3
+      when 'admin' then 4
+    end
   end
   from public.profiles p
   where p.id = (select auth.uid())
@@ -82,6 +90,24 @@ as $$
   select pp.pupitre_id
   from public.profile_pupitres pp
   where pp.profile_id = (select auth.uid())
+$$;
+
+create or replace function public.my_member_pupitre_ids()
+returns setof uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select pp.pupitre_id
+  from public.profile_pupitres pp
+  where pp.profile_id = (select auth.uid())
+  union
+  select p.parent_pupitre_id
+  from public.profile_pupitres pp
+  join public.pupitres p on p.id = pp.pupitre_id
+  where pp.profile_id = (select auth.uid())
+    and p.parent_pupitre_id is not null
 $$;
 
 -- Titres du bureau historisés (honorifiques, sans droits associés)
@@ -120,6 +146,7 @@ create table public.events (
   location text,
   start_at timestamptz not null,
   end_at timestamptz not null,
+  event_type public.event_type not null,
   visibility public.event_visibility not null default 'interne',
   is_poll boolean not null default false,
   author_id uuid references public.profiles(id) on delete set null,
@@ -128,7 +155,7 @@ create table public.events (
   constraint events_dates_check check (end_at >= start_at)
 );
 
--- Liaison Événements <-> Pupitres (pour visibility = 'pupitre')
+-- Pupitres concernés par les événements ciblés ou associés à un pupitre.
 create table public.event_pupitres (
   event_id uuid not null references public.events(id) on delete cascade,
   pupitre_id uuid not null references public.pupitres(id) on delete cascade,
@@ -273,8 +300,7 @@ alter table public.notification_preferences enable row level security;
 alter table public.account_deletion_requests enable row level security;
 alter table public.member_loans enable row level security;
 
--- Security-definer helpers avoid recursive RLS when policies inspect events
--- and their target pupitres.
+-- Security-definer helpers avoid recursive RLS when policies inspect events.
 create or replace function public.can_access_event(target_event_id uuid)
 returns boolean
 language sql
@@ -297,7 +323,7 @@ as $$
                 select 1
                 from public.event_pupitres ep
                 where ep.event_id = e.id
-                  and ep.pupitre_id in (select public.my_pupitre_ids())
+                  and ep.pupitre_id in (select public.my_member_pupitre_ids())
               )
             )
           )
@@ -313,11 +339,15 @@ security definer
 set search_path = ''
 as $$
   select coalesce((select public.my_role_level()), -1) = 2
+    and (
+      select count(*)
+      from public.profile_pupitres pp
+      where pp.profile_id = (select auth.uid())
+    ) = 1
     and exists (
       select 1
       from public.events e
       where e.id = target_event_id
-        and e.author_id = (select auth.uid())
         and e.visibility = 'pupitre'
         and exists (
           select 1
@@ -325,6 +355,11 @@ as $$
           where ep.event_id = e.id
             and ep.pupitre_id in (select public.my_pupitre_ids())
         )
+        and (
+          select count(*)
+          from public.event_pupitres ep
+          where ep.event_id = e.id
+        ) = 1
         and not exists (
           select 1
           from public.event_pupitres ep
@@ -336,10 +371,12 @@ $$;
 
 revoke all on function public.my_role_level() from public, anon;
 revoke all on function public.my_pupitre_ids() from public, anon;
+revoke all on function public.my_member_pupitre_ids() from public, anon;
 revoke all on function public.can_access_event(uuid) from public, anon;
 revoke all on function public.can_manage_pupitre_event(uuid) from public, anon;
 grant execute on function public.my_role_level() to authenticated;
 grant execute on function public.my_pupitre_ids() to authenticated;
+grant execute on function public.my_member_pupitre_ids() to authenticated;
 grant execute on function public.can_access_event(uuid) to authenticated;
 grant execute on function public.can_manage_pupitre_event(uuid) to authenticated;
 
@@ -349,8 +386,9 @@ create or replace function public.create_pupitre_event(
   event_location text,
   event_start_at timestamptz,
   event_end_at timestamptz,
+  new_event_type public.event_type,
   event_is_poll boolean,
-  target_pupitre_ids uuid[]
+  target_pupitre_id uuid
 )
 returns uuid
 language plpgsql
@@ -365,32 +403,35 @@ begin
       using errcode = '42501';
   end if;
 
-  if target_pupitre_ids is null
-    or cardinality(target_pupitre_ids) = 0
-    or exists (
-      select 1
-      from unnest(target_pupitre_ids) requested(pupitre_id)
-      where requested.pupitre_id is null
-        or requested.pupitre_id not in (select public.my_pupitre_ids())
-    )
+  if (
+    select count(*)
+    from public.profile_pupitres pp
+    where pp.profile_id = (select auth.uid())
+  ) <> 1 then
+    raise exception 'Un chef ne peut gérer qu''un seul pupitre'
+      using errcode = '42501';
+  end if;
+
+  if target_pupitre_id is null
+    or target_pupitre_id not in (select public.my_pupitre_ids())
   then
-    raise exception 'Les pupitres ciblés doivent appartenir au chef connecté'
+    raise exception 'Le pupitre ciblé doit être attribué au chef connecté'
       using errcode = '42501';
   end if;
 
   insert into public.events (
-    title, description, location, start_at, end_at,
+    title, description, location, start_at, end_at, event_type,
     visibility, is_poll, author_id
   )
   values (
     event_title, event_description, event_location, event_start_at, event_end_at,
+    new_event_type,
     'pupitre', event_is_poll, (select auth.uid())
   )
   returning id into created_event_id;
 
   insert into public.event_pupitres (event_id, pupitre_id)
-  select created_event_id, requested.pupitre_id
-  from unnest(target_pupitre_ids) requested(pupitre_id);
+  values (created_event_id, target_pupitre_id);
 
   return created_event_id;
 end;
@@ -403,8 +444,9 @@ create or replace function public.update_pupitre_event(
   event_location text,
   event_start_at timestamptz,
   event_end_at timestamptz,
+  new_event_type public.event_type,
   event_is_poll boolean,
-  target_pupitre_ids uuid[]
+  target_pupitre_id uuid
 )
 returns void
 language plpgsql
@@ -417,16 +459,10 @@ begin
       using errcode = '42501';
   end if;
 
-  if target_pupitre_ids is null
-    or cardinality(target_pupitre_ids) = 0
-    or exists (
-      select 1
-      from unnest(target_pupitre_ids) requested(pupitre_id)
-      where requested.pupitre_id is null
-        or requested.pupitre_id not in (select public.my_pupitre_ids())
-    )
+  if target_pupitre_id is null
+    or target_pupitre_id not in (select public.my_pupitre_ids())
   then
-    raise exception 'Les pupitres ciblés doivent appartenir au chef connecté'
+    raise exception 'Le pupitre ciblé doit être attribué au chef connecté'
       using errcode = '42501';
   end if;
 
@@ -436,14 +472,15 @@ begin
       location = event_location,
       start_at = event_start_at,
       end_at = event_end_at,
+      event_type = new_event_type,
+      visibility = 'pupitre',
       is_poll = event_is_poll
   where id = target_event_id;
 
   delete from public.event_pupitres where event_id = target_event_id;
 
   insert into public.event_pupitres (event_id, pupitre_id)
-  select target_event_id, requested.pupitre_id
-  from unnest(target_pupitre_ids) requested(pupitre_id);
+  values (target_event_id, target_pupitre_id);
 end;
 $$;
 
@@ -464,17 +501,21 @@ end;
 $$;
 
 revoke all on function public.create_pupitre_event(
-  text, text, text, timestamptz, timestamptz, boolean, uuid[]
+  text, text, text, timestamptz, timestamptz,
+  public.event_type, boolean, uuid
 ) from public, anon;
 revoke all on function public.update_pupitre_event(
-  uuid, text, text, text, timestamptz, timestamptz, boolean, uuid[]
+  uuid, text, text, text, timestamptz, timestamptz,
+  public.event_type, boolean, uuid
 ) from public, anon;
 revoke all on function public.delete_pupitre_event(uuid) from public, anon;
 grant execute on function public.create_pupitre_event(
-  text, text, text, timestamptz, timestamptz, boolean, uuid[]
+  text, text, text, timestamptz, timestamptz,
+  public.event_type, boolean, uuid
 ) to authenticated;
 grant execute on function public.update_pupitre_event(
-  uuid, text, text, text, timestamptz, timestamptz, boolean, uuid[]
+  uuid, text, text, text, timestamptz, timestamptz,
+  public.event_type, boolean, uuid
 ) to authenticated;
 grant execute on function public.delete_pupitre_event(uuid) to authenticated;
 
@@ -512,11 +553,11 @@ begin
   end if;
 
   update public.profiles
-  set role = 'member'
-  where id = target_profile_id and role = 'pending';
+  set account_status = 'active'
+  where id = target_profile_id and account_status = 'pending';
 
   if not found then
-    raise exception 'Profil introuvable ou déjà approuvé'
+    raise exception 'Profil introuvable ou déjà activé'
       using errcode = 'P0002';
   end if;
 end;
@@ -537,7 +578,7 @@ begin
       using errcode = '42501';
   end if;
 
-  if new_role <> 'pending' and not exists (
+  if not exists (
     select 1
     from auth.users u
     where u.id = target_profile_id
@@ -547,9 +588,53 @@ begin
       using errcode = '42501';
   end if;
 
-  update public.profiles set role = new_role where id = target_profile_id;
+  update public.profiles
+  set role = new_role
+  where id = target_profile_id
+    and account_status <> 'pending';
   if not found then
-    raise exception 'Profil introuvable'
+    raise exception 'Profil introuvable ou encore en attente'
+      using errcode = 'P0002';
+  end if;
+end;
+$$;
+
+create or replace function public.set_account_status(
+  target_profile_id uuid,
+  new_status public.account_status
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if coalesce((select public.my_role_level()), -1) <> 4 then
+    raise exception 'Permission refusée : admin requis'
+      using errcode = '42501';
+  end if;
+
+  if new_status not in ('active', 'suspended') then
+    raise exception 'Le statut doit être active ou suspended'
+      using errcode = '22023';
+  end if;
+
+  if new_status = 'active' and not exists (
+    select 1
+    from auth.users u
+    where u.id = target_profile_id
+      and u.email_confirmed_at is not null
+  ) then
+    raise exception 'Adresse e-mail non confirmée'
+      using errcode = '42501';
+  end if;
+
+  update public.profiles
+  set account_status = new_status
+  where id = target_profile_id
+    and account_status <> 'pending';
+  if not found then
+    raise exception 'Profil introuvable ou encore en attente'
       using errcode = 'P0002';
   end if;
 end;
@@ -609,11 +694,15 @@ create trigger account_deletion_requests_fill_snapshot
 
 revoke all on function public.approve_member(uuid) from public, anon;
 revoke all on function public.set_profile_role(uuid, public.app_role) from public, anon;
+revoke all on function public.set_account_status(uuid, public.account_status)
+  from public, anon;
 revoke all on function public.update_member_status(uuid, public.musician_level, boolean)
   from public, anon;
 revoke all on function public.fill_account_deletion_snapshot() from public, anon, authenticated;
 grant execute on function public.approve_member(uuid) to authenticated;
 grant execute on function public.set_profile_role(uuid, public.app_role) to authenticated;
+grant execute on function public.set_account_status(uuid, public.account_status)
+  to authenticated;
 grant execute on function public.update_member_status(uuid, public.musician_level, boolean)
   to authenticated;
 
@@ -640,12 +729,17 @@ create policy "pupitres: écriture admin"
 create policy "profiles: lecture de soi"
   on public.profiles for select
   to authenticated
-  using (id = (select auth.uid()));
+  using (id = (select auth.uid()) and (select public.my_role_level()) >= 1);
 
 create policy "profiles: lecture secretaire et admin"
   on public.profiles for select
   to authenticated
   using ((select public.my_role_level()) >= 3);
+
+create policy "profiles: lecture membres actifs"
+  on public.profiles for select
+  to authenticated
+  using (account_status = 'active' and (select public.my_role_level()) >= 1);
 
 create policy "profiles: mise à jour de soi"
   on public.profiles for update
@@ -665,7 +759,15 @@ create policy "profiles: gestion admin"
 create policy "profile_pupitres: lecture de soi"
   on public.profile_pupitres for select
   to authenticated
-  using (profile_id = (select auth.uid()));
+  using (
+    profile_id = (select auth.uid())
+    and (select public.my_role_level()) >= 1
+  );
+
+create policy "profile_pupitres: lecture membres actifs"
+  on public.profile_pupitres for select
+  to authenticated
+  using ((select public.my_role_level()) >= 1);
 
 create policy "profile_pupitres: lecture chef sur son pupitre"
   on public.profile_pupitres for select
@@ -687,7 +789,21 @@ create policy "profile_pupitres: gestion secretaire et admin"
 create policy "bureau_positions: lecture de soi"
   on public.bureau_positions for select
   to authenticated
-  using (profile_id = (select auth.uid()));
+  using (
+    profile_id = (select auth.uid())
+    and (select public.my_role_level()) >= 1
+    and start_date <= current_date
+    and (end_date is null or end_date >= current_date)
+  );
+
+create policy "bureau_positions: lecture membres actifs"
+  on public.bureau_positions for select
+  to authenticated
+  using (
+    (select public.my_role_level()) >= 1
+    and start_date <= current_date
+    and (end_date is null or end_date >= current_date)
+  );
 
 create policy "bureau_positions: gestion secretaire et admin"
   on public.bureau_positions for all
@@ -726,18 +842,12 @@ create policy "events: lecture interne membres"
     and (select public.my_role_level()) >= 1
   );
 
-create policy "events: lecture pupitre ciblé"
+create policy "events: lecture pupitre cible"
   on public.events for select
   to authenticated
   using (
     visibility = 'pupitre'
-    and (
-      (select public.my_role_level()) >= 3
-      or (
-        (select public.my_role_level()) >= 1
-        and (select public.can_access_event(id))
-      )
-    )
+    and (select public.can_access_event(id))
   );
 
 create policy "events: écriture secrétaire et admin"
@@ -774,7 +884,12 @@ create policy "event_responses: lecture soi, chef et secretaire"
     (select public.my_role_level()) >= 3
     or (
       (select public.my_role_level()) = 2
-      and (select public.can_access_event(event_id))
+      and exists (
+        select 1
+        from public.event_pupitres ep
+        where ep.event_id = event_responses.event_id
+          and ep.pupitre_id in (select public.my_member_pupitre_ids())
+      )
     )
     or (
       profile_id = (select auth.uid())
@@ -825,7 +940,12 @@ where
   (select public.my_role_level()) >= 3
   or (
     (select public.my_role_level()) = 2
-    and (select public.can_access_event(er.event_id))
+    and exists (
+      select 1
+      from public.event_pupitres ep
+      where ep.event_id = er.event_id
+        and ep.pupitre_id in (select public.my_member_pupitre_ids())
+    )
   )
   or (
     er.profile_id = (select auth.uid())
@@ -837,6 +957,45 @@ comment on view public.event_response_details is
   'Minimal respondent names and statuses filtered by event access.';
 revoke all on public.event_response_details from public, anon, authenticated;
 grant select on public.event_response_details to authenticated;
+
+create view public.member_directory
+with (security_barrier = true, security_invoker = true)
+as
+select
+  p.id as profile_id,
+  p.first_name,
+  p.last_name,
+  'profiles/' || p.id::text || '/avatar.webp' as avatar_path,
+  p.musician_level,
+  array(
+    select sections.name
+    from (
+      select distinct section.name
+      from public.profile_pupitres pp
+      join public.pupitres section on section.id = pp.pupitre_id
+      where pp.profile_id = p.id
+      union
+      select distinct parent.name
+      from public.profile_pupitres pp
+      join public.pupitres section on section.id = pp.pupitre_id
+      join public.pupitres parent on parent.id = section.parent_pupitre_id
+      where pp.profile_id = p.id
+    ) sections
+    order by sections.name
+  ) as pupitres,
+  array(
+    select bp.title
+    from public.bureau_positions bp
+    where bp.profile_id = p.id
+      and bp.start_date <= current_date
+      and (bp.end_date is null or bp.end_date >= current_date)
+    order by bp.title
+  ) as bureau_positions
+from public.profiles p
+where (select public.my_role_level()) >= 1;
+
+comment on view public.member_directory is
+  'V1 directory fields only; row access is limited to active profiles by RLS.';
 
 -- ----------------------------------------------------------------------------
 -- Table: documents (Partitions PDF)
@@ -950,7 +1109,10 @@ create policy "activity_log: lecture admin"
 create policy "notification_preferences: lecture de soi"
   on public.notification_preferences for select
   to authenticated
-  using (profile_id = (select auth.uid()));
+  using (
+    profile_id = (select auth.uid())
+    and (select public.my_role_level()) >= 1
+  );
 
 create policy "notification_preferences: insertion de soi"
   on public.notification_preferences for insert
@@ -978,7 +1140,10 @@ create policy "notification_preferences: modification de soi"
 create policy "account_deletion_requests: lecture de soi"
   on public.account_deletion_requests for select
   to authenticated
-  using (profile_id = (select auth.uid()));
+  using (
+    profile_id = (select auth.uid())
+    and (select public.my_role_level()) >= 1
+  );
 
 create policy "account_deletion_requests: création de soi"
   on public.account_deletion_requests for insert
@@ -1079,9 +1244,9 @@ begin
     raise exception 'Aucune invitation valide ou non expirée trouvée pour l''adresse email %', new.email;
   end if;
 
-  -- Création du profil initial en statut pending
-  insert into public.profiles (id, first_name, last_name, role)
-  values (new.id, inv.first_name, inv.last_name, 'pending');
+  -- Le statut d'accès et le rôle applicatif sont deux données indépendantes.
+  insert into public.profiles (id, first_name, last_name, account_status, role)
+  values (new.id, inv.first_name, inv.last_name, 'pending', 'member');
 
   -- Attribution des pupitres rattachés à l'invitation
   insert into public.profile_pupitres (profile_id, pupitre_id)
@@ -1135,7 +1300,8 @@ create unique index account_deletion_requests_one_pending_profile_idx
 
 -- Indexes supporting RLS and the common access paths. Primary keys and UNIQUE
 -- constraints already provide the leading-column indexes for their tables.
-create index profiles_role_idx on public.profiles(role);
+create index profiles_account_status_role_idx
+  on public.profiles(account_status, role);
 create index bureau_positions_profile_start_idx
   on public.bureau_positions(profile_id, start_date desc);
 create index profile_pupitres_pupitre_profile_idx
@@ -1176,18 +1342,21 @@ revoke all on
   public.activity_log,
   public.notification_preferences,
   public.account_deletion_requests,
-  public.member_loans
+  public.member_loans,
+  public.member_directory
 from public, anon, authenticated;
 
 grant select on public.pupitres to anon, authenticated;
 grant insert, update, delete on public.pupitres to authenticated;
 
-grant select on public.profiles to authenticated;
+grant select (id, first_name, last_name, musician_level)
+  on public.profiles to authenticated;
 grant update (first_name, last_name, phone, nickname, birthdate)
   on public.profiles to authenticated;
 
 grant select on public.profile_pupitres, public.bureau_positions
   to authenticated;
+grant select on public.member_directory to authenticated;
 grant insert, update, delete on public.profile_pupitres, public.bureau_positions
   to authenticated;
 
@@ -1239,7 +1408,8 @@ grant all on
   public.notification_preferences,
   public.account_deletion_requests,
   public.member_loans,
-  public.event_response_details
+  public.event_response_details,
+  public.member_directory
 to service_role;
 
 -- Public media are intentionally world-readable; private files require RLS.
@@ -1272,7 +1442,7 @@ as $$
       select 1
       from public.profiles p
       where p.id::text = target_profile_id
-        and p.role in ('member', 'chef_pupitre', 'secretaire', 'admin')
+        and p.account_status = 'active'
     )
 $$;
 
@@ -1288,11 +1458,8 @@ as $$
       select 1
       from public.profiles p
       where p.id::text = target_profile_id
-        and (
-          p.id = (select auth.uid())
-          or coalesce((select public.my_role_level()), -1) = 4
-        )
-        and p.role in ('member', 'chef_pupitre', 'secretaire', 'admin')
+        and p.id = (select auth.uid())
+        and p.account_status = 'active'
     )
 $$;
 
@@ -1501,5 +1668,11 @@ insert into public.pupitres (name, slug) values
   ('Caisse claire', 'caisse-claire'),
   ('Percussion', 'percussion')
 on conflict (slug) do nothing;
+
+update public.pupitres percussion
+set parent_pupitre_id = caisse.id
+from public.pupitres caisse
+where percussion.slug = 'percussion'
+  and caisse.slug = 'caisse-claire';
 
 commit;

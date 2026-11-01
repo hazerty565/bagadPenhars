@@ -2,14 +2,16 @@
 title: Bagad Penhars — Schéma relationnel Supabase
 ---
 erDiagram
-    %% Schéma consolidé des migrations 001 à 004.
+    %% Schéma de référence de la migration active 005.
     %% Les services externes auth.users et storage.objects ne sont pas détaillés.
+    %% La vue member_directory est limitée par RLS et n'est pas une table physique.
     %% Les cardinalités représentent les FK ; les tables de jointure matérialisent les N:N.
 
     PUPITRES {
         uuid id PK
         text name UK
         text slug UK
+        uuid parent_pupitre_id FK
         timestamptz created_at
     }
 
@@ -18,6 +20,7 @@ erDiagram
         text first_name
         text last_name
         text phone
+        account_status account_status
         app_role role
         timestamptz created_at
         timestamptz updated_at
@@ -64,6 +67,7 @@ erDiagram
         text location
         timestamptz start_at
         timestamptz end_at
+        event_type event_type
         event_visibility visibility
         boolean is_poll
         uuid author_id FK
@@ -143,7 +147,7 @@ erDiagram
         timestamptz sent_at
     }
 
-    AUDIT_LOG {
+    ACTIVITY_LOG {
         uuid id PK
         uuid actor_id FK
         text action
@@ -180,6 +184,7 @@ erDiagram
 
     %% Profils et pupitres
     PROFILES ||--o{ PROFILE_PUPITRES : "affectations"
+    PUPITRES o|--o{ PUPITRES : "héritage (Percussion → Caisse claire)"
     PUPITRES ||--o{ PROFILE_PUPITRES : "membres"
     PROFILES ||--o{ BUREAU_POSITIONS : "mandats / titres"
     PROFILES ||--o{ INVITATIONS : "auteur"
@@ -203,7 +208,7 @@ erDiagram
     %% Notifications et suivi
     PROFILES ||--o| NOTIFICATION_PREFERENCES : "préférences"
     PROFILES o|--o{ NOTIFICATION_LOG : "expéditeur"
-    PROFILES o|--o{ AUDIT_LOG : "acteur"
+    PROFILES o|--o{ ACTIVITY_LOG : "acteur"
     PROFILES o|--o{ ACCOUNT_DELETION_REQUESTS : "demandeur (nullable)"
     PROFILES o|--o{ ACCOUNT_DELETION_REQUESTS : "traitée par"
     PROFILES ||--o{ MEMBER_LOANS : "prêts"
