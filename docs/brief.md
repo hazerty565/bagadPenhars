@@ -24,7 +24,7 @@ Ordre de grandeur : environ 200 utilisateurs. Un site simple, fiable, facile à 
 
 Règles :
 
-- Le **rôle** (droits sur le site) est distinct du **titre du bureau** (président, trésorier, secrétaire…). Les titres sont honorifiques, cumulables, et ne donnent aucun droit.
+- Le **rôle** (droits sur le site) est indépendant du **titre du bureau** (président, trésorier, secrétaire…). Aucun titre n'attribue automatiquement un rôle applicatif. Les titres sont honorifiques et cumulables ; le président et le trésorier n'ont aucun droit métier au titre de leur fonction.
 - L'association compte trois **pupitres** : bombarde, caisse claire et cornemuse. Un membre ou un chef peut être associé à un ou plusieurs pupitres.
 - Les rôles se lisent toujours dans la base (table des profils), jamais dans les métadonnées de session.
 - Chaque pupitre a son propre chef. Les chefs sont indépendants et ne gèrent que les événements associés à leurs pupitres ; leurs droits ne dépendent pas de l'auteur de l'événement.

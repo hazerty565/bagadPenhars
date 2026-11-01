@@ -2,6 +2,25 @@
 
 ## 2026-11-01
 
+### Clarification des titres du bureau et configuration Auth
+
+#### Fait
+
+- Confirmation que le titre au bureau et le rôle applicatif sont indépendants :
+  aucun titre ne déclenche l'attribution automatique d'un rôle.
+- Président et trésorier restent des titres honorifiques sans droits métier ;
+  les permissions de la secrétaire proviennent de son rôle applicatif
+  `secretaire`, et non de son titre au bureau.
+- Documentation de la configuration des paramètres Auth hébergés et du modèle
+  d'e-mail d'invitation via le Dashboard Supabase. La configuration locale
+  conserve son usage de développement.
+
+#### Validation
+
+- Alignement des décisions dans le brief, la spécification développeur, la
+  documentation de base de données et les questions produit. Aucune
+  modification du schéma ou des rôles n'est requise.
+
 ### Décision Storage public/privé
 
 #### Fait

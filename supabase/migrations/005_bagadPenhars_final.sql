@@ -18,38 +18,6 @@ create type public.event_visibility as enum ('public', 'pupitre', 'interne');
 create type public.response_status as enum ('present', 'absent');
 create type public.musician_level as enum ('skolaj', 'bagadig', 'bagad');
 
--- 3. Fonctions de sécurité d'aide RLS (security definer, search_path vide)
-create or replace function public.my_role_level()
-returns int
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select case p.role
-    when 'pending' then 0
-    when 'member' then 1
-    when 'chef_pupitre' then 2
-    when 'secretaire' then 3
-    when 'admin' then 4
-    else null
-  end
-  from public.profiles p
-  where p.id = (select auth.uid())
-$$;
-
-create or replace function public.my_pupitre_ids()
-returns setof uuid
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select pp.pupitre_id
-  from public.profile_pupitres pp
-  where pp.profile_id = (select auth.uid())
-$$;
-
 -- 4. Tables fondamentales
 
 -- Pupitres (bombarde, cornemuse, caisse claire, percussion)
@@ -82,6 +50,39 @@ create table public.profile_pupitres (
   created_at timestamptz not null default now(),
   primary key (profile_id, pupitre_id)
 );
+
+-- Les fonctions sont créées après les tables référencées pour que leur corps SQL
+-- soit validé avec check_function_bodies activé.
+create or replace function public.my_role_level()
+returns int
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select case p.role
+    when 'pending' then 0
+    when 'member' then 1
+    when 'chef_pupitre' then 2
+    when 'secretaire' then 3
+    when 'admin' then 4
+    else null
+  end
+  from public.profiles p
+  where p.id = (select auth.uid())
+$$;
+
+create or replace function public.my_pupitre_ids()
+returns setof uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select pp.pupitre_id
+  from public.profile_pupitres pp
+  where pp.profile_id = (select auth.uid())
+$$;
 
 -- Titres du bureau historisés (honorifiques, sans droits associés)
 create table public.bureau_positions (

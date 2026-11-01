@@ -375,7 +375,11 @@ grant execute on function public.approve_member(uuid) to authenticated;
 ## 7. Création de compte et trigger d'invitation
 
 La cible validée réserve la création des invitations à l'administrateur.
-L'inscription libre est désactivée. Le parcours attendu est le suivant :
+L'inscription libre est désactivée. Pour le projet hébergé, les paramètres
+Auth (dont la confirmation d'adresse et l'expiration du lien) et le modèle
+d'e-mail d'invitation sont configurés dans le Dashboard Supabase ; la
+configuration du dépôt ne règle que l'environnement local. Le parcours attendu
+est le suivant :
 
 1. L'administrateur crée une invitation (adresse e-mail et informations du futur membre), associe un ou plusieurs pupitres dans `invitation_pupitres`, puis déclenche l'invitation côté serveur (`auth.admin.inviteUserByEmail`). Le compte est créé immédiatement dans Supabase Auth.
 2. **Unicité garantie en base** : un email ne peut avoir qu'une seule invitation non consommée à la fois. Le lien Supabase Auth expire après une heure (`auth.email.otp_expiry = 3600` dans la configuration locale ; la configuration du projet hébergé doit correspondre). Avant un renvoi, le serveur invalide l'ancienne ligne et renvoie une invitation au compte Auth existant.
@@ -399,6 +403,10 @@ L'inscription libre est désactivée. Le parcours attendu est le suivant :
 Le délai d'une heure est appliqué au lien Auth et au contrôle de validité de
 l'invitation en base. La policy RLS, la fonction d'approbation et le contrôle
 de `email_confirmed_at` de la migration 005 réservent les opérations à l'admin.
+Le titre au bureau est indépendant du rôle applicatif : il n'attribue aucun
+rôle automatiquement. Président et trésorier n'ont aucun droit métier lié à
+leur titre ; les droits de la secrétaire proviennent exclusivement du rôle
+applicatif `secretaire`.
 Le renvoi d'un lien expiré doit être effectué par l'admin sur le compte Auth
 existant et testé avec Supabase Auth.
 

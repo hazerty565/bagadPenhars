@@ -28,7 +28,7 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    toutes les données de membres nécessaires aux invitations et validations,
    sans avoir les droits globaux de l'admin.
 
-   Décision : la secrétaire est un rôle applicatif autonome (secretaire). Elle peut gérer les membres, invitations et validations nécessaires à sa fonction, sans disposer des droits globaux de l'admin.
+   Décision : la secrétaire est un rôle applicatif autonome (`secretaire`). Elle peut gérer les membres, invitations et validations nécessaires à sa fonction, sans disposer des droits globaux de l'admin. L'attribution d'une fonction au bureau n'attribue jamais automatiquement un rôle applicatif : les deux restent indépendants. Président et trésorier sont des titres honorifiques sans droits métier dans l'application.
 
 3. **Invitations et approbation** — décision validée le 2026-11-01 :
    seul l'administrateur envoie l'invitation avec `inviteUserByEmail()`.
@@ -37,6 +37,9 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    validation manuelle par l'administrateur après confirmation de l'adresse.
    Si le lien expire, l'administrateur peut renvoyer une invitation au compte
    Auth existant. L'approbation attribue toujours le rôle `member`.
+   Les paramètres Auth du projet hébergé et les modèles d'e-mails d'invitation
+   sont à configurer dans le Dashboard Supabase ; il s'agit d'une opération
+   technique, pas d'une décision produit.
 
 4. **Visibilité des partitions et événements** — le brief précise que tous les
    membres approuvés peuvent consulter les partitions de tous les pupitres;

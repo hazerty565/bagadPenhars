@@ -34,7 +34,9 @@ est réservé aux membres actifs et limité aux informations autorisées.
 
 Le rôle applicatif détermine les permissions. Un titre au bureau
 (président, trésorier, secrétaire, etc.) est une information distincte et ne
-confère aucun droit à lui seul.
+confère aucun droit à lui seul. L'attribution d'un titre ne modifie jamais
+automatiquement le rôle applicatif : les deux sont gérés indépendamment. Le
+président et le trésorier n'ont pas de droits métier liés à leur titre.
 
 | Rôle           | Exigences                                                                                                                   |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -133,9 +135,11 @@ membre et le rôle applicatif `secretaire`.
    compte. L'expiration doit être configurée côté Supabase Auth, pas seulement
    enregistrée dans la table applicative.
 
-Le processus de révocation et de renvoi reste à définir avant son
-implémentation. Les opérations doivent être auditées lorsque le modèle de
-données le permet.
+Les paramètres Auth du projet hébergé et le modèle d'e-mail d'invitation
+(contenu, lien et redirection) sont configurés dans le Dashboard Supabase.
+La configuration locale du dépôt sert au développement et ne remplace pas
+ce réglage Dashboard. Les opérations doivent être auditées lorsque le modèle
+de données le permet.
 
 ### 4.3 Espace adhérents
 
