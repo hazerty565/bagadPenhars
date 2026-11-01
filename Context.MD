@@ -72,7 +72,7 @@ Une **seule route** (`/dashboard/agenda`) qui s'adapte au rôle de l'utilisateur
 
 **Pas de routes séparées** par rôle. L'affichage change via blocs `{#if}`.
 
-### 3. **Rôles hiérarchiques**
+### 3. **Rôles et autorisations**
 
 ```
 member → chef_pupitre → admin
@@ -81,36 +81,70 @@ Lecture    Gestion      Tout
 seule      pupitre      gérer
 ```
 
-**Chaque rôle hérite des permissions du rôle inférieur.**
+Les niveaux de rôle ne remplacent pas les règles métier : les droits propres à
+un pupitre, la visibilité d'un événement et la validation d'un compte doivent
+être vérifiés explicitement côté serveur et dans la base.
 
 ### 4. **Pupitres**
 
-Le Bagad a **4 pupitres** (sections musicales) :
+Le Bagad a **3 pupitres** (sections musicales) :
 - Bombarde
-- Cornemuse
 - Caisse Claire
-- Percussion
+- Cornemuse
 
-**Chaque membre = 1 pupitre.**
-**Chaque chef_pupitre = gère seulement son pupitre.**
+Chaque membre peut appartenir à un ou plusieurs pupitres. Chaque pupitre a son
+propre chef ; les chefs sont indépendants et ne gèrent que les événements
+associés à leur(s) pupitre(s), quel qu'en soit l'auteur.
 
 ### 5. **Invitation flow sécurisé**
 
 ```
-Admin crée invitation → Email avec token unique → 
-Utilisateur se crée compte → Profil en "pending" → 
-Admin approuve et attribue rôle → Accès au dashboard
+Admin crée l'invitation et le compte Auth → Email de confirmation et de définition du mot de passe →
+Profil "pending" → Admin vérifie la confirmation et valide manuellement →
+Profil "member" → Accès à l'espace adhérents
 ```
 
-**Tokens** : UUID, expirant (+7 jours), à usage unique.
+La création de comptes est réservée aux invitations d'un administrateur via
+`inviteUserByEmail()`. Le lien Supabase Auth est valable une heure. Le membre
+confirme son adresse e-mail et définit son mot de passe ; son profil reste
+`pending` jusqu'à l'approbation administrative, qui vérifie la confirmation.
+Si le lien expire, l'administrateur peut renvoyer une invitation au compte
+existant sans créer un second compte.
 
-### 6. **Système de présence**
+### 6. **Événements**
 
-Pour chaque événement : "Présent / Absent / Ne sais pas"
+Chaque événement a un type (répétition, concert, sortie, festival, fest-noz,
+concours, réunion, assemblée générale, gala ou repas) et une visibilité
+indépendante choisie explicitement :
 
-Stocké en collection `attendance`.
+- `public` : accessible à tous, y compris sans compte ;
+- `interne` : accessible aux membres actifs connectés ;
+- `pupitre` : accessible aux membres actifs des pupitres ciblés, à la secrétaire
+  et à l'administrateur.
 
-### 7. **Documents = Partitions**
+La secrétaire et l'administrateur gèrent tous les événements. Un chef crée,
+consulte, modifie et supprime les événements associés à son ou ses pupitres,
+sans restriction liée à l'auteur ; il ne gère pas les événements globaux ni
+ceux d'autres pupitres. Un membre ne fait que consulter et répondre selon son
+niveau d'accès. Aucune gestion des événements récurrents n'est incluse en V1.
+
+### 7. **Trombinoscope**
+
+Le trombinoscope est réservé aux membres actifs connectés. Il expose uniquement
+le nom, le prénom, la photo de profil, les pupitres, le niveau musical et la
+fonction éventuelle au bureau. Il ne rend pas accessibles les coordonnées
+privées (téléphone, e-mail personnel, adresse postale ou autres données non
+autorisées). La fonction au bureau est informative et ne confère aucun droit.
+
+Une vue SQL dédiée doit limiter les colonnes exposées. Les droits de lecture
+des profils complets restent distincts de ceux du trombinoscope ; les tables
+associées aux pupitres et niveaux doivent également être protégées.
+
+### 8. **Système de présence**
+
+Pour chaque événement, les membres autorisés peuvent répondre présent ou absent.
+
+### 9. **Documents = Partitions**
 
 Stockés par pupitre ou globaux.
 - **Member** : Peut télécharger
@@ -297,13 +331,13 @@ export const fr = {
     <button name="status" value="present">Présent</button>
   </form>
 
-  <!-- Modification (chef + admin) -->
+  <!-- Modification (chef du/des pupitres ciblés, secrétaire ou admin) -->
   {#if data.canEditAgenda}
     <button onclick={() => editEvent(event.id)}>Modifier</button>
   {/if}
 {/each}
 
-<!-- Ajouter (chef + admin) -->
+<!-- Ajouter (chef du/des pupitres ciblés, secrétaire ou admin) -->
 {#if data.canEditAgenda}
   <a href="/dashboard/agenda/create">Ajouter</a>
 {/if}
@@ -322,29 +356,34 @@ export const fr = {
 
 ```
 public.profiles          → Profil et rôle, lié à auth.users
-public.invitations       → Invitations (token haché, expiration)
-public.events            → Événements (agenda et visibilité)
-public.attendance        → Présences
+public.invitations       → Invitations (email, expiration)
+public.events            → Événements (type et visibilité)
+public.event_pupitres    → Pupitres ciblés par les événements
+public.event_responses   → Réponses de présence
 public.documents         → Métadonnées des partitions
 ```
 
-Ce schéma est la cible fonctionnelle; il n'est pas encore intégralement
-implémenté dans le dépôt. Les tables métier seront définies par des migrations
-versionnées dans
-`supabase/migrations/`. La base gérée par Supabase fournit les comptes dans
-`auth.users`. Toute table exposée par l'API doit avoir RLS et des policies
-explicites.
+La migration 005 est le schéma actuellement versionné. Les décisions de
+trombinoscope, de type d'événement et de flux d'invitation décrites ici sont
+des exigences cibles ; leur compatibilité et leur implémentation doivent être
+validées avant toute nouvelle migration. Toute table exposée par l'API doit
+avoir RLS et des policies explicites.
 
 ### Buckets Supabase Storage
 
-```
-bagad-avatars      → Photos de profil, accès protégé
-bagad-partitions   → Partitions privées, accès contrôlé par rôle
-bagad-medias       → Médias destinés au public
-```
+Le stockage utilise deux buckets Supabase :
 
-Les médias doivent être servis depuis le bucket Supabase Storage configuré
-pour leur visibilité; ne pas utiliser de blob ou CDN de stockage externe.
+- `bagad-public` (`public = true`) : médias publiés sous `articles/`, `albums/`,
+  `events/` et `documents/`, lisibles sans connexion.
+- `bagad-private` (`public = false`) : photos de profil sous
+  `profiles/{profile_id}/avatar.webp` et documents privés sous `documents/`.
+
+Les partitions vont sous `documents/{pupitre_slug}/`. Les photos d'albums non
+publiques vont sous `documents/albums/{album_id}/` dans le bucket privé. Chaque
+membre actif lit les avatars des membres actifs, mais ne peut modifier que sa
+propre photo. Les fichiers privés sont servis par requête authentifiée ou URL
+signée à courte durée ; ils ne reçoivent jamais d'URL publique permanente.
+Les chemins et rôles sont contrôlés par les policies RLS Storage.
 
 ---
 

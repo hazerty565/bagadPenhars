@@ -99,20 +99,13 @@ CREATE TABLE invitation_pupitres (
 );
 
 -- ============================================================================
--- AGENDA, SÉRIES, ÉVÉNEMENTS ET RÉPONSES
+-- AGENDA, ÉVÉNEMENTS ET RÉPONSES
 -- Un sondage est modélisé par events.is_poll ; il n'existe pas de table polls.
--- Les réponses stockent present/absent selon response_status.
+-- Les événements récurrents ne sont pas inclus en V1.
 -- ============================================================================
-
-CREATE TABLE event_series (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  rrule text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
 
 CREATE TABLE events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  series_id uuid REFERENCES event_series(id) ON DELETE SET NULL,
   title text NOT NULL,
   description text,
   location text,

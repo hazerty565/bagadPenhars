@@ -1,5 +1,78 @@
 # Journal
 
+## 2026-11-01
+
+### Décision Storage public/privé
+
+#### Fait
+
+- Configuration des buckets `bagad-public` (public) et `bagad-private`
+  (privé), avec des politiques RLS Storage pour les rôles, chemins autorisés,
+  documents liés et avatars de profil.
+- Les membres actifs peuvent lire les avatars des membres actifs ; chaque
+  membre ne peut gérer que sa propre photo, et l'administrateur peut gérer
+  toutes les photos. Les fichiers privés restent accessibles uniquement via
+  une requête authentifiée ou une URL signée courte.
+- Alignement du README, du contexte contributeur, du brief, des spécifications,
+  des décisions produit et de la documentation de base de données.
+- Désactivation des inscriptions libres et activation de la confirmation
+  d'adresse e-mail dans la configuration locale Supabase.
+
+#### Validation
+
+- Vérification statique des chemins, des rôles et des politiques dans la
+  migration 005. Le lint SQL Supabase ne peut pas être exécuté sans Docker et
+  base locale ; le CLI a précédemment échoué à se connecter au port 54322.
+- Les objets du bucket public sont accessibles publiquement par conception :
+  seuls des fichiers publiables doivent y être déposés.
+- Si la migration 005 a déjà été appliquée sur un environnement partagé ou de
+  production, les changements doivent être transposés dans une nouvelle
+  migration plutôt que réécrits dans l'historique déjà appliqué.
+
+### Validation de l'expiration des invitations et suppression des récurrences
+
+#### Fait
+
+- Fixation de la validité du lien Supabase Auth à une heure (`otp_expiry =
+  3600`), avec renvoi d'invitation par l'administrateur au compte Auth existant
+  si le lien expire.
+- Alignement du trigger SQL sur une heure et de l'approbation réservée à
+  l'administrateur après confirmation de l'adresse e-mail.
+- Suppression de `event_series`, `events.series_id`, de sa policy RLS et de ses
+  grants de la migration 005 ; aucune structure ou logique de récurrence ne
+  reste dans le schéma initial.
+- Mise à jour des références courantes dans les spécifications, le README, les
+  questions produit et les schémas documentaires. Les migrations archivées et
+  les anciennes entrées de journal sont conservées comme historique.
+
+#### Validation
+
+- Recherche de références dans la migration active et vérification du diff SQL
+  et documentaire. Validation d'exécution Supabase à effectuer avant
+  application ; si la migration 005 a déjà été appliquée, utiliser une nouvelle
+  migration additive plutôt que la réécrire en production.
+
+### Intégration des décisions métier validées
+
+#### Fait
+
+- Alignement du brief, du contexte contributeur, des spécifications
+  développeur et UI, et de la documentation SQL sur les trois pupitres, les
+  droits des chefs, le trombinoscope privé, les événements typés et leur
+  visibilité, et le parcours d'invitation/activation.
+- Signalement explicite des écarts avec la migration 005 et des points restant
+  à valider (expiration Auth, réinvitation, stockage des photos, pupitre
+  Percussion et structures récurrentes).
+- Mise à jour de `AGENTS.md` pour autoriser le trombinoscope uniquement selon
+  les champs et accès du brief.
+- Aucune migration SQL modifiée : l'architecture et la compatibilité doivent
+  être revues avant implémentation.
+
+#### Validation
+
+- Vérification documentaire des règles et des divergences connues. Aucun test
+  applicatif exécuté (documentation uniquement).
+
 ## 2026-10-27
 
 ### Référencement de la spécification UI

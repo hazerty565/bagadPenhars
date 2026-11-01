@@ -1,6 +1,6 @@
 # Schema: bagadpenhars
 Database: pgsql
-Tables: 18
+Tables: 17
 Columns are NOT NULL unless marked nullable.
 
 ## pupitres
@@ -48,14 +48,8 @@ used_at: timestamptz nullable
 invitation_id: uuid PK FK
 pupitre_id: uuid PK FK
 
-## event_series
-id: uuid PK default:UUID()
-rrule: text
-created_at: timestamptz default:CURRENT_TIMESTAMP
-
 ## events
 id: uuid PK default:UUID()
-series_id: uuid FK nullable
 title: text
 description: text nullable
 location: text nullable
@@ -162,7 +156,6 @@ bureau_positions.profile_id → profiles.id (many-to-one)
 invitations.author_id → profiles.id (many-to-one)
 invitation_pupitres.invitation_id → invitations.id (many-to-one)
 invitation_pupitres.pupitre_id → pupitres.id (many-to-one)
-events.series_id → event_series.id (many-to-one)
 events.author_id → profiles.id (many-to-one)
 event_pupitres.event_id → events.id (many-to-one)
 event_pupitres.pupitre_id → pupitres.id (many-to-one)

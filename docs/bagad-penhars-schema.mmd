@@ -57,15 +57,8 @@ erDiagram
         uuid pupitre_id PK, FK
     }
 
-    EVENT_SERIES {
-        uuid id PK
-        text rrule
-        timestamptz created_at
-    }
-
     EVENTS {
         uuid id PK
-        uuid series_id FK
         text title
         text description
         text location
@@ -194,7 +187,6 @@ erDiagram
     PUPITRES ||--o{ INVITATION_PUPITRES : "pupitres proposés"
 
     %% Agenda
-    EVENT_SERIES o|--o{ EVENTS : "série"
     PROFILES o|--o{ EVENTS : "auteur"
     EVENTS ||--o{ EVENT_PUPITRES : "ciblage"
     PUPITRES ||--o{ EVENT_PUPITRES : "événements ciblés"

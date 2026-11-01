@@ -36,6 +36,59 @@ Site vitrine pour le Bagad Penhars avec présentation de l'association, actualit
 
 ---
 
+## Espace adhérents
+
+### Trombinoscope
+
+Le trombinoscope est accessible uniquement aux membres actifs connectés. Chaque
+fiche affiche le nom, le prénom, la photo de profil, le ou les pupitres, le
+niveau musical et, le cas échéant, la fonction au bureau.
+
+Ne jamais afficher dans cette interface le téléphone, l'adresse e-mail
+personnelle, l'adresse postale ou toute autre donnée privée non autorisée. La
+fonction au bureau est une information de présentation et ne modifie pas les
+droits d'accès. Les photos se chargent depuis le bucket privé par accès
+authentifié ou URL signée courte ; chaque membre ne peut remplacer que sa
+propre photo.
+
+### Agenda et formulaire événement
+
+Le formulaire de création/modification comprend :
+
+- le titre, la description et les dates ;
+- un type choisi dans le référentiel : répétition, concert, sortie, festival,
+  fest-noz, concours, réunion, assemblée générale, gala ou repas ;
+- une visibilité choisie explicitement : `public`, `interne` ou `pupitre` ;
+- un ou plusieurs pupitres si la visibilité `pupitre` est sélectionnée.
+
+Le type ne détermine jamais la visibilité. Le choix de pupitre est obligatoire
+pour un événement `pupitre` et n'est pas proposé comme audience obligatoire pour
+un événement `public` ou `interne`.
+
+Les visiteurs voient uniquement les événements publics. Les membres actifs
+voient aussi les événements internes et ceux de leurs pupitres. Les chefs
+voient et gèrent les événements de leur(s) pupitre(s), y compris ceux créés par
+un autre utilisateur ; ils ne gèrent ni les événements globaux ni ceux d'autres
+pupitres. Secrétaire et administrateur gèrent tous les événements. Un membre
+classique ne dispose d'aucune action de création, modification ou suppression.
+La récurrence n'est pas proposée en V1.
+
+### Invitations et validation des comptes
+
+Seul un administrateur peut créer une invitation. Son formulaire recueille
+l'adresse e-mail, les informations nécessaires du membre et son ou ses pupitres.
+Le compte Auth est créé lors de l'invitation ; le profil apparaît au statut
+`pending`.
+
+Le membre confirme son adresse et définit son mot de passe dans l'heure.
+Après confirmation, son statut reste `pending` jusqu'à validation manuelle par
+un administrateur. La liste de validation lui permet de vérifier l'état de
+confirmation ; un compte non confirmé ne peut pas être activé. Si le lien
+expire, l'administrateur peut renvoyer une invitation au compte Auth existant.
+Aucun compte `pending` ne reçoit les actions d'un membre actif.
+
+---
+
 ## Composants clés
 
 | Composant | Description | Notes |

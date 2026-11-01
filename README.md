@@ -18,37 +18,44 @@ répondre aux événements et gérer son profil.
 - Le site public est disponible en français, anglais et breton (`fr`, `en`,
   `br`).
 - L'authentification et l'espace adhérents sont en français uniquement.
-- Il n'y a pas d'annuaire des membres, public ou privé. Les titres du bureau
-  ne sont pas publiés.
+- Le trombinoscope est réservé aux membres actifs et n'expose que les champs
+  autorisés. Les coordonnées privées et les titres du bureau ne sont pas
+  publics.
+- Supabase Storage sépare les médias publiés (`bagad-public`) des photos de
+  profil et documents privés (`bagad-private`).
 - Les représentations explicitement publiques sont consultables sans compte.
-- Le fuseau horaire des événements est `Europe/Paris`. Les événements
-  récurrents peuvent être modifiés occurrence par occurrence.
+- Le fuseau horaire des événements est `Europe/Paris`. La première version ne
+  gère pas les événements récurrents.
 
 ### Rôles et comptes
 
 | Rôle | Responsabilités prévues |
 | --- | --- |
 | `pending` | Terminer la création du compte et consulter l'attente de validation; pas d'accès à l'espace adhérents. |
-| `member` | Consulter l'agenda et les partitions, répondre aux événements et modifier son profil, sauf son rôle et ses pupitres. |
+| `member` | Consulter l'agenda, les partitions et le trombinoscope autorisé, répondre aux événements et modifier son profil, sauf son rôle et ses pupitres. |
 | `chef_pupitre` | Droits d'un membre; gérer les événements, partitions et notifications de son ou ses pupitres. |
 | `secretaire` | Rôle applicatif; gérer les invitations, validations et pupitres, créer les contenus et événements autorisés, et notifier plusieurs pupitres. |
 | `admin` | Gérer globalement les utilisateurs, rôles, contenus, événements et notifications. |
 
-Un membre peut être rattaché à un ou plusieurs pupitres : bombarde, cornemuse,
-caisse claire et percussion. Le rôle et les pupitres sont des données de profil,
-pas des informations de session fournies par le navigateur.
+L'association compte trois pupitres : bombarde, caisse claire et cornemuse. Un
+membre peut être rattaché à un ou plusieurs pupitres. Le rôle et les pupitres
+sont des données de profil, pas des informations de session fournies par le
+navigateur.
 
-Les invitations sont envoyées par email par un admin ou une secrétaire. Elles
-expirent après sept jours et sont à usage unique. Après définition du mot de
-passe, le compte reste `pending`; l'admin ou la secrétaire approuve le compte
-avec le rôle `member`. L'attribution d'un rôle supérieur est réservée à
-l'admin. Le pupitre ne peut pas être modifié par la personne invitée.
+Seul l'administrateur envoie une invitation par `inviteUserByEmail()`. Le lien
+Supabase Auth expire après une heure. Le membre confirme son adresse et définit
+son mot de passe ; le profil reste `pending` jusqu'à l'approbation manuelle par
+l'administrateur après confirmation de l'adresse. Si le lien expire,
+l'administrateur peut renvoyer une invitation au compte Auth existant. Le
+pupitre ne peut pas être modifié par la personne invitée.
 
 ### Agenda, présences et documents
 
 - L'agenda public est en lecture seule. L'admin et la secrétaire peuvent créer
   des événements communs et des événements destinés au public. Un chef ne
   crée que des événements de son ou ses pupitres.
+- Aucun événement récurrent n'est prévu en V1 ; la migration initiale ne
+  contient ni table `event_series` ni colonne `events.series_id`.
 - La visibilité des événements comprend trois niveaux distincts :
   `public` (visible par tous), `interne` (visible par tous les membres approuvés),
   et `pupitre` (visible uniquement par les membres du ou des pupitres concernés).
@@ -64,9 +71,9 @@ l'admin. Le pupitre ne peut pas être modifié par la personne invitée.
 - Les articles et albums sont prévisualisés avant publication. L'admin et la
   secrétaire peuvent publier et supprimer les albums.
 - Les médias publics publiés sont accessibles sans connexion. Les photos
-  source JPG/JPEG de 20 Mo maximum sont converties en WebP. Les vidéos et les
-  avatars téléversés ne sont pas acceptés pour la première version; les
-  initiales servent d'avatar.
+  source JPG/JPEG de 20 Mo maximum sont converties en WebP. Les vidéos sont
+  interdites. Chaque membre actif peut lire les photos de profil des autres
+  membres actifs, mais modifier uniquement la sienne.
 - Le formulaire de contact doit utiliser Netlify Forms; les pièces jointes
   sont interdites. La configuration existe côté Netlify, mais le branchement
   dans l'application et la confirmation à l'expéditeur restent à préciser.

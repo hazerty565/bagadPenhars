@@ -93,7 +93,7 @@ create table public.bureau_positions (
   created_at timestamptz not null default now()
 );
 
--- Invitations d'adhérents (durée de validité 7 jours)
+-- Invitations d'adhérents (lien Supabase Auth valable 1 heure)
 create table public.invitations (
   id uuid primary key default gen_random_uuid(),
   email text not null,
@@ -111,17 +111,9 @@ create table public.invitation_pupitres (
   primary key (invitation_id, pupitre_id)
 );
 
--- Séries d'événements récurrents
-create table public.event_series (
-  id uuid primary key default gen_random_uuid(),
-  rrule text not null,
-  created_at timestamptz not null default now()
-);
-
 -- Événements d'agenda & Sondages unifiés
 create table public.events (
   id uuid primary key default gen_random_uuid(),
-  series_id uuid references public.event_series(id) on delete set null,
   title text not null,
   description text,
   location text,
@@ -267,7 +259,6 @@ alter table public.profile_pupitres enable row level security;
 alter table public.bureau_positions enable row level security;
 alter table public.invitations enable row level security;
 alter table public.invitation_pupitres enable row level security;
-alter table public.event_series enable row level security;
 alter table public.events enable row level security;
 alter table public.event_pupitres enable row level security;
 alter table public.event_responses enable row level security;
@@ -504,8 +495,18 @@ security definer
 set search_path = ''
 as $$
 begin
-  if coalesce((select public.my_role_level()), -1) < 3 then
-    raise exception 'Permission refusée : secrétaire ou admin requis'
+  if coalesce((select public.my_role_level()), -1) <> 4 then
+    raise exception 'Permission refusée : admin requis'
+      using errcode = '42501';
+  end if;
+
+  if not exists (
+    select 1
+    from auth.users u
+    where u.id = target_profile_id
+      and u.email_confirmed_at is not null
+  ) then
+    raise exception 'Adresse e-mail non confirmée'
       using errcode = '42501';
   end if;
 
@@ -532,6 +533,16 @@ as $$
 begin
   if coalesce((select public.my_role_level()), -1) <> 4 then
     raise exception 'Permission refusée : admin requis'
+      using errcode = '42501';
+  end if;
+
+  if new_role <> 'pending' and not exists (
+    select 1
+    from auth.users u
+    where u.id = target_profile_id
+      and u.email_confirmed_at is not null
+  ) then
+    raise exception 'Adresse e-mail non confirmée'
       using errcode = '42501';
   end if;
 
@@ -686,39 +697,17 @@ create policy "bureau_positions: gestion secretaire et admin"
 -- ----------------------------------------------------------------------------
 -- Table: invitations & invitation_pupitres
 -- ----------------------------------------------------------------------------
-create policy "invitations: gestion secretaire et admin"
+create policy "invitations: gestion admin"
   on public.invitations for all
   to authenticated
-  using ((select public.my_role_level()) >= 3)
-  with check ((select public.my_role_level()) >= 3);
+  using ((select public.my_role_level()) = 4)
+  with check ((select public.my_role_level()) = 4);
 
-create policy "invitation_pupitres: gestion secretaire et admin"
+create policy "invitation_pupitres: gestion admin"
   on public.invitation_pupitres for all
   to authenticated
-  using ((select public.my_role_level()) >= 3)
-  with check ((select public.my_role_level()) >= 3);
-
--- ----------------------------------------------------------------------------
--- Table: event_series
--- ----------------------------------------------------------------------------
-create policy "event_series: lecture membres"
-  on public.event_series for select
-  to authenticated
-  using (
-    (select public.my_role_level()) >= 1
-    and exists (
-      select 1
-      from public.events e
-      where e.series_id = event_series.id
-        and (select public.can_access_event(e.id))
-    )
-  );
-
-create policy "event_series: gestion secretaire et admin"
-  on public.event_series for all
-  to authenticated
-  using ((select public.my_role_level()) >= 3)
-  with check ((select public.my_role_level()) >= 3);
+  using ((select public.my_role_level()) = 4)
+  with check ((select public.my_role_level()) = 4);
 
 -- ----------------------------------------------------------------------------
 -- Table: events
@@ -1080,7 +1069,7 @@ begin
   from public.invitations
   where lower(email) = lower(new.email)
     and used_at is null
-    and created_at > (now() - interval '7 days')
+    and created_at > (now() - interval '1 hour')
   order by created_at desc
   limit 1
   for update;
@@ -1175,7 +1164,6 @@ revoke all on
   public.bureau_positions,
   public.invitations,
   public.invitation_pupitres,
-  public.event_series,
   public.events,
   public.event_pupitres,
   public.event_responses,
@@ -1205,9 +1193,6 @@ grant insert, update, delete on public.profile_pupitres, public.bureau_positions
 grant select, insert, update, delete
   on public.invitations, public.invitation_pupitres
   to authenticated;
-
-grant select on public.event_series to authenticated;
-grant insert, update, delete on public.event_series to authenticated;
 
 grant select, insert, update, delete on public.events, public.event_pupitres
   to authenticated;
@@ -1241,7 +1226,6 @@ grant all on
   public.bureau_positions,
   public.invitations,
   public.invitation_pupitres,
-  public.event_series,
   public.events,
   public.event_pupitres,
   public.event_responses,
@@ -1257,136 +1241,252 @@ grant all on
   public.event_response_details
 to service_role;
 
--- Private buckets preserve the album-level access rules. Public albums are
--- served through short-lived signed URLs after the object policy check.
+-- Public media are intentionally world-readable; private files require RLS.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values
-  ('bagad-partitions', 'bagad-partitions', false, 20971520, array['application/pdf']),
-  ('bagad-medias', 'bagad-medias', false, 20971520, array['image/webp']);
-
-create policy "bagad-partitions: lecture membres"
-  on storage.objects for select
-  to authenticated
-  using (
-    bucket_id = 'bagad-partitions'
-    and (select public.my_role_level()) >= 1
+  (
+    'bagad-public',
+    'bagad-public',
+    true,
+    20971520,
+    array['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+  ),
+  (
+    'bagad-private',
+    'bagad-private',
+    false,
+    20971520,
+    array['application/pdf', 'image/webp']
   );
 
-create policy "bagad-partitions: insertion autorisée"
-  on storage.objects for insert
-  to authenticated
-  with check (
-    bucket_id = 'bagad-partitions'
-    and (
-      (select public.my_role_level()) >= 3
-      or (
-        (select public.my_role_level()) = 2
-        and exists (
-          select 1
-          from public.pupitres p
-          where p.slug = (storage.foldername(name))[1]
-            and p.id in (select public.my_pupitre_ids())
-        )
-      )
-    )
-  );
-
-create policy "bagad-partitions: modification autorisée"
-  on storage.objects for update
-  to authenticated
-  using (
-    bucket_id = 'bagad-partitions'
-    and (
-      (select public.my_role_level()) >= 3
-      or (
-        (select public.my_role_level()) = 2
-        and exists (
-          select 1
-          from public.pupitres p
-          where p.slug = (storage.foldername(name))[1]
-            and p.id in (select public.my_pupitre_ids())
-        )
-      )
-    )
-  )
-  with check (
-    bucket_id = 'bagad-partitions'
-    and (
-      (select public.my_role_level()) >= 3
-      or (
-        (select public.my_role_level()) = 2
-        and exists (
-          select 1
-          from public.pupitres p
-          where p.slug = (storage.foldername(name))[1]
-            and p.id in (select public.my_pupitre_ids())
-        )
-      )
-    )
-  );
-
-create policy "bagad-partitions: suppression autorisée"
-  on storage.objects for delete
-  to authenticated
-  using (
-    bucket_id = 'bagad-partitions'
-    and (
-      (select public.my_role_level()) >= 3
-      or (
-        (select public.my_role_level()) = 2
-        and exists (
-          select 1
-          from public.pupitres p
-          where p.slug = (storage.foldername(name))[1]
-            and p.id in (select public.my_pupitre_ids())
-        )
-      )
-    )
-  );
-
-create policy "bagad-medias: lecture si album accessible"
-  on storage.objects for select
-  to anon, authenticated
-  using (
-    bucket_id = 'bagad-medias'
+create or replace function public.can_read_profile_avatar(target_profile_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((select public.my_role_level()), -1) >= 1
     and exists (
       select 1
-      from public.media m
-      join public.albums a on a.id = m.album_id
-      where m.storage_path = name
-        and (
-          a.is_public = true
-          or (select public.my_role_level()) >= 1
-        )
+      from public.profiles p
+      where p.id::text = target_profile_id
+        and p.role in ('member', 'chef_pupitre', 'secretaire', 'admin')
     )
-  );
+$$;
 
-create policy "bagad-medias: insertion secrétaire et admin"
+create or replace function public.can_manage_profile_avatar(target_profile_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((select public.my_role_level()), -1) >= 1
+    and exists (
+      select 1
+      from public.profiles p
+      where p.id::text = target_profile_id
+        and (
+          p.id = (select auth.uid())
+          or coalesce((select public.my_role_level()), -1) = 4
+        )
+        and p.role in ('member', 'chef_pupitre', 'secretaire', 'admin')
+    )
+$$;
+
+revoke all on function public.can_read_profile_avatar(text) from public, anon;
+revoke all on function public.can_manage_profile_avatar(text) from public, anon;
+grant execute on function public.can_read_profile_avatar(text) to authenticated;
+grant execute on function public.can_manage_profile_avatar(text) to authenticated;
+
+create policy "bagad-public: lecture publique"
+  on storage.objects for select
+  to anon, authenticated
+  using (bucket_id = 'bagad-public');
+
+create policy "bagad-public: ajout secrétaire et admin"
   on storage.objects for insert
   to authenticated
   with check (
-    bucket_id = 'bagad-medias'
+    bucket_id = 'bagad-public'
+    and (storage.foldername(name))[1] in ('articles', 'albums', 'events', 'documents')
     and (select public.my_role_level()) >= 3
   );
 
-create policy "bagad-medias: modification secrétaire et admin"
+create policy "bagad-public: modification secrétaire et admin"
   on storage.objects for update
   to authenticated
   using (
-    bucket_id = 'bagad-medias'
+    bucket_id = 'bagad-public'
+    and (storage.foldername(name))[1] in ('articles', 'albums', 'events', 'documents')
     and (select public.my_role_level()) >= 3
   )
   with check (
-    bucket_id = 'bagad-medias'
+    bucket_id = 'bagad-public'
+    and (storage.foldername(name))[1] in ('articles', 'albums', 'events', 'documents')
     and (select public.my_role_level()) >= 3
   );
 
-create policy "bagad-medias: suppression secrétaire et admin"
+create policy "bagad-public: suppression secrétaire et admin"
   on storage.objects for delete
   to authenticated
   using (
-    bucket_id = 'bagad-medias'
+    bucket_id = 'bagad-public'
+    and (storage.foldername(name))[1] in ('articles', 'albums', 'events', 'documents')
     and (select public.my_role_level()) >= 3
+  );
+
+create policy "bagad-private: lecture selon profil ou document"
+  on storage.objects for select
+  to authenticated
+  using (
+    bucket_id = 'bagad-private'
+    and (select public.my_role_level()) >= 1
+    and (
+      (
+        (storage.foldername(name))[1] = 'profiles'
+        and array_length(storage.foldername(name), 1) = 2
+        and storage.filename(name) = 'avatar.webp'
+        and (select public.can_read_profile_avatar((storage.foldername(name))[2]))
+      )
+      or (
+        (storage.foldername(name))[1] = 'documents'
+        and (
+          exists (
+            select 1 from public.documents d
+            where d.storage_path = name
+          )
+          or exists (
+            select 1
+            from public.media m
+            join public.albums a on a.id = m.album_id
+            where m.storage_path = name
+              and a.is_public = false
+          )
+        )
+      )
+    )
+  );
+
+create policy "bagad-private: ajout selon rôle"
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'bagad-private'
+    and (
+      (
+        (storage.foldername(name))[1] = 'profiles'
+        and array_length(storage.foldername(name), 1) = 2
+        and storage.filename(name) = 'avatar.webp'
+        and (select public.can_manage_profile_avatar((storage.foldername(name))[2]))
+      )
+      or (
+        (storage.foldername(name))[1] = 'documents'
+        and (
+          (select public.my_role_level()) >= 3
+          or (
+            (select public.my_role_level()) = 2
+            and (storage.foldername(name))[2] not in ('albums', '')
+            and exists (
+              select 1
+              from public.pupitres p
+              where p.slug = (storage.foldername(name))[2]
+                and p.id in (select public.my_pupitre_ids())
+            )
+          )
+        )
+      )
+    )
+  );
+
+create policy "bagad-private: modification propriétaire ou rôle"
+  on storage.objects for update
+  to authenticated
+  using (
+    bucket_id = 'bagad-private'
+    and (
+      (
+        (storage.foldername(name))[1] = 'profiles'
+        and array_length(storage.foldername(name), 1) = 2
+        and storage.filename(name) = 'avatar.webp'
+        and (select public.can_manage_profile_avatar((storage.foldername(name))[2]))
+      )
+      or (
+        (storage.foldername(name))[1] = 'documents'
+        and (
+          (select public.my_role_level()) >= 3
+          or (
+            (select public.my_role_level()) = 2
+            and (storage.foldername(name))[2] not in ('albums', '')
+            and exists (
+              select 1
+              from public.pupitres p
+              where p.slug = (storage.foldername(name))[2]
+                and p.id in (select public.my_pupitre_ids())
+            )
+          )
+        )
+      )
+    )
+  )
+  with check (
+    bucket_id = 'bagad-private'
+    and (
+      (
+        (storage.foldername(name))[1] = 'profiles'
+        and array_length(storage.foldername(name), 1) = 2
+        and storage.filename(name) = 'avatar.webp'
+        and (select public.can_manage_profile_avatar((storage.foldername(name))[2]))
+      )
+      or (
+        (storage.foldername(name))[1] = 'documents'
+        and (
+          (select public.my_role_level()) >= 3
+          or (
+            (select public.my_role_level()) = 2
+            and (storage.foldername(name))[2] not in ('albums', '')
+            and exists (
+              select 1
+              from public.pupitres p
+              where p.slug = (storage.foldername(name))[2]
+                and p.id in (select public.my_pupitre_ids())
+            )
+          )
+        )
+      )
+    )
+  );
+
+create policy "bagad-private: suppression propriétaire ou rôle"
+  on storage.objects for delete
+  to authenticated
+  using (
+    bucket_id = 'bagad-private'
+    and (
+      (
+        (storage.foldername(name))[1] = 'profiles'
+        and array_length(storage.foldername(name), 1) = 2
+        and storage.filename(name) = 'avatar.webp'
+        and (select public.can_manage_profile_avatar((storage.foldername(name))[2]))
+      )
+      or (
+        (storage.foldername(name))[1] = 'documents'
+        and (
+          (select public.my_role_level()) >= 3
+          or (
+            (select public.my_role_level()) = 2
+            and (storage.foldername(name))[2] not in ('albums', '')
+            and exists (
+              select 1
+              from public.pupitres p
+              where p.slug = (storage.foldername(name))[2]
+                and p.id in (select public.my_pupitre_ids())
+            )
+          )
+        )
+      )
+    )
   );
 
 revoke all on function public.set_updated_at() from public, anon, authenticated;

@@ -10,6 +10,12 @@ archivées dans `supabase/deprecated_migrations/` et ne doivent pas être appliq
 Un projet ayant déjà exécuté ces anciennes migrations nécessite une stratégie de
 réconciliation distincte avant tout déploiement.
 
+Les décisions métier validées le 1 novembre 2026 ci-dessous décrivent la cible
+fonctionnelle à documenter. Elles ne sont pas toutes implémentées dans la
+migration 005. Cette migration reste la source de vérité du schéma actuellement
+versionné ; aucune nouvelle migration ne doit être écrite avant revue de
+l'architecture SQL et de la compatibilité des données existantes.
+
 ## 1. Principes
 
 1. **RLS activée sur toutes les tables du schéma `public`, sans exception**, y compris les tables publiques (agenda, articles). Une table publique a une policy de lecture explicite, filtrée sur une colonne (`visibility`, `published`).
@@ -28,6 +34,12 @@ create type event_visibility as enum ('public', 'pupitre', 'interne');
 create type response_status as enum ('present', 'absent');
 create type musician_level as enum ('skolaj', 'bagadig', 'bagad');
 ```
+
+La migration 005 utilise l'ordre `public`, `pupitre`, `interne` pour
+`event_visibility`. La cible validée conserve ces trois valeurs (l'ordre
+souhaité dans la définition cible est `public`, `interne`, `pupitre`). Les types
+d'événement sont distincts de cette visibilité ; leur référentiel cible est
+décrit au §12.
 
 Niveaux utilisés par `my_role_level()` :
 
@@ -83,9 +95,8 @@ liaisons pour vérifier les audiences sans récursion RLS. Les chefs gèrent leu
 | `profile_pupitres`          | Liaison membre ↔ pupitres (plusieurs possibles)                                                                                                     |
 | `bureau_positions`          | Titres du bureau historisés (honorifiques, aucun droit)                                                                                             |
 | `member_loans`              | Suivi simplifié des prêts de matériel et costumes par adhérent                                                                                      |
-| `invitations`               | Invitation envoyée : email, nom, prénom, auteur, validité 7 jours                                                                                   |
+| `invitations`               | Invitation envoyée : email, nom, prénom, auteur ; lien Supabase Auth valable 1 heure                                                                |
 | `invitation_pupitres`       | Pupitres attribués à l'invité                                                                                                                       |
-| `event_series`              | Séries récurrentes (règle `rrule`)                                                                                                                  |
 | `events`                    | Représentations, répétitions et sondages (`is_poll`), avec `visibility`                                                                             |
 | `event_pupitres`            | Liaison événement ↔ pupitres ciblés (quand `visibility = 'pupitre'`)                                                                                |
 | `event_responses`           | Réponse d'un membre à un événement ou sondage (`present` / `absent`)                                                                                |
@@ -104,6 +115,9 @@ liaisons pour vérifier les audiences sans récursion RLS. Les chefs gèrent leu
 
 L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses propres lignes, « pup. » = son ou ses pupitres.
 
+La matrice et les exemples RLS des §5–7 décrivent l'état de la migration 005.
+Le trombinoscope et ses autorisations restent à implémenter ; les décisions
+cibles correspondantes sont précisées au §12.
 
 | Table                       | Visiteur         | Membre                                   | Chef de pupitre                  | Secrétaire          | Admin               |
 | --------------------------- | ---------------- | ---------------------------------------- | -------------------------------- | ------------------- | ------------------- |
@@ -112,8 +126,8 @@ L = lecture, E = écriture (créer / modifier / supprimer), « soi » = ses prop
 | `profile_pupitres`          | –                | L soi                                    | L pup.                           | L/E                 | L/E                 |
 | `bureau_positions`          | –                | L soi                                    | L soi                            | L/E                 | L/E                 |
 | `member_loans`              | –                | L soi                                    | L pup.                           | L/E                 | L/E                 |
-| `invitations`               | –                | –                                        | –                                | L/E                 | L/E                 |
-| `invitation_pupitres`       | –                | –                                        | –                                | L/E                 | L/E                 |
+| `invitations`               | –                | –                                        | –                                | –                   | L/E                 |
+| `invitation_pupitres`       | –                | –                                        | –                                | –                   | L/E                 |
 | `events`                    | L si `public`    | L public/interne + événements de ses pupitres | L idem membre ; E événements de ses pupitres | L/E tous | L/E tous |
 | `event_pupitres`            | –                | L si événement accessible                | L si événement accessible        | L/E                 | L/E                 |
 | `event_responses`           | –                | L/E sa réponse si accès à l'événement ; aucune suppression | L réponses selon l'accès à l'événement | L/E toutes | L/E toutes |
@@ -309,8 +323,15 @@ security definer
 set search_path = ''
 as $$
 begin
-  if (select public.my_role_level()) < 4 then
+  if coalesce((select public.my_role_level()), -1) <> 4 then
     raise exception 'Réservé aux administrateurs';
+  end if;
+
+  if new_role <> 'pending' and not exists (
+    select 1 from auth.users u
+    where u.id = target and u.email_confirmed_at is not null
+  ) then
+    raise exception 'Adresse e-mail non confirmée';
   end if;
 
   update public.profiles set role = new_role where id = target;
@@ -329,8 +350,15 @@ security definer
 set search_path = ''
 as $$
 begin
-  if (select public.my_role_level()) < 3 then
-    raise exception 'Réservé à la secrétaire et à l''admin';
+  if coalesce((select public.my_role_level()), -1) <> 4 then
+    raise exception 'Réservé aux administrateurs';
+  end if;
+
+  if not exists (
+    select 1 from auth.users u
+    where u.id = target and u.email_confirmed_at is not null
+  ) then
+    raise exception 'Adresse e-mail non confirmée';
   end if;
 
   update public.profiles set role = 'member'
@@ -342,79 +370,77 @@ revoke execute on function public.approve_member(uuid) from anon, public;
 grant execute on function public.approve_member(uuid) to authenticated;
 ```
 
-> `approve_member` ne peut attribuer **que** le rôle `member`, et uniquement depuis `pending`. `update_member_status` (niveau musical, costume) suit le même modèle avec un garde `>= 3`.
+> `approve_member` ne peut attribuer **que** le rôle `member`, uniquement depuis `pending` et après confirmation de l'adresse e-mail. `set_profile_role` bloque également l'attribution de tout rôle actif à une adresse non confirmée. `update_member_status` (niveau musical, costume) suit le même modèle avec un garde `>= 3`.
 
 ## 7. Création de compte et trigger d'invitation
 
-1. Un admin ou une secrétaire crée une ligne dans `invitations` (email, nom, prénom) et y associe un ou plusieurs pupitres dans `invitation_pupitres`, puis déclenche l'invitation côté serveur (`auth.admin.inviteUserByEmail`).
-2. **Unicité garantie en base** : un email ne peut avoir qu'une seule invitation non consommée à la fois. L'index partiel ne représente pas à lui seul la validité temporelle de 7 jours : le serveur doit invalider les invitations expirées avant d'en créer une nouvelle.
+La cible validée réserve la création des invitations à l'administrateur.
+L'inscription libre est désactivée. Le parcours attendu est le suivant :
+
+1. L'administrateur crée une invitation (adresse e-mail et informations du futur membre), associe un ou plusieurs pupitres dans `invitation_pupitres`, puis déclenche l'invitation côté serveur (`auth.admin.inviteUserByEmail`). Le compte est créé immédiatement dans Supabase Auth.
+2. **Unicité garantie en base** : un email ne peut avoir qu'une seule invitation non consommée à la fois. Le lien Supabase Auth expire après une heure (`auth.email.otp_expiry = 3600` dans la configuration locale ; la configuration du projet hébergé doit correspondre). Avant un renvoi, le serveur invalide l'ancienne ligne et renvoie une invitation au compte Auth existant.
   ```sql
    create unique index idx_invitations_email_active
    on public.invitations (lower(email))
    where used_at is null;
   ```
 
-   Si l'invitation a expiré ou a déjà été utilisée, le serveur **invalide d'abord l'ancienne ligne** (`used_at = now()`), puis crée une nouvelle invitation et renvoie le mail. L'index unique partiel garantit l'unicité même en cas d'erreur applicative.
+   L'index unique partiel garantit l'unicité même en cas d'erreur applicative. Le renvoi ne doit pas créer un deuxième compte Auth pour la même adresse.
 3. Un trigger `after insert` sur `auth.users` :
   - Sélectionne et verrouille la ligne d'invitation retenue (`FOR UPDATE`) afin que deux inscriptions concurrentes ne puissent pas consommer la même invitation.
   - La validation, la création du profil, la copie des pupitres et le marquage `used_at` doivent appartenir à la même transaction ; toute erreur annule l'ensemble.
-  - Vérifie la présence d'une invitation valide pour `new.email` (`used_at is null` et `created_at > now() - interval '7 days'`). Si aucune invitation valide n'existe, lève une exception (`raise exception 'Invitation invalide ou expirée'`).
+  - Vérifie la présence d'une invitation valide pour `new.email` (`used_at is null` et `created_at > now() - interval '1 hour'`). Si aucune invitation valide n'existe, lève une exception (`raise exception 'Invitation invalide ou expirée'`).
   - Crée le profil dans `public.profiles` (`id = new.id`, `role = 'pending'`).
   - Associe l'utilisateur à ses pupitres dans `public.profile_pupitres` en copiant ceux de `invitation_pupitres`.
   - Marque l'invitation comme utilisée (`used_at = now()`).
-4. L'invité crée son mot de passe. Il reste `pending`, sans accès à l'espace adhérents.
-5. Un admin ou une secrétaire passe le profil à `member` via `approve_member`.
+4. Le membre ouvre le lien Supabase Auth dans l'heure, confirme son adresse e-mail et définit son mot de passe. La confirmation ne change pas le rôle : le profil reste `pending`, sans accès de membre actif.
+5. Un administrateur valide manuellement le profil via une fonction d'approbation ; celle-ci vérifie dans `auth.users` que `email_confirmed_at` est renseigné avant le passage de `pending` à `member`.
+
+Le délai d'une heure est appliqué au lien Auth et au contrôle de validité de
+l'invitation en base. La policy RLS, la fonction d'approbation et le contrôle
+de `email_confirmed_at` de la migration 005 réservent les opérations à l'admin.
+Le renvoi d'un lien expiré doit être effectué par l'admin sur le compte Auth
+existant et testé avec Supabase Auth.
 
 ## 8. Storage
 
-> **Règle V1** : aucun avatar n'est téléversé (affichage des initiales du prénom et nom). Le bucket `bagad-avatars` est exclu de la V1 pour éviter tout stockage inutile.
+La migration 005 configure deux buckets distincts :
 
+| Bucket | Visibilité | Organisation | Accès |
+|---|---|---|---|
+| `bagad-public` | `public = true` | `articles/`, `albums/`, `events/`, `documents/` | Lecture sans connexion ; ajout/modification/suppression selon le rôle éditorial. Seuls des fichiers réellement publiables peuvent y être déposés. |
+| `bagad-private` | `public = false` | `profiles/{profile_id}/avatar.webp`, `documents/` | Lecture authentifiée par les policies RLS ; avatar lisible par les membres actifs, documents selon leur droit d'accès. Aucun accès public permanent. |
 
-| Bucket             | Accès                                                                                                                 |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `bagad-partitions` | **Privé** ; lecture : tous les membres approuvés (tous pupitres) ; écriture : chef de pupitre (son pup.), secrétaire+ |
-| `bagad-medias`     | **Privé** ; lecture selon l'accès à l'album lié ; écriture : secrétaire+                                              |
+Les partitions et autres documents internes sont rangés sous
+`documents/{pupitre_slug}/...`. Les fichiers d'albums non publics restent dans
+le bucket privé sous `documents/albums/{album_id}/...` et ne sont lisibles que
+par les membres actifs autorisés. Les images d'albums publics utilisent
+`albums/{album_id}/...` dans `bagad-public`. Les politiques vérifient le rôle,
+le chemin et, pour les ressources reliées à une ligne métier, l'association au
+document ou à l'album. Les politiques `INSERT`, `UPDATE` et `DELETE` vérifient
+également l'ancien et le nouveau chemin lors d'un déplacement.
 
+Les photos de profil sont converties en WebP et enregistrées à un chemin
+déterministe `profiles/{profile_id}/avatar.webp` dans `bagad-private`. Un membre
+actif peut lire les avatars de tous les membres actifs et modifier uniquement
+le sien ; l'administrateur dispose des droits nécessaires à leur gestion. Les
+droits de Storage ne permettent pas de lire ou modifier les autres champs du
+profil. Le trombinoscope utilise un accès authentifié ou une URL signée courte
+pour afficher ces photos.
 
-Chaque bucket a ses policies sur `storage.objects`, avec la même rigueur que les tables. Les fichiers de partition sont rangés sous le slug du pupitre : la policy d'écriture du chef vérifie le dossier racine du fichier. La migration 005 définit explicitement les policies `SELECT`, `INSERT`, `UPDATE` et `DELETE`, en revalidant le bucket et le pupitre lors d'un déplacement ou renommage.
+Les objets du bucket privé ne doivent jamais être servis via une URL publique
+permanente. Les documents et les photos privées sont téléchargés via une
+requête authentifiée RLS ou une URL signée créée après vérification des droits.
+Le bucket public est réellement public : toute personne connaissant une URL
+peut lire l'objet, indépendamment des policies `SELECT`. Il ne doit donc
+contenir que des ressources prévues pour être publiques. Les policies restent
+obligatoires pour contrôler les uploads, modifications, suppressions et
+l'énumération des objets.
 
-```sql
--- Exemple : lecture des partitions par tout membre approuvé
-create policy "partitions: lecture membres"
-on storage.objects for select
-to authenticated
-using (
-  bucket_id = 'bagad-partitions'
-  and (select public.my_role_level()) >= 1
-);
-
--- Exemple : écriture limitée au dossier du pupitre du chef, ou secrétaire+
-create policy "partitions: écriture chef (son pupitre) et secrétaire+"
-on storage.objects for insert
-to authenticated
-with check (
-  bucket_id = 'bagad-partitions'
-  and (
-    (select public.my_role_level()) >= 3
-    or (
-      (select public.my_role_level()) = 2
-      and exists (
-        select 1
-        from public.pupitres p
-        where p.slug = (storage.foldername(name))[1]
-          and p.id in (select public.my_pupitre_ids())
-      )
-    )
-  )
-);
-```
-
-La migration 005 applique ce contrôle à partir du slug du dossier et de
-`my_pupitre_ids()` ; elle n'ajoute pas de fonction `pupitre_slug_from_ids()`.
-Les deux buckets restent privés. Pour afficher les fichiers, le client doit
-demander une URL signée : la policy Storage vérifie que le média est lié à un
-album public ou accessible au membre connecté. Un bucket public contournerait
-les règles `albums.is_public` et exposerait aussi les objets d'albums privés.
+La migration 005 active des policies `SELECT`, `INSERT`, `UPDATE` et `DELETE`
+sur les deux buckets. Le helper `can_read_profile_avatar(text)` vérifie que
+l'appelant et le profil cible sont actifs ; `can_manage_profile_avatar(text)`
+limite les modifications à la personne propriétaire ou à l'administrateur.
 
 ## 9. Migrations
 
@@ -469,6 +495,11 @@ select count(*) from public.events;        -- public + interne + pupitres auxque
 select count(*) from public.event_responses; -- uniquement ses réponses; jamais anon
 update public.profiles set role = 'admin' where id = '<uuid-membre>';  -- doit échouer
 delete from public.event_responses where profile_id = '<uuid-membre>';  -- doit échouer (aucune policy delete)
+-- anon lit les médias de bagad-public, mais jamais un objet de bagad-private.
+-- Un membre actif lit les avatars des membres actifs et ses documents autorisés.
+-- Un membre actif ne peut ni remplacer ni supprimer l'avatar d'un autre membre.
+-- Un compte pending ne peut accéder à aucun objet de bagad-private.
+-- Secrétaire/admin peuvent gérer les objets selon les chemins Storage autorisés.
 -- Tenter une réponse à un événement de pupitre étranger doit échouer.
 -- Tenter de modifier profile_id/event_id sur sa réponse doit échouer.
 -- Tenter de lire la réponse d'un autre membre doit échouer.
@@ -481,26 +512,75 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
 
 ## 12. Décisions
 
-- **Pas d'annuaire** : un membre ne voit pas la liste des autres membres. `profiles` n'est lisible que par son propriétaire et par la secrétaire / l'admin. Un chef de pupitre voit les réponses des événements auxquels son pupitre a accès via `event_responses` et `profile_pupitres` (nom et réponse uniquement), sans accès au reste des profils. Un membre ne voit que ses propres réponses.
-- **Titres du bureau non publics** : aucune policy de lecture pour `anon`. Un membre ne voit que ses propres titres.
+- **Trombinoscope privé** : les membres actifs connectés peuvent consulter le trombinoscope, quel que soit leur rôle. Une vue SQL dédiée n'expose que le nom, le prénom, la photo de profil, les pupitres, le niveau musical et la fonction éventuelle au bureau. Les coordonnées privées (téléphone, e-mail personnel, adresse postale et autres champs non autorisés) ne sont jamais exposées. La lecture de cette vue ne donne aucun droit de lecture sur les profils complets. Les droits RLS des profils, des tables de liaison de pupitres et des données de niveau doivent être vérifiés séparément.
+- **Titres du bureau non publics** : aucune policy de lecture pour `anon`. Un membre actif peut voir la fonction de présentation exposée dans le trombinoscope ; cela n'accorde aucun droit applicatif supplémentaire.
 - **Événements et visibilité (`public`, `interne`, `pupitre`)** :
   - `public` : événement visible par les visiteurs non connectés et les membres ; les réponses restent privées et sont visibles par leur auteur, les chefs ayant accès à l'événement et la secrétaire/admin.
   - `interne` : événement visible par tous les membres connectés approuvés; les réponses sont visibles par leur auteur, les chefs ayant accès à l'événement et la secrétaire/admin.
-  - `pupitre` : événement visible uniquement par les membres des pupitres ciblés et par la secrétaire/admin. Les réponses sont visibles par leur auteur, les chefs ayant accès à l'événement et la secrétaire/admin. Un chef de pupitre ne crée, ne modifie et ne supprime que des événements de visibilité `pupitre` pour les pupitres qui lui sont attribués.
+  - `pupitre` : événement visible uniquement par les membres des pupitres ciblés et par la secrétaire/admin. Les réponses sont visibles par leur auteur, les chefs ayant accès à l'événement et la secrétaire/admin. Un chef peut créer, consulter, modifier et supprimer tout événement associé à son ou ses pupitres, indépendamment de son auteur ; il ne peut gérer ni un événement global ni les événements d'autres pupitres. La secrétaire et l'admin gèrent tous les événements. Un membre ordinaire ne crée, ne modifie et ne supprime aucun événement.
+- **Type d'événement distinct de sa visibilité** : ajouter le champ `event_type` à `events` et un référentiel maîtrisé `event_types` (relation et compatibilité à valider). Catégories initiales : répétition, concert, sortie, festival, fest-noz, concours, réunion, assemblée générale, gala et repas. La visibilité est choisie explicitement ; le type ne la détermine pas.
+- **Pupitres** : la cible métier comporte Bombarde, Caisse claire et Cornemuse, avec un chef indépendant par pupitre. La migration 005 contient aussi Percussion ; la stratégie de compatibilité et le traitement des données liées à ce pupitre restent à valider.
+- **Événements récurrents** : aucune gestion des récurrences en V1. La table `event_series`, la colonne `events.series_id` et tous les objets exclusivement liés aux récurrences sont supprimés de la migration 005 et du schéma cible.
+- **Invitations et activation** : seul l'admin crée les invitations avec `inviteUserByEmail()` et les comptes Auth. Le lien Supabase Auth expire après une heure. Le trigger crée le profil applicatif en `pending`. La confirmation de l'adresse e-mail ne valide pas le membre ; l'admin approuve manuellement et la fonction d'approbation vérifie `auth.users.email_confirmed_at` avant de passer à `member`. Un compte non confirmé ou `pending` ne reçoit pas les droits d'un membre actif. Si le lien expire, l'admin peut renvoyer une invitation au compte Auth existant, sans créer un doublon.
+- **Expiration Auth** : le lien d'invitation a une validité d'une heure (`auth.email.otp_expiry = 3600` dans la configuration locale et dans le projet Supabase hébergé). Le renvoi pour un compte Auth déjà créé doit être testé.
 - **Réponses de présence** : seules les valeurs `present` et `absent` sont admises. Le membre peut modifier sa propre réponse à tout moment avant l'événement. Il ne peut pas supprimer sa réponse individuellement, ni répondre à un événement auquel il n'a pas accès. Un visiteur public ne voit jamais les réponses.
 - **Affectations des chefs** : un profil `chef_pupitre` doit avoir au moins un pupitre attribué ; un pupitre peut temporairement ne pas avoir de chef. Le chef ne peut gérer que ses pupitres.
 - **Documents partagés entre pupitres** : tous les membres lisent tous les documents ; seul le chef de pupitre (son pupitre), la secrétaire et l'admin peuvent écrire.
 - **Réponses jamais supprimées individuellement** : un membre modifie sa réponse au fil du temps (présent → absent le jour même par exemple) ; la suppression n'intervient qu'à la suppression du compte (RGPD).
 - **`activity_log` (ex-`audit_log`)** : trace applicative interne, sans valeur probante ; elle n'est **pas** une piste d'audit au sens légal et ne doit pas être présentée comme telle.
 
+### 12.1. Cible SQL à valider avant migration
+
+Les éléments de cette sous-section documentent les changements approuvés, mais
+ne décrivent pas le schéma déjà appliqué. La revue préalable devra notamment :
+
+- définir le type `event_visibility` cible (`public`, `interne`, `pupitre`) sans
+  confondre type et visibilité ;
+- ajouter le champ `event_type` à `events` et décider du schéma du référentiel
+  maîtrisé `event_types` auquel il se rapporte ;
+- conserver la relation `event_pupitres` pour associer un événement `pupitre` à
+  un ou plusieurs pupitres et interdire aux chefs la gestion d'événements
+  globaux ou d'autres pupitres ;
+- définir une vue dédiée au trombinoscope, limitée aux colonnes autorisées et
+  lisible uniquement par les membres actifs. La vue ne doit pas contourner les
+  droits RLS des profils et des tables associées ; le stockage des photos reste
+  à concevoir en cohérence avec la politique de stockage privée ;
+- faire évoluer les RPC de création, modification et suppression afin de
+  vérifier les pupitres autorisés côté serveur/SQL, sans dépendre de l'auteur
+  de l'événement ;
+- tester le renvoi d'une invitation Auth expirée au compte existant, sans
+  créer de doublon ;
+- vérifier la compatibilité des quatre pupitres de la migration 005 avec la
+  cible métier de trois pupitres.
+
+Définition cible de la visibilité (référence documentaire, pas une migration à
+appliquer telle quelle) :
+
+```sql
+CREATE TYPE public.event_visibility AS ENUM (
+    'public',
+    'interne',
+    'pupitre'
+);
+```
+
+La validation des policies et RPC devra couvrir au minimum les cas suivants :
+un chef bombarde modifie/supprime un événement bombarde créé par un tiers, mais
+ne gère pas un événement caisse claire ; un membre consulte le trombinoscope sans
+accéder aux coordonnées privées ; `anon` ne lit que les événements publics ;
+les membres voient les événements internes et ceux de leurs pupitres ; un chef
+ne crée pas d'événement global ; la secrétaire gère tous les événements ; un
+compte non confirmé ne peut pas être approuvé ; la confirmation seule ne change
+pas le statut `pending`.
+
 ## 13. Schéma initial consolidé (migration 005)
 
 - `notification_preferences` conserve les préférences OneSignal de chaque membre : activation globale, notifications d'événements et rappels de sondage. Les abonnements d'appareils restent gérés par OneSignal.
 - `account_deletion_requests` enregistre les demandes de suppression de compte. L'utilisateur peut demander la suppression de son compte et l'admin peut également la déclencher ; aucun compte n'est automatiquement rétrogradé à `pending`. À la suppression effective (côté serveur, via `auth.admin.deleteUser` avec `service_role`), le `on delete cascade` sur `event_responses.profile_id` efface les réponses du membre. La demande doit conserver son instantané minimal d'identité et son statut de traitement après suppression du profil ; elle ne doit donc pas dépendre d'une FK en cascade vers `profiles`.
 - `articles.summary` et `articles.image_url` conservent les capacités éditoriales présentes dans l'ancien schéma. Le corps de l'article cible reste dans `articles.content`.
-- Les fonctions `approve_member(uuid)` (secrétaire/admin, attribution du rôle `member` uniquement) et `set_profile_role(uuid, app_role)` (admin uniquement) sont les voies prévues pour modifier le rôle applicatif. Elles suivent le modèle standard Supabase du §6 (`security definer`, `search_path = ''`, garde de rôle interne, `grant execute` explicite).
-- Les buckets Storage sont `bagad-partitions` (privé, PDF, lecture par tous les membres approuvés) et `bagad-medias` (privé, WebP, lecture selon l'accès à l'album, écriture secrétaire/admin). Les médias doivent être servis avec des URL signées ; les fichiers de partition sont rangés sous le slug du pupitre.
-- Les photos JPG/JPEG sources jusqu'à 20 Mo doivent être converties côté serveur en WebP avant stockage dans `bagad-medias`. La migration configure le bucket de sortie, mais ne réalise pas elle-même la conversion.
+- Les fonctions `approve_member(uuid)` (admin uniquement, adresse e-mail confirmée, attribution du rôle `member` uniquement) et `set_profile_role(uuid, app_role)` (admin uniquement) sont les voies prévues pour modifier le rôle applicatif. Elles suivent le modèle standard Supabase du §6 (`security definer`, `search_path = ''`, garde de rôle interne, `grant execute` explicite).
+- Les buckets Storage sont `bagad-public` (public, images et documents publiés) et `bagad-private` (privé, photos de profil, partitions et médias non publics). Voir §8 pour les chemins et les règles RLS.
+- Les photos JPG/JPEG sources jusqu'à 20 Mo sont converties côté serveur en WebP avant stockage. Les avatars sont stockés sous `profiles/{profile_id}/avatar.webp` dans le bucket privé.
 - Le formulaire de contact reste géré par Netlify Forms : aucune table `contact` n'est créée dans le nouveau schéma.
 
 - `musician_level` catégorise le niveau musical du membre : `skolaj` (École de musique), `bagadig`, `bagad`.

@@ -30,14 +30,13 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
 
    Décision : la secrétaire est un rôle applicatif autonome (secretaire). Elle peut gérer les membres, invitations et validations nécessaires à sa fonction, sans disposer des droits globaux de l'admin.
 
-3. **Invitations et approbation** — le brief autorise l'admin et la secrétaire
-   à inviter et approuver, tandis que d'anciens écrans/documentations semblent
-   réserver certaines actions à l'admin. Confirmer les rôles autorisés,
-   notamment si l'approbation donne toujours le rôle `member` ou peut attribuer
-   un autre rôle. Quelle durée d'expiration faut-il appliquer? Une ancienne
-   documentation indique sept jours, mais ce délai n'est pas dans le brief.
-
-   Décision : l'admin et la secrétaire peuvent inviter et approuver les adhérents. Toute approbation attribue le rôle member. Les invitations expirent après 7 jours.
+3. **Invitations et approbation** — décision validée le 2026-11-01 :
+   seul l'administrateur envoie l'invitation avec `inviteUserByEmail()`.
+   Le lien Supabase Auth expire après une heure. Le membre confirme son
+   adresse et définit son mot de passe ; son profil reste `pending` jusqu'à
+   validation manuelle par l'administrateur après confirmation de l'adresse.
+   Si le lien expire, l'administrateur peut renvoyer une invitation au compte
+   Auth existant. L'approbation attribue toujours le rôle `member`.
 
 4. **Visibilité des partitions et événements** — le brief précise que tous les
    membres approuvés peuvent consulter les partitions de tous les pupitres;
@@ -100,11 +99,11 @@ Les membres peuvent gérer leurs préférences de notification.
 
 Décision : un membre peut demander la suppression de son compte. Les données personnelles sont supprimées ou anonymisées selon les obligations légales. Les durées de conservation des présences et journaux d'audit restent à définir.
 
-11. **Fuseau horaire et récurrence** — confirmer le fuseau de référence
-    (probablement Europe/Paris), la gestion des changements d'heure, les
-    exceptions aux répétitions récurrentes et les modifications d'une seule
-    occurrence.
-Décision : fuseau Europe/Paris. Les changements d'heure sont gérés automatiquement. Les occurrences récurrentes peuvent être modifiées individuellement sans modifier toute la série.
+11. **Fuseau horaire et récurrence** — décision validée le 2026-11-01 :
+    fuseau de référence `Europe/Paris`, changements d'heure gérés
+    automatiquement. Aucune gestion des événements récurrents en V1 ; la
+    migration 005 ne contient pas `event_series`, `events.series_id` ni les
+    objets exclusivement liés aux récurrences.
 
 12. **Photos et vie privée** — qui peut publier/supprimer un album? Quel
     processus de retrait appliquer si une personne demande la suppression
@@ -112,6 +111,11 @@ Décision : fuseau Europe/Paris. Les changements d'heure sont gérés automatiqu
     après publication?
 
     Décision : l'admin et la secrétaire peuvent publier et supprimer les albums. Toute demande de retrait d'une photo est traitée rapidement par un responsable habilité. Les médias publics publiés sont accessibles sans connexion.
+    Décision Storage validée le 2026-11-01 : les médias publics vont dans
+    `bagad-public` (`public = true`) ; les photos de profil et documents privés
+    vont dans `bagad-private` (`public = false`). Les profils actifs peuvent
+    lire les avatars de tous les membres actifs, mais seul le propriétaire
+    modifie sa photo ; les administrateurs disposent des droits de gestion.
 
 13. **OneSignal et PWA** — le document PWA signale le conflit potentiel entre
     son service worker et celui de OneSignal. Quelle approche faut-il valider,
@@ -145,9 +149,10 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     par l'admin ou la secrétaire?
 
     **Question close — voir la décision validée à la question 21.** Le membre
-    peut modifier ses informations de profil, mais pas son rôle ni ses
-    pupitres. L'admin et la secrétaire peuvent modifier les pupitres; seuls
-    les admins peuvent attribuer les rôles applicatifs supérieurs.
+    peut modifier ses informations de profil, y compris uniquement sa propre
+    photo, mais pas son rôle ni ses pupitres. L'admin et la secrétaire peuvent
+    modifier les pupitres; seuls les admins peuvent attribuer les rôles
+    applicatifs supérieurs.
 
 18. **Contenus publics** — quels champs composent un article et un album
     (titre, texte, date, auteur, légende, ordre des photos)? Une publication
@@ -156,8 +161,8 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     Décision : articles avec titre, texte, date et auteur ; albums avec titre, description, date, légendes et ordre des photos. Une prévisualisation est requise avant publication.
 
 19. **Capacités fichiers** — partitions PDF uniquement. Voir la décision 29
-    pour le traitement et les limites des photos; aucun avatar ni vidéo pour
-    la première version.
+    pour le traitement et les limites des photos; les avatars sont stockés
+    dans le bucket privé, les vidéos sont interdites.
 
 ## Questions complémentaires avant les fonctions concernées
 
@@ -221,10 +226,9 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     formats accepter pour les avatars, photos et vidéos? (Les partitions sont
     limitées au PDF.)
 
-    Décision : pas d'avatar téléversé pour la première version; afficher les
-    initiales du prénom et du nom. Les photos publiées sont au format WebP.
-    Voir la décision 29 : les fichiers JPG/JPEG jusqu'à 20 Mo sont convertis
-    en WebP; les vidéos sont interdites.
+    Décision : les photos source JPG/JPEG jusqu'à 20 Mo sont converties en WebP.
+    Les avatars sont enregistrés sous `profiles/{profile_id}/avatar.webp` dans
+    le bucket privé. Voir la décision 29; les vidéos sont interdites.
 
 ## Questions restantes
 
@@ -255,8 +259,8 @@ Décision : utiliser une configuration compatible avec le service worker de l'ap
     présences et journaux d'audit restent suivies à la question 25.
 
 29. **Médias** — décision : refuser les vidéos; accepter les photos source
-    JPG/JPEG jusqu'à 20 Mo et les convertir en WebP. Aucun avatar téléversé
-    pour la première version; afficher les initiales.
+    JPG/JPEG jusqu'à 20 Mo et les convertir en WebP. Les avatars sont stockés
+    dans le bucket privé au chemin `profiles/{profile_id}/avatar.webp`.
 
 30. **Modélisation des sondages (`events` vs `polls`)** — la décision 23 indique
     que « le sondage est lui-même l'événement d'agenda ». Pourtant, la

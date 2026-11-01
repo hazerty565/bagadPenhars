@@ -58,7 +58,9 @@ Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` 
 
 - Aucun secret committé (`.env` ignoré, `.env.example` à jour).
 - Pas de nouvelle dépendance sans la justifier dans `docs/journal.md`.
-- Pas d'annuaire des membres, pas de titres du bureau publics (voir `docs/brief.md`).
+- Le trombinoscope est réservé aux membres actifs connectés et n'expose que les
+  champs autorisés dans `docs/brief.md` ; les titres du bureau ne sont jamais
+  publics.
 
 ## 3. Choisir le travail
 

@@ -18,16 +18,17 @@ Le produit comprend :
 - un site public pour présenter l'association, publier les actualités et les
   albums, annoncer les représentations et recevoir les demandes de contact ;
 - un espace adhérents privé, accessible uniquement sur invitation, pour
-  consulter l'agenda et les partitions, répondre aux événements, gérer son
-  profil et recevoir des notifications ;
+  consulter l'agenda et le trombinoscope, les partitions, répondre aux
+  événements, gérer son profil et recevoir des notifications ;
 - des outils d'administration permettant aux rôles autorisés de gérer les
   comptes, les contenus, l'agenda et les notifications.
 
 L'application est principalement utilisée sur téléphone et doit rester simple
 à maintenir par une petite équipe.
 
-Hors périmètre : inscription libre, annuaire des membres (y compris interne),
-publication des titres du bureau, paiements ou cotisations en ligne.
+Hors périmètre : inscription libre, annuaire public, publication publique des
+titres du bureau, paiements ou cotisations en ligne. Le trombinoscope interne
+est réservé aux membres actifs et limité aux informations autorisées.
 
 ## 3. Utilisateurs, rôles et autorisations
 
@@ -37,30 +38,32 @@ confère aucun droit à lui seul.
 
 | Rôle           | Exigences                                                                                                                   |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `pending`      | Peut terminer la création de son compte et consulter le parcours d'attente; aucun accès à l'espace adhérents.               |
-| `member`       | Consulte l'agenda et les documents; répond aux événements; gère son propre profil. Ne voit pas la liste des autres membres. |
-| `chef_pupitre` | Droits d'un membre; gère les événements, partitions et notifications de son ou ses pupitres autorisés.                      |
-| `secretaire`   | Crée les dates d'agenda, articles et albums; invite et valide les comptes; envoie des notifications aux pupitres autorisés. |
-| `admin`        | Gère globalement les utilisateurs, rôles, contenus et notifications.                                                        |
+| `pending`      | Peut terminer la création de son compte et consulter le parcours d'attente; aucun accès aux droits d'un membre actif. |
+| `member`       | Consulte l'agenda, les documents et le trombinoscope autorisé; répond aux événements et gère son propre profil. |
+| `chef_pupitre` | Droits d'un membre; gère les événements associés à son ou ses pupitres, et les partitions/notifications de son périmètre. |
+| `secretaire`   | Gère tous les événements, articles et albums; envoie des notifications aux pupitres autorisés. |
+| `admin`        | Gère globalement les utilisateurs, invitations, rôles, contenus et notifications; valide les comptes. |
 
 Principes obligatoires :
 
-- Un membre peut appartenir à un ou plusieurs pupitres : bombarde, cornemuse,
-  caisse claire et percussion.
+- L'association compte trois pupitres : bombarde, caisse claire et cornemuse.
+  Un membre peut appartenir à un ou plusieurs pupitres, chacun ayant son chef
+  indépendant.
 - Toute autorisation est vérifiée côté serveur et dérivée du rôle et des
   pupitres fiables en base, jamais d'une valeur de rôle fournie par le client
   ou de métadonnées de session modifiables.
 - Une action reçoit l'identité de l'acteur depuis la session vérifiée; elle ne
   fait pas confiance à un identifiant d'utilisateur soumis dans le formulaire.
-- La secrétaire est un rôle applicatif autonome. Elle peut gérer les membres,
-  invitations et validations nécessaires à sa fonction, ainsi que les contenus
-  et notifications prévus dans le brief; elle ne reçoit pas implicitement les
-  droits globaux de l'admin.
-- La secrétaire et les chefs ne peuvent agir que dans le périmètre accordé par
-  leur rôle et leurs pupitres. Toute opération globale non explicitement
-  attribuée à ces rôles est réservée à l'admin.
-- Aucun écran ou endpoint ne fournit d'annuaire des membres. Les titres du
-  bureau ne sont pas visibles publiquement.
+- Les invitations et validations de comptes sont réservées à l'admin. La
+  secrétaire gère tous les événements, sans obtenir pour autant les droits
+  globaux de l'admin sur les autres ressources.
+- Les chefs sont indépendants : ils gèrent les événements associés à leur(s)
+  pupitre(s), quel qu'en soit l'auteur, mais pas les événements globaux ou les
+  événements d'autres pupitres.
+- Le trombinoscope est réservé aux membres actifs connectés et expose seulement
+  le nom, le prénom, la photo, les pupitres, le niveau musical et l'éventuelle
+  fonction au bureau. Les coordonnées privées restent inaccessibles. Les titres
+  du bureau ne sont jamais publics et ne déterminent aucun droit.
 
 Les permissions détaillées sont précisées dans les exigences par ressource
 ci-dessous. Le schéma Supabase devra prendre en charge plusieurs pupitres par
@@ -76,7 +79,7 @@ membre et le rôle applicatif `secretaire`.
   l'effectif, les photos et les principaux événements ou palmarès. Le bureau
   valide les contenus avant publication.
 - **Page Formation** : présenter les formations proposées pour chacun des
-  instruments/pupitres : bombarde, cornemuse, caisse claire et percussion.
+  instruments/pupitres : bombarde, caisse claire et cornemuse.
   Chaque instrument doit avoir une section identifiable avec les niveaux
   requis, le contenu des cours, les horaires, le lieu et les modalités de prêt
   d'instrument. Le bureau complète les informations manquantes.
@@ -104,7 +107,7 @@ membre et le rôle applicatif `secretaire`.
 
 - La navigation permet d'atteindre l'accueil, la présentation du Bagad et la
   page Formation.
-- La page Formation présente séparément les quatre instruments/pupitres
+- La page Formation présente séparément les trois instruments/pupitres
   ci-dessus, avec un contenu éditorial fourni ou validé par l'association.
 - Ces pages sont consultables sans compte et ne révèlent aucune information
   privée sur les membres ou les titres du bureau.
@@ -114,17 +117,21 @@ membre et le rôle applicatif `secretaire`.
 
 ### 4.2 Invitations et validation des comptes
 
-1. Une personne autorisée envoie une invitation par email en renseignant
-   l'identité nécessaire et le ou les pupitres.
-2. Le lien permet à son destinataire de définir un mot de passe; il ne donne
-   pas accès au dashboard avant cette étape et la validation requise.
-3. Le compte est créé avec le rôle `pending`.
-4. Un admin ou une secrétaire valide le compte; toute approbation attribue le
-   rôle `member`. L'attribution ultérieure d'un rôle applicatif supérieur relève
-   de l'administration.
+1. Seul un administrateur envoie une invitation, renseigne l'adresse e-mail,
+   l'identité nécessaire et le ou les pupitres. Le compte Auth est créé
+   immédiatement et le profil applicatif est créé avec le rôle `pending`.
+2. Dans l'heure, le destinataire ouvre le lien Supabase Auth, confirme son
+   adresse e-mail et définit son mot de passe. Le lien ne donne pas accès au
+   dashboard.
+3. La confirmation e-mail ne valide pas le compte : il reste `pending` jusqu'à
+   l'approbation manuelle par un administrateur.
+4. L'administrateur ne peut approuver le compte que si l'adresse e-mail est
+   confirmée; l'approbation attribue le rôle `member`.
 5. Le pupitre attribué n'est pas modifiable par l'invité.
-6. Une invitation est à usage unique, expire après sept jours et ne stocke pas
-   son secret en clair.
+6. Le lien Auth expire après une heure. Si le lien expire, l'administrateur
+   peut renvoyer une invitation au compte Auth existant sans créer un second
+   compte. L'expiration doit être configurée côté Supabase Auth, pas seulement
+   enregistrée dans la table applicative.
 
 Le processus de révocation et de renvoi reste à définir avant son
 implémentation. Les opérations doivent être auditées lorsque le modèle de
@@ -134,17 +141,16 @@ données le permet.
 
 - Toutes les pages et actions privées exigent une session valide et un rôle
   approuvé.
-- Le dashboard montre les informations du profil connecté, sans exposer une
-  liste de membres.
+- Le dashboard montre les informations du profil connecté. Le trombinoscope
+  distinct est accessible aux membres actifs et ne révèle aucun champ privé.
 - Chaque membre ne modifie que son propre profil et sa propre réponse de
   présence.
 - Le membre peut modifier ses propres informations de profil, à l'exception
   de son rôle et de son ou ses pupitres. L'admin et la secrétaire peuvent
   modifier les pupitres; l'attribution des rôles applicatifs supérieurs reste
   réservée à l'admin.
-- Les rôles `admin` et `secretaire` peuvent inviter et approuver les comptes.
-  La secrétaire ne peut pas attribuer un rôle supérieur à `member` lors de
-  l'approbation.
+- Seul l'admin peut inviter et approuver les comptes; il ne peut approuver un
+  compte dont l'adresse e-mail n'est pas confirmée.
 - Les champs de profil modifiables sont ceux du profil du membre, hors rôle et
   pupitres. Le changement de l'adresse email du compte doit suivre le flux
   sécurisé de Supabase Auth.
@@ -157,16 +163,21 @@ données le permet.
 
 - L'agenda public expose uniquement les représentations sélectionnées pour
   publication; il est en lecture seule.
-- L'agenda privé comprend les répétitions et événements internes ainsi que les
-  représentations.
+- L'agenda privé comprend les événements `interne` et les événements `pupitre`
+  accessibles au membre, en plus des événements `public`.
 - Les réponses possibles sont `present` ou `absent` (ou aucune réponse).
 - L'identité de la personne qui répond vient de la session serveur.
 - Un sondage est lui-même l'événement correspondant dans l'agenda; il est matérialisé
   directement dans la table `events` au moyen d'un champ `is_poll BOOLEAN NOT NULL DEFAULT FALSE`
   (la table `polls` est supprimée). Les réponses sont centralisées dans `event_responses`
   avec les statuts uniques `present` ou `absent`. L'admin et la secrétaire peuvent créer,
-  modifier et supprimer des sondages publics ou privés. Un chef peut gérer les événements,
-  y compris les sondages, de son ou ses pupitres uniquement.
+  modifier et supprimer tous les événements, y compris les sondages. Un chef peut
+  gérer les événements associés à son ou ses pupitres, y compris ceux créés par
+  un autre utilisateur, mais ne peut pas gérer d'événement global ni d'un autre
+  pupitre.
+- Chaque événement possède un type choisi dans un référentiel : répétition,
+  concert, sortie, festival, fest-noz, concours, réunion, assemblée générale,
+  gala ou repas. Le type est indépendant de la visibilité.
 - Les niveaux de visibilité d'un événement (`visibility`) sont stricts :
   - `public` : visible par tout le monde (public non connecté et membres connectés).
   - `interne` : visible par tous les membres connectés approuvés.
@@ -179,8 +190,8 @@ données le permet.
   périmètre du pupitre; leur visibilité publique est explicite, jamais
   implicite.
 - Le fuseau de référence est `Europe/Paris`; les changements d'heure sont
-  gérés automatiquement et une occurrence récurrente peut être modifiée sans
-  changer toute la série.
+  gérés automatiquement. Aucune gestion des événements récurrents n'est
+  incluse en V1.
 
 ### 4.5 Documents et médias
 
@@ -193,17 +204,23 @@ données le permet.
   serveur avant de lire le stockage.
 - Les photos et albums destinés au public sont explicitement publiés; les
   fichiers non publics restent protégés.
-- Aucun avatar n'est téléversé dans la première version : afficher les
-  initiales du prénom et du nom. Les photos téléversées au format JPG/JPEG,
-  jusqu'à 20 Mo par fichier source, sont converties au format WebP avant
-  stockage. Les vidéos ne sont pas acceptées.
+- La photo de profil figure dans le trombinoscope réservé aux membres actifs.
+  Elle est stockée dans `bagad-private/profiles/{profile_id}/avatar.webp`.
+  Tout membre actif peut la lire; seul son propriétaire peut la modifier et
+  l'administrateur dispose des droits de gestion. Les photos téléversées au
+  format JPG/JPEG, jusqu'à 20 Mo par fichier source, sont converties au format
+  WebP avant stockage. Les vidéos ne sont pas acceptées.
 - L'admin et la secrétaire peuvent publier et supprimer les albums. Une demande
   de retrait d'une photo est traitée rapidement par un responsable habilité;
-  les médias d'albums publics sont accessibles sans connexion via une URL
-  signée après vérification de leur visibilité.
-- Tous les fichiers sont stockés dans des buckets Supabase privés. Les policies
-  de `storage.objects` contrôlent l'accès selon la visibilité de l'album ou le
-  rôle du membre; aucune URL publique ne doit contourner ces règles.
+  les médias d'albums publics sont servis publiquement depuis
+  `bagad-public/albums/{album_id}/`. Les médias non publics restent dans
+  `bagad-private/documents/albums/{album_id}/`.
+- `bagad-public` est configuré avec `public = true` pour `articles/`, `albums/`,
+  `events/` et `documents/`; ne jamais y placer de fichier non publié. `bagad-private`
+  est configuré avec `public = false` pour les photos de profil et documents
+  internes. Les policies de `storage.objects` contrôlent l'accès et les
+  opérations d'écriture. Les fichiers privés sont servis par accès authentifié
+  ou URL signée courte, jamais par URL publique permanente.
 
 ### 4.6 Notifications
 
@@ -385,20 +402,24 @@ autorisés.
 
 ### Étape C — Invitations, profils et membres
 
-- Mettre en place les invitations email à usage unique, expirantes et dont le
-  jeton n'est stocké qu'empreinté; leur durée de validité est de sept jours.
-- Créer le profil `pending` après acceptation; l'invité ne choisit ni son rôle
-  ni ses pupitres.
-- Autoriser l'admin et la secrétaire à approuver un compte, en lui attribuant
-  le rôle `member`.
+- Mettre en place les invitations email à usage unique, expirantes après une
+  heure et dont le jeton n'est stocké qu'empreinté. Seul l'admin peut inviter; le compte Auth
+  et le profil `pending` sont créés immédiatement.
+- L'invité confirme son adresse et définit son mot de passe dans l'heure.
+  La confirmation ne valide pas le compte et l'invité ne choisit ni son rôle ni
+  ses pupitres.
+- Seul l'admin peut approuver un compte; l'approbation vérifie que l'adresse
+  e-mail est confirmée et attribue le rôle `member`.
 - Permettre à un membre de modifier uniquement les champs de son propre profil
   hors rôle et pupitres; le changement d'adresse email suit le flux Supabase
-  Auth. Ne pas créer d'annuaire.
+  Auth. Le trombinoscope réservé aux membres actifs expose uniquement les champs
+  autorisés par le brief, sans ouvrir l'accès aux profils complets.
 - Journaliser les changements de rôle et les actions d'administration sans
   enregistrer de secrets.
 
 **Livrable :** tests du cycle invitation → mot de passe → attente → approbation,
-incluant jeton invalide, expiré, déjà utilisé et email non concordant.
+incluant adresse e-mail non confirmée, jeton invalide, expiré, déjà utilisé et
+adresse non concordante.
 
 ### Étape D — Agenda, présences et sondages
 
@@ -415,7 +436,11 @@ incluant jeton invalide, expiré, déjà utilisé et email non concordant.
   (type `response_status`), sans table `polls` distincte ni étape de validation préalable.
   L'admin et la secrétaire peuvent les créer, modifier et supprimer dans les audiences publique
   ou privée; un chef a ces droits uniquement pour les événements de son ou ses pupitres.
-- Valider les dates, fuseaux horaires, heures de fin et événements récurrents.
+- Associer chaque événement à un type du référentiel maîtrisé (répétition,
+  concert, sortie, festival, fest-noz, concours, réunion, assemblée générale,
+  gala ou repas), indépendamment de sa visibilité.
+- Valider les dates, fuseaux horaires et heures de fin. La première version ne
+  comporte aucune structure SQL ni aucun comportement de récurrence.
 
 **Livrable :** tests de visibilité public/privé, permissions par rôle,
 propriété des réponses et cas de dates invalides.
@@ -426,8 +451,14 @@ propriété des réponses et cas de dates invalides.
 - Stocker les fichiers dans les buckets Supabase prévus; contrôler type,
   taille, nom et droits avant écriture.
 - N'accepter aucune vidéo. Limiter chaque fichier photo source JPG/JPEG à
-  20 Mo, le convertir en WebP avant stockage et n'accepter aucun téléversement
-  d'avatar.
+  20 Mo et le convertir en WebP avant stockage. La photo de profil affichée
+  dans le trombinoscope est stockée dans `bagad-private/profiles/{profile_id}/avatar.webp`,
+  accessible aux membres actifs; seul son propriétaire peut la modifier, avec
+  les droits de gestion de l'administrateur.
+- Configurer `bagad-public` (`public = true`) pour les médias publiés et
+  `bagad-private` (`public = false`) pour les avatars et documents privés.
+  Les fichiers privés sont servis via accès authentifié ou URL signée courte,
+  jamais par URL publique permanente.
 - Servir les partitions depuis un bucket privé avec autorisation serveur et
   RLS; ne jamais exposer une URL publique pour un document privé.
 - Publier les albums et médias uniquement après action d'un rôle autorisé.
@@ -470,7 +501,7 @@ mobiles, parcours hors-ligne sans fuite de données privées, CI verte.
 - En tant que visiteur, je consulte les pages et événements destinés au public
   sans créer de compte.
 - Je peux consulter la page d'accueil, découvrir le Bagad sur sa page de
-  présentation et trouver la formation correspondant à chacun des quatre
+  présentation et trouver la formation correspondant à chacun des trois
   instruments/pupitres.
 - Je ne peux jamais lire les profils, réponses, invitations ni partitions
   privées.
@@ -481,6 +512,8 @@ mobiles, parcours hors-ligne sans fuite de données privées, CI verte.
 
 - En tant que membre approuvé, je consulte mon espace, les événements et les
   documents autorisés.
+- Je consulte le trombinoscope et uniquement ses champs autorisés, sans accéder
+  aux coordonnées privées ni au profil complet des autres membres.
 - Je crée ou modifie ma propre réponse de présence sans pouvoir répondre à la
   place d'une autre personne.
 - Je modifie uniquement les champs de mon profil autorisés par la décision
