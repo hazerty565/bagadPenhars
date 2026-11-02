@@ -30,7 +30,6 @@ create table public.pupitres (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
   slug text not null unique,
-  parent_pupitre_id uuid references public.pupitres(id) on delete restrict,
   created_at timestamptz not null default now()
 );
 
@@ -54,6 +53,7 @@ create table public.profiles (
 create table public.profile_pupitres (
   profile_id uuid not null references public.profiles(id) on delete cascade,
   pupitre_id uuid not null references public.pupitres(id) on delete restrict,
+  is_chef boolean not null default false,
   created_at timestamptz not null default now(),
   primary key (profile_id, pupitre_id)
 );
@@ -92,7 +92,7 @@ as $$
   where pp.profile_id = (select auth.uid())
 $$;
 
-create or replace function public.my_member_pupitre_ids()
+create or replace function public.my_managed_pupitre_ids()
 returns setof uuid
 language sql
 stable
@@ -102,12 +102,7 @@ as $$
   select pp.pupitre_id
   from public.profile_pupitres pp
   where pp.profile_id = (select auth.uid())
-  union
-  select p.parent_pupitre_id
-  from public.profile_pupitres pp
-  join public.pupitres p on p.id = pp.pupitre_id
-  where pp.profile_id = (select auth.uid())
-    and p.parent_pupitre_id is not null
+    and pp.is_chef = true
 $$;
 
 -- Titres du bureau historisés (honorifiques, sans droits associés)
@@ -323,7 +318,7 @@ as $$
                 select 1
                 from public.event_pupitres ep
                 where ep.event_id = e.id
-                  and ep.pupitre_id in (select public.my_member_pupitre_ids())
+                  and ep.pupitre_id in (select public.my_pupitre_ids())
               )
             )
           )
@@ -339,11 +334,6 @@ security definer
 set search_path = ''
 as $$
   select coalesce((select public.my_role_level()), -1) = 2
-    and (
-      select count(*)
-      from public.profile_pupitres pp
-      where pp.profile_id = (select auth.uid())
-    ) = 1
     and exists (
       select 1
       from public.events e
@@ -353,30 +343,24 @@ as $$
           select 1
           from public.event_pupitres ep
           where ep.event_id = e.id
-            and ep.pupitre_id in (select public.my_pupitre_ids())
+            and ep.pupitre_id in (select public.my_managed_pupitre_ids())
         )
         and (
           select count(*)
           from public.event_pupitres ep
           where ep.event_id = e.id
         ) = 1
-        and not exists (
-          select 1
-          from public.event_pupitres ep
-          where ep.event_id = e.id
-            and ep.pupitre_id not in (select public.my_pupitre_ids())
-        )
     );
 $$;
 
 revoke all on function public.my_role_level() from public, anon;
 revoke all on function public.my_pupitre_ids() from public, anon;
-revoke all on function public.my_member_pupitre_ids() from public, anon;
+revoke all on function public.my_managed_pupitre_ids() from public, anon;
 revoke all on function public.can_access_event(uuid) from public, anon;
 revoke all on function public.can_manage_pupitre_event(uuid) from public, anon;
 grant execute on function public.my_role_level() to authenticated;
 grant execute on function public.my_pupitre_ids() to authenticated;
-grant execute on function public.my_member_pupitre_ids() to authenticated;
+grant execute on function public.my_managed_pupitre_ids() to authenticated;
 grant execute on function public.can_access_event(uuid) to authenticated;
 grant execute on function public.can_manage_pupitre_event(uuid) to authenticated;
 
@@ -403,19 +387,10 @@ begin
       using errcode = '42501';
   end if;
 
-  if (
-    select count(*)
-    from public.profile_pupitres pp
-    where pp.profile_id = (select auth.uid())
-  ) <> 1 then
-    raise exception 'Un chef ne peut gérer qu''un seul pupitre'
-      using errcode = '42501';
-  end if;
-
   if target_pupitre_id is null
-    or target_pupitre_id not in (select public.my_pupitre_ids())
+    or target_pupitre_id not in (select public.my_managed_pupitre_ids())
   then
-    raise exception 'Le pupitre ciblé doit être attribué au chef connecté'
+    raise exception 'Le pupitre ciblé doit être dirigé par le chef connecté'
       using errcode = '42501';
   end if;
 
@@ -460,9 +435,9 @@ begin
   end if;
 
   if target_pupitre_id is null
-    or target_pupitre_id not in (select public.my_pupitre_ids())
+    or target_pupitre_id not in (select public.my_managed_pupitre_ids())
   then
-    raise exception 'Le pupitre ciblé doit être attribué au chef connecté'
+    raise exception 'Le pupitre ciblé doit être dirigé par le chef connecté'
       using errcode = '42501';
   end if;
 
@@ -774,7 +749,7 @@ create policy "profile_pupitres: lecture chef sur son pupitre"
   to authenticated
   using (
     (select public.my_role_level()) = 2
-    and pupitre_id in (select public.my_pupitre_ids())
+    and pupitre_id in (select public.my_managed_pupitre_ids())
   );
 
 create policy "profile_pupitres: gestion secretaire et admin"
@@ -888,7 +863,7 @@ create policy "event_responses: lecture soi, chef et secretaire"
         select 1
         from public.event_pupitres ep
         where ep.event_id = event_responses.event_id
-          and ep.pupitre_id in (select public.my_member_pupitre_ids())
+          and ep.pupitre_id in (select public.my_pupitre_ids())
       )
     )
     or (
@@ -944,7 +919,7 @@ where
       select 1
       from public.event_pupitres ep
       where ep.event_id = er.event_id
-        and ep.pupitre_id in (select public.my_member_pupitre_ids())
+        and ep.pupitre_id in (select public.my_pupitre_ids())
     )
   )
   or (
@@ -973,12 +948,6 @@ select
       select distinct section.name
       from public.profile_pupitres pp
       join public.pupitres section on section.id = pp.pupitre_id
-      where pp.profile_id = p.id
-      union
-      select distinct parent.name
-      from public.profile_pupitres pp
-      join public.pupitres section on section.id = pp.pupitre_id
-      join public.pupitres parent on parent.id = section.parent_pupitre_id
       where pp.profile_id = p.id
     ) sections
     order by sections.name
@@ -1010,11 +979,11 @@ create policy "documents: écriture chef sur son pupitre"
   to authenticated
   using (
     (select public.my_role_level()) = 2
-    and pupitre_id in (select public.my_pupitre_ids())
+    and pupitre_id in (select public.my_managed_pupitre_ids())
   )
   with check (
     (select public.my_role_level()) = 2
-    and pupitre_id in (select public.my_pupitre_ids())
+    and pupitre_id in (select public.my_managed_pupitre_ids())
   );
 
 create policy "documents: écriture secretaire et admin"
@@ -1187,7 +1156,7 @@ create policy "member_loans: lecture chef sur son pupitre"
       select 1
       from public.profile_pupitres pp
       where pp.profile_id = member_loans.profile_id
-        and pp.pupitre_id in (select public.my_pupitre_ids())
+        and pp.pupitre_id in (select public.my_managed_pupitre_ids())
     )
   );
 
@@ -1306,6 +1275,9 @@ create index bureau_positions_profile_start_idx
   on public.bureau_positions(profile_id, start_date desc);
 create index profile_pupitres_pupitre_profile_idx
   on public.profile_pupitres(pupitre_id, profile_id);
+create unique index profile_pupitres_one_chef_per_pupitre_idx
+  on public.profile_pupitres(pupitre_id)
+  where is_chef = true;
 create index events_visibility_start_at_idx
   on public.events(visibility, start_at);
 create index event_pupitres_pupitre_event_idx
@@ -1560,7 +1532,7 @@ create policy "bagad-private: ajout selon rôle"
               select 1
               from public.pupitres p
               where p.slug = (storage.foldername(name))[2]
-                and p.id in (select public.my_pupitre_ids())
+                and p.id in (select public.my_managed_pupitre_ids())
             )
           )
         )
@@ -1591,7 +1563,7 @@ create policy "bagad-private: modification propriétaire ou rôle"
               select 1
               from public.pupitres p
               where p.slug = (storage.foldername(name))[2]
-                and p.id in (select public.my_pupitre_ids())
+                and p.id in (select public.my_managed_pupitre_ids())
             )
           )
         )
@@ -1618,7 +1590,7 @@ create policy "bagad-private: modification propriétaire ou rôle"
               select 1
               from public.pupitres p
               where p.slug = (storage.foldername(name))[2]
-                and p.id in (select public.my_pupitre_ids())
+                and p.id in (select public.my_managed_pupitre_ids())
             )
           )
         )
@@ -1649,7 +1621,7 @@ create policy "bagad-private: suppression propriétaire ou rôle"
               select 1
               from public.pupitres p
               where p.slug = (storage.foldername(name))[2]
-                and p.id in (select public.my_pupitre_ids())
+                and p.id in (select public.my_managed_pupitre_ids())
             )
           )
         )
@@ -1668,11 +1640,5 @@ insert into public.pupitres (name, slug) values
   ('Caisse claire', 'caisse-claire'),
   ('Percussion', 'percussion')
 on conflict (slug) do nothing;
-
-update public.pupitres percussion
-set parent_pupitre_id = caisse.id
-from public.pupitres caisse
-where percussion.slug = 'percussion'
-  and caisse.slug = 'caisse-claire';
 
 commit;

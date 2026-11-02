@@ -118,8 +118,8 @@ Le formulaire de création/modification comprend :
   `concours`, `gala`, `repetition`, `reunion` et `repas` ;
 - une visibilité choisie indépendamment du type : `public`, `interne` ou
   `pupitre` ;
-- pour un chef, la visibilité `pupitre` est automatique et l'unique cible est
-  son pupitre attribué ;
+- pour un chef, la visibilité `pupitre` est automatique et une liste de
+  sélection propose uniquement les pupitres qu'il dirige, avec une seule cible ;
 - pour la secrétaire et l'administrateur, un ou plusieurs pupitres peuvent être
   ciblés, ou aucun pour un événement global.
 

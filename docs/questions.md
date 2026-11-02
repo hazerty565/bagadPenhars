@@ -51,8 +51,9 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
    et admin) sont-ils bien distincts des droits de lecture?
 
    Décision : les partitions sont visibles par tous les membres actifs,
-   quel que soit leur pupitre. Un chef ne peut gérer que les événements de son
-   pupitre unique, même s'il n'en est pas l'auteur. Les événements publics,
+   quel que soit leur pupitre. Un chef ne peut gérer que les événements des
+   pupitres qu'il dirige via `is_chef`, même s'il n'en est pas l'auteur. La
+   création impose une seule cible choisie dans la liste. Les événements publics,
    globaux ou multi-pupitres sont gérés exclusivement par l'admin ou la
    secrétaire.
 
@@ -63,8 +64,8 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
 
    Décision validée le 2026-11-01 : la secrétaire et l'administrateur peuvent
    créer, modifier et supprimer tous les événements, y compris ceux ciblant
-   plusieurs pupitres ou tous les pupitres. Un chef gère uniquement ceux de son
-   pupitre unique, indépendamment de `author_id`; les événements
+   plusieurs pupitres ou tous les pupitres. Un chef gère ceux des pupitres qu'il
+   dirige via `is_chef`, indépendamment de `author_id`; les événements
    multi-pupitres ou globaux ne sont pas gérables par un chef. Décision
    actualisée le 2026-11-01 : `event_type` est un ENUM (`sortie`, `concert`,
    `fest-noz`, `festival`, `concours`, `gala`, `repetition`, `reunion`,
@@ -319,11 +320,9 @@ Décision : présenter l'histoire, les valeurs, les dates clés, l'effectif, les
     L'activation n'attribue pas un rôle et la suspension bloque l'accès sans
     supprimer les données.
 
-33. **Pupitre Percussion** — Percussion reste distinct, mais toute affectation
-    Percussion donne aussi une appartenance effective à Caisse claire, sans
-    dupliquer la ligne d'affectation. Cette appartenance héritée ouvre les
-    événements Caisse claire ; elle ne confère pas au chef de Percussion les
-    droits de gestion du chef de Caisse claire.
+33. **Pupitre Percussion — OBsolète — ne plus prendre en compte** — l'ancien
+    lien d'héritage de Percussion vers Caisse claire et l'appartenance effective
+    sont supprimés. Percussion est indépendant.
 
 34. **Trombinoscope V1** — exigence obligatoire à la première mise en
     production. Une vue SQL limitée aux champs autorisés, ses relations et
@@ -363,17 +362,17 @@ experts en développement.
     l'admin est remplacée. Toute mention contraire dans les autres documents
     est **OBsolète — ne plus prendre en compte**.
 
-38. **Nombre de pupitres** — il y a quatre pupitres. Percussion est lié à
-    Caisse claire. La mention de trois instruments/pupitres dans `Spec.md` est
-    un oubli du cahier des charges et **OBsolète — ne plus prendre en compte**.
+38. **Nombre de pupitres — OBsolète — ne plus prendre en compte** — la décision
+    précédente reliant Percussion à Caisse claire est remplacée. Il y a quatre
+    pupitres distincts et indépendants.
 
-39. **Responsabilité des chefs de pupitre** — il y a un chef par pupitre, sauf
-    Percussion, qui relève du chef de Caisse claire. Le chef de Caisse claire
-    assure donc aussi le rôle de chef de Percussion. La formulation du README
-    « son ou ses pupitres », la règle imposant un chef distinct pour Percussion
-    et les décisions antérieures excluant la gestion de Percussion par le chef
-    de Caisse claire ou limitant chaque chef à un seul pupitre sont
-    **OBsolètes — ne plus prendre en compte**.
+39. **Responsabilité des chefs de pupitre — OBsolète — ne plus prendre en
+    compte** — remplacée par la décision validée suivante: il existe au plus un
+    chef par pupitre, garanti par l'index unique partiel sur
+    `profile_pupitres(pupitre_id) where is_chef`, et une personne peut diriger
+    plusieurs pupitres. La création ou la modification d'un événement pupitre
+    impose une seule cible sélectionnée parmi les pupitres dirigés via
+    `profile_pupitres.is_chef`. Percussion est indépendant.
 
 40. **Types d'événement** — `event_type` est un ENUM limité à neuf valeurs.
     L'entrée antérieure du journal disant qu'il n'existe pas de liste fermée

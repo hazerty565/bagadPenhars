@@ -1,5 +1,23 @@
 # Journal
 
+## 2026-11-02
+
+### Direction multi-pupitres des chefs
+
+#### Fait
+
+- Passage de la responsabilité des chefs de « un pupitre unique » à plusieurs
+  pupitres possibles, sans changement du modèle où un événement pupitre n'a
+  qu'une seule cible.
+- Ajout de `profile_pupitres.is_chef` et garantie d'au plus un chef par
+  pupitre via un index unique partiel.
+- Suppression de `pupitres.parent_pupitre_id`, de l'héritage Percussion vers
+  Caisse claire et de la fonction `my_member_pupitre_ids()`.
+- Séparation de `my_pupitre_ids()` pour les affectations membres et de
+  `my_managed_pupitre_ids()` pour les responsabilités de chef.
+- Mise à jour des spécifications, de la base documentaire et des décisions
+  produit 33, 38 et 39.
+
 ## 2026-11-01
 
 ### Règles V1 du trombinoscope, des événements et des comptes

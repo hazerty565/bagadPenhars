@@ -47,7 +47,7 @@ président et le trésorier n'ont pas de droits métier liés à leur titre.
 | Rôle           | Exigences                                                                                                       |
 | -------------- | --------------------------------------------------------------------------------------------------------------- |
 | `member`       | Consulte l'agenda, les documents et le trombinoscope autorisé; répond aux événements et gère son propre profil. |
-| `chef_pupitre` | Droits d'un membre; gère les événements d'un seul pupitre, et les partitions/notifications de son périmètre.    |
+| `chef_pupitre` | Droits d'un membre; gère les événements et les partitions/notifications des pupitres qu'il dirige.                 |
 | `secretaire`   | Gère tous les événements, articles et albums; envoie des notifications aux pupitres autorisés.                  |
 | `admin`        | Gère globalement les utilisateurs, invitations, rôles, contenus et notifications; valide les comptes.           |
 
@@ -61,10 +61,10 @@ Le statut de compte est distinct du rôle applicatif :
 
 Principes obligatoires :
 
-- L'association compte trois pupitres : bombarde, caisse claire et cornemuse.
-  Percussion est conservé comme pupitre distinct, dont les membres appartiennent
-  aussi à Caisse claire par une relation d'héritage explicite. Un membre peut
-  avoir plusieurs affectations ; un chef ne gère qu'un seul pupitre.
+- L'association compte quatre pupitres : Bombarde, Caisse claire, Cornemuse et
+  Percussion. Percussion est indépendant de Caisse claire. Un membre peut avoir
+  plusieurs affectations. Un chef peut diriger plusieurs pupitres, avec au plus
+  un chef par pupitre. La responsabilité est portée par `is_chef` sur l'affectation.
 - Toute autorisation est vérifiée côté serveur et dérivée du rôle et des
   pupitres fiables en base, jamais d'une valeur de rôle fournie par le client
   ou de métadonnées de session modifiables.
@@ -73,8 +73,9 @@ Principes obligatoires :
 - Les invitations et validations de comptes sont réservées à l'admin. La
   secrétaire gère tous les événements, sans obtenir pour autant les droits
   globaux de l'admin sur les autres ressources.
-- Les chefs sont indépendants : chacun gère uniquement les événements de son
-  pupitre unique, quel qu'en soit l'auteur. Les événements ciblant plusieurs
+- Les chefs sont indépendants : chacun gère les événements des pupitres qu'il
+  dirige, quel qu'en soit l'auteur. La création impose le choix d'un seul
+  pupitre cible. Les événements ciblant plusieurs
   pupitres ou tous les pupitres relèvent exclusivement de la secrétaire ou de
   l'admin.
 - Le trombinoscope est une exigence V1 obligatoire, opérationnelle dès la
@@ -201,7 +202,7 @@ de données le permet.
   (la table `polls` est supprimée). Les réponses sont centralisées dans `event_responses`
   avec les statuts uniques `present` ou `absent`. L'admin et la secrétaire peuvent créer,
   modifier et supprimer tous les événements, y compris les sondages. Un chef peut
-  gérer les événements de son unique pupitre, y compris ceux créés par un autre
+  gérer les événements des pupitres qu'il dirige, y compris ceux créés par un autre
   utilisateur. Il ne peut pas gérer d'événement multi-pupitres ou global.
 - Chaque événement possède un `event_type` ENUM parmi `sortie`, `concert`,
   `fest-noz`, `festival`, `concours`, `gala`, `repetition`, `reunion` et
@@ -213,8 +214,8 @@ de données le permet.
 - Les membres actifs peuvent répondre aux événements publics et internes ;
   seuls les membres actifs des pupitres ciblés peuvent voir et répondre aux
   événements `pupitre`. Une répétition peut être publique, interne ou ciblée.
-- Un chef crée toujours un événement avec la visibilité `pupitre`, ciblé sur
-  son unique pupitre ; les membres des autres pupitres ne le voient pas et ne
+- Un chef crée toujours un événement avec la visibilité `pupitre`, en sélectionnant
+  un seul pupitre parmi ceux qu'il dirige ; les membres des autres pupitres ne le voient pas et ne
   peuvent pas y répondre. Il peut gérer un événement de son pupitre même s'il
   n'en est pas l'auteur. L'admin
   et la secrétaire peuvent créer les événements internes communs, notamment
@@ -471,7 +472,7 @@ adresse non concordante.
   et enregistrer les réponses dans `event_responses` avec le statut strict `present` ou `absent`
   (type `response_status`), sans table `polls` distincte ni étape de validation préalable.
   L'admin et la secrétaire peuvent les créer, modifier et supprimer dans les audiences publique
-  ou privée; un chef a ces droits uniquement pour les événements de son pupitre unique.
+  ou privée; un chef a ces droits uniquement pour les événements des pupitres qu'il dirige.
 - Utiliser l'ENUM `event_type` avec les neuf valeurs définies, et enregistrer
   indépendamment la visibilité `public`, `interne` ou `pupitre`.
 - Valider les dates, fuseaux horaires et heures de fin. La première version ne
@@ -560,7 +561,7 @@ mobiles, parcours hors-ligne sans fuite de données privées, CI verte.
 ### Chef de pupitre
 
 - En tant que chef, je ne gère que les événements, partitions et notifications
-  de mon unique pupitre.
+  des pupitres qu'il dirige.
 - Je peux modifier/supprimer un événement de mon pupitre même si je ne l'ai pas
   créé ; une requête directe visant un autre pupitre, un événement
   multi-pupitres ou global est refusée.

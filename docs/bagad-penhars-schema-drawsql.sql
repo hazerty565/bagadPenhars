@@ -51,7 +51,6 @@ CREATE TABLE pupitres (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL UNIQUE,
   slug text NOT NULL UNIQUE,
-  parent_pupitre_id uuid REFERENCES pupitres(id) ON DELETE RESTRICT,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -74,6 +73,7 @@ CREATE TABLE profiles (
 CREATE TABLE profile_pupitres (
   profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   pupitre_id uuid NOT NULL REFERENCES pupitres(id) ON DELETE RESTRICT,
+  is_chef boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (profile_id, pupitre_id)
 );
