@@ -156,6 +156,13 @@ ne peut pas être activé. Si le lien
 expire, l'administrateur peut renvoyer une invitation au compte Auth existant.
 Aucun compte `pending` ou `suspended` ne reçoit les actions d'un membre actif.
 
+### Création et édition d'articles
+
+Le formulaire de création et de modification d'article utilise Milkdown comme
+éditeur WYSIWYG Markdown. Le contenu est édité visuellement et conservé au
+format Markdown. Une prévisualisation de l'article est disponible avant sa
+publication.
+
 ---
 
 ## Composants clés
@@ -228,7 +235,7 @@ Aucun compte `pending` ou `suspended` ne reçoit les actions d'un membre actif.
 
 ## Prochaines étapes
 
-- [ ] Pages secondaires (Bagad, Formation, Agenda, Contact)
+- [ ] Pages secondaires (Bagad, Formation, Agenda,partenaire ,Contact)
 - [ ] Intégration CMS pour contenu
 - [ ] Blog/Actualités
 - [ ] Galerie média

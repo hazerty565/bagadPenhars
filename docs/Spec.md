@@ -108,6 +108,9 @@ plusieurs affectations de pupitre par membre.
 - Les articles contiennent un titre, un texte, une date et un auteur; les
   albums contiennent un titre, une description, une date, des légendes et
   l'ordre des photos. Une prévisualisation est requise avant publication.
+- Pour créer ou modifier un article, les rôles autorisés utilisent Milkdown
+  comme éditeur WYSIWYG Markdown. Le contenu de l'article est conservé au format
+  Markdown.
 - Proposer un formulaire de contact qui transmet le message par email.
 - Optimiser le référencement naturel des pages publiques : chaque page dispose
   d'un titre et d'une description adaptés à son contenu et à sa langue; les
