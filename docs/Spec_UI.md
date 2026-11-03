@@ -143,17 +143,17 @@ La récurrence n'est pas proposée en V1.
 
 ### Invitations et validation des comptes
 
-Seul un administrateur peut créer une invitation. Son formulaire recueille
-l'adresse e-mail, les informations nécessaires du membre et son ou ses pupitres.
-Le compte Auth est créé lors de l'invitation ; le profil apparaît avec
+La secrétaire ou l'administrateur peut créer une invitation. Son formulaire
+recueille l'adresse e-mail, les informations nécessaires du membre et son ou
+ses pupitres. Le compte Auth est créé lors de l'invitation ; le profil apparaît avec
 `account_status = pending` et un `app_role` indépendant.
 
 Le membre confirme son adresse et définit son mot de passe dans l'heure.
 Après confirmation, son `account_status` reste `pending` jusqu'à activation
-manuelle par un administrateur. L'activation ne change pas le rôle. La liste de
-validation permet de vérifier l'état de confirmation ; un compte non confirmé
-ne peut pas être activé. Si le lien
-expire, l'administrateur peut renvoyer une invitation au compte Auth existant.
+manuelle par la secrétaire ou l'administrateur. L'activation ne change pas le
+rôle. La liste de validation permet de vérifier l'état de confirmation ; un
+compte non confirmé ne peut pas être activé. Si le lien expire, la secrétaire
+ou l'administrateur peut renvoyer une invitation au compte Auth existant.
 Aucun compte `pending` ou `suspended` ne reçoit les actions d'un membre actif.
 
 ---

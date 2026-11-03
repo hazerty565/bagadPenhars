@@ -54,11 +54,11 @@ Règles :
 
 Les comptes ne se créent pas librement :
 
-1. Un administrateur envoie une **invitation par e-mail** (nom, prénom, pupitre(s)). Le compte Auth est créé immédiatement avec `account_status = pending` et le rôle applicatif initial `member`. Le pupitre n'est pas modifiable par l'invité.
+1. Un administrateur ou la secrétaire envoie une **invitation par e-mail** (nom, prénom, pupitre(s)). Le compte Auth est créé immédiatement avec `account_status = pending` et le rôle applicatif initial `member`. Le pupitre n'est pas modifiable par l'invité.
 2. Dans l'heure, l'invité ouvre le lien Supabase Auth, confirme son adresse e-mail et **définit son mot de passe**.
 3. La confirmation ne valide pas le compte : `account_status` reste `pending`, sans accès membre.
-4. Un administrateur vérifie que l'adresse e-mail est confirmée puis **active manuellement** le compte : `account_status` devient `active`, le rôle reste indépendant.
-5. Si le lien expire, l'administrateur peut renvoyer une invitation au compte Auth existant.
+4. Un administrateur ou la secrétaire vérifie que l'adresse e-mail est confirmée puis **active manuellement** le compte : `account_status` devient `active`, le rôle reste indépendant.
+5. Si le lien expire, l'administrateur ou la secrétaire peut renvoyer une invitation au compte Auth existant.
 
 ## 4. Pages et fonctionnalités
 

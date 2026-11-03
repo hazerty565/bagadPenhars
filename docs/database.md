@@ -386,8 +386,8 @@ security definer
 set search_path = ''
 as $$
 begin
-  if coalesce((select public.my_role_level()), -1) <> 4 then
-    raise exception 'Réservé aux administrateurs';
+  if coalesce((select public.my_role_level()), -1) < 3 then
+    raise exception 'Réservé aux secrétaires et administrateurs';
   end if;
 
   if not exists (
@@ -406,18 +406,18 @@ revoke execute on function public.approve_member(uuid) from anon, public;
 grant execute on function public.approve_member(uuid) to authenticated;
 ```
 
-> `approve_member` active uniquement un compte `pending`, après confirmation de l'adresse e-mail ; le rôle applicatif reste indépendant. `set_profile_role` modifie seulement le rôle. `set_account_status` permet à l'admin de suspendre ou réactiver un compte déjà activé. `update_member_status` (niveau musical, costume) suit le même modèle avec un garde `>= 3`.
+> `approve_member` active uniquement un compte `pending`, après confirmation de l'adresse e-mail ; le garde est `>= 3`, donc la secrétaire et l'admin peuvent l'utiliser. Le rôle applicatif reste indépendant. `set_profile_role` modifie seulement le rôle et reste réservé à l'admin. `set_account_status` permet à l'admin de suspendre ou réactiver un compte déjà activé. `update_member_status` (niveau musical, costume) suit le même modèle avec un garde `>= 3`.
 
 ## 7. Création de compte et trigger d'invitation
 
-La cible validée réserve la création des invitations à l'administrateur.
+La cible validée permet à la secrétaire et à l'administrateur de créer les invitations.
 L'inscription libre est désactivée. Pour le projet hébergé, les paramètres
 Auth (dont la confirmation d'adresse et l'expiration du lien) et le modèle
 d'e-mail d'invitation sont configurés dans le Dashboard Supabase ; la
 configuration du dépôt ne règle que l'environnement local. Le parcours attendu
 est le suivant :
 
-1. L'administrateur crée une invitation (adresse e-mail et informations du futur membre), associe un ou plusieurs pupitres dans `invitation_pupitres`, puis déclenche l'invitation côté serveur (`auth.admin.inviteUserByEmail`). Le compte est créé immédiatement dans Supabase Auth.
+1. La secrétaire ou l'administrateur crée une invitation (adresse e-mail et informations du futur membre), associe un ou plusieurs pupitres dans `invitation_pupitres`, puis déclenche l'invitation côté serveur (`auth.admin.inviteUserByEmail`). Le compte est créé immédiatement dans Supabase Auth.
 2. **Unicité garantie en base** : un email ne peut avoir qu'une seule invitation non consommée à la fois. Le lien Supabase Auth expire après une heure (`auth.email.otp_expiry = 3600` dans la configuration locale ; la configuration du projet hébergé doit correspondre). Avant un renvoi, le serveur invalide l'ancienne ligne et renvoie une invitation au compte Auth existant.
   ```sql
    create unique index idx_invitations_email_active
@@ -434,16 +434,16 @@ est le suivant :
   - Associe l'utilisateur à ses pupitres dans `public.profile_pupitres` en copiant ceux de `invitation_pupitres`.
   - Marque l'invitation comme utilisée (`used_at = now()`).
 4. Le membre ouvre le lien Supabase Auth dans l'heure, confirme son adresse e-mail et définit son mot de passe. La confirmation seule ne change pas le statut : le compte reste `pending`, sans accès métier.
-5. Un administrateur active manuellement le profil via `approve_member`; celle-ci vérifie dans `auth.users` que `email_confirmed_at` est renseigné avant le passage de `account_status` de `pending` à `active`. Le rôle demeure inchangé.
+5. La secrétaire ou l'administrateur active manuellement le profil via `approve_member`; celle-ci vérifie dans `auth.users` que `email_confirmed_at` est renseigné avant le passage de `account_status` de `pending` à `active`. Le rôle demeure inchangé.
 
 Le délai d'une heure est appliqué au lien Auth et au contrôle de validité de
 l'invitation en base. La policy RLS, la fonction d'approbation et le contrôle
-de `email_confirmed_at` de la migration 005 réservent les opérations à l'admin.
+de `email_confirmed_at` de la migration 005 autorisent la secrétaire et l'admin.
 Le titre au bureau est indépendant du rôle applicatif : il n'attribue aucun
 rôle automatiquement. Président et trésorier n'ont aucun droit métier lié à
 leur titre ; les droits de la secrétaire proviennent exclusivement du rôle
 applicatif `secretaire`.
-Le renvoi d'un lien expiré doit être effectué par l'admin sur le compte Auth
+Le renvoi d'un lien expiré doit être effectué par la secrétaire ou l'admin sur le compte Auth
 existant et testé avec Supabase Auth.
 
 ## 8. Storage
@@ -597,6 +597,12 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
   l'événement est dirigée par cette personne via `is_chef`, sans vérifier son auteur. Les RPC de chef ne
   prennent qu'un identifiant de pupitre ; les policies SQL réservent les
   opérations multi-pupitres et globales aux rôles secrétaire/admin.
+- Les RPC `create_pupitre_event` et `update_pupitre_event` exigent un titre,
+  des dates valides et une cible unique parmi les pupitres dirigés par le chef.
+- Des triggers différés vérifient en fin de transaction qu'un événement
+  `pupitre` possède exactement une cible, qu'un événement `public` ou `interne`
+  n'en possède aucune et qu'aucune modification SQL directe ne contourne ces
+  invariants.
 - `my_pupitre_ids()` représente les affectations du membre.
   `my_managed_pupitre_ids()` représente les pupitres où `is_chef = true`.
   Percussion n'hérite d'aucun accès Caisse claire. La gestion des chefs et les
@@ -638,7 +644,7 @@ un compte suspendu n'accède à aucune donnée ou action métier.
 - `notification_preferences` conserve les préférences OneSignal de chaque membre : activation globale, notifications d'événements et rappels de sondage. Les abonnements d'appareils restent gérés par OneSignal.
 - `account_deletion_requests` enregistre les demandes de suppression de compte. L'utilisateur peut demander la suppression de son compte et l'admin peut également la déclencher ; aucun compte n'est automatiquement rétrogradé à `pending`. À la suppression effective (côté serveur, via `auth.admin.deleteUser` avec `service_role`), le `on delete cascade` sur `event_responses.profile_id` efface les réponses du membre. La demande doit conserver son instantané minimal d'identité et son statut de traitement après suppression du profil ; elle ne doit donc pas dépendre d'une FK en cascade vers `profiles`.
 - `articles.summary` et `articles.image_url` conservent les capacités éditoriales présentes dans l'ancien schéma. Le corps de l'article cible reste dans `articles.content`.
-- Les fonctions `approve_member(uuid)` (admin uniquement, adresse e-mail confirmée, attribution du rôle `member` uniquement) et `set_profile_role(uuid, app_role)` (admin uniquement) sont les voies prévues pour modifier le rôle applicatif. Elles suivent le modèle standard Supabase du §6 (`security definer`, `search_path = ''`, garde de rôle interne, `grant execute` explicite).
+- Les fonctions `approve_member(uuid)` (secrétaire ou admin, adresse e-mail confirmée, activation uniquement) et `set_profile_role(uuid, app_role)` (admin uniquement) sont les voies prévues pour gérer l'activation et le rôle applicatif. Elles suivent le modèle standard Supabase du §6 (`security definer`, `search_path = ''`, garde de rôle interne, `grant execute` explicite).
 - Les buckets Storage sont `bagad-public` (public, images et documents publiés) et `bagad-private` (privé, photos de profil, partitions et médias non publics). Voir §8 pour les chemins et les règles RLS.
 - Les photos JPG/JPEG sources jusqu'à 20 Mo sont converties côté serveur en WebP avant stockage. Les avatars sont stockés sous `profiles/{profile_id}/avatar.webp` dans le bucket privé.
 - Le formulaire de contact reste géré par Netlify Forms : aucune table `contact` n'est créée dans le nouveau schéma.

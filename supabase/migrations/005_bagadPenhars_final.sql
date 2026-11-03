@@ -387,6 +387,16 @@ begin
       using errcode = '42501';
   end if;
 
+  if nullif(btrim(event_title), '') is null then
+    raise exception 'Le titre de l’événement est obligatoire'
+      using errcode = '22023';
+  end if;
+
+  if event_start_at is null or event_end_at is null or event_end_at < event_start_at then
+    raise exception 'Les dates de l’événement sont invalides'
+      using errcode = '22023';
+  end if;
+
   if target_pupitre_id is null
     or target_pupitre_id not in (select public.my_managed_pupitre_ids())
   then
@@ -432,6 +442,16 @@ begin
   if not coalesce((select public.can_manage_pupitre_event(target_event_id)), false) then
     raise exception 'Permission refusée : événement non gérable'
       using errcode = '42501';
+  end if;
+
+  if nullif(btrim(event_title), '') is null then
+    raise exception 'Le titre de l’événement est obligatoire'
+      using errcode = '22023';
+  end if;
+
+  if event_start_at is null or event_end_at is null or event_end_at < event_start_at then
+    raise exception 'Les dates de l’événement sont invalides'
+      using errcode = '22023';
   end if;
 
   if target_pupitre_id is null
@@ -505,6 +525,46 @@ begin
 end;
 $$;
 
+create or replace function public.validate_event_pupitre_targets()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if exists (
+    select 1
+    from public.events e
+    where e.visibility = 'pupitre'
+      and (
+        select count(*)
+        from public.event_pupitres ep
+        where ep.event_id = e.id
+      ) <> 1
+  ) then
+    raise exception
+      'Un événement pupitre doit avoir exactement un pupitre cible'
+      using errcode = '23514';
+  end if;
+
+  if exists (
+    select 1
+    from public.events e
+    join public.event_pupitres ep on ep.event_id = e.id
+    where e.visibility in ('public', 'interne')
+  ) then
+    raise exception
+      'Un événement public ou interne ne peut pas avoir de pupitre cible'
+      using errcode = '23514';
+  end if;
+
+  return null;
+end;
+$$;
+
+revoke all on function public.validate_event_pupitre_targets()
+  from public, anon, authenticated;
+
 create or replace function public.approve_member(target_profile_id uuid)
 returns void
 language plpgsql
@@ -512,8 +572,8 @@ security definer
 set search_path = ''
 as $$
 begin
-  if coalesce((select public.my_role_level()), -1) <> 4 then
-    raise exception 'Permission refusée : admin requis'
+  if coalesce((select public.my_role_level()), -1) < 3 then
+    raise exception 'Permission refusée : secrétaire ou admin requis'
       using errcode = '42501';
   end if;
 
@@ -722,6 +782,12 @@ create policy "profiles: mise à jour de soi"
   using (id = (select auth.uid()) and (select public.my_role_level()) >= 1)
   with check (id = (select auth.uid()) and (select public.my_role_level()) >= 1);
 
+create policy "profiles: gestion des membres secrétaire et admin"
+  on public.profiles for update
+  to authenticated
+  using ((select public.my_role_level()) >= 3)
+  with check ((select public.my_role_level()) >= 3);
+
 create policy "profiles: gestion admin"
   on public.profiles for all
   to authenticated
@@ -789,17 +855,17 @@ create policy "bureau_positions: gestion secretaire et admin"
 -- ----------------------------------------------------------------------------
 -- Table: invitations & invitation_pupitres
 -- ----------------------------------------------------------------------------
-create policy "invitations: gestion admin"
+create policy "invitations: gestion admin/secretaire"
   on public.invitations for all
   to authenticated
-  using ((select public.my_role_level()) = 4)
-  with check ((select public.my_role_level()) = 4);
+  using ((select public.my_role_level()) >= 3)
+  with check ((select public.my_role_level()) >= 3);
 
-create policy "invitation_pupitres: gestion admin"
+create policy "invitation_pupitres: gestion admin/secretaire"
   on public.invitation_pupitres for all
   to authenticated
-  using ((select public.my_role_level()) = 4)
-  with check ((select public.my_role_level()) = 4);
+  using ((select public.my_role_level()) >= 3)
+  with check ((select public.my_role_level()) >= 3);
 
 -- ----------------------------------------------------------------------------
 -- Table: events
@@ -1259,6 +1325,16 @@ create trigger notification_preferences_set_updated_at
 create trigger member_loans_set_updated_at
   before update on public.member_loans
   for each row execute function public.set_updated_at();
+
+create constraint trigger events_validate_pupitre_targets
+  after insert or update or delete on public.events
+  deferrable initially deferred
+  for each row execute function public.validate_event_pupitre_targets();
+
+create constraint trigger event_pupitres_validate_targets
+  after insert or update or delete on public.event_pupitres
+  deferrable initially deferred
+  for each row execute function public.validate_event_pupitre_targets();
 
 -- Keep deletion requests after the profile is removed.
 create index account_deletion_requests_status_requested_at_idx

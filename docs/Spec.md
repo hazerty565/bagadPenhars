@@ -70,7 +70,7 @@ Principes obligatoires :
   ou de métadonnées de session modifiables.
 - Une action reçoit l'identité de l'acteur depuis la session vérifiée; elle ne
   fait pas confiance à un identifiant d'utilisateur soumis dans le formulaire.
-- Les invitations et validations de comptes sont réservées à l'admin. La
+- Les invitations et validations de comptes sont réservées à l'admin et à la secrétaire. La
   secrétaire gère tous les événements, sans obtenir pour autant les droits
   globaux de l'admin sur les autres ressources.
 - Les chefs sont indépendants : chacun gère les événements des pupitres qu'il
@@ -141,7 +141,7 @@ plusieurs affectations de pupitre par membre.
 
 ### 4.2 Invitations et validation des comptes
 
-1. Seul un administrateur envoie une invitation, renseigne l'adresse e-mail,
+1. La secrétaire ou l'administrateur envoie une invitation, renseigne l'adresse e-mail,
    l'identité nécessaire et le ou les pupitres. Le compte Auth est créé
    immédiatement et le profil applicatif a `account_status = 'pending'` et le
    rôle indépendant `member`.
@@ -149,11 +149,11 @@ plusieurs affectations de pupitre par membre.
    adresse e-mail et définit son mot de passe. Le lien ne donne pas accès au
    dashboard.
 3. La confirmation e-mail ne valide pas le compte : il reste `pending` jusqu'à
-   l'activation manuelle par un administrateur.
-4. L'administrateur ne peut activer le compte que si l'adresse e-mail est
+   l'activation manuelle par la secrétaire ou l'administrateur.
+4. La secrétaire ou l'administrateur ne peut activer le compte que si l'adresse e-mail est
    confirmée; l'activation change le statut en `active`, sans attribuer le rôle.
 5. Le pupitre attribué n'est pas modifiable par l'invité.
-6. Le lien Auth expire après une heure. Si le lien expire, l'administrateur
+6. Le lien Auth expire après une heure. Si le lien expire, la secrétaire ou l'administrateur
    peut renvoyer une invitation au compte Auth existant sans créer un second
    compte. L'expiration doit être configurée côté Supabase Auth, pas seulement
    enregistrée dans la table applicative.
@@ -178,7 +178,7 @@ de données le permet.
   de son rôle et de ses pupitres. L'admin et la secrétaire peuvent
   modifier les pupitres; l'attribution des rôles applicatifs supérieurs reste
   réservée à l'admin.
-- Seul l'admin peut inviter et approuver les comptes; il ne peut approuver un
+- La secrétaire et l'admin peuvent inviter et approuver les comptes; ils ne peuvent approuver un
   compte dont l'adresse e-mail n'est pas confirmée.
 - Les champs de profil modifiables sont ceux du profil du membre, hors rôle et
   pupitres. Le changement de l'adresse email du compte doit suivre le flux
@@ -439,13 +439,13 @@ refus et accès autorisés.
 ### Étape C — Invitations, profils et membres
 
 - Mettre en place les invitations email à usage unique, expirantes après une
-  heure et dont le jeton n'est stocké qu'empreinté. Seul l'admin peut inviter;
+  heure et dont le jeton n'est stocké qu'empreinté. La secrétaire et l'admin peuvent inviter;
   le compte Auth et le profil avec `account_status = pending` et `app_role =
 member` sont créés immédiatement.
 - L'invité confirme son adresse et définit son mot de passe dans l'heure.
   La confirmation ne valide pas le compte et l'invité ne choisit ni son rôle ni
   ses pupitres.
-- Seul l'admin peut activer un compte; l'activation vérifie que l'adresse
+- La secrétaire et l'admin peuvent activer un compte; l'activation vérifie que l'adresse
   e-mail est confirmée et change uniquement `account_status` en `active`.
 - Permettre à un membre de modifier uniquement les champs de son propre profil
   hors rôle et pupitres; le changement d'adresse email suit le flux Supabase

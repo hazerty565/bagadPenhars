@@ -1,5 +1,25 @@
 # Journal
 
+## 2026-11-03
+
+### Exclusion des maquettes de spécification
+
+- Le dossier `src/autre/` reste conservé dans le dépôt comme spécification de
+  design, mais il est exclu des deux projets Vitest afin qu'aucune erreur ou
+  aucun test de cette maquette indépendante n'affecte la suite du site.
+
+### Invitations et intégrité des événements
+
+- Alignement de la migration 005 sur la décision validée : la secrétaire peut
+  inviter, activer et gérer les données membres nécessaires à ses fonctions,
+  tandis que l'attribution des rôles applicatifs reste réservée à l'admin.
+- Les policies des invitations passent du niveau `4` à `>= 3`; les fonctions
+  d'activation acceptent également la secrétaire.
+- Renforcement des RPC de création/modification des événements de chef avec
+  validation du titre et des dates.
+- Ajout de triggers différés garantissant qu'un événement pupitre possède une
+  cible unique et qu'un événement public ou interne ne possède aucune cible.
+
 ## 2026-11-02
 
 ### Direction multi-pupitres des chefs
