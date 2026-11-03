@@ -415,3 +415,28 @@ experts en développement.
     personnes concernées sont averties par notification OneSignal. Le fichier
     a été réécrit pour représenter l'arborescence actuelle et documenter le
     prototype visuel comme référence pour la page d'accueil.
+
+## Questions à valider — 03/11/2026
+
+Les questions ci-dessous restent ouvertes. Elles précisent les sujets déjà
+signalés aux questions 10 et 25 ; aucune règle de conservation ou de suppression
+ne doit être déduite avant validation.
+
+47. **Conservation des réponses de présence** — combien de temps conserver les
+    réponses après la date de l'événement? Faut-il distinguer les réponses
+    liées à un événement à venir, passé ou annulé, et qui peut autoriser leur
+    suppression anticipée?
+    Decision: losque la date de l'evenement est depassé, on clos l'evenement, donc on peux supprimer les données de l'evenement.
+
+48. **Conservation des journaux d'audit** — quelle durée de conservation
+    appliquer aux journaux, et quelles actions doivent y être tracées? Quels
+    rôles peuvent les consulter, et faut-il prévoir une procédure de suppression
+    ou d'anonymisation à l'échéance?
+    Decision: supprimer le journal d'audit pour le moment
+
+49. **Demande de suppression d'un compte** — à qui le membre adresse-t-il sa
+    demande, qui la valide et dans quel délai doit-elle être traitée? Quelles
+    données doivent être supprimées ou anonymisées, et quelles données doivent
+    être conservées au titre des obligations légales? Comment traiter les
+    réponses de présence et les journaux liés au compte?
+    decision: seul l'admin et secretaire peuvent supprimer un compte ou le susprendre. les réponses de presence et les journaux  liés au comptes peuvent etre supprimer
