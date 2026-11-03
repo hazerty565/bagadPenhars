@@ -1,5 +1,43 @@
 # Journal
 
+## 2026-11-03
+
+### Exclusion des maquettes de spécification
+
+- Le dossier `src/autre/` reste conservé dans le dépôt comme spécification de
+  design, mais il est exclu des deux projets Vitest afin qu'aucune erreur ou
+  aucun test de cette maquette indépendante n'affecte la suite du site.
+
+### Invitations et intégrité des événements
+
+- Alignement de la migration 005 sur la décision validée : la secrétaire peut
+  inviter, activer et gérer les données membres nécessaires à ses fonctions,
+  tandis que l'attribution des rôles applicatifs reste réservée à l'admin.
+- Les policies des invitations passent du niveau `4` à `>= 3`; les fonctions
+  d'activation acceptent également la secrétaire.
+- Renforcement des RPC de création/modification des événements de chef avec
+  validation du titre et des dates.
+- Ajout de triggers différés garantissant qu'un événement pupitre possède une
+  cible unique et qu'un événement public ou interne ne possède aucune cible.
+
+## 2026-11-02
+
+### Direction multi-pupitres des chefs
+
+#### Fait
+
+- Passage de la responsabilité des chefs de « un pupitre unique » à plusieurs
+  pupitres possibles, sans changement du modèle où un événement pupitre n'a
+  qu'une seule cible.
+- Ajout de `profile_pupitres.is_chef` et garantie d'au plus un chef par
+  pupitre via un index unique partiel.
+- Suppression de `pupitres.parent_pupitre_id`, de l'héritage Percussion vers
+  Caisse claire et de la fonction `my_member_pupitre_ids()`.
+- Séparation de `my_pupitre_ids()` pour les affectations membres et de
+  `my_managed_pupitre_ids()` pour les responsabilités de chef.
+- Mise à jour des spécifications, de la base documentaire et des décisions
+  produit 33, 38 et 39.
+
 ## 2026-11-01
 
 ### Règles V1 du trombinoscope, des événements et des comptes

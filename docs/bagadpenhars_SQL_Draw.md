@@ -10,7 +10,6 @@ Columns are NOT NULL unless marked nullable.
 id: uuid PK default:UUID()
 name: text unique
 slug: text unique
-parent_pupitre_id: uuid FK nullable
 created_at: timestamptz default:CURRENT_TIMESTAMP
 
 ## profiles
@@ -30,6 +29,7 @@ costume_complete: boolean
 ## profile_pupitres
 profile_id: uuid PK FK
 pupitre_id: uuid PK FK
+is_chef: boolean default:false
 created_at: timestamptz default:CURRENT_TIMESTAMP
 
 ## bureau_positions
@@ -156,7 +156,6 @@ created_at: timestamptz default:CURRENT_TIMESTAMP
 updated_at: timestamptz default:CURRENT_TIMESTAMP
 
 ## Relationships
-pupitres.parent_pupitre_id → pupitres.id (many-to-one, nullable)
 profile_pupitres.profile_id → profiles.id (many-to-one)
 profile_pupitres.pupitre_id → pupitres.id (many-to-one)
 bureau_positions.profile_id → profiles.id (many-to-one)

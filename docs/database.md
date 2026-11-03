@@ -95,9 +95,10 @@ language sql stable security definer set search_path = '' as $$
 $$;
 ```
 
-`my_pupitre_ids()` renvoie les affectations directes, utilisées pour contrôler
-la gestion du chef. `my_member_pupitre_ids()` ajoute le pupitre parent hérité :
-un membre affecté à Percussion est également membre de Caisse claire.
+`my_pupitre_ids()` renvoie les affectations directes du membre. Elles contrôlent
+l'accès aux événements ciblés et aux réponses. `my_managed_pupitre_ids()` renvoie
+uniquement les affectations où `profile_pupitres.is_chef = true` et contrôle la
+gestion des chefs. Percussion est indépendant de Caisse claire.
 
 Un utilisateur sans profil obtient `null` : toute comparaison `>= n` est fausse, donc refus.
 
@@ -111,9 +112,9 @@ des chefs acceptent un seul `target_pupitre_id`; l'écriture multi-pupitres ou
 globale est réservée à la secrétaire et à l'admin. Pour un événement `pupitre`,
 la lecture et la réponse sont limitées aux membres actifs des pupitres ciblés.
 Les événements `interne` restent visibles et accessibles en réponse par tous
-les membres actifs, quel que soit leur ciblage. L'appartenance héritée
-Percussion → Caisse claire donne accès aux événements et réponses Caisse claire,
-sans conférer au chef Percussion les droits de gestion du chef Caisse claire.
+les membres actifs, quel que soit leur ciblage. Percussion est indépendant de
+Caisse claire : aucune affectation, aucune lecture ni aucun droit de gestion
+n'est hérité entre ces deux pupitres.
 
 ## 4. Tables
 
@@ -121,8 +122,8 @@ sans conférer au chef Percussion les droits de gestion du chef Caisse claire.
 | Table                       | Rôle                                                                                                                                                |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `profiles`                  | Un profil par utilisateur (`id` = `auth.users.id`), identité, `account_status`, rôle applicatif et données privées |
-| `pupitres`                  | bombarde, cornemuse, caisse claire, percussion ; Percussion référence Caisse claire comme parent |
-| `profile_pupitres`          | Liaison membre ↔ pupitres (plusieurs possibles)                                                                                                     |
+| `pupitres` | bombarde, cornemuse, caisse claire, percussion |
+| `profile_pupitres`          | Liaison membre ↔ pupitres, avec `is_chef` pour distinguer l'affectation musicale de la responsabilité de direction |
 | `member_directory`          | Vue V1 aux champs autorisés, lisible par les membres actifs via RLS |
 | `bureau_positions`          | Titres du bureau historisés (honorifiques, aucun droit)                                                                                             |
 | `member_loans`              | Suivi simplifié des prêts de matériel et costumes par adhérent                                                                                      |
@@ -179,7 +180,7 @@ par les clients : l'approbation et le changement de rôle passent par les RPC
 autorisées. La suppression d'un profil passe par le traitement serveur de
 Supabase Auth.
 
-**Règles métier des événements :** seuls les secrétaires/admins peuvent gérer tous les événements, y compris les événements multi-pupitres ou globaux. Un chef peut créer, modifier et supprimer les événements de son unique pupitre, indépendamment de `author_id`; un événement multi-pupitres n'est jamais gérable par un chef. Les membres ordinaires ne créent, ne modifient et ne suppriment aucun événement. Les visiteurs anonymes ne voient que les événements `public`.
+**Règles métier des événements :** seuls les secrétaires/admins peuvent gérer tous les événements, y compris les événements multi-pupitres ou globaux. Un chef peut créer, modifier et supprimer les événements des pupitres qu'il dirige, indépendamment de `author_id`; chaque événement pupitre conservé par la création du chef n'a qu'une seule cible. Les membres ordinaires ne créent, ne modifient et ne suppriment aucun événement. Les visiteurs anonymes ne voient que les événements `public`.
 
 ## 6. Policies : modèles à suivre
 
@@ -272,7 +273,7 @@ using (
     and exists (
       select 1 from public.event_pupitres ep
       where ep.event_id = event_responses.event_id
-      and ep.pupitre_id in (select public.my_member_pupitre_ids())
+      and ep.pupitre_id in (select public.my_pupitre_ids())
     )
   )
   or (
@@ -343,7 +344,7 @@ de pupitre et des titres au bureau ne laissent lire que les lignes nécessaires
 aux comptes actifs. Les privilèges `SELECT` sur `profiles` sont limités à
 `id`, prénom, nom et niveau musical ; téléphone et autres données privées ne
 sont pas accessibles par une requête directe. La vue ne renvoie que le prénom,
-le nom, le chemin de l'avatar, les pupitres effectifs, le niveau musical et les
+le nom, le chemin de l'avatar, les pupitres directs, le niveau musical et les
 fonctions actuelles au bureau.
 
 ### Fonctions de modification de rôle : modèle standard Supabase
@@ -385,8 +386,8 @@ security definer
 set search_path = ''
 as $$
 begin
-  if coalesce((select public.my_role_level()), -1) <> 4 then
-    raise exception 'Réservé aux administrateurs';
+  if coalesce((select public.my_role_level()), -1) < 3 then
+    raise exception 'Réservé aux secrétaires et administrateurs';
   end if;
 
   if not exists (
@@ -405,18 +406,18 @@ revoke execute on function public.approve_member(uuid) from anon, public;
 grant execute on function public.approve_member(uuid) to authenticated;
 ```
 
-> `approve_member` active uniquement un compte `pending`, après confirmation de l'adresse e-mail ; le rôle applicatif reste indépendant. `set_profile_role` modifie seulement le rôle. `set_account_status` permet à l'admin de suspendre ou réactiver un compte déjà activé. `update_member_status` (niveau musical, costume) suit le même modèle avec un garde `>= 3`.
+> `approve_member` active uniquement un compte `pending`, après confirmation de l'adresse e-mail ; le garde est `>= 3`, donc la secrétaire et l'admin peuvent l'utiliser. Le rôle applicatif reste indépendant. `set_profile_role` modifie seulement le rôle et reste réservé à l'admin. `set_account_status` permet à l'admin de suspendre ou réactiver un compte déjà activé. `update_member_status` (niveau musical, costume) suit le même modèle avec un garde `>= 3`.
 
 ## 7. Création de compte et trigger d'invitation
 
-La cible validée réserve la création des invitations à l'administrateur.
+La cible validée permet à la secrétaire et à l'administrateur de créer les invitations.
 L'inscription libre est désactivée. Pour le projet hébergé, les paramètres
 Auth (dont la confirmation d'adresse et l'expiration du lien) et le modèle
 d'e-mail d'invitation sont configurés dans le Dashboard Supabase ; la
 configuration du dépôt ne règle que l'environnement local. Le parcours attendu
 est le suivant :
 
-1. L'administrateur crée une invitation (adresse e-mail et informations du futur membre), associe un ou plusieurs pupitres dans `invitation_pupitres`, puis déclenche l'invitation côté serveur (`auth.admin.inviteUserByEmail`). Le compte est créé immédiatement dans Supabase Auth.
+1. La secrétaire ou l'administrateur crée une invitation (adresse e-mail et informations du futur membre), associe un ou plusieurs pupitres dans `invitation_pupitres`, puis déclenche l'invitation côté serveur (`auth.admin.inviteUserByEmail`). Le compte est créé immédiatement dans Supabase Auth.
 2. **Unicité garantie en base** : un email ne peut avoir qu'une seule invitation non consommée à la fois. Le lien Supabase Auth expire après une heure (`auth.email.otp_expiry = 3600` dans la configuration locale ; la configuration du projet hébergé doit correspondre). Avant un renvoi, le serveur invalide l'ancienne ligne et renvoie une invitation au compte Auth existant.
   ```sql
    create unique index idx_invitations_email_active
@@ -433,16 +434,16 @@ est le suivant :
   - Associe l'utilisateur à ses pupitres dans `public.profile_pupitres` en copiant ceux de `invitation_pupitres`.
   - Marque l'invitation comme utilisée (`used_at = now()`).
 4. Le membre ouvre le lien Supabase Auth dans l'heure, confirme son adresse e-mail et définit son mot de passe. La confirmation seule ne change pas le statut : le compte reste `pending`, sans accès métier.
-5. Un administrateur active manuellement le profil via `approve_member`; celle-ci vérifie dans `auth.users` que `email_confirmed_at` est renseigné avant le passage de `account_status` de `pending` à `active`. Le rôle demeure inchangé.
+5. La secrétaire ou l'administrateur active manuellement le profil via `approve_member`; celle-ci vérifie dans `auth.users` que `email_confirmed_at` est renseigné avant le passage de `account_status` de `pending` à `active`. Le rôle demeure inchangé.
 
 Le délai d'une heure est appliqué au lien Auth et au contrôle de validité de
 l'invitation en base. La policy RLS, la fonction d'approbation et le contrôle
-de `email_confirmed_at` de la migration 005 réservent les opérations à l'admin.
+de `email_confirmed_at` de la migration 005 autorisent la secrétaire et l'admin.
 Le titre au bureau est indépendant du rôle applicatif : il n'attribue aucun
 rôle automatiquement. Président et trésorier n'ont aucun droit métier lié à
 leur titre ; les droits de la secrétaire proviennent exclusivement du rôle
 applicatif `secretaire`.
-Le renvoi d'un lien expiré doit être effectué par l'admin sur le compte Auth
+Le renvoi d'un lien expiré doit être effectué par la secrétaire ou l'admin sur le compte Auth
 existant et testé avec Supabase Auth.
 
 ## 8. Storage
@@ -546,7 +547,7 @@ delete from public.event_responses where profile_id = '<uuid-membre>';  -- doit 
 -- Un compte pending ou suspended ne peut accéder aux données métier privées.
 -- Secrétaire/admin peuvent gérer les objets selon les chemins Storage autorisés.
 -- Tenter une réponse à un événement de pupitre étranger doit échouer.
--- Le chef modifie un événement de son pupitre créé par un tiers, sans author_id check.
+--- Le chef modifie un événement d'un pupitre qu'il dirige, créé par un tiers, sans author_id check.
 -- Un chef ne crée/gère pas de cible multi-pupitres ou un autre pupitre.
 -- Un chef Percussion peut lire les réponses ciblées Caisse claire, mais ne
 -- reçoit pas les droits de gestion des événements Caisse claire.
@@ -561,21 +562,21 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
 
 ## 12. Décisions
 
-- **Trombinoscope V1 obligatoire** : il doit être opérationnel dès la première mise en production. La vue `member_directory` (security invoker) expose seulement prénom, nom, chemin de photo, pupitres effectifs, niveau musical et fonctions actuelles au bureau. Elle est lisible uniquement par les comptes actifs via RLS sur les profils, les liaisons de pupitres et les fonctions du bureau. Les grants sur `profiles` limitent également les colonnes accessibles ; e-mail, téléphone et adresse personnelle ne sont jamais exposés par le trombinoscope ni par une requête directe.
+- **Trombinoscope V1 obligatoire** : il doit être opérationnel dès la première mise en production. La vue `member_directory` (security invoker) expose seulement prénom, nom, chemin de photo, pupitres directs, niveau musical et fonctions actuelles au bureau. Elle est lisible uniquement par les comptes actifs via RLS sur les profils, les liaisons de pupitres et les fonctions du bureau. Les grants sur `profiles` limitent également les colonnes accessibles ; e-mail, téléphone et adresse personnelle ne sont jamais exposés par le trombinoscope ni par une requête directe.
 - **Photos de profil** : elles sont dans `bagad-private/profiles/{profile_id}/avatar.webp`. Tous les membres actifs peuvent les lire. Seul le propriétaire peut créer, modifier ou supprimer sa photo, administrateurs inclus. Les chemins Storage imposent le format exact du chemin ; accès authentifié ou URL signée courte uniquement.
 - **Titres du bureau non publics** : aucune policy de lecture pour `anon`. Un membre actif peut voir la fonction de présentation exposée dans le trombinoscope ; cela n'accorde aucun droit applicatif supplémentaire.
 - **Événements et visibilité (`public`, `interne`, `pupitre`)** :
   - `public` : événement visible par les visiteurs non connectés et les membres ; les réponses restent privées et sont visibles par leur auteur, les chefs ayant accès à l'événement et la secrétaire/admin.
   - `interne` : événement visible par tous les comptes actifs; les réponses sont visibles par leur auteur, les chefs ayant accès à l'événement et la secrétaire/admin.
 - Les événements ciblés (`visibility = 'pupitre'`) ne sont visibles et accessibles pour réponse que par les membres actifs des pupitres concernés et la secrétaire/l'admin. Les événements `interne` sont visibles et ouverts aux réponses de tous les membres actifs, ciblage ou non. Les événements `public` sont visibles par tous, y compris les visiteurs, et les membres actifs peuvent y répondre.
-- Un chef crée toujours un événement ciblé sur son unique pupitre, même s'il n'en est pas l'auteur lorsqu'il le modifie. Il ne gère aucun événement multi-pupitres ni global. La secrétaire et l'admin gèrent tous les événements et peuvent en créer des publics, internes ou ciblés.
+- Un chef choisit un événement ciblé parmi les pupitres qu'il dirige, même s'il n'en est pas l'auteur lorsqu'il le modifie. Il ne gère aucun événement multi-pupitres ni global. La secrétaire et l'admin gèrent tous les événements et peuvent en créer des publics, internes ou ciblés.
 - **Type d'événement distinct de sa visibilité** : `events.event_type` est un ENUM indépendant de `visibility`, contenant `sortie`, `concert`, `fest-noz`, `festival`, `concours`, `gala`, `repetition`, `reunion` et `repas`. Une répétition peut être publique ou interne.
-- **Pupitres et appartenance héritée** : Bombarde, Caisse claire, Cornemuse et Percussion sont des pupitres distincts. Percussion référence explicitement Caisse claire comme parent ; les membres Percussion sont membres effectifs des deux pupitres sans duplication de `profile_pupitres`. La lecture des événements eux-mêmes ne dépend pas du pupitre ; l'accès aux réponses des événements ciblés tient compte de l'appartenance héritée, tandis que les droits de gestion des chefs utilisent les affectations directes.
+- **Pupitres et responsabilités distinctes** : Bombarde, Caisse claire, Cornemuse et Percussion sont des pupitres distincts et indépendants. Un membre peut avoir plusieurs affectations. `profile_pupitres.is_chef` indique les pupitres qu'il dirige, avec un seul chef garanti par pupitre en base.
 - **Événements récurrents** : aucune gestion des récurrences en V1. La table `event_series`, la colonne `events.series_id` et tous les objets exclusivement liés aux récurrences sont supprimés de la migration 005 et du schéma cible.
 - **État du compte et rôle** : `account_status` (`pending`, `active`, `suspended`) et `app_role` (`member`, `chef_pupitre`, `secretaire`, `admin`) sont indépendants. Une invitation crée un rôle initial `member` en statut `pending`. Après confirmation de l'e-mail, l'admin active le compte via `approve_member`; cette fonction change uniquement le statut. Un statut `suspended` bloque les droits métier sans supprimer les données. Le changement de rôle et la suspension/réactivation passent par des fonctions admin dédiées.
 - **Expiration Auth** : le lien d'invitation a une validité d'une heure (`auth.email.otp_expiry = 3600` dans la configuration locale et dans le projet Supabase hébergé). Le renvoi pour un compte Auth déjà créé doit être testé.
 - **Réponses de présence** : seules les valeurs `present` et `absent` sont admises. Le membre peut modifier sa propre réponse à tout moment avant l'événement. Il ne peut pas supprimer sa réponse individuellement, ni répondre à un événement auquel il n'a pas accès. Un visiteur public ne voit jamais les réponses.
-- **Affectations des chefs** : chaque pupitre a un chef. Les RPC des chefs n'acceptent qu'un pupitre cible et vérifient l'affectation directe ; la fonction de gestion ne compare jamais `author_id`. Les événements multi-pupitres et globaux sont gérés uniquement par la secrétaire ou l'admin.
+- **Affectations des chefs** : chaque pupitre peut avoir au plus un chef et une personne peut en diriger plusieurs. Les RPC des chefs n'acceptent qu'un pupitre cible parmi leurs responsabilités `is_chef` ; la fonction de gestion ne compare jamais `author_id`. Les événements multi-pupitres et globaux sont gérés uniquement par la secrétaire ou l'admin.
 - **Documents partagés entre pupitres** : tous les membres lisent tous les documents ; seul le chef de pupitre (son pupitre), la secrétaire et l'admin peuvent écrire.
 - **Réponses jamais supprimées individuellement** : un membre modifie sa réponse au fil du temps (présent → absent le jour même par exemple) ; la suppression n'intervient qu'à la suppression du compte (RGPD).
 - **`activity_log` (ex-`audit_log`)** : trace applicative interne, sans valeur probante ; elle n'est **pas** une piste d'audit au sens légal et ne doit pas être présentée comme telle.
@@ -592,14 +593,20 @@ Un test par rôle et par table sensible. Une policy non testée est considérée
 - Les photos de profil restent privées ; les policies valident le statut actif,
   l'identifiant du propriétaire et le chemin exact. Même l'admin ne peut pas
   modifier la photo d'un autre membre.
-- `can_manage_pupitre_event()` vérifie le rôle actif de chef et l'unique
-  pupitre attribué à l'événement, sans vérifier son auteur. Les RPC de chef ne
+- `can_manage_pupitre_event()` vérifie le rôle actif de chef et que la cible de
+  l'événement est dirigée par cette personne via `is_chef`, sans vérifier son auteur. Les RPC de chef ne
   prennent qu'un identifiant de pupitre ; les policies SQL réservent les
   opérations multi-pupitres et globales aux rôles secrétaire/admin.
-- `my_member_pupitre_ids()` propage l'appartenance Percussion vers Caisse
-  claire pour l'affichage du trombinoscope et l'accès aux réponses des événements
-  ciblés ; la lecture des événements ne dépend pas du pupitre. La gestion du
-  chef et les dépôts de partitions utilisent les affectations directes.
+- Les RPC `create_pupitre_event` et `update_pupitre_event` exigent un titre,
+  des dates valides et une cible unique parmi les pupitres dirigés par le chef.
+- Des triggers différés vérifient en fin de transaction qu'un événement
+  `pupitre` possède exactement une cible, qu'un événement `public` ou `interne`
+  n'en possède aucune et qu'aucune modification SQL directe ne contourne ces
+  invariants.
+- `my_pupitre_ids()` représente les affectations du membre.
+  `my_managed_pupitre_ids()` représente les pupitres où `is_chef = true`.
+  Percussion n'hérite d'aucun accès Caisse claire. La gestion des chefs et les
+  dépôts de partitions utilisent les responsabilités explicites.
 - `my_role_level()` retourne 0 pour les comptes `pending` et `suspended`, ce
   qui bloque les opérations protégées par les policies et fonctions métier.
 
@@ -637,7 +644,7 @@ un compte suspendu n'accède à aucune donnée ou action métier.
 - `notification_preferences` conserve les préférences OneSignal de chaque membre : activation globale, notifications d'événements et rappels de sondage. Les abonnements d'appareils restent gérés par OneSignal.
 - `account_deletion_requests` enregistre les demandes de suppression de compte. L'utilisateur peut demander la suppression de son compte et l'admin peut également la déclencher ; aucun compte n'est automatiquement rétrogradé à `pending`. À la suppression effective (côté serveur, via `auth.admin.deleteUser` avec `service_role`), le `on delete cascade` sur `event_responses.profile_id` efface les réponses du membre. La demande doit conserver son instantané minimal d'identité et son statut de traitement après suppression du profil ; elle ne doit donc pas dépendre d'une FK en cascade vers `profiles`.
 - `articles.summary` et `articles.image_url` conservent les capacités éditoriales présentes dans l'ancien schéma. Le corps de l'article cible reste dans `articles.content`.
-- Les fonctions `approve_member(uuid)` (admin uniquement, adresse e-mail confirmée, attribution du rôle `member` uniquement) et `set_profile_role(uuid, app_role)` (admin uniquement) sont les voies prévues pour modifier le rôle applicatif. Elles suivent le modèle standard Supabase du §6 (`security definer`, `search_path = ''`, garde de rôle interne, `grant execute` explicite).
+- Les fonctions `approve_member(uuid)` (secrétaire ou admin, adresse e-mail confirmée, activation uniquement) et `set_profile_role(uuid, app_role)` (admin uniquement) sont les voies prévues pour gérer l'activation et le rôle applicatif. Elles suivent le modèle standard Supabase du §6 (`security definer`, `search_path = ''`, garde de rôle interne, `grant execute` explicite).
 - Les buckets Storage sont `bagad-public` (public, images et documents publiés) et `bagad-private` (privé, photos de profil, partitions et médias non publics). Voir §8 pour les chemins et les règles RLS.
 - Les photos JPG/JPEG sources jusqu'à 20 Mo sont converties côté serveur en WebP avant stockage. Les avatars sont stockés sous `profiles/{profile_id}/avatar.webp` dans le bucket privé.
 - Le formulaire de contact reste géré par Netlify Forms : aucune table `contact` n'est créée dans le nouveau schéma.

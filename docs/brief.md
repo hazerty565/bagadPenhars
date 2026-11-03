@@ -23,7 +23,7 @@ Ordre de grandeur : environ 200 utilisateurs. Un site simple, fiable, facile à 
 |---|---|
 | **admin** | Tout : utilisateurs, rôles, contenus, notifications ; inviter et valider les comptes |
 | **secrétaire** | Gérer tous les événements, articles et albums photo ; envoyer des notifications OneSignal à plusieurs pupitres |
-| **chef de pupitre** | Créer, modifier et supprimer les événements de son pupitre uniquement ; consulter l'agenda selon la visibilité ; envoyer des partitions PDF ; notifier son pupitre |
+| **chef de pupitre** | Créer, modifier et supprimer les événements des pupitres qu'il dirige ; sélectionner une seule cible lors de la création ou de la modification ; envoyer des partitions PDF ; notifier ses pupitres |
 | **membre** | Consulter l'agenda et les documents, répondre aux événements, consulter le trombinoscope et gérer son profil |
 
 Le statut du compte est indépendant du rôle applicatif :
@@ -37,9 +37,9 @@ Le statut du compte est indépendant du rôle applicatif :
 Règles :
 
 - Le **rôle** (droits sur le site) est indépendant du **titre du bureau** (président, trésorier, secrétaire…). Aucun titre n'attribue automatiquement un rôle applicatif. Les titres sont honorifiques et cumulables ; le président et le trésorier n'ont aucun droit métier au titre de leur fonction.
-- Les pupitres sont Bombarde, Caisse claire, Cornemuse et Percussion. Un membre Percussion appartient aussi à Caisse claire sans dupliquer l'affectation. Chaque pupitre a son propre chef, qui ne gère que ce pupitre.
+- Les pupitres sont Bombarde, Caisse claire, Cornemuse et Percussion. Chaque pupitre a au plus un chef. Une personne peut diriger plusieurs pupitres ; elle sélectionne le pupitre concerné lors de la création d'un événement, qui conserve une seule cible. Percussion est indépendant de Caisse claire, sans affectation héritée.
 - Les rôles se lisent toujours dans la base (table des profils), jamais dans les métadonnées de session.
-- Les chefs sont indépendants et ne gèrent que les événements associés à leur pupitre ; leurs droits ne dépendent pas de l'auteur de l'événement. Un événement ciblant plusieurs pupitres ou tous les pupitres est exclusivement géré par la secrétaire ou l'admin.
+- Les chefs ne gèrent que les événements associés aux pupitres qu'ils dirigent ; leurs droits ne dépendent pas de l'auteur de l'événement. Un chef choisit un pupitre cible à la fois. Un événement ciblant plusieurs pupitres ou tous les pupitres est exclusivement géré par la secrétaire ou l'admin.
 
 ## 2 bis. Décisions de visibilité
 
@@ -54,11 +54,11 @@ Règles :
 
 Les comptes ne se créent pas librement :
 
-1. Un administrateur envoie une **invitation par e-mail** (nom, prénom, pupitre(s)). Le compte Auth est créé immédiatement avec `account_status = pending` et le rôle applicatif initial `member`. Le pupitre n'est pas modifiable par l'invité.
+1. Un administrateur ou la secrétaire envoie une **invitation par e-mail** (nom, prénom, pupitre(s)). Le compte Auth est créé immédiatement avec `account_status = pending` et le rôle applicatif initial `member`. Le pupitre n'est pas modifiable par l'invité.
 2. Dans l'heure, l'invité ouvre le lien Supabase Auth, confirme son adresse e-mail et **définit son mot de passe**.
 3. La confirmation ne valide pas le compte : `account_status` reste `pending`, sans accès membre.
-4. Un administrateur vérifie que l'adresse e-mail est confirmée puis **active manuellement** le compte : `account_status` devient `active`, le rôle reste indépendant.
-5. Si le lien expire, l'administrateur peut renvoyer une invitation au compte Auth existant.
+4. Un administrateur ou la secrétaire vérifie que l'adresse e-mail est confirmée puis **active manuellement** le compte : `account_status` devient `active`, le rôle reste indépendant.
+5. Si le lien expire, l'administrateur ou la secrétaire peut renvoyer une invitation au compte Auth existant.
 
 ## 4. Pages et fonctionnalités
 

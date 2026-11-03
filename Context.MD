@@ -95,8 +95,9 @@ un pupitre, la visibilité d'un événement et la validation d'un compte doivent
 Le Bagad conserve quatre pupitres distincts : Bombarde, Caisse claire,
 Cornemuse et Percussion. Un membre affecté à Percussion est également membre de
 Caisse claire par une relation explicite, sans duplication d'affectation.
-Chaque pupitre a son propre chef. Un chef ne gère que les événements de son
-pupitre unique, même s'il n'en est pas l'auteur ; les événements multi-pupitres
+Chaque pupitre a au plus un chef. Un chef peut diriger plusieurs pupitres et
+choisit une seule cible lors de la création d'un événement, même s'il n'en est
+pas l'auteur ; les événements multi-pupitres
 ou globaux relèvent uniquement de la secrétaire ou de l'administrateur.
 
 ### 5. **Invitation flow sécurisé**
@@ -131,17 +132,17 @@ qu'une visibilité indépendante choisie explicitement :
   des pupitres ciblés.
 
 Une répétition peut être publique, interne ou ciblée sur un pupitre. Un chef
-crée toujours un événement `pupitre` pour son unique pupitre ; les membres des
-autres pupitres ne le voient pas et ne peuvent pas y répondre. Les événements
-publics et internes restent visibles et ouverts aux réponses selon leur
-visibilité.
+choisit dans une liste le pupitre qu'il dirige et l'événement `pupitre` conserve
+une seule cible. Les membres des autres pupitres ne le voient pas et ne peuvent
+pas y répondre. Les événements publics et internes restent visibles et ouverts
+aux réponses selon leur visibilité.
 La secrétaire et l'administrateur gèrent tous les événements, y compris les
 événements multi-pupitres ou globaux. Un chef crée, modifie et supprime les
-événements `pupitre` de son pupitre unique, sans restriction liée à l'auteur ;
-il ne gère pas les événements globaux ni ceux d'autres pupitres. L'appartenance
-Percussion → Caisse claire est conservée pour les droits liés aux pupitres,
-sans droits de gestion hérités. Un membre ne fait que consulter et répondre
-selon son statut et son rôle. Aucune gestion des
+événements `pupitre` des pupitres qu'il dirige, sans restriction liée à
+l'auteur ; il ne gère pas les événements globaux ni les événements multi-pupitres.
+Percussion est indépendant de Caisse claire et ne bénéficie d'aucun héritage
+de lecture ou de gestion. Un membre ne fait que consulter et répondre selon son
+statut et son rôle. Aucune gestion des
 événements récurrents n'est incluse en V1.
 
 ### 7. **Trombinoscope**
@@ -350,13 +351,13 @@ export const fr = {
     <button name="status" value="present">Présent</button>
   </form>
 
-  <!-- Modification (chef de l'unique pupitre cible, secrétaire ou admin) -->
+  <!-- Modification (chef d'un pupitre cible, secrétaire ou admin) -->
   {#if data.canEditAgenda}
     <button onclick={() => editEvent(event.id)}>Modifier</button>
   {/if}
 {/each}
 
-<!-- Ajouter (chef de l'unique pupitre cible, secrétaire ou admin) -->
+<!-- Ajouter (chef d'un pupitre dirigé, secrétaire ou admin) -->
 {#if data.canEditAgenda}
   <a href="/dashboard/agenda/create">Ajouter</a>
 {/if}

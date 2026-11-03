@@ -47,7 +47,7 @@ président et le trésorier n'ont pas de droits métier liés à leur titre.
 | Rôle           | Exigences                                                                                                       |
 | -------------- | --------------------------------------------------------------------------------------------------------------- |
 | `member`       | Consulte l'agenda, les documents et le trombinoscope autorisé; répond aux événements et gère son propre profil. |
-| `chef_pupitre` | Droits d'un membre; gère les événements d'un seul pupitre, et les partitions/notifications de son périmètre.    |
+| `chef_pupitre` | Droits d'un membre; gère les événements et les partitions/notifications des pupitres qu'il dirige.                 |
 | `secretaire`   | Gère tous les événements, articles et albums; envoie des notifications aux pupitres autorisés.                  |
 | `admin`        | Gère globalement les utilisateurs, invitations, rôles, contenus et notifications; valide les comptes.           |
 
@@ -61,20 +61,21 @@ Le statut de compte est distinct du rôle applicatif :
 
 Principes obligatoires :
 
-- L'association compte trois pupitres : bombarde, caisse claire et cornemuse.
-  Percussion est conservé comme pupitre distinct, dont les membres appartiennent
-  aussi à Caisse claire par une relation d'héritage explicite. Un membre peut
-  avoir plusieurs affectations ; un chef ne gère qu'un seul pupitre.
+- L'association compte quatre pupitres : Bombarde, Caisse claire, Cornemuse et
+  Percussion. Percussion est indépendant de Caisse claire. Un membre peut avoir
+  plusieurs affectations. Un chef peut diriger plusieurs pupitres, avec au plus
+  un chef par pupitre. La responsabilité est portée par `is_chef` sur l'affectation.
 - Toute autorisation est vérifiée côté serveur et dérivée du rôle et des
   pupitres fiables en base, jamais d'une valeur de rôle fournie par le client
   ou de métadonnées de session modifiables.
 - Une action reçoit l'identité de l'acteur depuis la session vérifiée; elle ne
   fait pas confiance à un identifiant d'utilisateur soumis dans le formulaire.
-- Les invitations et validations de comptes sont réservées à l'admin. La
+- Les invitations et validations de comptes sont réservées à l'admin et à la secrétaire. La
   secrétaire gère tous les événements, sans obtenir pour autant les droits
   globaux de l'admin sur les autres ressources.
-- Les chefs sont indépendants : chacun gère uniquement les événements de son
-  pupitre unique, quel qu'en soit l'auteur. Les événements ciblant plusieurs
+- Les chefs sont indépendants : chacun gère les événements des pupitres qu'il
+  dirige, quel qu'en soit l'auteur. La création impose le choix d'un seul
+  pupitre cible. Les événements ciblant plusieurs
   pupitres ou tous les pupitres relèvent exclusivement de la secrétaire ou de
   l'admin.
 - Le trombinoscope est une exigence V1 obligatoire, opérationnelle dès la
@@ -143,7 +144,7 @@ plusieurs affectations de pupitre par membre.
 
 ### 4.2 Invitations et validation des comptes
 
-1. Seul un administrateur envoie une invitation, renseigne l'adresse e-mail,
+1. La secrétaire ou l'administrateur envoie une invitation, renseigne l'adresse e-mail,
    l'identité nécessaire et le ou les pupitres. Le compte Auth est créé
    immédiatement et le profil applicatif a `account_status = 'pending'` et le
    rôle indépendant `member`.
@@ -151,11 +152,11 @@ plusieurs affectations de pupitre par membre.
    adresse e-mail et définit son mot de passe. Le lien ne donne pas accès au
    dashboard.
 3. La confirmation e-mail ne valide pas le compte : il reste `pending` jusqu'à
-   l'activation manuelle par un administrateur.
-4. L'administrateur ne peut activer le compte que si l'adresse e-mail est
+   l'activation manuelle par la secrétaire ou l'administrateur.
+4. La secrétaire ou l'administrateur ne peut activer le compte que si l'adresse e-mail est
    confirmée; l'activation change le statut en `active`, sans attribuer le rôle.
 5. Le pupitre attribué n'est pas modifiable par l'invité.
-6. Le lien Auth expire après une heure. Si le lien expire, l'administrateur
+6. Le lien Auth expire après une heure. Si le lien expire, la secrétaire ou l'administrateur
    peut renvoyer une invitation au compte Auth existant sans créer un second
    compte. L'expiration doit être configurée côté Supabase Auth, pas seulement
    enregistrée dans la table applicative.
@@ -180,7 +181,7 @@ de données le permet.
   de son rôle et de ses pupitres. L'admin et la secrétaire peuvent
   modifier les pupitres; l'attribution des rôles applicatifs supérieurs reste
   réservée à l'admin.
-- Seul l'admin peut inviter et approuver les comptes; il ne peut approuver un
+- La secrétaire et l'admin peuvent inviter et approuver les comptes; ils ne peuvent approuver un
   compte dont l'adresse e-mail n'est pas confirmée.
 - Les champs de profil modifiables sont ceux du profil du membre, hors rôle et
   pupitres. Le changement de l'adresse email du compte doit suivre le flux
@@ -204,7 +205,7 @@ de données le permet.
   (la table `polls` est supprimée). Les réponses sont centralisées dans `event_responses`
   avec les statuts uniques `present` ou `absent`. L'admin et la secrétaire peuvent créer,
   modifier et supprimer tous les événements, y compris les sondages. Un chef peut
-  gérer les événements de son unique pupitre, y compris ceux créés par un autre
+  gérer les événements des pupitres qu'il dirige, y compris ceux créés par un autre
   utilisateur. Il ne peut pas gérer d'événement multi-pupitres ou global.
 - Chaque événement possède un `event_type` ENUM parmi `sortie`, `concert`,
   `fest-noz`, `festival`, `concours`, `gala`, `repetition`, `reunion` et
@@ -216,8 +217,8 @@ de données le permet.
 - Les membres actifs peuvent répondre aux événements publics et internes ;
   seuls les membres actifs des pupitres ciblés peuvent voir et répondre aux
   événements `pupitre`. Une répétition peut être publique, interne ou ciblée.
-- Un chef crée toujours un événement avec la visibilité `pupitre`, ciblé sur
-  son unique pupitre ; les membres des autres pupitres ne le voient pas et ne
+- Un chef crée toujours un événement avec la visibilité `pupitre`, en sélectionnant
+  un seul pupitre parmi ceux qu'il dirige ; les membres des autres pupitres ne le voient pas et ne
   peuvent pas y répondre. Il peut gérer un événement de son pupitre même s'il
   n'en est pas l'auteur. L'admin
   et la secrétaire peuvent créer les événements internes communs, notamment
@@ -441,13 +442,13 @@ refus et accès autorisés.
 ### Étape C — Invitations, profils et membres
 
 - Mettre en place les invitations email à usage unique, expirantes après une
-  heure et dont le jeton n'est stocké qu'empreinté. Seul l'admin peut inviter;
+  heure et dont le jeton n'est stocké qu'empreinté. La secrétaire et l'admin peuvent inviter;
   le compte Auth et le profil avec `account_status = pending` et `app_role =
 member` sont créés immédiatement.
 - L'invité confirme son adresse et définit son mot de passe dans l'heure.
   La confirmation ne valide pas le compte et l'invité ne choisit ni son rôle ni
   ses pupitres.
-- Seul l'admin peut activer un compte; l'activation vérifie que l'adresse
+- La secrétaire et l'admin peuvent activer un compte; l'activation vérifie que l'adresse
   e-mail est confirmée et change uniquement `account_status` en `active`.
 - Permettre à un membre de modifier uniquement les champs de son propre profil
   hors rôle et pupitres; le changement d'adresse email suit le flux Supabase
@@ -474,7 +475,7 @@ adresse non concordante.
   et enregistrer les réponses dans `event_responses` avec le statut strict `present` ou `absent`
   (type `response_status`), sans table `polls` distincte ni étape de validation préalable.
   L'admin et la secrétaire peuvent les créer, modifier et supprimer dans les audiences publique
-  ou privée; un chef a ces droits uniquement pour les événements de son pupitre unique.
+  ou privée; un chef a ces droits uniquement pour les événements des pupitres qu'il dirige.
 - Utiliser l'ENUM `event_type` avec les neuf valeurs définies, et enregistrer
   indépendamment la visibilité `public`, `interne` ou `pupitre`.
 - Valider les dates, fuseaux horaires et heures de fin. La première version ne
@@ -563,7 +564,7 @@ mobiles, parcours hors-ligne sans fuite de données privées, CI verte.
 ### Chef de pupitre
 
 - En tant que chef, je ne gère que les événements, partitions et notifications
-  de mon unique pupitre.
+  des pupitres qu'il dirige.
 - Je peux modifier/supprimer un événement de mon pupitre même si je ne l'ai pas
   créé ; une requête directe visant un autre pupitre, un événement
   multi-pupitres ou global est refusée.

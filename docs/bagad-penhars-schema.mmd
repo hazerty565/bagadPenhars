@@ -11,7 +11,6 @@ erDiagram
         uuid id PK
         text name UK
         text slug UK
-        uuid parent_pupitre_id FK
         timestamptz created_at
     }
 
@@ -184,7 +183,6 @@ erDiagram
 
     %% Profils et pupitres
     PROFILES ||--o{ PROFILE_PUPITRES : "affectations"
-    PUPITRES o|--o{ PUPITRES : "héritage (Percussion → Caisse claire)"
     PUPITRES ||--o{ PROFILE_PUPITRES : "membres"
     PROFILES ||--o{ BUREAU_POSITIONS : "mandats / titres"
     PROFILES ||--o{ INVITATIONS : "auteur"
