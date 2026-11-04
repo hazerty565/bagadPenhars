@@ -440,3 +440,53 @@ ne doit être déduite avant validation.
     être conservées au titre des obligations légales? Comment traiter les
     réponses de présence et les journaux liés au compte?
     decision: seul l'admin et secretaire peuvent supprimer un compte ou le susprendre. les réponses de presence et les journaux  liés au comptes peuvent etre supprimer
+
+## Questions backend validées — reprise de la mission — 2026-11-04
+
+Les points suivants bloquent la conception ou l'exécution de fonctionnalités
+dans le périmètre base de données, RLS, Storage, Edge Functions et types. Ils
+sont maintenant validés et les propositions par défaut peuvent être appliquées.
+
+50. **Moment et périmètre de la purge des événements passés**
+    - Question : après la date de l'événement, faut-il supprimer uniquement les
+      réponses de présence, l'événement entier, ses liaisons `event_pupitres`, ou
+      aussi ses documents associés, et par quel mécanisme (cron, RPC ou trigger)?
+      Quel délai exact déclenche la clôture?
+    - Pourquoi : le jeu de règles contient encore une tension : la question 47
+      propose une suppression après dépassement de la date, tandis que
+      `database.md` prévoit actuellement qu'une réponse ne soit supprimée que
+      lors de la suppression effective du compte, sans policy `DELETE`.
+    - Proposition par défaut : ne supprimer aucune réponse automatiquement tant
+      qu'une décision de purge n'a pas été validée; rendre l'événement non
+      modifiable/répondable après sa date, puis supprimer les données événement
+      uniquement via une procédure PostgreSQL explicitement validée.
+     [Proposition validé] avec un systeme de suspension de compte et suppression ( suspend et delete)
+
+51. **Workflow de suppression de compte**
+    - Question : qui déclenche effectivement la suppression Auth/Profile, à quel
+      moment l'account_deletion_request est-elle créée, quel délai de traitement
+      s'applique, quelles données de la demande sont conservées et quelles sont
+      leurs durées d'accès?
+    - Pourquoi : le backend doit supprimer de manière cohérente
+      `auth.users`, `profiles` et les objets associés; une règle incomprise
+      pourrait créer une fuite RGPD, conserver des données interdites, ou
+      effectuer une suppression partielle irréversible.
+    - Proposition par défaut : délimiter la suppression effective à l'admin et
+      à la secrétaire seulement selon la décision existante, conserver un
+      instantané minimal dans `account_deletion_requests`, supprimer les réponses
+      par FK cascade et supprimer ou anonymiser l'identité et les avatars privés
+      associés. La durée de conservation reste non définie jusqu'à validation.
+      [Proposition validé]
+
+52. **Environnement Supabase à utiliser pour les validations**
+    - Question : dispose-t-on d'un environnement local Supabase avec Docker pour
+      exécuter la migration 005 et les tests SQL, ou faut-il viser un projet
+      hébergé distinct de développement? Faut-il considérer la migration 005
+      comme déjà appliquée sur une base partagée?
+    - Pourquoi : la migration 005 ne doit pas être modifiée si elle a déjà été
+      appliquée; les politiques Storage/RLS doivent être testées sur PostgreSQL
+      réel sans exposer de secret ni de donnée en production.
+    - Proposition par défaut : utiliser une base locale vierge pour valider et
+      tester la migration 005, ne pas modifier de migration appliquée, et créer
+      une migration additive uniquement si une base distante existe déjà.
+      [Proposition validé] pour le moment le projet et vierge,donc pas d'impact reel.

@@ -12,6 +12,10 @@ travail couvert par la présente mise à jour; les autres restent à faire.
       commandes du projet.
 - [ ] Migrer l'authentification, la base PostgreSQL et le stockage de fichiers
       vers Supabase (Auth, PostgreSQL/RLS et Storage).
+- [ ] Examiner la migration 005 sur une base vierge et établir son application
+      reproductible, sans modifier une migration déjà appliquée.
+- [ ] Finaliser les migrations additives nécessaires pour les invitations,
+      profils, membres, événements, réponses et suppression de compte.
 - [ ] Implémenter la gestion des sessions et les guards côté serveur; vérifier
       les autorisations des actions et routes de fichiers.
 - [x] Définir et mettre en œuvre un mécanisme de migrations reproductible
@@ -24,6 +28,13 @@ travail couvert par la présente mise à jour; les autres restent à faire.
       créer les migrations manquantes, notamment pour les invitations.
 - [ ] Définir et tester les policies RLS pour toutes les tables et les buckets
       Supabase Storage.
+- [ ] Ajouter les tests SQL d'accès pour les comptes anonyme, membre actif,
+      chef de pupitre, secrétaire et admin.
+- [ ] Implémenter atomiquement la suspension et la suppression des comptes,
+      avec cascade des réponses et retrait des données Storage associées.
+- [ ] Fermer les réponses des événements passés par une procédure PostgreSQL
+      validée, sans lancer de purge automatique tant que le périmètre exact
+      de suppression n'est pas confirmé.
 - [ ] Terminer les flux d'invitation, d'approbation et de gestion des membres.
 - [ ] Terminer l'agenda, les réponses de présence et les permissions par
       pupitre.

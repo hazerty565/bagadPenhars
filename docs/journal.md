@@ -1,5 +1,28 @@
 # Journal
 
+## 2026-11-04
+
+### Reprise de la mission backend Supabase
+
+- Lecture des réponses ajoutées à [questions.md](./questions.md) : les trois
+  blocages backend identifiés sont validés.
+- Purge des événements : la réponse validée retient la suspension et la
+  suppression comme mécanisme de gestion, sans préciser davantage le périmètre
+  exact de purge. Il faut conserver les données des comptes actifs et clôturer
+  les réponses sans déduire une règle non documentée.
+- Suppression de compte : la proposition validée couvre une suppression
+  déclenchée uniquement par la secrétaire ou l'admin, avec réponse en cascade
+  et données associées supprimées ou anonymisées.
+- Environnement : le projet est vierge, donc la migration 005 peut être
+  examinée et validée sur une base locale avant toute nouvelle migration
+  additive.
+- Étapes du plan relevant du périmètre backend : socle Supabase/RLS/Storage,
+  Auth/sessions/guards, invitations/profils/trombinoscope, agenda/réponses,
+  documents/médias, notifications OneSignal côté serveur et Edge Functions,
+  types, tests de policies et préparation de la mise en production.
+- Aucun fichier de code, migration ou configuration n'a été modifié dans cette
+  reprise. Les tâches ont été ajoutées au backlog documentaire.
+
 ## 2026-11-03
 
 ### Exclusion des maquettes de spécification
