@@ -13,7 +13,8 @@ date. Les hypothèses techniques ne remplacent pas une décision produit.
 
 - **Décisions plateforme du 2026-11-05 — validées par le client :**
   Cloudflare Hyperdrive est utilisé avec Drizzle et Neon; les buckets R2 sont
-  séparés en public et privé; le seuil de stockage bloquant est fixé à 9,5 GB;
+  séparés en public et privé; la capacité globale est 8 Go, avec alerte à 8 Go
+  et blocage à 9 Go;
   Resend envoie les invitations et les contacts; Cloudflare Turnstile protège
   le formulaire de contact.
 - **OBSOLÈTE — ne plus prendre en compte :** l'ancienne décision Supabase comme
@@ -111,10 +112,10 @@ Les membres peuvent gérer leurs préférences de notification.
    confirmation à l'expéditeur? Les pièces jointes sont-elles interdites? Qui
    traite les messages?
 
-   Décision : les messages sont envoyés à l'adresse officielle de l'association,
-   configurée dans Netlify. Une confirmation est envoyée à l'expéditeur. Pas
-   de pièces jointes. Les responsables du bureau traitent manuellement les
-   soumissions dans le dashboard Netlify.
+   Décision : les messages sont envoyés à l'adresse officielle de l'association
+   via Resend depuis un endpoint SvelteKit hébergé sur Cloudflare Pages. Une
+   confirmation est envoyée à l'expéditeur. Pas de pièces jointes. Cloudflare
+   Turnstile protège la soumission contre l'abus.
 
 ## P1 — À décider avant mise en production ou import de données
 
@@ -265,7 +266,10 @@ Décision : présenter l'histoire, les valeurs, les dates clés, l'effectif, les
     formats accepter pour les avatars, photos et vidéos? (Les partitions sont
     limitées au PDF.)
 
-    Décision : les photos source JPG/JPEG jusqu'à 20 Mo sont converties en WebP.
+    Décision : les images JPG/JPEG/PNG/WebP jusqu'à 15 Mo sont converties en
+    WebP. Les dimensions maximales sont 6000 × 6000 pixels, la qualité cible
+    est 82, les métadonnées inutiles sont supprimées et la taille finale est
+    contrôlée. Les audio OGG sont limités à 30 Mo et les PDF à 20 Mo.
     Les avatars sont enregistrés sous `profiles/{profile_id}/avatar.webp` dans
     le bucket privé. Voir la décision 29; les vidéos sont interdites.
 
@@ -289,16 +293,14 @@ Décision : présenter l'histoire, les valeurs, les dates clés, l'effectif, les
     Les règles de création, de modification et de suppression restent celles définies dans les décisions relatives aux rôles et aux événements.
 
 28. **Netlify Forms** — les soumissions du formulaire de contact sont gérées
-    manuellement par les responsables du bureau dans le dashboard Netlify.
-    **Question close :** leur traitement opérationnel relève de Netlify et ne
-    nécessite pas de règle de conservation dans cette documentation produit.
-    L'intégration du formulaire dans l'application reste une tâche
-    d'implémentation, pas une décision produit. Les durées de conservation des
-    présences et journaux d'audit restent suivies à la question 25.
+    via Netlify Forms et son dashboard.
+    **OBSOLÈTE — ne plus prendre en compte :** décision remplacée le
+    2026-11-05 par Resend, Cloudflare Pages et Cloudflare Turnstile.
 
 29. **Médias** — décision : refuser les vidéos; accepter les photos source
-    JPG/JPEG jusqu'à 20 Mo et les convertir en WebP. Les avatars sont stockés
-    dans le bucket privé au chemin `profiles/{profile_id}/avatar.webp`.
+    JPG/JPEG/PNG/WebP jusqu'à 15 Mo, limitées à 6000 × 6000 pixels, et les
+    convertir en WebP avec une qualité cible 82. Les avatars sont stockés dans
+    le bucket privé au chemin `profiles/{profile_id}/avatar.webp`.
 
 30. **Modélisation des sondages (`events` vs `polls`)** — la décision 23 indique
     que « le sondage est lui-même l'événement d'agenda ». Pourtant, la
@@ -333,6 +335,10 @@ Décision : présenter l'histoire, les valeurs, les dates clés, l'effectif, les
     `app_role` vaut `member`, `chef_pupitre`, `secretaire` ou `admin`.
     L'activation n'attribue pas un rôle et la suspension bloque l'accès sans
     supprimer les données.
+
+    Convention documentaire: `app_role` est conservé comme nom de l'ENUM
+    PostgreSQL; la valeur effective est stockée dans la colonne
+    `profiles.role`.
 
 33. **Pupitre Percussion — OBsolète — ne plus prendre en compte** — l'ancien
     lien d'héritage de Percussion vers Caisse claire et l'appartenance effective
@@ -407,11 +413,10 @@ experts en développement.
     d'une suspension est une exigence à intégrer.
 
 43. **Formulaire de contact** — le formulaire et le traitement des soumissions
-    sont gérés uniquement par Netlify Forms et son dashboard ; les soumissions
-    sont envoyées à `bagadpenhars@gmail.com`. Les passages laissant le
-    fournisseur ou le destinataire à définir sont **OBsolètes — ne plus
-    prendre en compte**. Cette décision remplace toute exigence antérieure de
-    traitement ou d'envoi d'e-mail depuis l'application.
+    sont gérés par un endpoint SvelteKit Cloudflare Pages, avec Resend pour
+    l'envoi, Cloudflare Turnstile pour l'anti-abus et aucune pièce jointe.
+    Cette décision remplace Netlify Forms et toute exigence antérieure de
+    traitement ou d'envoi depuis Netlify.
 
 44. **Notifications** — les nouveaux événements déclenchent une notification
     OneSignal destinée aux personnes concernées, selon l'audience déjà définie
@@ -539,8 +544,8 @@ pour accélérer le développement.
 55. **Provisionnement et stockage R2**
     - Question : quel bucket R2 créer, quelle clé de binding utiliser et
       comment distinguer les objets publics des objets privés?
-      Avec une limite annoncée de `10 GB-month`, faut-il bloquer les uploads
-      avant dépassement ou prévoir une alerte?
+      **OBSOLÈTE** : l'ancien seuil de `10 GB-month`/9,5 Go est remplacé par
+      la capacité opérationnelle validée ci-dessous.
     - Pourquoi : des objets privés placés dans un préfixe public ou une
       capacité dépassée exposeraient ou interrompraient le service.
     - Proposition par défaut : créer un bucket unique avec binding `R2_BUCKET`,
@@ -549,8 +554,18 @@ pour accélérer le développement.
       SvelteKit, et alerte technique avant dépassement avec blocage temporaire
       documenté.
     - Décision validée le 2026-11-05 par le client : deux buckets sont retenus,
-      `bagad-public` et `bagad-private`. Le téléversement est vérifié contre la
-      limite de 9,5 GB; au seuil atteint, l'upload est bloqué.
+      `bagad-public` et `bagad-private`, avec un quota global de **8 Go**.
+      Une alerte administrateur est affichée à **7 Go**; les nouveaux uploads
+      sont bloqués à **8 Go**.
+    - Formats et limites : images JPG/JPEG/PNG/WebP jusqu'à 15 Mo, conversion
+      en WebP cible qualité 82 et dimensions maximales 6000 × 6000; audio OGG
+      jusqu'à 30 Mo conservé; PDF jusqu'à 20 Mo conservé.
+    - Le suivi repose sur une table `storage_usage` Neon/Drizzle contenant
+      `public_bytes`, `private_bytes`, `reserved_bytes` et `updated_at`.
+      Les réservations et confirmations sont transactionnelles côté serveur;
+      les suppressions et remplacements mettent aussi à jour le compteur.
+    - Une synchronisation périodique réconcilie les deux buckets avec Neon et
+      permet une resynchronisation manuelle depuis Administration → Stockage.
 
 56. **Better Auth et envoi des invitations**
     - Question : quel fournisseur transactionnel envoie les invitations et les

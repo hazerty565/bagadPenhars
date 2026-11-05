@@ -21,6 +21,9 @@ travail couvert par la présente mise à jour; les autres restent à faire.
       les autorisations des actions et routes de fichiers.
 - [ ] Définir et mettre en œuvre un mécanisme de migrations reproductible pour
       Neon.
+- [ ] Implémenter le quota R2 de 8 Go, l'alerte à 7 Go, la réservation Neon,
+      la validation des formats et tailles, les conversions WebP et la
+      réconciliation R2/Neon.
 
 ## P1 — Fonctions principales
 

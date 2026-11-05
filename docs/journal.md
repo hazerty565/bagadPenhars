@@ -7,6 +7,23 @@
 
 ## 2026-11-05
 
+### Harmonisation Drizzle, Cloudflare et rôles
+
+- Le chemin de migration officiel est `drizzle/` avec SQL et métadonnées
+  `drizzle/meta/`; `migrations/` n'est plus une convention cible.
+- Le formulaire de contact est aligné sur Resend, Cloudflare Turnstile et
+  Cloudflare Pages. Netlify Forms et le dashboard Netlify sont marqués
+  historiques ou obsolètes dans les documents actifs.
+- Convention explicite ajoutée: `profiles.role` porte la valeur lue côté
+  serveur, tandis que `app_role` demeure le nom de l'ENUM PostgreSQL.
+- Gestion du stockage R2 validée: quota global 8 Go, alerte 7 Go, blocage à
+  8 Go; images 15 Mo/JPG-JPEG-PNG-WebP converties en WebP, audio OGG 30 Mo,
+  PDF 20 Mo. Neon/Drizzle suit `storage_usage` avec réservations, confirmation
+  et réconciliation des compteurs publics/privés.
+- Les anciennes entrées datées restent traçables dans le journal, mais les
+  recommandations actives sont celles reprises par le brief, la spécification,
+  l'architecture et la base de données.
+
 ### Arbitrages plateforme du client
 
 - Structure de démarrage retenue pour Drizzle : `drizzle.config.ts`,
@@ -18,8 +35,8 @@
   `production` pour la production Cloudflare Pages, via Cloudflare Hyperdrive.
 - Drizzle est retenu comme ORM avec le driver Neon adapté à Cloudflare.
 - R2 utilise désormais deux buckets: `bagad-public` et `bagad-private`.
-  Les téléversements sont bloqués après vérification du seuil de 9,5 GB sur la
-  limite annoncée de 10 GB-month.
+  Le quota actif est 8 Go au total, avec alerte à 7 Go; l'ancien seuil
+  documentaire de 9,5 GB/10 GB-month est remplacé.
 - Resend envoie les invitations, réinitialisations et messages de contact.
 - Cloudflare Turnstile protège le formulaire de contact contre l'abus.
 

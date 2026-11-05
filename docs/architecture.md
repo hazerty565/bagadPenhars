@@ -49,8 +49,15 @@ Les pages publiques acceptent les langues `fr`, `en` et `br` selon le matcher
    dans les layouts, actions et endpoints serveur.
 4. Les actions serveur lisent le rôle et le statut dans les profils Neon; elles
    vérifient explicitement les rôles et les pupitres sur chaque opération.
+   Le rôle applicatif est `profiles.role`, dont les valeurs sont celles de
+   l'ENUM PostgreSQL conservé `app_role`.
 5. Cloudflare R2 stocke les fichiers. Neon conserve leurs métadonnées, clés,
    visibilité et identifiants de propriétaire.
+6. Les uploads passent par des routes SvelteKit exécutées sur Cloudflare Pages.
+   Neon réserve l'espace de façon transactionnelle, puis SvelteKit charge le
+   fichier final dans le bucket public ou privé. Une réservation est libérée en
+   cas d'échec et les suppressions/remplacements mettent à jour les compteurs.
+   Une synchronisation périodique réconcilie les compteurs avec les buckets.
 
 Ce flux est la cible. Les modules historiques du dépôt ne sont pas encore
 migrés; ne pas supposer que ces contrôles sont déjà effectifs.
@@ -65,7 +72,7 @@ migrés; ne pas supposer que ces contrôles sont déjà effectifs.
 - `src/lib/schemas/` : schémas de validation.
 - `src/lib/types/` : types métier et types de données.
 - `src/lib/i18n/` : traductions françaises, anglaises et bretonnes.
-- `migrations/` : schéma SQL versionné.
+- `drizzle/` : migrations SQL versionnées et métadonnées générées par Drizzle.
 - `scripts/` : scripts de maintenance et d'administration.
 
 ## Sécurité des données

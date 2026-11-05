@@ -60,7 +60,7 @@ Le statut de compte est distinct du rôle applicatif :
 | `account_status` | Effet                                                                    |
 | ---------------- | ------------------------------------------------------------------------ |
 | `pending`        | Compte créé sur invitation, en attente d'activation ; aucun accès métier |
-| `active`         | Accès autorisé selon `app_role`                                          |
+| `active`         | Accès autorisé selon `profiles.role`, de type PostgreSQL `app_role`      |
 | `suspended`      | Accès métier révoqué temporairement, données conservées                  |
 
 Principes obligatoires :
@@ -251,8 +251,11 @@ de données le permet.
   Elle est stockée dans `bagad-private/profiles/{profile_id}/avatar.webp`.
   Tout membre actif peut la lire; seul son propriétaire peut la modifier,
   administrateurs inclus. Les photos téléversées au
-  format JPG/JPEG, jusqu'à 20 Mo par fichier source, sont converties au format
-  WebP avant stockage. Les vidéos ne sont pas acceptées.
+  format JPG/JPEG, PNG ou WebP, jusqu'à 15 Mo par fichier source, sont
+  converties au format WebP avant stockage. Les dimensions source sont limitées
+  à 6000 × 6000 pixels, la qualité cible est 82 et les métadonnées inutiles
+  sont supprimées. Les vidéos ne sont pas acceptées. Les fichiers audio OGG sont
+  limités à 30 Mo; les PDF à 20 Mo.
 - L'admin et la secrétaire peuvent publier et supprimer les albums. Une demande
   de retrait d'une photo est traitée rapidement par un responsable habilité;
   les médias d'albums publics sont servis publiquement depuis
@@ -345,7 +348,7 @@ dans `docs/questions.md`.
 - Données métier : entièrement gérées dans Neon. Cloudflare R2 stocke les
   fichiers. OneSignal envoie les notifications push.
 - Évolution du schéma : uniquement via de nouvelles migrations PostgreSQL
-  reproductibles sous `migrations/`.
+  reproductibles sous `drizzle/` et ses métadonnées `drizzle/meta/`.
 - Environnements : séparation stricte de dev, preview et production. Aucun secret committé.
 - Fuseau horaire : `Europe/Paris` avec gestion automatique des décalages été/hiver.
 - PWA : service worker restreint aux assets statiques du build et à `/offline`.
@@ -377,8 +380,9 @@ appliquées dans cette spécification. Les questions complémentaires qui resten
 ouvertes sont identifiées dans ce fichier et doivent être tranchées avant les
 fonctions concernées : durées de conservation des présences et journaux d'audit,
 ainsi que les modalités du traitement des demandes de suppression de compte.
-Les soumissions de contact sont traitées manuellement dans le dashboard
-Netlify; leur intégration dans l'application est une tâche d'implémentation.
+Les soumissions de contact sont transmises par l'application avec Resend
+après validation Cloudflare Turnstile; leur intégration reste une tâche
+d'implémentation.
 
 ## 9. État du dépôt à la préparation
 
@@ -454,8 +458,9 @@ refus et accès autorisés.
 
 - Mettre en place les invitations email à usage unique, expirantes après une
   heure et dont le jeton n'est stocké qu'empreinté. La secrétaire et l'admin peuvent inviter;
-  le compte Auth et le profil avec `account_status = pending` et `app_role =
-member` sont créés immédiatement.
+  le compte Auth et le profil avec `account_status = pending` et
+  `profiles.role = member` sont créés immédiatement; `member` appartient à
+  l'ENUM PostgreSQL `app_role`.
 - L'invité confirme son adresse et définit son mot de passe dans l'heure.
   La confirmation ne valide pas le compte et l'invité ne choisit ni son rôle ni
   ses pupitres.
@@ -500,8 +505,10 @@ propriété des réponses et cas de dates invalides.
 - Séparer contenu brouillon et publié; le public ne lit que le contenu publié.
 - Stocker les fichiers dans R2; contrôler type,
   taille, nom et droits avant écriture.
-- N'accepter aucune vidéo. Limiter chaque fichier photo source JPG/JPEG à
-  20 Mo et le convertir en WebP avant stockage. Le trombinoscope V1 est
+- N'accepter aucune vidéo. Les images JPG/JPEG/PNG/WebP sont limitées à 15 Mo,
+  6000 × 6000 pixels, puis converties en WebP avec une qualité cible de 82 et
+  suppression des métadonnées inutiles. Les OGG sont limités à 30 Mo et les PDF
+  à 20 Mo. Le trombinoscope V1 est
   obligatoire et opérationnel à la première mise en production. La photo de
   profil affichée y est stockée dans
   `profiles/{profile_id}/avatar.webp`, accessible aux membres
@@ -516,10 +523,9 @@ propriété des réponses et cas de dates invalides.
 - Publier les albums et médias uniquement après action d'un rôle autorisé.
 - Prévoir la prévisualisation avant publication; seuls l'admin et la secrétaire
   publient ou suppriment un album.
-- Connecter le formulaire public à la configuration Netlify déjà présente et
-  vérifier le parcours de soumission, la confirmation à l'expéditeur et la
-  réception des messages dans le dashboard pour traitement manuel. Ne pas
-  reconfigurer Netlify ni accepter de pièces jointes.
+- Connecter le formulaire public à un endpoint SvelteKit Cloudflare Pages,
+  valider Cloudflare Turnstile côté serveur, envoyer le message avec Resend,
+  confirmer l'expéditeur et interdire les pièces jointes.
 
 **Livrable :** tests de brouillon/publication, accès aux objets Storage selon
 les droits, refus d'upload non autorisé et validation du formulaire.
@@ -540,8 +546,8 @@ les droits, refus d'upload non autorisé et validation du formulaire.
   en production.
 - Le cache PWA ne contient que les fichiers statiques et `/offline`; aucune
   requête Supabase ou page adhérent n'est mise en cache.
-- Compléter tests, observabilité d'erreurs, variables Netlify et guide de
-  déploiement.
+- Compléter tests, observabilité d'erreurs, variables Cloudflare/Resend et
+  guide de déploiement Cloudflare Pages.
 
 **Livrable :** notifications testées sur navigateurs ciblés et appareils
 mobiles, parcours hors-ligne sans fuite de données privées, CI verte.

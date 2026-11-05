@@ -51,6 +51,8 @@ Règles :
 - Cloudflare R2 sépare les fichiers publics des photos de profil et documents
   privés. Les objets privés sont servis après vérification du compte et du
   rôle. Chaque membre ne modifie que sa propre photo.
+- Le stockage global des deux buckets R2 est limité à 8 Go. Une alerte
+  administrateur apparaît à 7 Go et aucun nouvel upload n'est accepté à 8 Go.
 
 ## 3. Création de compte
 

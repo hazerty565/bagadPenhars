@@ -214,7 +214,8 @@ dans `events` par `is_poll` ; les tables historiques `polls` et
 
 Les objets sont séparés dans deux buckets R2 distincts: `bagad-public` et
 `bagad-private`. Les objets privés sont servis après contrôle côté serveur,
-jamais par URL publique permanente. Les téléversements sont bloqués à 9,5 GB.
+jamais par URL publique permanente. Le quota global est limité à 8 Go avec
+alerte à 7 Go et blocage de tout nouvel upload à 8 Go.
 
 ### Cloudflare Pages et notifications
 

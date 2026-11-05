@@ -34,6 +34,7 @@ Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` 
 - La séparation des données repose sur des contrôles applicatifs explicites, pas sur des policies Supabase (interdites).
 - Utiliser des migrations reproductibles pour toute modification de schéma.
 - Les rôles se lisent dans `profiles.role`, **jamais** dans `user_metadata`.
+  La colonne `profiles.role` utilise l'ENUM PostgreSQL `app_role`.
 - Données via `+page.server.ts` / `+layout.server.ts`, garde sur `event.locals`.
 - Les identifiants Neon, les secrets Better Auth et les clés OneSignal restent côté serveur et ne sont jamais exposés au client.
 - La branche Neon `test` est utilisée par les déploiements de preview et les validations locales; `production` est réservée au déploiement de production.

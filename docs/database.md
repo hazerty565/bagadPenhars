@@ -23,6 +23,8 @@ avec Drizzle comme ORM et le driver Neon adapté au runtime Cloudflare.
 1. Les rôles et statuts sont lus dans `profiles.role` et
    `profiles.account_status`, jamais dans les métadonnées Better Auth ou le
    navigateur.
+   La colonne `profiles.role` utilise l'ENUM PostgreSQL conservé `app_role`;
+   `app_role` désigne donc le type des valeurs, pas une colonne distincte.
 2. Chaque lecture, modification, téléchargement et suppression sensible est
    autorisée côté serveur avant accès aux données.
 3. Une migration PostgreSQL appliquée ne doit jamais être modifiée; toute
@@ -95,9 +97,16 @@ R2 contient les objets binaires dans deux buckets distincts :
 | `bagad-public` | Médias publiés et autres objets explicitement publics |
 | `bagad-private` | Profils, documents, albums privés et fichiers réservés |
 
-L'espace disponible annoncé est **10 GB-month**. Un contrôle serveur mesure
-le volume occupé dans les buckets et bloque les nouveaux téléversements dès
-que l'utilisation atteint **9,5 GB**, avec alerte technique avant le seuil.
+La capacité opérationnelle globale est **8 Go**, les deux buckets étant
+additionnés dans le même quota. Une alerte administrateur est déclenchée à
+**7 Go**; à **8 Go**, les nouveaux téléversements sont bloqués côté serveur.
+
+La table `storage_usage` conserve `public_bytes`, `private_bytes`,
+`reserved_bytes` et `updated_at`. Chaque réservation, confirmation, suppression
+et remplacement met à jour le compteur. Les réservations évitent les dépassements
+pendant les uploads simultanés; les suppressions et remplacements restent
+atomiques dans la mesure permise par les opérations R2. Une synchronisation
+périodique réconcilie les compteurs Neon avec le contenu réel des deux buckets.
 
 - Neon conserve le nom de clé, la taille, le type MIME et les métadonnées.
 - Les objets du bucket public ont uniquement une URL publique tant qu'ils restent

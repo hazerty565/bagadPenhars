@@ -146,7 +146,8 @@ La récurrence n'est pas proposée en V1.
 La secrétaire ou l'administrateur peut créer une invitation. Son formulaire
 recueille l'adresse e-mail, les informations nécessaires du membre et son ou
 ses pupitres. Le compte Auth est créé lors de l'invitation ; le profil apparaît avec
-`account_status = pending` et un `app_role` indépendant.
+`account_status = pending` et `profiles.role` initialisé avec la valeur
+`member` de l'ENUM PostgreSQL `app_role`.
 
 Le membre confirme son adresse et définit son mot de passe dans l'heure.
 Après confirmation, son `account_status` reste `pending` jusqu'à activation
