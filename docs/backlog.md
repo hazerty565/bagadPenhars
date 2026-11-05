@@ -10,24 +10,24 @@ travail couvert par la présente mise à jour; les autres restent à faire.
 - [x] Ajouter une CI sur push et pull request pour `check`, `lint` et `build`.
 - [ ] Exécuter les validations en CI et corriger les erreurs qui bloquent les
       commandes du projet.
-- [ ] Migrer l'authentification, la base PostgreSQL et le stockage de fichiers
-      vers Supabase (Auth, PostgreSQL/RLS et Storage).
-- [ ] Examiner la migration 005 sur une base vierge et établir son application
-      reproductible, sans modifier une migration déjà appliquée.
+- [ ] Mettre en place Better Auth, Neon PostgreSQL et Cloudflare R2.
+- [ ] Configurer Drizzle, Cloudflare Hyperdrive, les deux buckets R2, Resend et
+      Cloudflare Turnstile.
+- [ ] Examiner le modèle PostgreSQL sur la branche Neon `test` et établir son
+      application reproductible sans modifier une migration déjà appliquée.
 - [ ] Finaliser les migrations additives nécessaires pour les invitations,
       profils, membres, événements, réponses et suppression de compte.
 - [ ] Implémenter la gestion des sessions et les guards côté serveur; vérifier
       les autorisations des actions et routes de fichiers.
-- [x] Définir et mettre en œuvre un mécanisme de migrations reproductible
-      (CLI Supabase et migration initiale autonome
-      `supabase/migrations/005_bagadPenhars_final.sql`).
+- [ ] Définir et mettre en œuvre un mécanisme de migrations reproductible pour
+      Neon.
 
 ## P1 — Fonctions principales
 
 - [ ] Comparer le schéma SQL avec les fonctions décrites dans le README et
       créer les migrations manquantes, notamment pour les invitations.
-- [ ] Définir et tester les policies RLS pour toutes les tables et les buckets
-      Supabase Storage.
+- [ ] Définir et tester les autorisations serveur pour toutes les routes,
+      actions et objets R2.
 - [ ] Ajouter les tests SQL d'accès pour les comptes anonyme, membre actif,
       chef de pupitre, secrétaire et admin.
 - [ ] Implémenter atomiquement la suspension et la suppression des comptes,

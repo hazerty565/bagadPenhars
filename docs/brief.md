@@ -1,9 +1,9 @@
 # Brief : site Bagad Penhars
 
-> **Passages obsolètes :** certaines règles de rôle et de périmètre ont été
-> précisées depuis la rédaction de ce brief. Consulter les arbitrages datés de
-> [`questions.md`](./questions.md) et ne pas prendre en compte les passages qui
-> y sont marqués **OBsolète — ne plus prendre en compte**.
+> **Changement de plateforme — 2026-11-05 :** Supabase, Supabase Auth,
+> Supabase Storage, les policies RLS et Netlify sont obsolètes pour ce projet.
+> La cible est Cloudflare Pages avec Better Auth, Neon PostgreSQL et Cloudflare
+> R2. Consulter les arbitrages datés de [`questions.md`](./questions.md).
 
 > Document de référence du besoin. À lire avant toute fonctionnalité.
 > Si un point est flou ou manquant, ne pas deviner : l'écrire dans `docs/questions.md`.
@@ -48,14 +48,16 @@ Règles :
 - Les titres du bureau ne sont pas affichés publiquement.
 - Les documents (partitions) sont visibles par tous les membres, tous pupitres confondus ; seuls le chef de pupitre (son pupitre), la secrétaire et l'admin les déposent.
 - Les types d'événement sont `sortie`, `concert`, `fest-noz`, `festival`, `concours`, `gala`, `repetition`, `reunion` et `repas`. La visibilité (`public`, `interne` ou `pupitre`) est indépendante du type : une répétition peut avoir l'une des trois visibilités. Un chef crée un événement `pupitre` ciblé sur son pupitre ; les membres des autres pupitres ne le voient pas et ne peuvent pas y répondre.
-- Supabase Storage sépare les fichiers publics (`bagad-public`) des photos de profil et documents privés (`bagad-private`). Les photos privées sont lisibles par les membres actifs ; chaque membre ne modifie que sa propre photo.
+- Cloudflare R2 sépare les fichiers publics des photos de profil et documents
+  privés. Les objets privés sont servis après vérification du compte et du
+  rôle. Chaque membre ne modifie que sa propre photo.
 
 ## 3. Création de compte
 
 Les comptes ne se créent pas librement :
 
 1. Un administrateur ou la secrétaire envoie une **invitation par e-mail** (nom, prénom, pupitre(s)). Le compte Auth est créé immédiatement avec `account_status = pending` et le rôle applicatif initial `member`. Le pupitre n'est pas modifiable par l'invité.
-2. Dans l'heure, l'invité ouvre le lien Supabase Auth, confirme son adresse e-mail et **définit son mot de passe**.
+2. Dans l'heure, l'invité ouvre le lien Better Auth, confirme son adresse e-mail et **définit son mot de passe**.
 3. La confirmation ne valide pas le compte : `account_status` reste `pending`, sans accès membre.
 4. Un administrateur ou la secrétaire vérifie que l'adresse e-mail est confirmée puis **active manuellement** le compte : `account_status` devient `active`, le rôle reste indépendant.
 5. Si le lien expire, l'administrateur ou la secrétaire peut renvoyer une invitation au compte Auth existant.
@@ -87,8 +89,8 @@ Les comptes ne se créent pas librement :
 
 ## 5. Contraintes
 
-- **Stack** : SvelteKit 5 (runes), Tailwind, Motion, Supabase, OneSignal, hébergement Netlify.
-- **Sécurité** : association privée, données personnelles de membres. RLS sur toutes les tables, validation des droits côté serveur.
+- **Stack** : SvelteKit 5 (runes), Tailwind, Motion, Better Auth, Neon PostgreSQL avec Drizzle et Cloudflare Hyperdrive, Cloudflare Pages, Cloudflare R2, Resend, Cloudflare Turnstile, OneSignal.
+- **Sécurité** : association privée, données personnelles de membres. Validation stricte des droits côté serveur sur chaque lecture, écriture, action et téléchargement.
 - **Langue** : site public disponible en français, anglais et breton (`fr`, `en`, `br`) ; espace adhérents et authentification en français.
 - **Usage** : surtout sur téléphone. Mobile first.
 - **Maintenance** : un seul mainteneur. Préférer le simple au sophistiqué.

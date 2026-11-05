@@ -1,7 +1,7 @@
 # AGENTS.md : Site Bagad Penhars
 
 Site de l'association Bagad Penhars (Quimper) : vitrine publique + espace adhérents sur invitation, installable en PWA.
-Stack : SvelteKit 5 (runes), Tailwind, Motion, Supabase, OneSignal, Netlify.
+Stack : SvelteKit 5 (runes), Tailwind, Motion, Better Auth, Neon PostgreSQL, Cloudflare Pages, Cloudflare R2, OneSignal.
 
 **Lis ce fichier d'abord, puis `docs/`. En cas de doute, n'invente pas : écris la question dans `docs/questions.md`.**
 
@@ -12,7 +12,7 @@ Stack : SvelteKit 5 (runes), Tailwind, Motion, Supabase, OneSignal, Netlify.
 | `docs/brief.md`        | Besoin, rôles, décisions de visibilité                       |
 | `docs/Spec.md`         | Exigences fonctionnelles et techniques pour les développeurs |
 | `docs/architecture.md` | Routes, flux d'auth, arborescence                            |
-| `docs/database.md`     | Schéma, RLS, migrations                                      |
+| `docs/database.md`     | Neon, Better Auth, R2, migrations                            |
 | `docs/pwa.md`          | Manifest, service worker, notifications                      |
 | `docs/roadmap.md`      | Jalons et « Focus actuel »                                   |
 | `docs/backlog.md`      | Tâches classées                                              |
@@ -27,13 +27,16 @@ Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` 
 - Runes uniquement : `$state`, `$derived`, `$effect`, `$props`.
 - Interdits : `export let`, `$:`, `on:click` (utiliser `onclick`), stores legacy pour l'état local.
 
-### Supabase et sécurité
+### Neon, Better Auth et sécurité
 
-- RLS activée sur **toute** table, y compris les tables publiques (policy de lecture explicite, filtrée sur `published` ou `visibility`).
-- Jamais de `using (true)` sans commentaire qui justifie.
+- Les autorisations métier sont vérifiées côté serveur dans les loads/actions/endpoints.
+- Les données et sessions sont gérées avec Better Auth et Neon PostgreSQL.
+- La séparation des données repose sur des contrôles applicatifs explicites, pas sur des policies Supabase (interdites).
+- Utiliser des migrations reproductibles pour toute modification de schéma.
 - Les rôles se lisent dans `profiles.role`, **jamais** dans `user_metadata`.
 - Données via `+page.server.ts` / `+layout.server.ts`, garde sur `event.locals`.
-- La clé `service_role` reste dans `src/lib/server/`, jamais côté client.
+- Les identifiants Neon, les secrets Better Auth et les clés OneSignal restent côté serveur et ne sont jamais exposés au client.
+- La branche Neon `test` est utilisée par les déploiements de preview et les validations locales; `production` est réservée au déploiement de production.
 - Une migration appliquée n'est jamais modifiée : on en ajoute une nouvelle.
 
 ### OneSignal
@@ -44,7 +47,7 @@ Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` 
 ### PWA
 
 - Le service worker ne met en cache **que** les fichiers statiques et la page `/offline`.
-- Jamais d'appel Supabase ni de page HTML d'espace adhérents en cache.
+- Jamais de page HTML d'espace adhérents ni de données Neon/R2 en cache.
 - Tout changement du manifest ou du service worker est consigné dans `docs/pwa.md`.
 
 ### UI
@@ -76,14 +79,15 @@ Ne pas entamer de refonte ni de nettoyage qui n'est pas demandé.
 npm run check && npm run lint && npm run build
 ```
 
-- Schéma modifié : nouvelle migration + mise à jour de `docs/database.md` (matrice des droits comprise) + test de policy dans `supabase/tests/`.
+- Schéma modifié : nouvelle migration Neon + mise à jour de `docs/database.md`
+  (matrice des droits comprise) + tests d'autorisation dans `tests/`.
 - Route ou flux modifié : mise à jour de `docs/architecture.md`.
 - Ajouter une entrée datée dans `docs/journal.md` : ce qui est fait, ce qui reste, les pièges rencontrés.
 
 ## 5. Demander avant d'agir
 
 - Changer de stack ou ajouter un service tiers.
-- Modifier les rôles, la RLS existante ou le flux d'invitation.
+- Modifier les rôles, les autorisations existantes ou le flux d'invitation.
 - Supprimer des données ou une migration.
 - Toucher aux en-têtes de sécurité (CSP) ou à la configuration Netlify.
 - Modifier la politique de cache du service worker.

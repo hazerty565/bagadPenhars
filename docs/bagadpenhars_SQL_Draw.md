@@ -1,5 +1,7 @@
-> **OBsolète — ne plus prendre en compte.** Ce schéma ne reflète pas la
-> migration Supabase active. Référence actuelle : `supabase/migrations/005_bagadPenhars_final.sql`.
+> **OBSOLETE — ne plus prendre en compte.** Ce document est une ancienne
+> représentation Supabase. La cible actuelle est un schéma PostgreSQL Neon
+> défini par de nouvelles migrations, décrites dans
+> [`database.md`](./database.md). Ne pas appliquer ce diagramme à Neon.
 
 # Schema: bagadpenhars — référence migration active 005
 Database: pgsql

@@ -7,14 +7,14 @@
 
 ## Stack et déploiement
 
-L'application cible SvelteKit 5, TypeScript et TailwindCSS. Supabase est
-l'unique fournisseur de services de données : Auth, PostgreSQL avec RLS et
-Storage. Netlify sert à héberger l'application; OneSignal est prévu pour les
-notifications push.
+L'application cible SvelteKit 5, TypeScript et Tailwind CSS. Les services sont
+Better Auth pour l'identité, Neon PostgreSQL avec Drizzle et Cloudflare
+Hyperdrive pour les données, Cloudflare R2 pour les fichiers, Cloudflare Pages
+pour l'hébergement, Resend pour les e-mails et Cloudflare Turnstile pour
+l'antispam, et OneSignal pour les notifications push.
 
-Cette architecture est la cible, pas encore l'état complet du dépôt : les
-fichiers d'authentification et le schéma historiques doivent être migrés vers
-Supabase. Voir [`database.md`](./database.md).
+La base Neon porte le nom `bagadpenhars` et deux branches sont utilisées :
+`production` et `test`. Voir [`database.md`](./database.md).
 
 ## Routes
 
@@ -27,8 +27,8 @@ fonction soit complète.
   médias, les partenaires et le contact.
 - `/auth/...` : connexion, déconnexion, invitation, attente, mot de passe
   oublié et réinitialisation.
-- `/auth/...` : pages d'authentification s'appuyant sur Supabase Auth et son
-  intégration SSR; aucun serveur d'authentification distinct n'est prévu.
+- `/auth/...` et `/api/auth/...` : pages et endpoint Better Auth pour la
+  connexion, la déconnexion, les invitations et la réinitialisation.
 - `/api/files/[...key]` : point d'entrée prévu pour le téléchargement des
   fichiers.
 - `/dashboard/...` : espace adhérent et pages d'administration : agenda,
@@ -43,14 +43,14 @@ Les pages publiques acceptent les langues `fr`, `en` et `br` selon le matcher
 
 1. Le navigateur appelle une page ou une action SvelteKit.
 2. Les lectures et écritures de données sont réalisées côté serveur via les
-   routes, les actions et les modules de `src/lib/server/`.
-3. Supabase Auth gère l'identité; SvelteKit lit et renouvelle la session avec
-   le client serveur SSR.
-4. Les policies RLS protègent les lignes dans PostgreSQL et les objets de
-   Storage. Les actions serveur appliquent aussi les règles métier et
-   vérifient le rôle et les pupitres.
-5. Les fichiers sont stockés dans Supabase Storage; PostgreSQL conserve leurs
-   métadonnées et clés.
+   routes, les actions et les modules de `src/lib/server/`. Drizzle accède à
+   Neon via Cloudflare Hyperdrive.
+3. Better Auth gère l'identité et les sessions. SvelteKit vérifie la session
+   dans les layouts, actions et endpoints serveur.
+4. Les actions serveur lisent le rôle et le statut dans les profils Neon; elles
+   vérifient explicitement les rôles et les pupitres sur chaque opération.
+5. Cloudflare R2 stocke les fichiers. Neon conserve leurs métadonnées, clés,
+   visibilité et identifiants de propriétaire.
 
 Ce flux est la cible. Les modules historiques du dépôt ne sont pas encore
 migrés; ne pas supposer que ces contrôles sont déjà effectifs.
@@ -70,8 +70,6 @@ migrés; ne pas supposer que ces contrôles sont déjà effectifs.
 
 ## Sécurité des données
 
-Les données privées doivent être protégées par des policies RLS Supabase et
-des contrôles côté serveur. La migration historique dans `migrations/` ne
-déclare pas ces policies et dépend de l'ancien système d'authentification;
-elle doit être portée vers `supabase/migrations/` avant d'être utilisée avec
-la cible.
+Les données privées sont protégées par des validations côté serveur, des
+sessions vérifiées et des URLs R2 privées. Aucune policy Supabase n'est reprise
+dans la cible.

@@ -2,7 +2,7 @@
 
 ## Focus actuel
 
-**Fiabiliser le socle avant d'étendre les fonctions métier** : rendre les
+**Fiabiliser le socle Neon/Better Auth/Cloudflare avant d'étendre les fonctions métier** : rendre les
 contrôles automatisés exécutables et expliciter les décisions d'authentification,
 de persistance et de sécurité. La CI `check` / `lint` / `build` est ajoutée;
 son premier passage et la complétion des fonctions serveur restent à valider.

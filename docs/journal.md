@@ -1,5 +1,41 @@
 # Journal
 
+> **OBSOLETE — ne plus prendre en compte pour toute décision de plateforme :
+> les entrées antérieures mentionnant Supabase, Supabase Auth/Storage/RLS,
+> Netlify ou Netlify Forms décrivent uniquement l'ancien projet. La cible
+> actuelle est Better Auth + Neon PostgreSQL + Cloudflare Pages + Cloudflare R2.**
+
+## 2026-11-05
+
+### Arbitrages plateforme du client
+
+- Structure de démarrage retenue pour Drizzle : `drizzle.config.ts`,
+  dossier `drizzle/` avec SQL et métadonnées, puis `src/lib/db/index.ts` et
+  `src/lib/db/schema.ts`. Les fichiers d'implémentation ne sont pas créés dans
+  cette étape documentaire; aucune migration Supabase ne doit être convertie
+  et appliquée comme migration initiale Neon.
+- Le mapping Neon retenu utilise `test` pour le développement/preview et
+  `production` pour la production Cloudflare Pages, via Cloudflare Hyperdrive.
+- Drizzle est retenu comme ORM avec le driver Neon adapté à Cloudflare.
+- R2 utilise désormais deux buckets: `bagad-public` et `bagad-private`.
+  Les téléversements sont bloqués après vérification du seuil de 9,5 GB sur la
+  limite annoncée de 10 GB-month.
+- Resend envoie les invitations, réinitialisations et messages de contact.
+- Cloudflare Turnstile protège le formulaire de contact contre l'abus.
+
+### Refonte documentaire vers Neon, Better Auth, Cloudflare Pages et R2
+
+- Demande client confirmée : Supabase est interdit; la documentation ne doit
+  plus présenter Supabase, sa RLS ou ses buckets comme cible.
+- La base Neon s'appelle `bagadpenhars` et utilise les branches `production`
+  et `test`.
+- Les spécifications actives passent à Better Auth pour l'identité, Neon pour
+  les données, Cloudflare Pages pour l'hébergement et R2 pour le stockage.
+- Les anciennes migrations et décisions Supabase restent uniquement
+  historiques; elles ne doivent pas être appliquées à Neon.
+- Questions bloquantes ajoutées pour les branches Neon, l'ORM, le bucket R2,
+  Better Auth et le fournisseur d'e-mails.
+
 ## 2026-11-04
 
 ### Reprise de la mission backend Supabase

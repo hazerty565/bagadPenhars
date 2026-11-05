@@ -17,7 +17,7 @@ Hors objectif : un mode hors-ligne complet. Les données de l'espace adhérents 
 | `src/service-worker.ts` | Cache des fichiers statiques et page hors-ligne |
 | `src/app.html` | Liens vers le manifest, `theme-color`, icône iOS |
 | `src/routes/offline/+page.svelte` | Page affichée sans réseau (prérendue) |
-| `netlify.toml` | En-têtes de cache du service worker et du manifest |
+| Cloudflare Pages / `_headers` | En-têtes de cache du service worker et du manifest |
 
 ## 3. Manifest
 
@@ -57,7 +57,7 @@ Dans `src/app.html` :
 |---|---|
 | Fichiers du build et `static/` (même origine) | Cache d'abord |
 | Navigation (pages HTML) | **Réseau uniquement**, repli sur `/offline` si coupure |
-| Autre origine (Supabase, OneSignal) | **Jamais interceptée** |
+| Autre origine (Neon, R2, OneSignal) | **Jamais interceptée** |
 | Méthodes autres que GET | Jamais interceptées |
 
 Pourquoi : les URL de l'espace adhérents ne sont pas préfixées (un groupe de routes `(app)` n'apparaît pas dans l'URL). Mettre les pages HTML en cache risquerait de montrer des données privées à quelqu'un de déconnecté. Seuls les fichiers statiques sont donc mis en cache.
@@ -94,7 +94,7 @@ sw.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  if (url.origin !== sw.location.origin) return; // Supabase, OneSignal : jamais touchés
+  if (url.origin !== sw.location.origin) return; // Neon, R2, OneSignal : jamais touchés
 
   if (req.mode === 'navigate') {
     event.respondWith(
@@ -122,19 +122,12 @@ OneSignal fournit son propre service worker (`OneSignalSDKWorker.js`). Deux serv
 
 Vérifier la documentation OneSignal actuelle avant de choisir, puis noter la décision ici. Tant qu'elle n'est pas prise, ne pas publier de service worker en production.
 
-## 6. En-têtes Netlify
+## 6. En-têtes Cloudflare Pages
 
-```toml
-[[headers]]
-  for = "/service-worker.js"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
-```
+Les headers exacts sont configurés dans Cloudflare Pages ou `_headers`, selon
+la solution retenue. Le service worker et le manifest ne doivent pas être
+mis en cache plus longtemps que nécessaire, notamment avec
+`Cache-Control: no-cache` pour le service worker.
 
 Sans `no-cache` sur le service worker, les mises à jour n'arrivent pas chez les utilisateurs.
 
@@ -153,7 +146,7 @@ Chaque déploiement change `version` : un nouveau cache est créé et l'ancien s
 - [ ] Lighthouse : la PWA est installable
 - [ ] Mode avion : une navigation affiche `/offline`
 - [ ] Déconnecté, aucune page de l'espace adhérents n'est servie depuis le cache
-- [ ] Aucune requête Supabase n'apparaît dans le cache (DevTools → Application → Cache Storage)
+- [ ] Aucune requête Neon ou R2 ni page adhérent n'apparaît dans le cache
 - [ ] Après un déploiement, la nouvelle version remplace l'ancienne
 - [ ] Installation et notification testées sur Android et sur iPhone
 

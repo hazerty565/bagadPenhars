@@ -19,8 +19,8 @@
 - [x] Mettre en place la structure SvelteKit.
 - [x] Mettre en place le routage multilingue FR / EN / BR du site public.
 - [x] Bloquer l'accès à l'espace adhérents pour les comptes `pending`.
-- [x] Confirmer Supabase comme cible pour l'authentification, la base de
-  données et le stockage, et aligner la documentation.
+- [x] Enregistrer l'obsolescence de Supabase et retenir Better Auth, Neon et
+  R2 comme cible.
 - [x] Compléter la spécification avec les décisions fonctionnelles confirmées
   et consigner les décisions encore ouvertes.
 - [x] Aligner la documentation des événements et des droits par pupitre.
@@ -30,12 +30,14 @@
 - [o] Faire passer `check`, `lint` et `build`, puis valider leur exécution en
   CI. Les dernières vérifications ont encore signalé des erreurs préexistantes.
 - [o] Migrer l'authentification, la base PostgreSQL et les fichiers vers
-  Supabase (Auth, PostgreSQL/RLS et Storage).
+  Better Auth, Neon et R2.
+- [o] Configurer Drizzle et Hyperdrive pour Neon; créer les buckets R2
+  `bagad-public` et `bagad-private`; intégrer Resend et Turnstile.
 - [o] Mettre en place les sessions et les guards côté serveur; vérifier les
   autorisations des actions et des routes de fichiers.
 - [o] Définir et mettre en œuvre un mécanisme de migrations reproductible.
-- [o] Définir et tester les policies RLS de toutes les tables et des buckets
-  Supabase Storage.
+- [o] Définir et tester les autorisations serveur de toutes les tables et
+  objets R2.
 - [o] Comparer le schéma SQL aux fonctionnalités prévues et créer les
   migrations manquantes, notamment pour les invitations.
 
@@ -60,12 +62,12 @@
 - [o] Vérifier et terminer l'affichage responsive sur mobile.
 - [o] Vérifier les environnements, les emails et le stockage lors du
   déploiement.
-- [o] Déployer et vérifier le site sur Netlify.
+- [o] Déployer et vérifier le site sur Cloudflare Pages.
 
 ## Décisions encore ouvertes
 
-- [o] Confirmer l'audience des notifications de sondage et le calendrier
-  d'intégration de Netlify Forms.
+- [o] Confirmer l'audience des notifications de sondage et le fournisseur
+  d'e-mails pour le contact et les invitations.
 - [o] Définir les durées de conservation et le processus de suppression de
   compte.
 

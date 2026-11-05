@@ -5,6 +5,10 @@
 > Consulter les arbitrages datés de [`questions.md`](./questions.md) et ne pas
 > prendre en compte les passages qui y sont marqués **OBsolète — ne plus
 > prendre en compte**.
+>
+> **Plateforme obsolète — 2026-11-05 :** Supabase, Supabase Auth et Supabase
+> Storage sont interdits par la demande client. La cible est Better Auth,
+> Neon PostgreSQL, Cloudflare Pages et Cloudflare R2.
 
 ## 1. Objet
 
@@ -84,11 +88,11 @@ Principes obligatoires :
   fonction au bureau. Les coordonnées privées restent inaccessibles. Les titres
   du bureau ne sont jamais publics et ne déterminent aucun droit. La vue
   dédiée, ses données associées et les photos doivent être accessibles dès la
-  V1, y compris au moyen d'appels directs à Supabase soumis aux mêmes contrôles.
+  V1, y compris au moyen d'appels serveur soumis aux mêmes contrôles.
 
 Les permissions détaillées sont précisées dans les exigences par ressource
-ci-dessous. Le schéma Supabase prend en charge les états de compte séparés des rôles et
-plusieurs affectations de pupitre par membre.
+ci-dessous. Neon PostgreSQL prend en charge les états de compte séparés des
+rôles et plusieurs affectations de pupitre par membre.
 
 ## 4. Exigences fonctionnelles
 
@@ -148,7 +152,7 @@ plusieurs affectations de pupitre par membre.
    l'identité nécessaire et le ou les pupitres. Le compte Auth est créé
    immédiatement et le profil applicatif a `account_status = 'pending'` et le
    rôle indépendant `member`.
-2. Dans l'heure, le destinataire ouvre le lien Supabase Auth, confirme son
+2. Dans l'heure, le destinataire ouvre le lien Better Auth, confirme son
    adresse e-mail et définit son mot de passe. Le lien ne donne pas accès au
    dashboard.
 3. La confirmation e-mail ne valide pas le compte : il reste `pending` jusqu'à
@@ -158,11 +162,12 @@ plusieurs affectations de pupitre par membre.
 5. Le pupitre attribué n'est pas modifiable par l'invité.
 6. Le lien Auth expire après une heure. Si le lien expire, la secrétaire ou l'administrateur
    peut renvoyer une invitation au compte Auth existant sans créer un second
-   compte. L'expiration doit être configurée côté Supabase Auth, pas seulement
+   compte. L'expiration doit être configurée côté Better Auth, pas seulement
    enregistrée dans la table applicative.
 
 Les paramètres Auth du projet hébergé et le modèle d'e-mail d'invitation
-(contenu, lien et redirection) sont configurés dans le Dashboard Supabase.
+(contenu, lien et redirection) sont configurés dans Better Auth et le service
+d'envoi d'e-mails retenu.
 La configuration locale du dépôt sert au développement et ne remplace pas
 ce réglage Dashboard. Les opérations doivent être auditées lorsque le modèle
 de données le permet.
@@ -184,8 +189,7 @@ de données le permet.
 - La secrétaire et l'admin peuvent inviter et approuver les comptes; ils ne peuvent approuver un
   compte dont l'adresse e-mail n'est pas confirmée.
 - Les champs de profil modifiables sont ceux du profil du membre, hors rôle et
-  pupitres. Le changement de l'adresse email du compte doit suivre le flux
-  sécurisé de Supabase Auth.
+  pupitres. Le changement de l'adresse e-mail suit le flux sécurisé Better Auth.
 - Un membre peut demander la suppression de son compte. Les données
   personnelles sont supprimées ou anonymisées selon les obligations légales;
   les durées de conservation des présences et journaux d'audit restent à
@@ -254,12 +258,11 @@ de données le permet.
   les médias d'albums publics sont servis publiquement depuis
   `bagad-public/albums/{album_id}/`. Les médias non publics restent dans
   `bagad-private/documents/albums/{album_id}/`.
-- `bagad-public` est configuré avec `public = true` pour `articles/`, `albums/`,
-  `events/` et `documents/`; ne jamais y placer de fichier non publié. `bagad-private`
-  est configuré avec `public = false` pour les photos de profil et documents
-  internes. Les policies de `storage.objects` contrôlent l'accès et les
-  opérations d'écriture. Les fichiers privés sont servis par accès authentifié
-  ou URL signée courte, jamais par URL publique permanente.
+- Le bucket `bagad-public` est réservé aux objets explicitement publiés.
+- Le bucket `bagad-private` contient les photos de profil et documents internes.
+  Les fichiers privés sont servis par accès authentifié ou URL signée courte,
+  jamais par URL publique permanente. Les autorisations sont vérifiées par les
+  actions SvelteKit et les gardes serveur, sans policy RLS Supabase.
 
 ### 4.6 Notifications
 
@@ -281,19 +284,17 @@ de données le permet.
 
 ### 4.7 Contact
 
-- Le formulaire public utilise Netlify Forms pour recevoir les soumissions;
-  la configuration Netlify existe déjà et l'adresse officielle de destination
-  est configurée hors du code. Les responsables du bureau consultent et
-  traitent manuellement les soumissions dans le dashboard Netlify.
+- Le formulaire public envoie les messages via un endpoint Cloudflare Pages
+  SvelteKit. Resend transmet le message à l'adresse officielle; Cloudflare
+  Turnstile valide l'action et les pièces jointes restent interdites.
 - Les pièces jointes sont interdites et une confirmation est envoyée à
   l'expéditeur. Le branchement du formulaire côté application reste une tâche
   d'implémentation.
 
 ## 5. Exigences de sécurité et de confidentialité
 
-- Activer et définir une politique RLS sur chaque table de données, y compris
-  celles qui contiennent des données destinées au public. Les politiques
-  publiques doivent filtrer explicitement les contenus publiés ou visibles.
+- Appliquer une autorisation serveur explicite à chaque table et opération,
+  y compris les données destinées au public.
 - Ne pas utiliser une politique générale autorisant tout accès sans justification
   documentée et revue.
 - Valider et normaliser les entrées côté serveur; appliquer les schémas de
@@ -311,29 +312,44 @@ de données le permet.
 ## 6. Contraintes techniques et conventions
 
 La cible déclarée dans `AGENTS.md` et `docs/brief.md` est SvelteKit 5 avec
-runes, Tailwind, Motion, Supabase, OneSignal et hébergement Netlify. Avant une
+runes, Tailwind, Motion, Better Auth, Neon PostgreSQL, Cloudflare R2,
+OneSignal et hébergement Cloudflare Pages. Avant une
 nouvelle intégration, vérifier cette cible face aux dépendances et à
 l'implémentation présentes : le dépôt peut contenir des choix antérieurs ou
-incomplets. Ne pas changer de fournisseur ni ajouter de service sans décision
+incomplets. Les anciens éléments Supabase/Netlify sont interdits et ne doivent
+pas être réintroduits. Ne pas ajouter de service tiers sans décision
 dans `docs/questions.md`.
 
 - Svelte 5 : utiliser exclusivement les runes (`$state`, `$derived`, `$effect`, `$props`). Ne pas introduire `export let`, `$:`, `on:click` (utiliser `onclick`), ni de stores Svelte legacy pour l'état local.
 - Formulaires et mutations : privilégier les actions SvelteKit (`+page.server.ts`) avec progressive enhancement (`use:enhance`), validation serveur systématique (schémas Zod/Standard Schema) et retours typés (`fail`, `success`).
-- Supabase SSR : intégration canonique via `@supabase/ssr` dans `src/hooks.server.ts` :
-  - Client serveur initialisé avec gestion complète des cookies (`getAll` / `setAll`).
-  - Helper `safeGetSession()` pour valider le JWT et charger l'utilisateur.
-  - Résolution du profil et des rôles en base (`public.profiles`) attachés à `event.locals.profile` et `event.locals.role`.
-  - Guards centralisés dans `src/lib/auth/guards.ts` appliqués dans `+layout.server.ts` ou `+page.server.ts`.
-  - La clé `service_role` est strictement confinée dans `src/lib/server/` pour les opérations administratives (`auth.admin`, logs d'audit).
-- Typage strict : génération et utilisation systématique des types Supabase (`Database`) via le CLI Supabase pour un typage de bout en bout.
+- Better Auth : intégrer le handler central, les hooks serveur et les sessions
+  vérifiées. Résoudre le profil et le rôle depuis Neon et les attacher à
+  `event.locals.profile` et `event.locals.role`.
+- Utiliser Drizzle comme ORM et Cloudflare Hyperdrive comme pool/connexion
+  PostgreSQL Neon pour les déploiements Cloudflare Workers.
+- Utiliser Resend pour les invitations et réinitialisations Better Auth, ainsi
+  que pour les messages de contact.
+- Utiliser Cloudflare Turnstile sur le formulaire de contact avant tout envoi
+  côté serveur.
+- Guards centralisés dans `src/lib/auth/guards.ts`, appliqués dans les layouts,
+  actions et endpoints.
+- Connexion PostgreSQL Neon et secrets Better Auth strictement confinés au
+  serveur, sans clé publique/admin exposée au client.
+- Typage strict : utiliser des types générés ou contrôlés pour les entités
+  PostgreSQL et les réponses API.
 - Tailwind CSS : respect strict des tokens de thème du projet (couleurs, rayons, espacements). Approche mobile-first systématique (`sm:`, `md:`, `lg:`), focus rings visibles pour l'accessibilité clavier (`focus-visible:ring-2`), et gestion du mouvement réduit (`motion-reduce:`).
 - Interface : en français, mobile-first, conforme aux critères d'accessibilité (labels explicites, contrastes WCAG AA).
-- Dépendances & nettoyage : suppression immédiate des paquets et fichiers obsolètes (Better Auth, Kysely, pg, Netlify Blobs) afin de débloquer la CI (`check`, `lint`, `build`).
-- Données métier : entièrement gérées dans Supabase. Netlify sert uniquement à l'hébergement et aux Netlify Forms (contact); OneSignal aux notifications push.
-- Évolution du schéma : uniquement via de nouvelles migrations `supabase/migrations/NNN_*.sql`. Chaque migration active RLS et pose des policies explicites.
+- Dépendances & nettoyage : supprimer toute dépendance et configuration
+  Supabase/Netlify non utilisée; aucune nouvelle dépendance tiers sans décision
+  documentée.
+- Données métier : entièrement gérées dans Neon. Cloudflare R2 stocke les
+  fichiers. OneSignal envoie les notifications push.
+- Évolution du schéma : uniquement via de nouvelles migrations PostgreSQL
+  reproductibles sous `migrations/`.
 - Environnements : séparation stricte de dev, preview et production. Aucun secret committé.
 - Fuseau horaire : `Europe/Paris` avec gestion automatique des décalages été/hiver.
-- PWA : service worker restreint aux assets statiques du build et à `/offline`. Aucune page privée ni requête Supabase en cache. Modification consignée dans `docs/pwa.md`.
+- PWA : service worker restreint aux assets statiques du build et à `/offline`.
+  Aucune page privée ni requête Neon/R2 en cache. Modification consignée dans `docs/pwa.md`.
 
 ## 7. Critères d'acceptation transversaux
 
@@ -377,55 +393,50 @@ fonctionnelle :
   `src/lib/auth/guards.ts`, `src/lib/auth/roles.ts`,
   `src/lib/server/auth.ts`, `src/lib/server/db.ts`,
   `src/lib/server/blobs.ts` et plusieurs modules `src/lib/server/data/`.
-- Le schéma Supabase de départ est consolidé dans
-  `supabase/migrations/005_bagadPenhars_final.sql`; les migrations 001–004
-  sont archivées sous `supabase/deprecated_migrations/` et ne doivent pas être
-  appliquées.
-- Au moment de cette lecture, il n'y a pas de dossier `supabase/`, de
-  migration Supabase, de fichier `.env.example` ni de dépendance Supabase dans
-  `package.json`. Le dépôt contient encore Better Auth, `pg`, Kysely et
-  Netlify Blobs.
+- L'ancien schéma Supabase est historique et obsolète; il ne doit pas être
+  migré automatiquement ni appliqué à Neon.
+- La configuration Neon/Better Auth/R2/Cloudflare Pages reste à finaliser avec
+  les questions ouvertes du dépôt.
 - `src/routes/` comprend des écrans d'agenda, d'articles, d'invitations,
   d'administration, de documents et de notifications. Il n'y a pas de routes
   dédiées aux sondages dans l'arborescence lue.
 - La présence de tests dans certains répertoires ne signifie pas que tous les
   scénarios produit ou les règles d'autorisation sont couverts.
 
-Le schéma 005 est prévu pour une base Supabase vierge. Un projet ayant déjà
-appliqué les migrations historiques doit faire l'objet d'une réconciliation
-dédiée avant déploiement.
+Le modèle PostgreSQL doit être initialisé par de nouvelles migrations sur la
+branche Neon `test`, puis vérifié avant application sur `production`.
 
 ## 10. Plan de réalisation recommandé
 
 L'ordre ci-dessous exprime les dépendances techniques. Une étape qui dépend
 d'une réponse inscrite dans `docs/questions.md` ne commence qu'après décision.
 
-### Étape A — Socle Supabase
+### Étape A — Socle Neon et Cloudflare
 
 - Définir les environnements de développement, preview et production sans
   partager de secrets entre eux.
-- Ajouter la configuration Supabase nécessaire à SvelteKit SSR et documenter
-  les noms de variables sans valeurs réelles.
-- Ajouter la structure de migrations Supabase et un processus reproductible
+- Configurer les deux branches Neon et les variables Cloudflare Pages associées
+  aux environnements preview et production.
+- Ajouter la configuration Better Auth et Neon adaptée à l'adapter Cloudflare.
+- Ajouter la structure de migrations PostgreSQL et un processus reproductible
   pour les appliquer.
-- Établir un nouveau schéma basé sur `auth.users`; définir les tables métier,
-  les contraintes, les index, les fonctions et les policies RLS.
-- Définir les buckets Storage et leurs policies; aucun bucket privé ne doit
+- Établir le schéma métier et les tables Better Auth avec contraintes, index
+  et fonctions.
+- Configurer les bindings R2; aucun objet privé ne doit
   être rendu public pour simplifier les téléchargements.
-- Écrire des tests de policies dans `supabase/tests/` pour accès anonyme,
+- Écrire des tests d'intégration pour accès anonyme,
   membre, chef de pupitre, secrétaire et administrateur selon la matrice
   approuvée.
 - La base démarre vierge; aucune migration historique de comptes ou de données
-  n'est prévue. Ne pas appliquer le schéma historique Better Auth comme schéma
-  Supabase.
+précédente n'est prévue. Ne pas appliquer les fichiers Supabase à Neon.
 
 **Livrable :** installation locale documentée, migrations applicables à une
-base Supabase neuve, RLS activée sur chaque table et Storage, tests de policies
-passants.
+base Neon neuve, autorisations serveur testées sur chaque table et R2, tests
+intégrés passants.
 
 ### Étape B — Identité et autorisations
 
-- Intégrer Supabase Auth dans le hook serveur et les types `event.locals`.
+- Intégrer Better Auth dans le hook serveur et les types `event.locals`.
 - Charger le profil et le rôle depuis la base; ne jamais dériver les droits de
   `user_metadata`.
 - Implémenter les guards et centraliser les vérifications de rôle et de
@@ -451,7 +462,7 @@ member` sont créés immédiatement.
 - La secrétaire et l'admin peuvent activer un compte; l'activation vérifie que l'adresse
   e-mail est confirmée et change uniquement `account_status` en `active`.
 - Permettre à un membre de modifier uniquement les champs de son propre profil
-  hors rôle et pupitres; le changement d'adresse email suit le flux Supabase
+  hors rôle et pupitres; le changement d'adresse email suit le flux Better Auth
   Auth. Le trombinoscope réservé aux membres actifs expose uniquement les champs
   autorisés par le brief, sans ouvrir l'accès aux profils complets.
 - Journaliser les changements de rôle et les actions d'administration sans
@@ -487,20 +498,21 @@ propriété des réponses et cas de dates invalides.
 ### Étape E — Articles, médias, documents et contact
 
 - Séparer contenu brouillon et publié; le public ne lit que le contenu publié.
-- Stocker les fichiers dans les buckets Supabase prévus; contrôler type,
+- Stocker les fichiers dans R2; contrôler type,
   taille, nom et droits avant écriture.
 - N'accepter aucune vidéo. Limiter chaque fichier photo source JPG/JPEG à
   20 Mo et le convertir en WebP avant stockage. Le trombinoscope V1 est
   obligatoire et opérationnel à la première mise en production. La photo de
   profil affichée y est stockée dans
-  `bagad-private/profiles/{profile_id}/avatar.webp`, accessible aux membres
+  `profiles/{profile_id}/avatar.webp`, accessible aux membres
   actifs; seul son propriétaire peut la modifier, administrateurs inclus.
-- Configurer `bagad-public` (`public = true`) pour les médias publiés et
-  `bagad-private` (`public = false`) pour les avatars et documents privés.
+- Utiliser `public/*` pour les médias publiés et
+  `profiles/*`, `documents/*`, `albums/*` pour les données privées ou
+  protégées.
   Les fichiers privés sont servis via accès authentifié ou URL signée courte,
   jamais par URL publique permanente.
-- Servir les partitions depuis un bucket privé avec autorisation serveur et
-  RLS; ne jamais exposer une URL publique pour un document privé.
+- Servir les partitions depuis R2 via autorisation serveur; ne jamais exposer
+  une URL publique permanente pour un document privé.
 - Publier les albums et médias uniquement après action d'un rôle autorisé.
 - Prévoir la prévisualisation avant publication; seuls l'admin et la secrétaire
   publient ou suppriment un album.
@@ -583,7 +595,7 @@ Une livraison développeur doit fournir :
 
 1. une implémentation conforme aux exigences décidées, sans comportements
    inventés pour les questions ouvertes;
-2. les migrations et policies RLS nécessaires, avec tests de policies;
+2. les migrations Neon nécessaires, avec tests d'autorisation serveur;
 3. des tests des cas heureux, des entrées invalides, des refus d'accès et des
    cas de confidentialité concernés;
 4. une interface française, mobile first et accessible, conforme aux règles

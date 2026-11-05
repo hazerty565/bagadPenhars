@@ -11,8 +11,9 @@ activités; l'espace adhérents sert à consulter l'agenda et les partitions,
 répondre aux événements et gérer son profil.
 
 > **État du projet :** les décisions ci-dessous décrivent la cible produit,
-> pas nécessairement des fonctions déjà opérationnelles. L'intégration
-> Supabase et plusieurs parcours restent à développer. Consultez
+> pas nécessairement des fonctions déjà opérationnelles. Supabase et Netlify
+> sont obsolètes depuis le 2026-11-05; la cible est Better Auth + Neon +
+> Cloudflare Pages/R2. Plusieurs parcours restent à développer. Consultez
 > [la spécification](./docs/Spec.md) et [l'architecture](./docs/architecture.md)
 > avant de considérer un parcours comme livré.
 
@@ -26,8 +27,8 @@ répondre aux événements et gérer son profil.
 - Le trombinoscope est réservé aux membres actifs et n'expose que les champs
   autorisés. Les coordonnées privées et les titres du bureau ne sont pas
   publics.
-- Supabase Storage sépare les médias publiés (`bagad-public`) des photos de
-  profil et documents privés (`bagad-private`).
+- Cloudflare R2 sépare les médias publics des photos de profil et documents
+  privés. Les objets privés sont servis uniquement après autorisation serveur.
 - Les représentations explicitement publiques sont consultables sans compte.
 - Le fuseau horaire des événements est `Europe/Paris`. La première version ne
   gère pas les événements récurrents.
@@ -47,8 +48,8 @@ membre peut être rattaché à un ou plusieurs pupitres. Le rôle et les pupitre
 sont des données de profil, pas des informations de session fournies par le
 navigateur.
 
-Seul l'administrateur envoie une invitation par `inviteUserByEmail()`. Le lien
-Supabase Auth expire après une heure. Le membre confirme son adresse et définit
+Seuls l'administrateur et la secrétaire envoient une invitation. Le lien
+Better Auth expire après une heure. Le membre confirme son adresse et définit
 son mot de passe ; le profil reste `pending` jusqu'à l'approbation manuelle par
 l'administrateur après confirmation de l'adresse. Si le lien expire,
 l'administrateur peut renvoyer une invitation au compte Auth existant. Le
@@ -79,9 +80,9 @@ pupitre ne peut pas être modifié par la personne invitée.
   source JPG/JPEG de 20 Mo maximum sont converties en WebP. Les vidéos sont
   interdites. Chaque membre actif peut lire les photos de profil des autres
   membres actifs, mais modifier uniquement la sienne.
-- Le formulaire de contact doit utiliser Netlify Forms; les pièces jointes
-  sont interdites. La configuration existe côté Netlify, mais le branchement
-  dans l'application et la confirmation à l'expéditeur restent à préciser.
+- Le formulaire de contact doit être traité par un endpoint Cloudflare Pages
+  avec un fournisseur e-mail côté serveur; les pièces jointes sont interdites.
+  Le branchement technique reste à valider dans `docs/questions.md`.
 
 ### Notifications
 
@@ -99,8 +100,8 @@ l'invitation, les profils, les formats de médias, la visibilité des événemen
 (`public`, `interne`, `pupitre`) et les notifications de sondage. Les points
 suivants ne doivent pas être supposés :
 
-1. **Netlify Forms :** confirmer le calendrier de branchement et le mécanisme
-   de confirmation à l'expéditeur.
+1. **Fournisseur e-mail du contact et des invitations :** confirmer le service,
+   l'adresse destination et le mécanisme de confirmation à l'expéditeur.
 2. **Conservation et suppression :** fixer les durées de conservation des
    soumissions de contact, présences et journaux d'audit, ainsi que le
    processus de traitement d'une demande de suppression de compte.
@@ -111,21 +112,20 @@ pas une exigence définitive.
 
 ## Architecture cible et état technique
 
-La cible est SvelteKit 5, TypeScript et Tailwind CSS, avec Supabase Auth,
-PostgreSQL/RLS et Storage. Netlify héberge l'application et reçoit les
-formulaires de contact; OneSignal gère les notifications push.
+La cible est SvelteKit 5, TypeScript et Tailwind CSS, avec Better Auth,
+Neon PostgreSQL via Drizzle et Cloudflare Hyperdrive, Cloudflare R2,
+Cloudflare Pages, Resend et Cloudflare Turnstile. OneSignal gère les
+notifications push.
 
-Le dépôt contient encore des éléments historiques fondés sur Better Auth,
-PostgreSQL direct et Netlify Blobs. Le schéma SQL sous `migrations/` n'est pas
-une migration Supabase et ne doit pas être appliqué tel quel. Les migrations
-Supabase, les policies RLS et l'intégration complète des parcours restent à
-mettre en place. L'état détaillé figure dans
+Le dépôt contient encore des éléments historiques fondés sur Supabase et
+Netlify. Ils sont obsolètes et ne doivent pas être utilisés comme implémentation
+ni comme source de vérité. Le modèle Neon/Better Auth/R2 reste à finaliser.
+L'état détaillé figure dans
 [la documentation de la base](./docs/database.md).
 
-Les environnements Supabase de développement, de preview et de production
-doivent être séparés. Les secrets restent dans des variables d'environnement
-et ne sont jamais committés; les clés de service ne sont jamais exposées au
-navigateur.
+Les branches Neon `test` et `production` sont séparées des environnements
+Cloudflare Pages. Les secrets restent dans des variables d'environnement
+serveur et ne sont jamais committés ni exposés au navigateur.
 
 ## Développement local
 
@@ -139,9 +139,7 @@ pnpm dev
 ```
 
 Le dépôt ne fournit pas encore de fichier `.env.example` ni de procédure
-reproductible de configuration des services Supabase. Le serveur de
-développement ne signifie donc pas que les parcours dépendant de ces services
-sont configurés.
+reproductible complète pour Neon, Better Auth, R2 ou Cloudflare Pages.
 
 ### Commandes
 
@@ -162,10 +160,10 @@ pnpm run check && pnpm run lint && pnpm run build
 
 ## Déploiement
 
-Netlify est la cible d'hébergement (`@sveltejs/adapter-netlify`). Avant toute
-mise en production, il faut terminer la migration vers Supabase, définir et
-tester les policies RLS, configurer séparément les environnements, vérifier
-les secrets et valider la compatibilité du service worker avec OneSignal.
+Cloudflare Pages est la cible d'hébergement. Avant toute mise en production,
+il faut configurer Better Auth, Neon et R2, séparément les branchements `test`
+et `production`, vérifier les secrets et valider la compatibilité du service
+worker avec OneSignal.
 Consultez [la feuille de route](./docs/roadmap.md) et
 [le backlog](./docs/backlog.md) pour l'ordre de réalisation.
 
@@ -179,7 +177,7 @@ Consultez [la feuille de route](./docs/roadmap.md) et
 - [Structure du dépôt](./docs/Structure.md) — arborescence réelle, prototype
   visuel et repères des modules.
 - [Architecture](./docs/architecture.md) — routes et flux.
-- [Base de données](./docs/database.md) — schéma cible, RLS et droits.
+- [Base de données](./docs/database.md) — Neon, Better Auth, R2 et droits.
 - [PWA](./docs/pwa.md) — cache et notifications.
 - [Questions produit](./docs/questions.md) — décisions prises et questions
   ouvertes.

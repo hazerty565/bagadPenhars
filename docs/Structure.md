@@ -16,7 +16,9 @@ Pour les règles produit, se référer au [brief](./brief.md), à la
 bagadPenhars/
 ├── .github/                 # Automatisation du dépôt et CI
 ├── docs/                    # Produit, architecture, schéma et suivi
-├── netlify/functions/       # Fonctions serverless Netlify
+├── drizzle/                 # Migrations SQL générées par Drizzle
+│   ├── meta/                # Métadonnées du journal Drizzle
+│   └── 0000_initial.sql     # Première migration PostgreSQL Neon
 ├── scripts/                 # Scripts de maintenance et migration
 ├── src/
 │   ├── autre/               # Prototype visuel autonome (Vite + Svelte)
@@ -25,22 +27,24 @@ bagadPenhars/
 │   │       ├── App.svelte
 │   │       ├── components/  # Sections de la maquette de page d'accueil
 │   │       └── lib/         # Données de démonstration du prototype
-│   ├── lib/                 # Composants, données, auth, serveur et types partagés
+│   ├── lib/
+│   │   ├── db/
+│   │   │   ├── index.ts     # Connexion Neon / Hyperdrive pour Drizzle
+│   │   │   └── schema.ts    # Définition du schéma Drizzle
+│   │   └── server/          # Auth, R2, e-mail et logique sensible côté serveur
 │   ├── params/              # Matchers de routes SvelteKit
 │   └── routes/              # Pages, actions et endpoints SvelteKit
 ├── static/                  # Fichiers servis tels quels
-├── supabase/
-│   ├── deprecated_migrations/ # Anciennes migrations archivées
-│   └── migrations/          # Migration de référence pour une base vierge
 ├── tests/                   # Tests Vitest du projet
+├── drizzle.config.ts        # Configuration de Drizzle et des migrations
 ├── package.json             # Scripts et dépendances
-├── svelte.config.js         # Configuration SvelteKit / Netlify
+├── svelte.config.js         # Configuration SvelteKit / Cloudflare Pages
 └── vite.config.ts           # Configuration Vite
 ```
 
-Le dépôt utilise SvelteKit 5, TypeScript, Tailwind CSS, Supabase et l'adapter
-Netlify. Les dépendances et commandes exactes sont définies dans
-`package.json`.
+Le dépôt cible SvelteKit 5, TypeScript, Tailwind CSS, Better Auth, Neon
+PostgreSQL, Cloudflare Pages et Cloudflare R2. Les dépendances exactes sont
+définies dans `package.json`.
 
 ## 2. Routes SvelteKit
 
@@ -116,7 +120,7 @@ l'interface ne constitue pas un contrôle d'accès.
 
 Les dossiers contenant des fichiers de test ou des `schema.ts` regroupent les
 tests et validations propres à la route. Leur présence ne signifie pas que tous
-les scénarios métier ou les policies Supabase sont couverts.
+les scénarios métier ou les autorisations serveur sont couverts.
 
 ## 3. Bibliothèques partagées (`src/lib/`)
 
@@ -161,7 +165,7 @@ d'implémentation ni leur conformité complète aux décisions en cours de revue
   événements, présences, documents, invitations et profils.
 - `src/lib/auth/` centralise les rôles, permissions et gardes.
 - `src/lib/schemas/` contient les schémas de validation ; `src/lib/types/`
-  regroupe les types TypeScript, dont ceux associés au schéma Supabase.
+  regroupe les types TypeScript, dont ceux associés au modèle PostgreSQL Neon.
 - `src/lib/data/` contient notamment les données éditoriales de formation,
   navigation et partenaires.
 - `src/lib/i18n/` contient les dictionnaires français, anglais et breton.
@@ -187,45 +191,36 @@ la migration ou les modules serveur les implémentent déjà tous.
 
 ## 4. Services et données
 
-### Supabase
+### Neon, Better Auth et Cloudflare R2
 
 ```text
-supabase/
-├── config.toml
-├── migrations/
-│   └── 005_bagadPenhars_final.sql
-└── deprecated_migrations/
-    ├── README.md
-    └── migrations 001–004 archivées, non applicables
+drizzle/                 # Migrations SQL générées par Drizzle
+drizzle.config.ts        # Source, cible et chemin des migrations
+src/lib/db/index.ts      # Drizzle via Neon et Cloudflare Hyperdrive
+src/lib/db/schema.ts     # Tables, relations et types du modèle applicatif
+src/lib/server/auth.ts   # Configuration Better Auth
+src/lib/server/r2.ts     # Accès serveur aux buckets public/private
+src/lib/server/email.ts  # Envoi Resend côté serveur
 ```
 
-La migration 005 constitue le schéma consolidé prévu pour une base Supabase
-vierge. Les migrations précédentes sont archivées et ne doivent pas être
-appliquées. La présence d'un dossier ou d'une migration ne prouve pas que
-Supabase a été configuré ou que la migration a été appliquée dans un
-environnement.
+La base Neon s'appelle `bagadpenhars` et possède les branches `test` et
+`production`. Les anciennes migrations Supabase ne sont pas une source de
+vérité ni une migration à appliquer.
 
 Le schéma métier courant utilise notamment `profiles`, `profile_pupitres`,
 `events`, `event_pupitres` et `event_responses`. Les sondages sont représentés
 dans `events` par `is_poll` ; les tables historiques `polls` et
 `poll_responses` ne font pas partie du modèle retenu.
 
-Les buckets prévus sont `bagad-public` pour les médias publiés et
-`bagad-private` pour les avatars et documents privés. Les fichiers privés
-doivent rester protégés par authentification et policies Storage.
+Les objets sont séparés dans deux buckets R2 distincts: `bagad-public` et
+`bagad-private`. Les objets privés sont servis après contrôle côté serveur,
+jamais par URL publique permanente. Les téléversements sont bloqués à 9,5 GB.
 
-### Netlify et notifications
+### Cloudflare Pages et notifications
 
-```text
-netlify/functions/
-├── invite-user.ts
-└── send-notification.ts
-```
-
-Netlify héberge l'application et ses fonctions serverless. Le formulaire de
-contact relève de Netlify Forms et de son dashboard ; les soumissions sont
-destinées à `bagadpenhars@gmail.com`. OneSignal est le service de notification
-push pour les personnes concernées par les événements.
+Cloudflare Pages héberge le runtime SvelteKit et reçoit les bindings Neon via
+variables d'environnement et R2 via binding `R2_BUCKET`. OneSignal reste le
+service de notification push côté serveur.
 
 Le service worker OneSignal fourni dans `static/OneSignalSDKWorker.js` ne
 signifie pas que la stratégie PWA/cache est finalisée. La compatibilité avec
@@ -277,8 +272,8 @@ précisés dans [`Spec_UI.md`](./Spec_UI.md).
 - `tests/` contient les tests du dépôt exécutés par Vitest.
 - Les fichiers `*.test.ts` présents sous les routes vérifient des parcours ou
   schémas spécifiques.
-- Aucun dossier `supabase/tests/` n'apparaît actuellement dans l'arborescence ;
-  les tests d'intégration RLS restent à confirmer dans le suivi technique.
+- Les tests de permissions doivent couvrir les accès serveur et les objets R2;
+  aucun dossier Supabase ou test RLS historique n'est valide comme cible.
 - `scripts/` contient les scripts de migration et de maintenance.
 - `static/` contient les fichiers servis directement, notamment le manifest
   PWA, `robots.txt` et le worker OneSignal.
@@ -298,7 +293,7 @@ précisés dans [`Spec_UI.md`](./Spec_UI.md).
 | `docs/Spec.md`                                                           | Exigences fonctionnelles et critères d'acceptation          |
 | `docs/Spec_UI.md`                                                        | Spécification de l'interface                                |
 | `docs/architecture.md`                                                   | Routes, flux applicatifs et architecture                    |
-| `docs/database.md`                                                       | Schéma Supabase, règles RLS et droits                       |
+| `docs/database.md`                                                       | Neon, Better Auth, R2 et droits applicatifs                  |
 | `docs/pwa.md`                                                            | Manifest, cache et notifications                            |
 | `docs/questions.md`                                                      | Décisions validées et points ouverts, avec arbitrages datés |
 | `docs/roadmap.md`, `docs/backlog.md`, `docs/suivi.md`                    | Priorités et avancement                                     |

@@ -1,9 +1,9 @@
-# Migrations historiques archivées
+# OBSOLÈTE — Migrations historiques archivées
+
+Ces fichiers ne font plus partie de la plateforme cible et ne doivent pas être
+appliqués. La cible 2026-11-05 est Neon PostgreSQL avec Better Auth et Cloudflare.
 
 Les fichiers `001` à `004` sont conservés à titre de référence uniquement.
-Ils ont été remplacés par `supabase/migrations/005_bagadPenhars_final.sql` pour
-une installation Supabase vierge et ne doivent pas être appliqués.
-
-Ne pas déplacer de fichiers SQL dans `supabase/migrations/` à moins qu'ils ne
-soient réellement des migrations versionnées à exécuter. Les exports DrawSQL
-restent dans `docs/`.
+Les anciens fichiers sont conservés uniquement pour comprendre l'historique du
+dépôt. Toute nouvelle migration PostgreSQL doit être créée dans `migrations/`
+et validée sur la branche Neon `test` avant `production`.

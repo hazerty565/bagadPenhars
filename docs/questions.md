@@ -1,14 +1,28 @@
 # Questions à trancher
 
+> **OBSOLETE — ne plus prendre en compte : toutes les références ci-dessous à
+> Supabase, Netlify, Supabase Auth/Storage/RLS ou aux branches Supabase qui
+> précèdent la section « Reprise d'architecture — 2026-11-05 » sont historiques.
+> La cible actuelle est Better Auth + Neon `bagadpenhars` + Cloudflare Pages/R2.**
+
 Répondre aux questions produit avant d'implémenter le comportement concerné.
 Pour chaque décision, consigner la réponse, la personne qui l'a validée et la
 date. Les hypothèses techniques ne remplacent pas une décision produit.
 
 ## Décisions déjà prises
 
-- Supabase est l'unique fournisseur de données : Supabase Auth, PostgreSQL/RLS
-  et Storage.
-- Netlify sert à héberger l'application.
+- **Décisions plateforme du 2026-11-05 — validées par le client :**
+  Cloudflare Hyperdrive est utilisé avec Drizzle et Neon; les buckets R2 sont
+  séparés en public et privé; le seuil de stockage bloquant est fixé à 9,5 GB;
+  Resend envoie les invitations et les contacts; Cloudflare Turnstile protège
+  le formulaire de contact.
+- **OBSOLÈTE — ne plus prendre en compte :** l'ancienne décision Supabase comme
+  fournisseur unique. Supabase est interdit par la demande client du 2026-11-05.
+- Cloudflare Pages héberge l'application.
+- Neon PostgreSQL héberge la base `bagadpenhars`, avec les branches
+  `production` et `test`.
+- Better Auth fournit l'identité et les sessions.
+- Cloudflare R2 fournit le stockage privé et public.
 - OneSignal est le service prévu pour les notifications push.
 - L'interface adhérent est en français; les langues publiques ont été tranchées
   en français, anglais et breton.
@@ -490,3 +504,79 @@ sont maintenant validés et les propositions par défaut peuvent être appliqué
       tester la migration 005, ne pas modifier de migration appliquée, et créer
       une migration additive uniquement si une base distante existe déjà.
       [Proposition validé] pour le moment le projet et vierge,donc pas d'impact reel.
+
+## Reprise d'architecture — demande client du 2026-11-05
+
+Les décisions suivantes remplacent la plateforme précédente. Elles sont à
+trancher avant toute implémentation, avec la proposition par défaut indiquée
+pour accélérer le développement.
+
+53. **Mapping des branches Neon avec Cloudflare Pages**
+    - Question : faut-il connecter automatiquement la branche `test` aux
+      déploiements preview et la branche `production` au déploiement de
+      production Cloudflare Pages? Un environnement local doit-il utiliser
+      également `test`?
+    - Pourquoi : une URL de base incorrecte pourrait faire écrire les tests ou
+      les déploiements de preview dans des données de production.
+    - Proposition par défaut : oui. Développement et preview utilisent
+      `bagadpenhars/test`; production utilise `bagadpenhars/production`. Chaque
+      branche Neon possède son propre secret de connexion injecté uniquement
+      côté serveur par Cloudflare Pages.
+    - Décision validée le 2026-11-05 par le client : la proposition est
+      acceptée, avec Cloudflare Hyperdrive ajouté au chemin de connexion.
+
+54. **Accès PostgreSQL et couche d'abstraction**
+    - Question : quel client/ORM utiliser avec Neon sur Cloudflare Pages?
+      Drizzle, Kysely ou un accès PostgreSQL direct sont des options.
+    - Pourquoi : le choix doit rester compatible avec le runtime Cloudflare
+      Workers, le typage TypeScript, les migrations et Better Auth.
+    - Proposition par défaut : Drizzle ORM avec le driver serveurless Neon,
+      plus des migrations versionnées SQL. Cette dépendance doit être
+      ajoutée au journal technique avant installation.
+    - Décision validée le 2026-11-05 par le client : Drizzle est retenu, avec
+      le driver Neon et Cloudflare Hyperdrive.
+
+55. **Provisionnement et stockage R2**
+    - Question : quel bucket R2 créer, quelle clé de binding utiliser et
+      comment distinguer les objets publics des objets privés?
+      Avec une limite annoncée de `10 GB-month`, faut-il bloquer les uploads
+      avant dépassement ou prévoir une alerte?
+    - Pourquoi : des objets privés placés dans un préfixe public ou une
+      capacité dépassée exposeraient ou interrompraient le service.
+    - Proposition par défaut : créer un bucket unique avec binding `R2_BUCKET`,
+      préfixes `public/`, `profiles/`, `documents/`, `albums/`, URLs publiques
+      uniquement sous `public/`, service des objets privés via actions
+      SvelteKit, et alerte technique avant dépassement avec blocage temporaire
+      documenté.
+    - Décision validée le 2026-11-05 par le client : deux buckets sont retenus,
+      `bagad-public` et `bagad-private`. Le téléversement est vérifié contre la
+      limite de 9,5 GB; au seuil atteint, l'upload est bloqué.
+
+56. **Better Auth et envoi des invitations**
+    - Question : quel fournisseur transactionnel envoie les invitations et les
+      liens de réinitialisation? Quel provider Better Auth utiliser, quelle
+      durée d'expiration et quelle URL publique de retour?
+    - Pourquoi : les liens doivent fonctionner sur Cloudflare Pages et ne
+      doivent pas exposer de secret de service ni permettre une activation sans
+      vérification e-mail.
+    - Proposition par défaut : Better Auth pour la session, le mot de passe et
+      les comptes; invitation à usage unique expirant après 1 heure; provider
+      e-mail configuré côté serveur; une durée plus courte reste ouverte
+      uniquement si une exigence association spécifique le demande.
+
+    - Décision validée le 2026-11-05 par le client : Resend envoie les mails;
+      la proposition Better Auth et l'expiration à une heure sont acceptées.
+
+57. **Hébergement du formulaire de contact**
+    - Question : le formulaire de contact doit-il rester envoyé par e-mail via
+      un fournisseur API/worker, ou doit-on utiliser une solution tiers?
+      La demande impose Cloudflare, mais aucune solution e-mail n'a encore été
+      validée.
+    - Pourquoi : Netlify Forms est obsolète avec la nouvelle plateforme et
+      aucune adresse de destination ni fournisseur ne peut être supposé.
+    - Proposition par défaut : appeler un endpoint SvelteKit depuis Cloudflare
+      Pages qui transmet le message via un provider e-mail côté serveur, sans
+      pièce jointe, avec validation anti-abus. Le destinataire reste à
+      confirmer dans le brief opérationnel.
+    - Décision validée le 2026-11-05 par le client : la proposition est
+      acceptée avec Resend pour l'envoi et Cloudflare Turnstile pour l'anti-abus.
