@@ -1,9 +1,8 @@
 # Brief : site Bagad Penhars
 
-> **Changement de plateforme — 2026-11-05 :** Supabase, Supabase Auth,
-> Supabase Storage, les policies RLS et Netlify sont obsolètes pour ce projet.
-> La cible est Cloudflare Pages avec Better Auth, Neon PostgreSQL et Cloudflare
-> R2. Consulter les arbitrages datés de [`questions.md`](./questions.md).
+> **Plateforme cible — 2026-11-05 :** Cloudflare Pages avec Better Auth, Neon
+> PostgreSQL et Cloudflare R2. Consulter les arbitrages datés de
+> [`questions.md`](./questions.md).
 
 > Document de référence du besoin. À lire avant toute fonctionnalité.
 > Si un point est flou ou manquant, ne pas deviner : l'écrire dans `docs/questions.md`.

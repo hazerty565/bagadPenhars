@@ -6,9 +6,8 @@
 > prendre en compte les passages qui y sont marqués **OBsolète — ne plus
 > prendre en compte**.
 >
-> **Plateforme obsolète — 2026-11-05 :** Supabase, Supabase Auth et Supabase
-> Storage sont interdits par la demande client. La cible est Better Auth,
-> Neon PostgreSQL, Cloudflare Pages et Cloudflare R2.
+> **Plateforme cible — 2026-11-05 :** Better Auth, Neon PostgreSQL,
+> Cloudflare Pages et Cloudflare R2.
 
 ## 1. Objet
 
@@ -265,7 +264,7 @@ de données le permet.
 - Le bucket `bagad-private` contient les photos de profil et documents internes.
   Les fichiers privés sont servis par accès authentifié ou URL signée courte,
   jamais par URL publique permanente. Les autorisations sont vérifiées par les
-  actions SvelteKit et les gardes serveur, sans policy RLS Supabase.
+  actions SvelteKit et les gardes serveur.
 
 ### 4.6 Notifications
 
@@ -319,9 +318,8 @@ runes, Tailwind, Motion, Better Auth, Neon PostgreSQL, Cloudflare R2,
 OneSignal et hébergement Cloudflare Pages. Avant une
 nouvelle intégration, vérifier cette cible face aux dépendances et à
 l'implémentation présentes : le dépôt peut contenir des choix antérieurs ou
-incomplets. Les anciens éléments Supabase/Netlify sont interdits et ne doivent
-pas être réintroduits. Ne pas ajouter de service tiers sans décision
-dans `docs/questions.md`.
+incomplets. Ne pas ajouter de service tiers sans décision dans
+`docs/questions.md`.
 
 - Svelte 5 : utiliser exclusivement les runes (`$state`, `$derived`, `$effect`, `$props`). Ne pas introduire `export let`, `$:`, `on:click` (utiliser `onclick`), ni de stores Svelte legacy pour l'état local.
 - Formulaires et mutations : privilégier les actions SvelteKit (`+page.server.ts`) avec progressive enhancement (`use:enhance`), validation serveur systématique (schémas Zod/Standard Schema) et retours typés (`fail`, `success`).
@@ -342,9 +340,8 @@ dans `docs/questions.md`.
   PostgreSQL et les réponses API.
 - Tailwind CSS : respect strict des tokens de thème du projet (couleurs, rayons, espacements). Approche mobile-first systématique (`sm:`, `md:`, `lg:`), focus rings visibles pour l'accessibilité clavier (`focus-visible:ring-2`), et gestion du mouvement réduit (`motion-reduce:`).
 - Interface : en français, mobile-first, conforme aux critères d'accessibilité (labels explicites, contrastes WCAG AA).
-- Dépendances & nettoyage : supprimer toute dépendance et configuration
-  Supabase/Netlify non utilisée; aucune nouvelle dépendance tiers sans décision
-  documentée.
+- Dépendances & nettoyage : conserver uniquement les dépendances nécessaires;
+  aucune nouvelle dépendance tiers sans décision documentée.
 - Données métier : entièrement gérées dans Neon. Cloudflare R2 stocke les
   fichiers. OneSignal envoie les notifications push.
 - Évolution du schéma : uniquement via de nouvelles migrations PostgreSQL
@@ -397,8 +394,8 @@ fonctionnelle :
   `src/lib/auth/guards.ts`, `src/lib/auth/roles.ts`,
   `src/lib/server/auth.ts`, `src/lib/server/db.ts`,
   `src/lib/server/blobs.ts` et plusieurs modules `src/lib/server/data/`.
-- L'ancien schéma Supabase est historique et obsolète; il ne doit pas être
-  migré automatiquement ni appliqué à Neon.
+- L'ancien schéma historique ne doit pas être migré automatiquement ni appliqué
+  à Neon.
 - La configuration Neon/Better Auth/R2/Cloudflare Pages reste à finaliser avec
   les questions ouvertes du dépôt.
 - `src/routes/` comprend des écrans d'agenda, d'articles, d'invitations,
@@ -432,7 +429,7 @@ d'une réponse inscrite dans `docs/questions.md` ne commence qu'après décision
   membre, chef de pupitre, secrétaire et administrateur selon la matrice
   approuvée.
 - La base démarre vierge; aucune migration historique de comptes ou de données
-précédente n'est prévue. Ne pas appliquer les fichiers Supabase à Neon.
+précédente n'est prévue.
 
 **Livrable :** installation locale documentée, migrations applicables à une
 base Neon neuve, autorisations serveur testées sur chaque table et R2, tests
@@ -545,7 +542,7 @@ les droits, refus d'upload non autorisé et validation du formulaire.
 - Valider la compatibilité des navigateurs et plateformes cibles avant la mise
   en production.
 - Le cache PWA ne contient que les fichiers statiques et `/offline`; aucune
-  requête Supabase ou page adhérent n'est mise en cache.
+  page adhérent ni donnée membre n'est mise en cache.
 - Compléter tests, observabilité d'erreurs, variables Cloudflare/Resend et
   guide de déploiement Cloudflare Pages.
 

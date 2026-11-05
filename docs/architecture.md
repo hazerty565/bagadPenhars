@@ -78,5 +78,4 @@ migrés; ne pas supposer que ces contrôles sont déjà effectifs.
 ## Sécurité des données
 
 Les données privées sont protégées par des validations côté serveur, des
-sessions vérifiées et des URLs R2 privées. Aucune policy Supabase n'est reprise
-dans la cible.
+sessions vérifiées et des URLs R2 privées.

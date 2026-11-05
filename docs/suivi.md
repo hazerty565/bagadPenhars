@@ -1,10 +1,6 @@
 # Suivi du projet
 
-> **État partiellement obsolète :** certaines cases de suivi ne reflètent pas
-> les dernières mises à jour et sont en cours de validation par des experts en
-> développement. Consulter [`questions.md`](./questions.md) ; les cases qui y
-> sont indiquées **OBsolète — ne plus prendre en compte** ne décrivent pas
-> l'état actuel.
+> Consulter [`questions.md`](./questions.md) pour les arbitrages validés.
 
 > État du projet : 26 octobre 2026
 > Échéance globale : **à définir**
@@ -19,8 +15,6 @@
 - [x] Mettre en place la structure SvelteKit.
 - [x] Mettre en place le routage multilingue FR / EN / BR du site public.
 - [x] Bloquer l'accès à l'espace adhérents pour les comptes `pending`.
-- [x] Enregistrer l'obsolescence de Supabase et retenir Better Auth, Neon et
-  R2 comme cible.
 - [x] Compléter la spécification avec les décisions fonctionnelles confirmées
   et consigner les décisions encore ouvertes.
 - [x] Aligner la documentation des événements et des droits par pupitre.

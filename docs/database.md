@@ -1,8 +1,7 @@
 # Base de données : Neon, Better Auth et accès aux données
 
 > **Plateforme cible validée le 2026-11-05 :** Neon PostgreSQL + Better Auth +
-> Cloudflare Pages + Cloudflare R2. Tout schéma, migration ou mécanisme Supabase
-> est **OBSOLÈTE — ne plus prendre en compte**.
+> Cloudflare Pages + Cloudflare R2.
 
 ## 1. Environnement Neon
 
@@ -31,8 +30,7 @@ avec Drizzle comme ORM et le driver Neon adapté au runtime Cloudflare.
    correction passe par une nouvelle migration additive.
 4. Drizzle génère les migrations versionnées sous `drizzle/`, avec les
    métadonnées dans `drizzle/meta/`. La migration initiale doit être nommée de
-   façon reproductible par Drizzle et ne contenait aucune migration Supabase
-   historique. Une migration appliquée n'est jamais modifiée; toute correction
+   façon reproductible par Drizzle. Une migration appliquée n'est jamais modifiée; toute correction
    passe par une nouvelle migration additive.
 5. Les migrations sont vérifiées sur `test` avant application sur `production`.
 6. Les identifiants SQL restent en anglais et en `snake_case`.
@@ -126,10 +124,3 @@ La matrice de base reste celle du brief :
 | `chef_pupitre` | Aucun | Gérer ses pupitres | Aucun | Déposer pour ses pupitres | Notifier ses pupitres |
 | `secretaire` | Inviter, activer, suspendre | Tous les événements | Articles/albums | Tous les documents autorisés | Plusieurs pupitres |
 | `admin` | Tous | Tous | Tous | Tous | Tous |
-
-## 7. Références obsolètes
-
-Les migrations, policies, buckets et imports Supabase antérieurs ne sont pas
-des sources de vérité. Toute documentation historique mentionnant Supabase doit
-être conservée uniquement comme **NOTICE d'obsolescence**, et aucune migration
-historique ne doit être appliquée à Neon.

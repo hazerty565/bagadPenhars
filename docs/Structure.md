@@ -176,8 +176,9 @@ Les décisions actuelles sont les suivantes :
 - les rôles applicatifs sont `member`, `chef_pupitre`, `secretaire` et `admin`,
   indépendamment du statut `pending`, `active` ou `suspended` ;
 - seuls la secrétaire et l'admin peuvent inviter et activer les comptes ;
-- il y a quatre pupitres. Le chef de Caisse claire assure également la
-  responsabilité de Percussion ;
+- il y a quatre pupitres indépendants: Bombarde, Caisse claire, Cornemuse et
+  Percussion ; la responsabilité de chaque pupitre est portée séparément par
+  `profile_pupitres.is_chef`;
 - les types d'événement sont un ENUM de neuf valeurs ; la visibilité
   (`public`, `interne`, `pupitre`) est indépendante du type ;
 - un événement ou sondage avertit les personnes concernées par OneSignal ;
@@ -204,8 +205,7 @@ src/lib/server/email.ts  # Envoi Resend côté serveur
 ```
 
 La base Neon s'appelle `bagadpenhars` et possède les branches `test` et
-`production`. Les anciennes migrations Supabase ne sont pas une source de
-vérité ni une migration à appliquer.
+`production`.
 
 Le schéma métier courant utilise notamment `profiles`, `profile_pupitres`,
 `events`, `event_pupitres` et `event_responses`. Les sondages sont représentés
@@ -273,8 +273,7 @@ précisés dans [`Spec_UI.md`](./Spec_UI.md).
 - `tests/` contient les tests du dépôt exécutés par Vitest.
 - Les fichiers `*.test.ts` présents sous les routes vérifient des parcours ou
   schémas spécifiques.
-- Les tests de permissions doivent couvrir les accès serveur et les objets R2;
-  aucun dossier Supabase ou test RLS historique n'est valide comme cible.
+- Les tests de permissions doivent couvrir les accès serveur et les objets R2.
 - `scripts/` contient les scripts de migration et de maintenance.
 - `static/` contient les fichiers servis directement, notamment le manifest
   PWA, `robots.txt` et le worker OneSignal.
