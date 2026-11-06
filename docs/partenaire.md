@@ -31,3 +31,35 @@ Ouvrir `src/lib/data/partenaires.ts` et ajouter :
   logo: "/logos/nom-entreprise.svg",
   lien: "https://entreprise.com",  
 }
+
+---
+
+## 📋 Explication
+
+Ce fichier `partenaires.md` sert de **guide pour ton agent IA** :
+
+1. **Il explique la structure** : Où sont les fichiers, quels formats utiliser
+2. **Il donne les étapes** : Comment ajouter un partenaire de A à Z
+3. **Il liste les règles** : Nommage, bonnes pratiques, erreurs à éviter
+4. **Il montre des exemples** : Code concret pour comprendre
+
+### 🎯 Pourquoi un `.md` ici ?
+
+Contrairement au fichier de données (qui doit être `.ts` ou `.json`), ce fichier est une **documentation** :
+- Lisible par un humain
+- Lisible par un agent IA
+- Facile à mettre à jour
+- Ne sera jamais "compilé" dans ton site
+
+### 📁 Où le placer ?
+
+Je te conseille de le mettre à la racine ou dans un dossier `docs/` :
+
+```txt
+/
+├── docs/
+│   └── partenaires.md          ← Documentation pour l'agent
+├── src/
+│   └── lib/
+│       └── data/
+│           └── partenaires.ts  ← Vraies données
