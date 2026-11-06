@@ -301,4 +301,4 @@ function getEtatEvenement(event) {
 **Dernière mise à jour** : 6 novembre 2026
 ```
 
-Voilà ton fichier `event.md` complet ! Il récapitule toute la logique, la structure SQL, les requêtes utiles, et les exemples de code. Ton agent pourra l'utiliser comme référence pour implémenter le système.
+Voilà le fichier `event.md` complet ! Il récapitule toute la logique, la structure SQL, les requêtes utiles, et les exemples de code. Ton agent pourra l'utiliser comme référence pour implémenter le système.
