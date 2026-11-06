@@ -15,13 +15,11 @@ create extension if not exists "pgcrypto";
 -- 2. Types Enum
 create type public.account_status as enum ('pending', 'active', 'suspended');
 create type public.app_role as enum ('member', 'chef_pupitre', 'secretaire', 'admin');
-create type public.event_type as enum (
-  'sortie', 'concert', 'fest-noz', 'festival', 'concours',
-  'gala', 'repetition', 'reunion', 'repas'
-);
+create type public.event_type as enum ('sortie', 'concert', 'fest-noz', 'festival', 'concours','gala', 'repetition', 'reunion', 'repas');
 create type public.event_visibility as enum ('public', 'interne', 'pupitre');
 create type public.response_status as enum ('present', 'absent');
 create type public.musician_level as enum ('skolaj', 'bagadig', 'bagad');
+create type public.contact_form as enum ('Adhesion','Demande d''information','Partenariat','Prestation','Autre');
 
 -- 4. Tables fondamentales
 
