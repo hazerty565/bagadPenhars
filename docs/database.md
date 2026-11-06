@@ -15,7 +15,8 @@ La base PostgreSQL s'appelle `bagadpenhars`. Elle contient deux branches :
 Les chaînes de connexion ne sont jamais committées. Une chaîne spécifique à
 la branche est injectée dans les variables d'environnement du runtime
 Cloudflare. Les connexions PostgreSQL transitent par Cloudflare Hyperdrive,
-avec Drizzle comme ORM et le driver Neon adapté au runtime Cloudflare.
+avec Drizzle comme ORM et `@neondatabase/serverless` comme driver adapté au
+runtime Cloudflare.
 
 ## 2. Principes
 
@@ -25,7 +26,8 @@ avec Drizzle comme ORM et le driver Neon adapté au runtime Cloudflare.
    La colonne `profiles.role` utilise l'ENUM PostgreSQL conservé `app_role`;
    `app_role` désigne donc le type des valeurs, pas une colonne distincte.
 2. Chaque lecture, modification, téléchargement et suppression sensible est
-   autorisée côté serveur avant accès aux données.
+   autorisée côté serveur avant accès aux données, puis limitée par RLS
+   PostgreSQL sur les tables sensibles.
 3. Une migration PostgreSQL appliquée ne doit jamais être modifiée; toute
    correction passe par une nouvelle migration additive.
 4. Drizzle génère les migrations versionnées sous `drizzle/`, avec les
@@ -34,6 +36,37 @@ avec Drizzle comme ORM et le driver Neon adapté au runtime Cloudflare.
    passe par une nouvelle migration additive.
 5. Les migrations sont vérifiées sur `test` avant application sur `production`.
 6. Les identifiants SQL restent en anglais et en `snake_case`.
+
+### Défense en profondeur : guards, RLS et Hyperdrive
+
+- Better Auth est l'autorité pour l'identité et les sessions. Après validation
+  de la session, SvelteKit charge le profil; `profiles.role` et
+  `profiles.account_status` restent les seules autorités métier des rôles et
+  statuts.
+- Chaque route, action et endpoint sensible applique un guard SvelteKit avant
+  l'opération. Le filtrage du menu est une aide d'interface uniquement.
+- Les tables contenant des données privées ou des opérations sensibles
+  activent RLS avec des politiques explicites pour les opérations nécessaires.
+  Les requêtes anonymes ou sans contexte ne doivent pas obtenir de données
+  privées.
+- Toute opération protégée utilise une transaction. Avant la première requête
+  métier, elle établit le contexte d'identité avec un réglage local à la
+  transaction, par exemple `select set_config('app.user_id', $1, true)`.
+  L'identifiant provient de la session Better Auth validée; il ne vient jamais
+  du formulaire ou d'un en-tête client. Toutes les requêtes de l'opération
+  utilisent la même transaction et la même connexion. Le paramètre `true`
+  évite de laisser un contexte d'utilisateur sur une connexion remise au pool.
+- Les politiques RLS lisent ce contexte et résolvent le rôle/statut depuis les
+  tables métier; elles ne font pas confiance à un rôle soumis par le client.
+- Le rôle PostgreSQL runtime ne doit pas être propriétaire des tables ni
+  disposer de `BYPASSRLS`. Les règles doivent être vérifiées avec le rôle
+  réellement utilisé par l'application.
+- Hyperdrive assure le pooling des connexions. Le cache de requêtes, s'il est
+  activé, est réservé aux lectures explicitement publiques et indépendantes de
+  l'identité. Les lectures protégées par RLS ne doivent jamais être servies
+  depuis un cache partagé entre utilisateurs.
+- Vérifier les scénarios sans contexte, membre A puis membre B sur une
+  connexion réutilisée, et tentatives d'accès aux lignes d'un autre profil.
 
 ## 3. Modèle métier conservé
 
@@ -82,9 +115,22 @@ compte ne sont jamais lus depuis des métadonnées modifiables côté client.
 - Le lien Better Auth expire selon la durée validée dans les questions produit.
 - `pending` empêche tout accès métier jusqu'à activation manuelle par la
   secrétaire ou l'admin.
-- La suspension révoque les sessions et droits sans supprimer les données.
-- La suppression, réservée à la secrétaire et à l'admin, supprime ou anonymise
-  les données associées conformément aux décisions validées.
+- La suspension révoque les sessions et droits sans supprimer les données ni
+  les réponses aux événements.
+- Lorsqu'un membre demande la suppression de son compte, son statut passe
+  immédiatement à `suspended` et l'administrateur traite la demande. Les données
+  personnelles, photos de profil et associations avec les pupitres sont
+  supprimées; les réponses conservées à des fins historiques sont anonymisées.
+  Les données soumises à une obligation légale sont conservées séparément avec
+  un accès restreint. La demande est clôturée après traitement et notification
+  au membre. Aucune purge automatique irréversible n'est activée avant
+  validation des durées de conservation par l'association.
+
+Les réponses conservées après suppression d'un compte sont anonymisées :
+`event_responses.profile_id` doit donc pouvoir devenir nullable avec une
+référence `ON DELETE SET NULL`, plutôt que d'effacer la réponse en cascade.
+Les règles et la fenêtre de modification des réponses sont détaillées dans
+[`event.md`](./event.md) et [`Spec.md`](./Spec.md).
 
 ## 5. Cloudflare R2
 
@@ -116,7 +162,8 @@ périodique réconcilie les compteurs Neon avec le contenu réel des deux bucket
 
 ## 6. Matrice de droits
 
-La matrice de base reste celle du brief :
+La matrice de base reste celle du brief. Les guards et les politiques RLS
+doivent tous deux la faire respecter :
 
 | Rôle | Comptes | Événements | Contenus | Documents | Notifications |
 |---|---|---|---|---|---|

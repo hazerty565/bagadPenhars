@@ -113,14 +113,20 @@ La page `/offline` doit être prérendue (`export const prerender = true` dans s
 
 ## 5. Cohabitation avec OneSignal
 
-**Décision ouverte, à valider avant d'implémenter.**
+**Décision produit — 2026-11-06 :** l'expérience PWA et les notifications
+OneSignal sont requises. Le choix technique entre un worker applicatif et le
+worker OneSignal est confié au développeur front-end.
 
 OneSignal fournit son propre service worker (`OneSignalSDKWorker.js`). Deux service workers ne peuvent pas partager la même portée. Deux pistes :
 
 - **A.** Charger le SDK OneSignal depuis notre `service-worker.ts` avec `importScripts`. Attention : `importScripts` n'existe pas dans un worker de type module, et SvelteKit enregistre le worker en module en développement. À tester en dev **et** en production.
 - **B.** Utiliser le worker OneSignal seul et y mettre le cache minimal.
 
-Vérifier la documentation OneSignal actuelle avant de choisir, puis noter la décision ici. Tant qu'elle n'est pas prise, ne pas publier de service worker en production.
+Le développeur front-end choisit et documente l'architecture après avoir
+vérifié la documentation OneSignal actuelle. Il teste la compatibilité avant
+l'activation en production. Quelle que soit l'architecture, le cache reste
+limité aux ressources statiques et à `/offline`; aucune page privée ni donnée
+personnelle n'est mise en cache.
 
 ## 6. En-têtes Cloudflare Pages
 
@@ -150,8 +156,7 @@ Chaque déploiement change `version` : un nouveau cache est créé et l'ancien s
 - [ ] Après un déploiement, la nouvelle version remplace l'ancienne
 - [ ] Installation et notification testées sur Android et sur iPhone
 
-## 10. Questions ouvertes
+## 10. Points restant à définir
 
-- Piste A ou B pour OneSignal ? (voir §5)
 - Faut-il proposer l'installation de l'application avant ou après la connexion ?
 - Couleurs et icônes définitives du thème.

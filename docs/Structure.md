@@ -183,12 +183,12 @@ Les décisions actuelles sont les suivantes :
   (`public`, `interne`, `pupitre`) est indépendante du type ;
 - un événement ou sondage avertit les personnes concernées par OneSignal ;
 - les réponses sont `present` ou `absent`. Le membre peut modifier sa réponse,
-  pas la supprimer ; elles sont supprimées lors d'une suspension ou d'une
-  suppression de compte.
+  pas la supprimer ; elles restent à la suspension et sont anonymisées lors
+  d'une suppression de compte selon les décisions validées.
 
-La migration 005 est en cours de relecture par des experts en développement.
-Les règles ci-dessus décrivent la décision produit et ne garantissent pas que
-la migration ou les modules serveur les implémentent déjà tous.
+La migration historique Supabase 005 n'est pas réutilisée pour Neon. Les règles
+ci-dessus décrivent la décision produit et ne garantissent pas que le modèle
+Drizzle, les migrations Neon ou les modules serveur les implémentent déjà tous.
 
 ## 4. Services et données
 
@@ -206,6 +206,13 @@ src/lib/server/email.ts  # Envoi Resend côté serveur
 
 La base Neon s'appelle `bagadpenhars` et possède les branches `test` et
 `production`.
+
+Better Auth fournit l'identité et les sessions. Le rôle métier provient de
+`profiles.role`. Les guards SvelteKit s'appliquent à chaque route protégée et
+les politiques RLS Neon/PostgreSQL protègent les tables sensibles. Le contexte
+utilisateur est transactionnel (`set_config(..., true)`); les lectures privées
+ne sont pas servies depuis un cache partagé Hyperdrive. Le driver ciblé est
+`@neondatabase/serverless`.
 
 Le schéma métier courant utilise notamment `profiles`, `profile_pupitres`,
 `events`, `event_pupitres` et `event_responses`. Les sondages sont représentés

@@ -1,5 +1,12 @@
 En lien avec le fichier event.md
 Voici une proposition design pour la page agenda
+
+> **Note pour l'implémentation :** les extraits ci-dessous sont une maquette
+> fonctionnelle historique, pas du code à reprendre tel quel. Respecter les
+> conventions Svelte 5 de `AGENTS.md` et la spécification actuelle. En
+> particulier, l'identité du répondant doit venir de la session vérifiée côté
+> serveur, jamais d'un `userId` fourni par le navigateur; les actions de
+> présence doivent appliquer les règles d'accès serveur.
 ---
 
 ## Structure des fichiers
@@ -578,11 +585,12 @@ export const GET: RequestHandler = async () => {
             statut,
             CASE 
                 WHEN statut = 'annule' THEN 'annule'
-                WHEN date_evenement < CURRENT_DATE THEN 'clos'
+                WHEN date_evenement < (now() AT TIME ZONE 'Europe/Paris')::date THEN 'clos'
                 ELSE 'actif'
             END as etat_reel
         FROM agenda
-        WHERE date_evenement >= CURRENT_DATE - INTERVAL '7 days'
+        WHERE date_evenement >=
+              (now() AT TIME ZONE 'Europe/Paris')::date - 7
         ORDER BY date_evenement ASC
     `;
     

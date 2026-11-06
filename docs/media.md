@@ -20,10 +20,10 @@ Ce document décrit l'architecture et les règles métier pour la gestion des m�
 ### Buckets R2
 | Bucket | Contenu | Quota |
 |--------|---------|-------|
-| `bagad-public` | Médias publiés, photos d'événements | 10 Go (partagé) |
-| `bagad-private` | Profils, documents, albums privés | 10 Go (partagé) |
+| `bagad-public` | Médias publiés, photos d'événements | Quota global partagé |
+| `bagad-private` | Profils, documents, albums privés | Quota global partagé |
 
-**Capacité opérationnelle globale** : 10 Go (les deux buckets sont additionnés dans le même quota).
+**Capacité opérationnelle globale** : 8 Go (les deux buckets sont additionnés dans le même quota).
 
 ---
 
@@ -41,7 +41,7 @@ Ce document décrit l'architecture et les règles métier pour la gestion des m�
 - `bucket_name` : Bucket concerné
 - `used_bytes` : Volume réellement utilisé
 - `reserved_bytes` : Volume réservé pour les uploads en cours
-- `quota_bytes` : Limite autorisée (10 Go)
+- `quota_bytes` : Limite autorisée (8 Go)
 - `alert_threshold_bytes` : Seuil d'alerte (7 Go)
 - `block_threshold_bytes` : Seuil de blocage (8 Go)
 - `last_sync_at` : Dernière synchronisation avec R2
@@ -388,7 +388,7 @@ L'image WebP optimisée (max 2000x2000) est stockée une seule fois dans R2. Lor
 | **Full** | 2000 × 2000 px | 82% | `contain` (ratio respecté) | Lightbox, vue détaillée au clic |
 
 ### Avantages de cette approche
-- **Zéro stockage supplémentaire** : Une seule version de l'image est conservée dans R2, ce qui préserve le quota strict de 10 Go.
+- **Zéro stockage supplémentaire** : Une seule version de l'image est conservée dans R2, ce qui préserve le quota strict de 8 Go.
 - **Bande passante optimisée** : Une thumbnail de 400px pèse environ 30 à 50 Ko, contre 1 à 3 Mo pour l'image complète.
 - **Mise en cache automatique** : Une fois générée par Cloudflare, la thumbnail est servie instantanément depuis le CDN Edge.
 

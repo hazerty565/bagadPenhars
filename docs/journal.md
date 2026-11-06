@@ -43,3 +43,27 @@
 - Le front-end utilise les runes Svelte 5; le back-end commence par les
   migrations, Better Auth, les guards, les routes serveur, R2 et les tests
   d'autorisation.
+
+## 2026-11-06
+
+### Arbitrages produit appliqués
+
+- Les réponses aux événements restent modifiables jusqu'à minuit le lendemain
+  de la date de l'événement; elles sont conservées en lecture seule après
+  annulation ou clôture.
+- Les événements ne stockent qu'une date sans heure; ils sont clos à minuit
+  au début du jour suivant selon `Europe/Paris`.
+- L'arbitrage Q-2026-11-06-07 confirme les dates civiles seules; le schéma
+  DrawSQL et les critères de clôture sont alignés.
+- Better Auth reste responsable de l'identité et des sessions; les rôles
+  métier viennent de `profiles.role`. Les guards SvelteKit sont complétés par
+  les policies RLS Neon, avec contexte `set_config(..., true)` limité à chaque
+  transaction. Les lectures privées ne sont pas mises en cache par Hyperdrive.
+- Cloudflare Images est retenu pour les transformations WebP et les variantes
+  d'affichage; le quota R2 global reste de 8 Go.
+- Le processus de suppression de compte, la cohabitation OneSignal/PWA, le
+  formulaire Resend et la référence Drizzle/Neon sont consignés dans
+  `docs/questions.md` et reflétés dans les documents de référence.
+- Les durées de conservation des réponses, des journaux d'audit et des
+  messages de contact restent à valider; aucune purge automatique
+  irréversible n'est activée avant cette validation.

@@ -13,12 +13,17 @@ travail couvert par la présente mise à jour; les autres restent à faire.
 - [ ] Mettre en place Better Auth, Neon PostgreSQL et Cloudflare R2.
 - [ ] Configurer Drizzle, Cloudflare Hyperdrive, les deux buckets R2, Resend et
       Cloudflare Turnstile.
+- [ ] Ajouter le driver `@neondatabase/serverless` et intégrer son accès à
+      Neon via Hyperdrive.
 - [ ] Examiner le modèle PostgreSQL sur la branche Neon `test` et établir son
       application reproductible sans modifier une migration déjà appliquée.
 - [ ] Finaliser les migrations additives nécessaires pour les invitations,
       profils, membres, événements, réponses et suppression de compte.
 - [ ] Implémenter la gestion des sessions et les guards côté serveur; vérifier
       les autorisations des actions et routes de fichiers.
+- [ ] Activer RLS et écrire les policies des tables sensibles; initialiser
+      `set_config(..., true)` dans chaque transaction protégée et exclure du
+      cache partagé Hyperdrive les lectures dépendantes de l'utilisateur.
 - [ ] Définir et mettre en œuvre un mécanisme de migrations reproductible pour
       Neon.
 - [ ] Implémenter le quota R2 de 8 Go, l'alerte à 7 Go, la réservation Neon,
@@ -33,6 +38,8 @@ travail couvert par la présente mise à jour; les autres restent à faire.
       actions et objets R2.
 - [ ] Ajouter les tests SQL d'accès pour les comptes anonyme, membre actif,
       chef de pupitre, secrétaire et admin.
+- [ ] Tester l'absence de contexte RLS et l'isolation de deux identités sur
+      une connexion réutilisée par Hyperdrive.
 - [ ] Implémenter atomiquement la suspension et la suppression des comptes,
       avec cascade des réponses et retrait des données Storage associées.
 - [ ] Fermer les réponses des événements passés par une procédure PostgreSQL

@@ -1,10 +1,10 @@
 ---
-title: Bagad Penhars — Schéma relationnel Supabase
+title: Bagad Penhars — Schéma relationnel métier (référence)
 ---
 erDiagram
-    %% Schéma de référence de la migration active 005.
-    %% Les services externes auth.users et storage.objects ne sont pas détaillés.
-    %% La vue member_directory est limitée par RLS et n'est pas une table physique.
+    %% Schéma métier de référence, non exécutable.
+    %% Les tables d'identité Better Auth et les objets R2 ne sont pas détaillés.
+    %% La vue member_directory n'est pas physique; l'accès est vérifié côté serveur.
     %% Les cardinalités représentent les FK ; les tables de jointure matérialisent les N:N.
 
     PUPITRES {
@@ -15,7 +15,7 @@ erDiagram
     }
 
     PROFILES {
-        uuid id PK "FK logique vers auth.users.id"
+        uuid id PK "Identifiant lié au compte Better Auth"
         text first_name
         text last_name
         text phone
@@ -32,6 +32,7 @@ erDiagram
     PROFILE_PUPITRES {
         uuid profile_id PK, FK
         uuid pupitre_id PK, FK
+        boolean is_chef
         timestamptz created_at
     }
 
@@ -64,8 +65,7 @@ erDiagram
         text title
         text description
         text location
-        timestamptz start_at
-        timestamptz end_at
+        date event_date
         event_type event_type
         event_visibility visibility
         boolean is_poll
@@ -82,7 +82,7 @@ erDiagram
     EVENT_RESPONSES {
         uuid id PK
         uuid event_id FK
-        uuid profile_id FK
+        uuid profile_id FK "nullable; ON DELETE SET NULL"
         response_status status
         timestamptz created_at
         timestamptz updated_at
@@ -194,7 +194,7 @@ erDiagram
     EVENTS ||--o{ EVENT_PUPITRES : "ciblage"
     PUPITRES ||--o{ EVENT_PUPITRES : "événements ciblés"
     EVENTS ||--o{ EVENT_RESPONSES : "réponses"
-    PROFILES ||--o{ EVENT_RESPONSES : "participations"
+    PROFILES o|--o{ EVENT_RESPONSES : "participations; nullable after anonymisation"
 
     %% Contenus
     PUPITRES ||--o{ DOCUMENTS : "partitions"

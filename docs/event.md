@@ -1,6 +1,12 @@
 ```markdown
 # Système de Gestion d'Événements avec RSVP
 
+> Les règles de présence de ce guide sont validées. Les exemples SQL et
+> d'implémentation ci-dessous sont conceptuels et ne remplacent pas le modèle
+> courant `events` / `event_responses` défini dans `docs/database.md`. Lors
+> d'une suppression de compte, appliquer l'anonymisation des réponses décidée
+> dans `docs/questions.md`.
+
 ## Contexte
 
 Mise en place d'un système de réponse présent/absent pour les événements d'un site web. Les membres peuvent répondre à un événement et modifier leur réponse jusqu'au jour J (clôture à minuit).
@@ -22,12 +28,15 @@ Mise en place d'un système de réponse présent/absent pour les événements d'
 ### États d'un événement
 1. **Actif** : Ouvert aux réponses (date pas encore passée)
 2. **Annulé** : L'admin a annulé manuellement l'événement
-3. **Clos** : Calculé automatiquement quand `date_evenement < CURRENT_DATE`
+3. **Clos** : Calculé automatiquement quand `date_evenement` est antérieure
+   au jour courant de `Europe/Paris`
 
 ### Comportements spéciaux
 - ✅ Si l'événement est **annulé** : Les réponses sont conservées mais en lecture seule
 - ✅ Si l'admin **modifie la date** : Les réponses existantes ne changent pas
-- ✅ Les réponses ne sont **jamais supprimées** (même si l'événement est annulé ou clos)
+- ✅ Les réponses ne sont pas supprimées lors de l'annulation ou de la clôture
+- ✅ Lors d'une suppression de compte, les réponses conservées à des fins
+  historiques sont anonymisées conformément à `docs/questions.md`
 
 ## Structure Base de Données (PostgreSQL)
 
@@ -92,7 +101,12 @@ CREATE TABLE notification_rappel (
 ## Logique de Clôture
 
 ### Règle simple
-L'événement est clos dès que `date_evenement < CURRENT_DATE`
+L'événement est clos dès que `date_evenement` est antérieure à la date courante
+en `Europe/Paris`. Avec PostgreSQL, le jour courant métier peut être calculé ainsi :
+
+```sql
+(now() AT TIME ZONE 'Europe/Paris')::date
+```
 
 ### Exemples
 | Date événement | Date actuelle | État |
@@ -113,12 +127,12 @@ SELECT
     statut,
     CASE 
         WHEN statut = 'annule' THEN 'annule'
-        WHEN date_evenement < CURRENT_DATE THEN 'clos'
+        WHEN date_evenement < (now() AT TIME ZONE 'Europe/Paris')::date THEN 'clos'
         ELSE 'actif'
     END as etat_reel,
     CASE 
         WHEN statut = 'annule' THEN false
-        WHEN date_evenement < CURRENT_DATE THEN false
+        WHEN date_evenement < (now() AT TIME ZONE 'Europe/Paris')::date THEN false
         ELSE true
     END as modifiable
 FROM agenda
@@ -179,7 +193,9 @@ FROM agenda a
 CROSS JOIN users u
 LEFT JOIN agenda_presence ap ON a.id = ap.agenda_id AND u.id = ap.user_id
 WHERE a.statut = 'actif'
-  AND a.date_evenement BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
+  AND a.date_evenement BETWEEN
+      (now() AT TIME ZONE 'Europe/Paris')::date
+      AND (now() AT TIME ZONE 'Europe/Paris')::date + 3
   AND ap.id IS NULL;
 ```
 
@@ -198,7 +214,7 @@ async function enregistrerReponse(agendaId, userId, statut) {
             statut,
             CASE 
                 WHEN statut = 'annule' THEN 'annule'
-                WHEN date_evenement < CURRENT_DATE THEN 'clos'
+                WHEN date_evenement < (now() AT TIME ZONE 'Europe/Paris')::date THEN 'clos'
                 ELSE 'actif'
             END as etat_reel
          FROM agenda 

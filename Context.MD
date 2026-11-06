@@ -29,21 +29,34 @@ Ce document est destiné à expliquer le contexte global du projet **Bagad Penha
 
 | Composant | Technologie cible | Rôle |
 |-----------|------------------|------|
-| **Frontend** | SvelteKit 5 (runes) | Framework fullstack | typescript
-| **Backend** | SvelteKit + Node.js | Serveurs, form actions, load functions |
-| **Authentification** | Supabase Auth | Comptes et sessions |
-| **Base de données** | Supabase PostgreSQL | Données relationnelles et RLS |
-| **Stockage fichiers** | Supabase Storage | Partitions, avatars et médias |
+| **Frontend** | SvelteKit 5 (runes) | Framework fullstack |
+| **Backend** | SvelteKit | Routes serveur, form actions et load functions |
+| **Authentification** | Better Auth | Identités et sessions; les rôles métier viennent de `profiles.role` |
+| **Base de données** | Neon PostgreSQL + RLS | Données relationnelles et sécurité au niveau des lignes |
+| **Driver et pooling** | `@neondatabase/serverless` + Cloudflare Hyperdrive | Connexions PostgreSQL; pas de cache partagé pour les lectures privées |
+| **ORM et migrations** | Drizzle | Modèle relationnel et migrations |
+| **Stockage fichiers** | Cloudflare R2 | Partitions et médias |
 | **Styling** | TailwindCSS | CSS utility-first |
 | **i18n** | Fichiers TS custom | Traductions (fr.ts, en.ts, br.ts) |
 | **Notifications** | OneSignal | Notifications push |
-| **Déploiement** | Netlify | Hébergement de l'application |
+| **Déploiement** | Cloudflare Pages | Hébergement de l'application |
 
-Supabase est l'unique fournisseur de données applicatives : Auth, PostgreSQL
-et Storage. Netlify sert uniquement à héberger l'application. Le code et la
-migration historiques du dépôt n'ont pas encore tous été portés vers cette
-cible; ne pas réintroduire d'autre fournisseur de base de données ou de
-stockage.
+Les guards SvelteKit et les policies RLS sont tous deux requis pour protéger
+les données sensibles. Le contexte `set_config(..., true)` est limité à la
+transaction courante. Le menu est filtré côté serveur, mais toute route,
+action ou endpoint sensible vérifie aussi les droits côté serveur. Les choix
+d'architecture de référence sont détaillés dans
+[`docs/architecture.md`](./docs/architecture.md) et
+[`docs/database.md`](./docs/database.md).
+
+Cette stack est la cible documentaire; le dépôt contient encore du code et
+des dépendances historiques qui n'ont pas tous été migrés.
+
+> **OBsolète — ne plus prendre en compte :** les références à Supabase
+> (Auth, PostgreSQL, Storage), Netlify, et au client Supabase dans les sections
+> suivantes décrivent l'ancienne cible. Elles sont remplacées par la stack
+> ci-dessus et les contrats de [`docs/architecture.md`](./docs/architecture.md)
+> et [`docs/database.md`](./docs/database.md).
 
 ---
 
@@ -694,4 +707,5 @@ Si une IA contribue au projet, elle doit :
 
 **Dernière mise à jour** : 26/10/2026
 **Maintainer** : hazerty565
-**Stack cible** : SvelteKit 5 + Supabase (Auth, PostgreSQL, Storage) + TailwindCSS + Netlify
+**Stack cible** : SvelteKit 5 + Better Auth + Neon PostgreSQL/RLS + Drizzle +
+`@neondatabase/serverless` + Cloudflare Hyperdrive/Pages/R2 + TailwindCSS

@@ -50,6 +50,11 @@ Règles :
 - Cloudflare R2 sépare les fichiers publics des photos de profil et documents
   privés. Les objets privés sont servis après vérification du compte et du
   rôle. Chaque membre ne modifie que sa propre photo.
+- Les photos sources JPG/JPEG, PNG et WebP (15 Mo maximum et 6000 × 6000
+  pixels maximum) sont converties en WebP, avec une dimension de sortie
+  maximale de 2000 × 2000 pixels, un ratio conservé, une qualité cible de 82
+  et suppression des métadonnées inutiles. Cloudflare Images est retenu pour
+  les transformations et les variantes d'affichage.
 - Le stockage global des deux buckets R2 est limité à 8 Go. Une alerte
   administrateur apparaît à 7 Go et aucun nouvel upload n'est accepté à 8 Go.
 
@@ -71,7 +76,10 @@ Les comptes ne se créent pas librement :
 - **Agenda public** : événements `public` en lecture seule.
 - **Actualités** (articles).
 - **Albums photo** (médias publics).
-- **Contacts** : formulaire qui envoie un email. Aucun trombinoscope n'est public.
+- **Contacts** : formulaire protégé par Turnstile, envoyé par Resend à
+  l'adresse officielle configurée côté serveur; un accusé de réception est
+  envoyé après acceptation de l'envoi à l'association. Aucun trombinoscope
+  n'est public.
 - **Référencement naturel (SEO)** : rendre les pages et contenus publics
   découvrables par les moteurs de recherche, avec des métadonnées adaptées et
   sans exposer ni faire indexer l'espace privé.
@@ -83,6 +91,13 @@ Les comptes ne se créent pas librement :
   visibles par tous les membres actifs, et événements `pupitre` visibles par
   les membres actifs des pupitres ciblés. Les membres concernés peuvent répondre.
 - **Réponse aux événements** : présent / absent (ou pas de réponse).
+- Les événements stockent une date sans heure. Une réponse peut être modifiée
+  pendant cette date et devient en lecture seule à minuit (00 h 00) au début
+  du lendemain, selon `Europe/Paris`; elle ne peut pas être retirée par le
+  membre. Elle est conservée en lecture seule après annulation ou clôture;
+  aucune réponse n'est supprimée lors de l'annulation ou de la clôture.
+  La suppression du compte suit le processus dédié décrit dans
+  [`questions.md`](./questions.md).
 - **Sondages de répétition** : chaque membre répond présent / absent ; le sondage est directement l'événement d'agenda.
 - **Trombinoscope** : consultation des informations explicitement autorisées pour les membres actifs connectés.
 - **Partitions / documents** : PDF déposés par les chefs de pupitre, visibles selon les règles de documents.
@@ -90,8 +105,18 @@ Les comptes ne se créent pas librement :
 
 ## 5. Contraintes
 
-- **Stack** : SvelteKit 5 (runes), Tailwind, Motion, Better Auth, Neon PostgreSQL avec Drizzle et Cloudflare Hyperdrive, Cloudflare Pages, Cloudflare R2, Resend, Cloudflare Turnstile, OneSignal.
-- **Sécurité** : association privée, données personnelles de membres. Validation stricte des droits côté serveur sur chaque lecture, écriture, action et téléchargement.
+- **Stack** : SvelteKit 5 (runes), Tailwind, Motion, Better Auth pour
+  l'identité et les sessions, Neon PostgreSQL avec RLS, Drizzle et
+  `@neondatabase/serverless`, Cloudflare Hyperdrive pour le pooling,
+  Cloudflare Pages, Cloudflare R2, Resend, Cloudflare Turnstile et OneSignal.
+  Les rôles métier restent dans `profiles.role`. Le contexte utilisateur RLS
+  est établi au début de chaque transaction; le cache partagé de requêtes est
+  interdit pour les lectures privées.
+- **Images** : Cloudflare Images transforme les images en WebP et fournit
+  les variantes d'affichage documentées dans [`media.md`](./media.md).
+- **Sécurité** : association privée, données personnelles de membres.
+  Guards côté serveur et RLS Neon/PostgreSQL sur chaque opération et table
+  sensible; les lectures privées sont isolées du cache partagé.
 - **Langue** : site public disponible en français, anglais et breton (`fr`, `en`, `br`) ; espace adhérents et authentification en français.
 - **Usage** : surtout sur téléphone. Mobile first.
 - **Maintenance** : un seul mainteneur. Préférer le simple au sophistiqué.

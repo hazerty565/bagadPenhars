@@ -190,9 +190,14 @@ de données le permet.
 - Les champs de profil modifiables sont ceux du profil du membre, hors rôle et
   pupitres. Le changement de l'adresse e-mail suit le flux sécurisé Better Auth.
 - Un membre peut demander la suppression de son compte. Les données
-  personnelles sont supprimées ou anonymisées selon les obligations légales;
-  les durées de conservation des présences et journaux d'audit restent à
-  décider.
+  personnelles, photos de profil et associations avec les pupitres sont
+  supprimées par l'administrateur. Les réponses aux événements sont
+  anonymisées si leur conservation a un intérêt historique. Les données
+  soumises à une obligation légale sont conservées séparément avec un accès
+  restreint. La demande est clôturée après traitement et notification au
+  membre. Le compte passe immédiatement à `suspended` dès le début du
+  traitement. Aucune purge automatique irréversible n'est activée avant
+  validation des règles par l'association.
 
 ### 4.4 Agenda, présences et sondages
 
@@ -203,6 +208,15 @@ de données le permet.
   Les événements `public` sont visibles par tous.
 - Les réponses possibles sont `present` ou `absent` (ou aucune réponse).
 - L'identité de la personne qui répond vient de la session serveur.
+- Les événements ne stockent qu'une date, sans heure de début ni de fin. Le
+  membre peut modifier sa réponse autant de fois qu'il le souhaite pendant la
+  date de l'événement; la réponse est verrouillée à minuit (00 h 00,
+  `Europe/Paris`) au début du jour suivant. Il n'y a pas d'historique des
+  modifications, seule la dernière réponse est conservée.
+  Une réponse ne peut pas être retirée par le membre. Les réponses sont
+  conservées en lecture seule lorsque l'événement est annulé ou clos. La
+  suspension du compte ne supprime pas les réponses; la suppression du compte
+  suit le processus d'anonymisation décrit en §4.3.
 - Un sondage est lui-même l'événement correspondant dans l'agenda; il est matérialisé
   directement dans la table `events` au moyen d'un champ `is_poll BOOLEAN NOT NULL DEFAULT FALSE`
   (la table `polls` est supprimée). Les réponses sont centralisées dans `event_responses`
@@ -230,9 +244,9 @@ de données le permet.
 - La création et la modification d'événements respectent le rôle et le
   périmètre du pupitre; leur visibilité publique est explicite, jamais
   implicite.
-- Le fuseau de référence est `Europe/Paris`; les changements d'heure sont
-  gérés automatiquement. Aucune gestion des événements récurrents n'est
-  incluse en V1.
+- Les événements n'ont pas d'heure; ils sont stockés comme dates civiles.
+  La clôture utilise le jour courant de `Europe/Paris`. Aucune gestion des
+  événements récurrents n'est incluse en V1.
 
 ### 4.5 Documents et médias
 
@@ -253,7 +267,11 @@ de données le permet.
   format JPG/JPEG, PNG ou WebP, jusqu'à 15 Mo par fichier source, sont
   converties au format WebP avant stockage. Les dimensions source sont limitées
   à 6000 × 6000 pixels, la qualité cible est 82 et les métadonnées inutiles
-  sont supprimées. Les vidéos ne sont pas acceptées. Les fichiers audio OGG sont
+  sont supprimées. Cloudflare Images effectue la transformation; la dimension
+  de sortie est limitée à 2000 × 2000 pixels en conservant le ratio. Les
+  variantes d'affichage utilisent 400 × 400 pixels (qualité 75, `cover`) pour
+  les vignettes et 2000 × 2000 pixels (qualité 82, `contain`) pour la vue
+  détaillée. Les vidéos ne sont pas acceptées. Les fichiers audio OGG sont
   limités à 30 Mo; les PDF à 20 Mo.
 - L'admin et la secrétaire peuvent publier et supprimer les albums. Une demande
   de retrait d'une photo est traitée rapidement par un responsable habilité;
@@ -287,22 +305,41 @@ de données le permet.
 ### 4.7 Contact
 
 - Le formulaire public envoie les messages via un endpoint Cloudflare Pages
-  SvelteKit. Resend transmet le message à l'adresse officielle; Cloudflare
-  Turnstile valide l'action et les pièces jointes restent interdites.
-- Les pièces jointes sont interdites et une confirmation est envoyée à
-  l'expéditeur. Le branchement du formulaire côté application reste une tâche
-  d'implémentation.
+  SvelteKit. Resend transmet le message à l'adresse officielle, configurée
+  dans une variable d'environnement serveur (adresse attendue :
+  `bagadpenhars@gmail.com`); Cloudflare Turnstile valide l'action et les
+  pièces jointes restent interdites.
+- Après acceptation de l'envoi du message à l'association, une confirmation
+  est envoyée à l'expéditeur. En cas d'échec de l'envoi à l'association,
+  aucune confirmation de succès ne doit être envoyée. L'adresse de réception
+  et la clé API Resend ne sont jamais exposées dans le navigateur.
 
 ## 5. Exigences de sécurité et de confidentialité
 
 - Appliquer une autorisation serveur explicite à chaque table et opération,
-  y compris les données destinées au public.
-- Ne pas utiliser une politique générale autorisant tout accès sans justification
-  documentée et revue.
+  avec des politiques RLS Neon/PostgreSQL explicites sur les tables sensibles,
+  y compris pour les données destinées au public.
+- N'accorder que les privilèges minimaux. Les tables sensibles sont protégées
+  par des policies `SELECT`/`INSERT`/`UPDATE`/`DELETE` adaptées, sans policy
+  générale permissive.
+- Le contexte RLS est défini avec `set_config(..., true)` au début de la même
+  transaction qui porte les requêtes. En l'absence de session ou de contexte,
+  les données privées sont refusées. Ne jamais faire confiance à un identifiant
+  ou rôle transmis par le client pour établir ce contexte.
+- Le rôle PostgreSQL runtime ne contourne pas RLS (`BYPASSRLS`) et ne possède
+  pas les tables protégées.
+- Better Auth est la source de l'identité et des sessions; `profiles.role` et
+  `profiles.account_status` restent la source des rôles et statuts métier.
+- Hyperdrive assure le pooling. Le cache partagé de requêtes ne sert que des
+  données publiques indépendantes de l'identité, jamais des lectures protégées
+  par RLS.
 - Valider et normaliser les entrées côté serveur; appliquer les schémas de
   validation du projet.
 - Vérifier les permissions à chaque requête sensible, y compris les actions de
   formulaire, les endpoints API et les téléchargements.
+- Tester RLS sous le rôle runtime réel : accès anonyme, absence de contexte,
+  rôles métier, isolation entre deux utilisateurs successifs sur une connexion
+  réutilisée et accès aux lignes hors périmètre.
 - Protéger les secrets dans les variables d'environnement serveur. Ne jamais
   les exposer dans le bundle client, les logs ou les exemples versionnés.
 - Ne mettre en cache côté PWA que les ressources statiques et la page hors
@@ -324,10 +361,20 @@ incomplets. Ne pas ajouter de service tiers sans décision dans
 - Svelte 5 : utiliser exclusivement les runes (`$state`, `$derived`, `$effect`, `$props`). Ne pas introduire `export let`, `$:`, `on:click` (utiliser `onclick`), ni de stores Svelte legacy pour l'état local.
 - Formulaires et mutations : privilégier les actions SvelteKit (`+page.server.ts`) avec progressive enhancement (`use:enhance`), validation serveur systématique (schémas Zod/Standard Schema) et retours typés (`fail`, `success`).
 - Better Auth : intégrer le handler central, les hooks serveur et les sessions
-  vérifiées. Résoudre le profil et le rôle depuis Neon et les attacher à
-  `event.locals.profile` et `event.locals.role`.
+  vérifiées. Résoudre le profil, le rôle et le statut depuis Neon et les
+  attacher à `event.locals.profile`, `event.locals.role` et
+  `event.locals.accountStatus`. Better Auth ne remplace pas `profiles.role`.
 - Utiliser Drizzle comme ORM et Cloudflare Hyperdrive comme pool/connexion
   PostgreSQL Neon pour les déploiements Cloudflare Workers.
+- Utiliser `@neondatabase/serverless` comme driver Neon. Établir le contexte
+  d'identité RLS avec `set_config(..., true)` dans la transaction avant les
+  requêtes métier; ne jamais réutiliser un contexte de session sur une
+  connexion poolée.
+- Filtrer les liens du menu côté serveur à partir des permissions résolues.
+  Cela ne remplace pas les guards dans chaque `+page.server.ts`, action et
+  endpoint; toute URL connue doit toujours être protégée côté serveur.
+- Ne pas mettre en cache dans Hyperdrive les lectures privées dépendantes du
+  contexte RLS; réserver le cache aux lectures publiques sûres.
 - Utiliser Resend pour les invitations et réinitialisations Better Auth, ainsi
   que pour les messages de contact.
 - Utiliser Cloudflare Turnstile sur le formulaire de contact avant tout envoi
@@ -347,7 +394,8 @@ incomplets. Ne pas ajouter de service tiers sans décision dans
 - Évolution du schéma : uniquement via de nouvelles migrations PostgreSQL
   reproductibles sous `drizzle/` et ses métadonnées `drizzle/meta/`.
 - Environnements : séparation stricte de dev, preview et production. Aucun secret committé.
-- Fuseau horaire : `Europe/Paris` avec gestion automatique des décalages été/hiver.
+- Dates d'événement : date civile uniquement, sans heure; la clôture est
+  calculée selon le jour courant de `Europe/Paris`.
 - PWA : service worker restreint aux assets statiques du build et à `/offline`.
   Aucune page privée ni requête Neon/R2 en cache. Modification consignée dans `docs/pwa.md`.
 
@@ -370,16 +418,14 @@ Une fonctionnalité est livrable lorsque :
 8. les vérifications `npm run check`, `npm run lint` et `npm run build`
    passent, ou les échecs préexistants et non liés sont signalés clairement.
 
-## 8. Décisions à compléter
+## 8. Décisions et éléments restant à compléter
 
-Les décisions validées dans [`docs/questions.md`](./docs/questions.md) sont
-appliquées dans cette spécification. Les questions complémentaires qui restent
-ouvertes sont identifiées dans ce fichier et doivent être tranchées avant les
-fonctions concernées : durées de conservation des présences et journaux d'audit,
-ainsi que les modalités du traitement des demandes de suppression de compte.
-Les soumissions de contact sont transmises par l'application avec Resend
-après validation Cloudflare Turnstile; leur intégration reste une tâche
-d'implémentation.
+Les décisions validées dans [`questions.md`](./questions.md) sont appliquées
+dans cette spécification. Les durées de conservation des réponses aux
+événements, des journaux d'audit et des messages de contact restent à valider
+par l'association. Aucune purge automatique irréversible ne doit être activée
+avant cette validation. Le traitement des demandes de suppression suit le
+processus défini en §4.3.
 
 ## 9. État du dépôt à la préparation
 
@@ -482,8 +528,10 @@ adresse non concordante.
 - Implémenter création, modification et suppression d'événement selon les
   rôles et périmètres décidés.
 - Enregistrer au plus une réponse par membre et événement. L'identité du
-  répondant vient de la session; la réponse est modifiable ou supprimable
-  uniquement par son propriétaire.
+  répondant vient de la session; le propriétaire peut modifier sa réponse
+  pendant la date de l'événement, qui ne contient pas d'heure, jusqu'à minuit
+  au début du lendemain selon `Europe/Paris`. Il ne peut pas la retirer; après
+  annulation ou clôture, elle reste en lecture seule.
 - Implémenter les sondages directement dans la table `events` avec `is_poll: boolean`
   et enregistrer les réponses dans `event_responses` avec le statut strict `present` ou `absent`
   (type `response_status`), sans table `polls` distincte ni étape de validation préalable.
@@ -491,8 +539,9 @@ adresse non concordante.
   ou privée; un chef a ces droits uniquement pour les événements des pupitres qu'il dirige.
 - Utiliser l'ENUM `event_type` avec les neuf valeurs définies, et enregistrer
   indépendamment la visibilité `public`, `interne` ou `pupitre`.
-- Valider les dates, fuseaux horaires et heures de fin. La première version ne
-  comporte aucune structure SQL ni aucun comportement de récurrence.
+- Valider les dates civiles uniquement. Les événements n'ont pas d'heures et
+  la première version ne comporte aucune structure SQL ni aucun comportement
+  de récurrence.
 
 **Livrable :** tests de visibilité public/privé, permissions par rôle,
 propriété des réponses et cas de dates invalides.
@@ -608,10 +657,12 @@ Une livraison développeur doit fournir :
 6. les vérifications `npm run check`, `npm run lint` et `npm run build`
    exécutées. Les erreurs préexistantes doivent être distinguées des erreurs
    introduites par le changement.
+7. les tests RLS couvrant l'absence de contexte, les accès autorisés/refusés
+   et l'isolation des utilisateurs via le pool de connexions.
 
-## 13. Questions bloquantes
+## 13. Arbitrages produit
 
-Les questions encore ouvertes dans [`docs/questions.md`](./docs/questions.md)
-sont des entrées de travail. Pour chacune, le responsable produit consigne la
-réponse, la date et les conséquences sur cette spécification. Le développeur
-ne met pas en production le comportement correspondant avant décision.
+Les arbitrages et les points restant à valider sont consignés dans
+[`questions.md`](./questions.md). Les règles déjà arbitrées dans ce document
+sont applicables; les durées de conservation non encore validées ne doivent
+pas être traduites en purge automatique.

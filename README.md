@@ -30,8 +30,9 @@ répondre aux événements et gérer son profil.
 - Cloudflare R2 sépare les médias publics des photos de profil et documents
   privés. Les objets privés sont servis uniquement après autorisation serveur.
 - Les représentations explicitement publiques sont consultables sans compte.
-- Le fuseau horaire des événements est `Europe/Paris`. La première version ne
-  gère pas les événements récurrents.
+- Les événements ne stockent qu'une date, sans heure. La clôture des réponses
+  a lieu à minuit au début du lendemain selon `Europe/Paris`. La première
+  version ne gère pas les événements récurrents.
 
 ### Rôles et comptes
 
@@ -67,6 +68,10 @@ pupitre ne peut pas être modifié par la personne invitée.
   et `pupitre` (visible uniquement par les membres du ou des pupitres concernés).
 - Pour les événements et sondages, une réponse est obligatoirement « présent »
   ou « absent » (ou reste sans réponse en l'absence de saisie).
+- Une réponse peut être modifiée jusqu'à la fin de la date de l'événement;
+  elle est close à minuit au début du lendemain, puis reste en lecture seule.
+  Elle n'est pas supprimée lors de l'annulation
+  ou de la clôture; la suppression de compte suit le processus dédié.
 - Les partitions sont des PDF privés consultables par tous les membres
   approuvés, quel que soit leur pupitre. Les chefs déposent des partitions
   pour leur périmètre; la secrétaire et l'admin peuvent en déposer pour tous
@@ -77,12 +82,14 @@ pupitre ne peut pas être modifié par la personne invitée.
 - Les articles et albums sont prévisualisés avant publication. L'admin et la
   secrétaire peuvent publier et supprimer les albums.
 - Les médias publics publiés sont accessibles sans connexion. Les photos
-  source JPG/JPEG de 20 Mo maximum sont converties en WebP. Les vidéos sont
-  interdites. Chaque membre actif peut lire les photos de profil des autres
-  membres actifs, mais modifier uniquement la sienne.
+  JPG/JPEG, PNG et WebP (15 Mo maximum et 6000 × 6000 pixels maximum) sont
+  transformées par Cloudflare Images en WebP jusqu'à 2000 × 2000 pixels.
+  Les vidéos sont interdites. Chaque membre actif peut lire les photos de
+  profil des autres membres actifs, mais modifier uniquement la sienne.
 - Le formulaire de contact doit être traité par un endpoint Cloudflare Pages
-  avec un fournisseur e-mail côté serveur; les pièces jointes sont interdites.
-  Le branchement technique reste à valider dans `docs/questions.md`.
+  avec Resend et Cloudflare Turnstile; les pièces jointes sont interdites.
+  L'adresse officielle est configurée côté serveur et l'expéditeur reçoit un
+  accusé après l'envoi réussi du message à l'association.
 
 ### Notifications
 
@@ -90,32 +97,26 @@ OneSignal est le service prévu pour les notifications push de la première
 version; aucun email de notification n'est prévu. La création d'un événement
 déclenche une notification automatique. Les membres peuvent gérer leurs
 préférences globales, celles des événements et des rappels, y compris les
-rappels en cas de réponse manquante à un sondage. L'audience exacte des
-notifications de sondage reste à valider.
+rappels en cas de réponse manquante à un sondage. Les règles d'audience
+figurent dans le brief et la spécification.
 
-## Points encore à décider
+## Décisions et points restant à valider
 
-Les réponses sont suffisamment claires pour les langues, les rôles,
-l'invitation, les profils, les formats de médias, la visibilité des événements
-(`public`, `interne`, `pupitre`) et les notifications de sondage. Les points
-suivants ne doivent pas être supposés :
-
-1. **Fournisseur e-mail du contact et des invitations :** confirmer le service,
-   l'adresse destination et le mécanisme de confirmation à l'expéditeur.
-2. **Conservation et suppression :** fixer les durées de conservation des
-   soumissions de contact, présences et journaux d'audit, ainsi que le
-   processus de traitement d'une demande de suppression de compte.
-
-Le détail et l'historique des réponses sont dans
-[les questions produit](./docs/questions.md). Une réponse non confirmée n'est
-pas une exigence définitive.
+Les arbitrages datés sont consignés dans [`docs/questions.md`](./docs/questions.md)
+et appliqués dans les spécifications. Les durées de conservation des messages
+de contact, des réponses et des journaux d'audit restent à valider par
+l'association; aucune purge automatique irréversible n'est activée avant cette
+validation.
 
 ## Architecture cible et état technique
 
 La cible est SvelteKit 5, TypeScript et Tailwind CSS, avec Better Auth,
-Neon PostgreSQL via Drizzle et Cloudflare Hyperdrive, Cloudflare R2,
-Cloudflare Pages, Resend et Cloudflare Turnstile. OneSignal gère les
-notifications push.
+Neon PostgreSQL avec RLS, Drizzle, `@neondatabase/serverless` et Cloudflare
+Hyperdrive pour le pooling, Cloudflare R2, Cloudflare Pages, Resend et
+Cloudflare Turnstile. OneSignal gère les notifications push. Better Auth
+gère l'identité et les sessions; `profiles.role` reste la source des rôles
+métier. Le contexte RLS est transactionnel et les lectures privées ne sont
+pas servies depuis un cache partagé de requêtes.
 
 Le dépôt contient encore des éléments historiques fondés sur Supabase et
 Netlify. Ils sont obsolètes et ne doivent pas être utilisés comme implémentation

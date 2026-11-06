@@ -1,20 +1,19 @@
 -- ============================================================================
 -- BAGAD PENHARS — Schéma relationnel consolidé (documentation / DrawSQL)
--- Source : supabase/migrations/005_bagadPenhars_final.sql
+-- Source métier : docs/database.md et décisions produit validées.
 -- Révision : 2026-11-01
 --
 -- IMPORTANT
 -- - Ce fichier est un schéma de référence destiné à l'import/visualisation
 --   dans DrawSQL ou un outil ERD. Ce n'est PAS une migration à exécuter tel quel.
--- - Les objets auth.users, storage.buckets et storage.objects appartiennent
---   aux extensions/services Supabase et ne sont pas redéclarés ici.
--- - Les policies RLS, fonctions, triggers, grants et buckets ne sont pas
---   représentés comme tables relationnelles ; ils restent définis dans les
---   migrations originales.
+-- - Les tables d'identité Better Auth et les objets Cloudflare R2 ne sont pas
+--   représentés ici.
+-- - Les règles d'autorisation applicatives ne sont pas représentées comme
+--   tables relationnelles; elles sont implémentées côté serveur.
 -- - La vue SQL member_directory (trombinoscope V1) n'est pas une table
 --   physique et n'est pas représentée ci-dessous.
--- - Les tables et colonnes suivent le schéma initial consolidé de la migration
---   active 005, y compris les décisions de statut, d'événement et de pupitre.
+-- - Ce document est une référence de visualisation DrawSQL, pas une migration.
+--   Le modèle Drizzle et les migrations Neon constituent la référence technique.
 -- ============================================================================
 
 -- ENUMS
@@ -54,7 +53,7 @@ CREATE TABLE pupitres (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- id est aussi la FK vers auth.users.id (table Supabase Auth externe).
+-- id est lié au compte correspondant dans Better Auth.
 CREATE TABLE profiles (
   id uuid PRIMARY KEY,
   first_name text NOT NULL,
@@ -118,15 +117,13 @@ CREATE TABLE events (
   title text NOT NULL,
   description text,
   location text,
-  start_at timestamptz NOT NULL,
-  end_at timestamptz NOT NULL,
+  event_date date NOT NULL,
   event_type event_type NOT NULL,
   visibility event_visibility NOT NULL DEFAULT 'interne',
   is_poll boolean NOT NULL DEFAULT false,
   author_id uuid REFERENCES profiles(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT events_dates_check CHECK (end_at >= start_at)
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE event_pupitres (
@@ -138,7 +135,7 @@ CREATE TABLE event_pupitres (
 CREATE TABLE event_responses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id uuid NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  profile_id uuid REFERENCES profiles(id) ON DELETE SET NULL,
   status response_status NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
@@ -223,8 +220,8 @@ CREATE TABLE activity_log (
 
 -- ============================================================================
 -- RGPD / SUPPRESSION DE COMPTE
--- profile_id devient nullable dans migration 003 pour conserver la demande
--- après suppression du profil ; snapshot_* est renseigné par trigger.
+-- profile_id est nullable pour conserver la demande après suppression du
+-- profil; les instantanés sont conservés selon les règles de rétention validées.
 -- ============================================================================
 CREATE TABLE account_deletion_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -256,8 +253,7 @@ CREATE TABLE member_loans (
 );
 
 -- ============================================================================
--- INDEX additionnels explicitement présents dans la migration 005
--- (les PK/UNIQUE créent déjà leurs propres index).
+-- INDEX additionnels (les PK/UNIQUE créent déjà leurs propres index).
 -- ============================================================================
 
 CREATE UNIQUE INDEX invitations_email_active_unique

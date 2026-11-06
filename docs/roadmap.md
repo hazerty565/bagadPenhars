@@ -2,10 +2,11 @@
 
 ## Focus actuel
 
-**Fiabiliser le socle Neon/Better Auth/Cloudflare avant d'étendre les fonctions métier** : rendre les
-contrôles automatisés exécutables et expliciter les décisions d'authentification,
-de persistance et de sécurité. La CI `check` / `lint` / `build` est ajoutée;
-son premier passage et la complétion des fonctions serveur restent à valider.
+**Fiabiliser le socle Neon/Better Auth/Cloudflare avant d'étendre les fonctions métier** : implémenter
+le driver Neon, Drizzle et Hyperdrive, les guards SvelteKit, le contexte RLS
+transactionnel et les policies sur les tables sensibles. La CI
+`check` / `lint` / `build` est ajoutée; son premier passage et la complétion
+des fonctions serveur restent à valider.
 
 ## Jalons
 

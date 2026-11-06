@@ -31,10 +31,22 @@ Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` 
 
 - Les autorisations métier sont vérifiées côté serveur dans les loads/actions/endpoints.
 - Les données et sessions sont gérées avec Better Auth et Neon PostgreSQL.
-- La séparation des données repose sur des contrôles applicatifs explicites, pas sur des policies Supabase (interdites).
+- Les tables sensibles utilisent les politiques RLS natives de Neon/PostgreSQL
+  en défense en profondeur, en plus des guards applicatifs; ne pas réintroduire
+  Supabase ni ses services.
+- Après validation de la session Better Auth, chaque transaction applicative
+  établit son contexte utilisateur avec `set_config(..., true)` avant les
+  requêtes métier. Le contexte est local à la transaction; ne jamais conserver
+  l'identité dans l'état d'une connexion Hyperdrive réutilisable.
+- Les données protégées par RLS ne passent pas par un cache partagé de
+  requêtes. Hyperdrive sert au pooling des connexions; n'activer le cache de
+  requêtes que pour des lectures explicitement publiques et indépendantes de
+  l'identité.
 - Utiliser des migrations reproductibles pour toute modification de schéma.
 - Les rôles se lisent dans `profiles.role`, **jamais** dans `user_metadata`.
   La colonne `profiles.role` utilise l'ENUM PostgreSQL `app_role`.
+- Better Auth est la source de l'identité et des sessions, pas la source
+  d'autorité des rôles métier.
 - Données via `+page.server.ts` / `+layout.server.ts`, garde sur `event.locals`.
 - Les identifiants Neon, les secrets Better Auth et les clés OneSignal restent côté serveur et ne sont jamais exposés au client.
 - La branche Neon `test` est utilisée par les déploiements de preview et les validations locales; `production` est réservée au déploiement de production.
@@ -81,7 +93,8 @@ npm run check && npm run lint && npm run build
 ```
 
 - Schéma modifié : nouvelle migration Neon + mise à jour de `docs/database.md`
-  (matrice des droits comprise) + tests d'autorisation dans `tests/`.
+  (matrice des droits et politiques RLS comprises) + tests d'autorisation
+  dans `tests/`, y compris absence de contexte et isolation entre utilisateurs.
 - Route ou flux modifié : mise à jour de `docs/architecture.md`.
 - Ajouter une entrée datée dans `docs/journal.md` : ce qui est fait, ce qui reste, les pièges rencontrés.
 

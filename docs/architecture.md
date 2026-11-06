@@ -7,11 +7,23 @@
 
 ## Stack et déploiement
 
-L'application cible SvelteKit 5, TypeScript et Tailwind CSS. Les services sont
-Better Auth pour l'identité, Neon PostgreSQL avec Drizzle et Cloudflare
-Hyperdrive pour les données, Cloudflare R2 pour les fichiers, Cloudflare Pages
-pour l'hébergement, Resend pour les e-mails et Cloudflare Turnstile pour
-l'antispam, et OneSignal pour les notifications push.
+L'application cible SvelteKit 5 (runes) et TypeScript. Better Auth gère les
+identités et sessions; les rôles métier sont lus dans `profiles.role`.
+Neon PostgreSQL fournit la base et ses politiques RLS, Drizzle le modèle et
+les migrations, `@neondatabase/serverless` le driver et Cloudflare Hyperdrive
+le pooling des connexions. Les données privées soumises à RLS ne sont pas
+servies depuis un cache partagé de requêtes Hyperdrive. Cloudflare R2 stocke
+les fichiers; Cloudflare Pages héberge l'application; Resend et Turnstile
+gèrent les e-mails et l'antispam; OneSignal fournit les notifications push.
+
+Le menu est construit côté serveur selon le profil et les permissions, puis
+transmis à l'interface. Cela améliore l'UX, mais n'est pas une barrière de
+sécurité : les routes d'administration restent protégées par des guards
+serveur, même lorsqu'un utilisateur connaît directement leur URL.
+On ne peut pas garantir qu'un chemin d'administration n'existe dans aucun
+fichier JavaScript du build; l'exigence vérifiable est de ne pas transmettre
+à l'utilisateur les liens et données de navigation non autorisés, et de
+refuser tout accès direct côté serveur et RLS.
 
 La base Neon porte le nom `bagadpenhars` et deux branches sont utilisées :
 `production` et `test`. Voir [`database.md`](./database.md).
@@ -42,18 +54,23 @@ Les pages publiques acceptent les langues `fr`, `en` et `br` selon le matcher
 ## Flux applicatifs attendus
 
 1. Le navigateur appelle une page ou une action SvelteKit.
-2. Les lectures et écritures de données sont réalisées côté serveur via les
-   routes, les actions et les modules de `src/lib/server/`. Drizzle accède à
-   Neon via Cloudflare Hyperdrive.
-3. Better Auth gère l'identité et les sessions. SvelteKit vérifie la session
-   dans les layouts, actions et endpoints serveur.
-4. Les actions serveur lisent le rôle et le statut dans les profils Neon; elles
-   vérifient explicitement les rôles et les pupitres sur chaque opération.
-   Le rôle applicatif est `profiles.role`, dont les valeurs sont celles de
-   l'ENUM PostgreSQL conservé `app_role`.
-5. Cloudflare R2 stocke les fichiers. Neon conserve leurs métadonnées, clés,
+2. Better Auth valide l'identité et la session côté serveur. Les guards
+   SvelteKit chargent depuis Neon le profil, le statut et `profiles.role`
+   (ENUM `app_role`); les droits ne viennent ni du client ni des rôles Better
+   Auth.
+3. Le menu est filtré par le serveur. Chaque `+page.server.ts`, action et
+   endpoint protégé vérifie aussi ses propres permissions; le filtrage UI ne
+   remplace jamais un guard.
+4. Chaque transaction de base commence par l'établissement du contexte
+   utilisateur avec `set_config(..., true)`, puis exécute ses requêtes dans la
+   même transaction/connexion. Les politiques RLS Neon/PostgreSQL appliquent
+   les droits au niveau des lignes. Sans contexte, l'accès privé échoue fermé.
+5. Drizzle utilise `@neondatabase/serverless` et se connecte via Hyperdrive.
+   Le pooling est activé; le cache de requêtes est exclu des lectures privées
+   dépendantes de l'identité.
+6. Cloudflare R2 stocke les fichiers. Neon conserve leurs métadonnées, clés,
    visibilité et identifiants de propriétaire.
-6. Les uploads passent par des routes SvelteKit exécutées sur Cloudflare Pages.
+7. Les uploads passent par des routes SvelteKit exécutées sur Cloudflare Pages.
    Neon réserve l'espace de façon transactionnelle, puis SvelteKit charge le
    fichier final dans le bucket public ou privé. Une réservation est libérée en
    cas d'échec et les suppressions/remplacements mettent à jour les compteurs.
@@ -77,5 +94,7 @@ migrés; ne pas supposer que ces contrôles sont déjà effectifs.
 
 ## Sécurité des données
 
-Les données privées sont protégées par des validations côté serveur, des
-sessions vérifiées et des URLs R2 privées.
+Les données privées sont protégées par des sessions Better Auth vérifiées,
+des guards SvelteKit, des politiques RLS Neon/PostgreSQL et des URLs R2
+privées. Les contextes RLS sont transactionnels et les lectures protégées
+contournent tout cache partagé de requêtes.
