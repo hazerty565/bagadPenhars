@@ -373,6 +373,37 @@ crons = ["0 0 * * *"]  # Synchronisation quotidienne
 5. **Monitoring** : Prévoir des logs pour tracer les uploads, les erreurs, et les synchronisations.
 
 ---
+## 🖼️ Stratégie d'Affichage et Thumbnails (Cloudflare Images à la volée)
+
+Pour optimiser les performances, la bande passante et le stockage, l'application n'utilise ni de thumbnails physiques stockés dans R2, ni un simple redimensionnement CSS. Elle s'appuie sur **Cloudflare Images à la volée**.
+
+### Principe
+L'image WebP optimisée (max 2000x2000) est stockée une seule fois dans R2. Lors de l'affichage sur le site, Cloudflare génère et met en cache dynamiquement les différentes tailles nécessaires directement via des paramètres d'URL.
+
+### Tailles définies
+
+| Contexte | Dimensions | Qualité | Fit (Ajustement) | Usage |
+|----------|------------|---------|------------------|-------|
+| **Thumbnail** | 400 × 400 px | 75% | `cover` (crop centré) | Grille de la galerie publique, liste de l'interface admin |
+| **Full** | 2000 × 2000 px | 82% | `contain` (ratio respecté) | Lightbox, vue détaillée au clic |
+
+### Avantages de cette approche
+- **Zéro stockage supplémentaire** : Une seule version de l'image est conservée dans R2, ce qui préserve le quota strict de 10 Go.
+- **Bande passante optimisée** : Une thumbnail de 400px pèse environ 30 à 50 Ko, contre 1 à 3 Mo pour l'image complète.
+- **Mise en cache automatique** : Une fois générée par Cloudflare, la thumbnail est servie instantanément depuis le CDN Edge.
+
+### Impact sur le quota Cloudflare Images (Plan Free)
+- Le plan Free inclut **5 000 transformations uniques par mois**.
+- Une "transformation unique" est définie par une combinaison unique de paramètres (URL de base + dimensions + qualité).
+- Puisque l'application utilise toujours les mêmes paramètres stricts pour les thumbnails (`w=400&h=400&fit=cover`) et pour les images pleines (`w=2000&h=2000&fit=contain`), cela ne consomme que **2 transformations uniques** au total, peu importe le nombre d'images uploadées ou de pages vues.
+
+### Exemple d'implémentation (URL)
+
+Thumbnail pour la grille
+https://imagedelivery.net/{CF_ACCOUNT_HASH}/{r2_key}/w=400,h=400,fit=cover,quality=75
+Image complète pour la lightbox
+https://imagedelivery.net/{CF_ACCOUNT_HASH}/{r2_key}/w=2000,h=2000,fit=contain,quality=82
+---
 
 ## 🔮 Évolutions Possibles
 
