@@ -20,6 +20,6 @@ Testeur → [TESTS.md]
   ↓
 Sécurité → [SECURITE.md]
   ↓
-Déploiyeur → [DEPLOIEMENT.md]
+Déploiyeur → [DEPLOYER.md]
   ↓
 Client (livraison finale)
