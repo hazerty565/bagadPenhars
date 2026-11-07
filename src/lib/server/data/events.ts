@@ -13,45 +13,44 @@ import { eq, and, desc } from 'drizzle-orm';
  *
  * Chaque fonction établit le contexte RLS via set_config(..., true) avant les
  * requêtes métier, dans la même transaction lorsque plusieurs requêtes sont
- * nécessaires.
+ * nécessaires. L'identité de l'acteur provient de la session Better Auth
+ * (validée par le guard), jamais du client.
  */
 
 /**
- * Établit le contexte RLS pour l'utilisateur donné dans le cadre d'une
- * transaction.
+ * Contexte d'acteur requis par les fonctions de données.
+ */
+export interface Actor {
+	profileId: string;
+	role: string;
+}
+
+/**
+ * Établit le contexte RLS pour l'acteur donné dans le cadre d'une transaction.
  */
 export async function setRLSContextInTx(
 	tx: typeof db,
-	userId: string,
-	userRole: string
+	actor: Actor
 ) {
-	await tx.execute`SELECT set_config('app.user_id', ${userId}, true)`;
-	await tx.execute`SELECT set_config('app.user_role', ${userRole}, true)`;
+	await tx.execute`SELECT set_config('app.user_id', ${actor.profileId}, true)`;
+	await tx.execute`SELECT set_config('app.user_role', ${actor.role}, true)`;
 }
 
 /**
  * Liste des événements visibles pour l'utilisateur, selon son rôle et ses
  * pupitres. L'appelant est responsable du guard d'autorisation avant l'appel.
- *
- * @param ctx - { userId, userRole, chefPupitres, assignedPupitres }
- * @param options - visibilityFilter, includePast, limit
  */
-export async function listEvents(ctx: {
-	userId: string;
-	userRole: string;
-	chefPupitres: string[];
-	assignedPupitres: string[];
+export async function listEvents(actor: Actor, options?: {
 	visibility?: 'public' | 'interne' | 'pupitre';
 	includePast?: boolean;
 	limit?: number;
 }) {
-	const { userId, userRole, chefPupitres, assignedPupitres } = ctx;
-	const visibility = ctx.visibility;
-	const includePast = ctx.includePast ?? false;
-	const limit = ctx.limit;
+	const visibility = options?.visibility;
+	const includePast = options?.includePast ?? false;
+	const limit = options?.limit;
 
 	return db.transaction(async (tx) => {
-		await setRLSContextInTx(tx, userId, userRole);
+		await setRLSContextInTx(tx, actor);
 
 		let q = tx
 			.select({
@@ -74,7 +73,7 @@ export async function listEvents(ctx: {
 
 		if (!includePast) {
 			const today = new Date().toISOString().slice(0, 10);
-			q = q.where(and(eq(events.visibility, visibility || 'public')));
+			q = q.where(and(eq(events.event_date, today)));
 		}
 
 		q = q.orderBy(desc(events.event_date));
@@ -114,20 +113,19 @@ export async function getEventById(eventId: string) {
 
 /**
  * Crée un événement avec ses pupitres ciblés. Retourne l'événement créé.
- * L'appelant doit avoir établi le contexte RLS et vérifié les permissions.
+ * L'acteur doit être authentifié et autorisé (vérifié par le guard).
  */
-export async function createEvent(data: {
+export async function createEvent(actor: Actor, data: {
 	title: string;
 	description?: string;
 	eventDate: Date;
 	eventType: string;
 	visibility: 'public' | 'interne' | 'pupitre';
 	isPoll?: boolean;
-	createdBy: string;
 	pupitreIds?: string[];
 }) {
 	return db.transaction(async (tx) => {
-		await setRLSContextInTx(tx, data.createdBy, 'member'); // le rôle est résolu par l'appelant via RLS
+		await setRLSContextInTx(tx, actor);
 
 		const [event] = await tx
 			.insert(events)
@@ -138,7 +136,7 @@ export async function createEvent(data: {
 				event_type: data.eventType as any,
 				visibility: data.visibility,
 				is_poll: data.isPoll ?? false,
-				created_by: data.createdBy
+				created_by: actor.profileId
 			})
 			.returning();
 
@@ -156,19 +154,23 @@ export async function createEvent(data: {
 }
 
 /**
- * Met à jour un événement. L'appelant vérifie les permissions (guard).
+ * Met à jour un événement. L'acteur doit être autorisé (guard).
  */
-export async function updateEvent(eventId: string, data: {
-	title?: string;
-	description?: string;
-	eventDate?: Date;
-	eventType?: string;
-	visibility?: 'public' | 'interne' | 'pupitre';
-	isPoll?: boolean;
-	pupitreIds?: string[]; // si fourni, remplace les affectations
-}) {
+export async function updateEvent(
+	actor: Actor,
+	eventId: string,
+	data: {
+		title?: string;
+		description?: string;
+		eventDate?: Date;
+		eventType?: string;
+		visibility?: 'public' | 'interne' | 'pupitre';
+		isPoll?: boolean;
+		pupitreIds?: string[]; // si fourni, remplace les affectations
+	}
+) {
 	return db.transaction(async (tx) => {
-		await setRLSContextInTx(tx, '00000000-0000-0000-0000-000000000000', 'member');
+		await setRLSContextInTx(tx, actor);
 
 		const updates: Record<string, unknown> = {};
 		if (data.title !== undefined) updates.title = data.title;
@@ -202,12 +204,12 @@ export async function updateEvent(eventId: string, data: {
 }
 
 /**
- * Supprime un événement et ses affectations de pupitre. L'appelant vérifie
- * les permissions (guard).
+ * Supprime un événement et ses affectations de pupitre. L'acteur doit être
+ * autorisé (guard).
  */
-export async function deleteEvent(eventId: string) {
+export async function deleteEvent(actor: Actor, eventId: string) {
 	return db.transaction(async (tx) => {
-		await setRLSContextInTx(tx, '00000000-0000-0000-0000-000000000000', 'member');
+		await setRLSContextInTx(tx, actor);
 		await tx.delete(eventPupitres).where(eq(eventPupitres.event_id, eventId));
 		return tx.delete(events).where(eq(events.id, eventId));
 	});
@@ -254,11 +256,16 @@ export async function getResponseByEventAndProfile(eventId: string, profileId: s
  * Crée ou met à jour la réponse d'un profil à un événement (upsert).
  * L'identité du répondant vient de la session (profileId), jamais du client.
  */
-export async function upsertResponse(data: {
+export async function upsertResponse(actor: Actor, data: {
 	eventId: string;
 	profileId: string;
 	status: 'present' | 'absent';
 }) {
+	// On ne permet de répondre que pour son propre profil (guard vérifié en amont).
+	if (data.profileId !== actor.profileId) {
+		throw new Error('Vous ne pouvez répondre que pour votre propre profil.');
+	}
+
 	const existing = await getResponseByEventAndProfile(
 		data.eventId,
 		data.profileId
