@@ -264,3 +264,45 @@ avant validation par le chef de projet.
   rôle, l'absence de contexte ainsi que deux utilisateurs successifs sur une
   connexion réutilisée. Le menu filtré ne constitue pas un contrôle d'accès;
   toute URL directe reste protégée par le serveur.
+
+## 2026-11-07 — Questions issues de la relecture de bout en bout
+
+### Q-2026-11-07-01 — Besoin fonctionnel concret au-delà du socle technique
+
+- **Date :** 2026-11-07
+- **Problème :** Le client n'a exprimé aucun besoin fonctionnel métier concret à implémenter par le développeur backend et le développeur frontend. Le plan actuel (`equipe/PLAN.md`) couvre uniquement le focus actuel : socle Neon/Better Auth/Cloudflare, CI, gardes d'accès, contexte RLS transactionnel et policies sur les tables sensibles.
+- **Pourquoi :** Toute étape fonctionnelle supplémentaire serait une supposition interdite ; le plan ne peut pas engager les développeurs sur un besoin métier non exprimé par le client.
+- **Proposition :** Poursuivre l'implémentation du focus actuel (socle) telle que décrite aux étapes 1 à 8 de `equipe/PLAN.md`. Le besoin fonctionnel sera ajouté à ce plan (nouvelle étape ou extension d'une étape existante) une fois tranché par le client.
+### Décision client — Q-2026-11-07-01
+
+Le périmètre fonctionnel du projet Bagad Penhars est déjà défini dans les documents de référence et dans les huit étapes du plan d'implémentation.
+
+Aucun nouveau besoin fonctionnel n'est à inventer ni à demander.
+
+Les développeurs backend et frontend doivent réaliser les fonctionnalités décrites dans le plan, en respectant les spécifications, les décisions validées et les critères de fin de chaque étape.
+
+**Ordre de réalisation :**
+- Étapes 1 à 3 : socle technique et sécuritaire.
+- Étapes 4 à 7 : fonctionnalités métier de l'application.
+- Étape 8 : validation globale et qualité.
+
+Toute fonctionnalité supplémentaire non prévue devra faire l'objet d'une validation préalable du client.
+
+L'architecte doit donc s'appuyer sur les besoins déjà documentés et ne pas confondre absence de nouveau besoin avec absence de besoin fonctionnel.
+### Q-2026-11-07-02 — Couleurs et icônes définitives du thème PWA
+
+- **Date :** 2026-11-07
+- **Problème :** Le fichier `docs/pwa.md` §3 indique que les couleurs du manifest sont "à remplacer par celles du thème du site", et §10 liste "Couleurs et icônes définitives du thème" comme point restant à définir. Aucune couleur primaire ni palette n'est fixée pour le site.
+- **Pourquoi :** Le design du header, du hero et des composants UI dépend de ces couleurs ; sans elles, l'intégration visuelle reste bloquée et le manifest PWA n'est pas finalisé.
+- **Proposition :** Demander au client ou au bureau de l'association de valider la couleur primaire et la palette (ou proposer une teinte par défaut cohérente avec l'identité visuelle du bagad), puis mettre à jour `docs/pwa.md`, `tailwind.config.js` et `static/manifest.webmanifest`.
+### Décision client — Q-2026-11-07-01
+ il y a un exemple de design dans le dossier `src\autre`, l'icone de l'aplication arrivera plus tard dans le dossier `src\routes\public`
+
+### Q-2026-11-07-03 — Installation de l'application PWA avant ou après la connexion
+
+- **Date :** 2026-11-07
+- **Problème :** `docs/pwa.md` §10 pose la question : "Faut-il proposer l'installation de l'application avant ou après la connexion ?" Aucun choix n'a été tranché.
+- **Pourquoi :** Ce choix conditionne l'affichage du bouton d'installation PWA, le parcours d'onboarding du membre et l'expérience d'activation des notifications push sur Android et iOS.
+- **Proposition :** Proposer l'installation de la PWA après la connexion (espace adhérents), car les notifications push concernent les membres actifs ; afficher une page d'aide "Installer l'application" dans l'espace adhérents, comme prévu par `docs/pwa.md` §7.
+### Décision client — Q-2026-11-07-01
+ proposition validé : Proposer l'installation de la PWA après la connexion (espace adhérents)

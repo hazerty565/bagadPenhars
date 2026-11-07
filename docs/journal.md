@@ -67,3 +67,10 @@
 - Les durées de conservation des réponses, des journaux d'audit et des
   messages de contact restent à valider; aucune purge automatique
   irréversible n'est activée avant cette validation.
+
+## 2026-11-07
+
+### Branche de travail
+
+- La branche `proto` est créée depuis `main` pour recevoir les changements
+  locaux; `main` reste inchangée.
