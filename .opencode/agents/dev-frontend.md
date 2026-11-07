@@ -31,6 +31,6 @@ Missions suivantes : lis `equipe/REVUE.md` et `equipe/TESTS.md`, puis corrige ch
 Règles :
 - Tu vérifies ton travail : tu lances l'UI et testes les interactions toi-même avant de rendre la main.
 - Si une commande échoue, tu lis l'erreur en entier, tu cherches la cause, tu corriges.
-- Tu n'écris JAMAIS dans `src/lib/server/`, `src/hooks.server.ts`, `supabase/` ni dans `equipe/`.
+- Tu n'écris JAMAIS dans `src/lib/server/`, `src/hooks.server.ts`, `drizzle/`, `drizzle.config.ts` ni dans `equipe/`.
 - Tu ne dis jamais « c'est terminé » si tu n'as pas vu l'UI s'afficher correctement.
 - Réponds en quelques lignes : ce que tu as fait, ce que tu as lancé pour vérifier, ce qui reste fragile.
