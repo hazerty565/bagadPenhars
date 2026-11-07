@@ -4,9 +4,10 @@
 
 ## 1. Objectif
 
-Rendre le site installable sur l'écran d'accueil (surtout sur téléphone), afficher une page propre sans réseau, et recevoir les notifications OneSignal.
-
-Hors objectif : un mode hors-ligne complet. Les données de l'espace adhérents nécessitent le réseau.
+La PWA sert à permettre l'activation des notifications push OneSignal. Son
+installation est requise sur Android et iOS pour recevoir ces notifications.
+L'espace adhérents et ses données nécessitent une connexion réseau : aucun
+mode hors-ligne n'est prévu pour les membres.
 
 ## 2. Fichiers
 
@@ -14,9 +15,8 @@ Hors objectif : un mode hors-ligne complet. Les données de l'espace adhérents 
 |---|---|
 | `static/manifest.webmanifest` | Nom, couleurs, icônes |
 | `static/icons/` | Icônes 192, 512, maskable 512, `apple-touch-icon` 180 |
-| `src/service-worker.ts` | Cache des fichiers statiques et page hors-ligne |
+| Service worker OneSignal ou worker applicatif | Fonctionnement des notifications push |
 | `src/app.html` | Liens vers le manifest, `theme-color`, icône iOS |
-| `src/routes/offline/+page.svelte` | Page affichée sans réseau (prérendue) |
 | Cloudflare Pages / `_headers` | En-têtes de cache du service worker et du manifest |
 
 ## 3. Manifest
@@ -51,71 +51,17 @@ Dans `src/app.html` :
 
 ## 4. Service worker
 
-### Règles de cache
-
-| Requête | Stratégie |
-|---|---|
-| Fichiers du build et `static/` (même origine) | Cache d'abord |
-| Navigation (pages HTML) | **Réseau uniquement**, repli sur `/offline` si coupure |
-| Autre origine (Neon, R2, OneSignal) | **Jamais interceptée** |
-| Méthodes autres que GET | Jamais interceptées |
-
-Pourquoi : les URL de l'espace adhérents ne sont pas préfixées (un groupe de routes `(app)` n'apparaît pas dans l'URL). Mettre les pages HTML en cache risquerait de montrer des données privées à quelqu'un de déconnecté. Seuls les fichiers statiques sont donc mis en cache.
-
-### Squelette
-
-```ts
-/// <reference types="@sveltejs/kit" />
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
-import { build, files, version } from '$service-worker';
-
-const sw = self as unknown as ServiceWorkerGlobalScope;
-const CACHE = `cache-${version}`;
-const ASSETS = [...build, ...files, '/offline'];
-
-sw.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => sw.skipWaiting())
-  );
-});
-
-sw.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => sw.clients.claim())
-  );
-});
-
-sw.addEventListener('fetch', (event) => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-
-  const url = new URL(req.url);
-  if (url.origin !== sw.location.origin) return; // Neon, R2, OneSignal : jamais touchés
-
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req).catch(async () => (await caches.match('/offline')) ?? Response.error())
-    );
-    return;
-  }
-
-  if (ASSETS.includes(url.pathname)) {
-    event.respondWith(caches.match(req).then((cached) => cached ?? fetch(req)));
-  }
-});
-```
-
-La page `/offline` doit être prérendue (`export const prerender = true` dans son `+page.ts`) pour exister dans le cache.
+Le service worker est nécessaire au fonctionnement des notifications push. Il
+ne fournit pas de mode hors-ligne et ne doit mettre en cache ni pages, ni
+requêtes applicatives, ni données membres. En particulier, aucune page de
+l'espace adhérents ne doit rester accessible depuis un cache après
+déconnexion.
 
 ## 5. Cohabitation avec OneSignal
 
-**Décision produit — 2026-11-06 :** l'expérience PWA et les notifications
-OneSignal sont requises. Le choix technique entre un worker applicatif et le
-worker OneSignal est confié au développeur front-end.
+**Décision produit — 2026-11-06 :** l'installation de la PWA est requise pour
+recevoir les notifications push OneSignal. Le choix technique entre un worker
+applicatif et le worker OneSignal est confié au développeur front-end.
 
 OneSignal fournit son propre service worker (`OneSignalSDKWorker.js`). Deux service workers ne peuvent pas partager la même portée. Deux pistes :
 
@@ -124,9 +70,8 @@ OneSignal fournit son propre service worker (`OneSignalSDKWorker.js`). Deux serv
 
 Le développeur front-end choisit et documente l'architecture après avoir
 vérifié la documentation OneSignal actuelle. Il teste la compatibilité avant
-l'activation en production. Quelle que soit l'architecture, le cache reste
-limité aux ressources statiques et à `/offline`; aucune page privée ni donnée
-personnelle n'est mise en cache.
+l'activation en production. Aucun cache applicatif ou mode hors-ligne n'est à
+ajouter.
 
 ## 6. En-têtes Cloudflare Pages
 
@@ -137,24 +82,25 @@ mis en cache plus longtemps que nécessaire, notamment avec
 
 Sans `no-cache` sur le service worker, les mises à jour n'arrivent pas chez les utilisateurs.
 
-## 7. iOS
+## 7. Installation et notifications
 
-- Les notifications push d'une PWA ne fonctionnent que si elle est **installée sur l'écran d'accueil** (iOS 16.4 minimum).
+- L'installation sur l'écran d'accueil est requise sur Android et iOS pour recevoir les notifications push.
+- Sur iOS, les notifications push des web apps installées nécessitent iOS 16.4 minimum.
 - Prévoir dans l'espace adhérents une page d'aide « Installer l'application » (Safari → Partager → Sur l'écran d'accueil), et inviter à activer les notifications une fois installée.
 - La demande de permission de notification se déclenche sur une action de l'utilisateur, jamais au chargement de la page.
 
 ## 8. Mises à jour
 
-Chaque déploiement change `version` : un nouveau cache est créé et l'ancien supprimé à l'activation. Après un déploiement, l'utilisateur obtient la nouvelle version au prochain chargement.
+Après un déploiement, le navigateur doit pouvoir récupérer la nouvelle version
+du service worker et du manifest au prochain chargement.
 
 ## 9. Tests avant mise en production
 
-- [ ] Lighthouse : la PWA est installable
-- [ ] Mode avion : une navigation affiche `/offline`
-- [ ] Déconnecté, aucune page de l'espace adhérents n'est servie depuis le cache
-- [ ] Aucune requête Neon ou R2 ni page adhérent n'apparaît dans le cache
-- [ ] Après un déploiement, la nouvelle version remplace l'ancienne
-- [ ] Installation et notification testées sur Android et sur iPhone
+- [ ] La PWA est installable sur Android et iOS
+- [ ] Un membre hors-ligne ne peut pas consulter l'espace adhérents
+- [ ] Aucune page ni donnée membre n'est mise en cache
+- [ ] Après un déploiement, le service worker et le manifest sont actualisés
+- [ ] Installation et notifications push testées sur Android et sur iPhone
 
 ## 10. Points restant à définir
 

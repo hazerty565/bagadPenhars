@@ -342,8 +342,8 @@ de données le permet.
   réutilisée et accès aux lignes hors périmètre.
 - Protéger les secrets dans les variables d'environnement serveur. Ne jamais
   les exposer dans le bundle client, les logs ou les exemples versionnés.
-- Ne mettre en cache côté PWA que les ressources statiques et la page hors
-  ligne; exclure les réponses privées et les pages de l'espace adhérents.
+- La PWA sert aux notifications push et ne fournit pas de mode hors-ligne aux
+  membres; ne mettre en cache aucune page ni donnée applicative.
 - Limiter les données personnelles collectées à ce qui est utile au service.
 - Prévoir une traçabilité des opérations administratives sensibles sans écrire
   de secrets ni de données excessives dans les journaux.
@@ -396,8 +396,9 @@ incomplets. Ne pas ajouter de service tiers sans décision dans
 - Environnements : séparation stricte de dev, preview et production. Aucun secret committé.
 - Dates d'événement : date civile uniquement, sans heure; la clôture est
   calculée selon le jour courant de `Europe/Paris`.
-- PWA : service worker restreint aux assets statiques du build et à `/offline`.
-  Aucune page privée ni requête Neon/R2 en cache. Modification consignée dans `docs/pwa.md`.
+- PWA : installation requise sur Android et iOS pour recevoir les notifications
+  push; aucun mode hors-ligne ni cache applicatif. Modification consignée dans
+  `docs/pwa.md`.
 
 ## 7. Critères d'acceptation transversaux
 
@@ -590,13 +591,13 @@ les droits, refus d'upload non autorisé et validation du formulaire.
   notifications en production.
 - Valider la compatibilité des navigateurs et plateformes cibles avant la mise
   en production.
-- Le cache PWA ne contient que les fichiers statiques et `/offline`; aucune
-  page adhérent ni donnée membre n'est mise en cache.
+- La PWA sert aux notifications push et ne propose pas de mode hors-ligne aux
+  membres; aucune page ni donnée membre n'est mise en cache.
 - Compléter tests, observabilité d'erreurs, variables Cloudflare/Resend et
   guide de déploiement Cloudflare Pages.
 
 **Livrable :** notifications testées sur navigateurs ciblés et appareils
-mobiles, parcours hors-ligne sans fuite de données privées, CI verte.
+mobiles, absence de cache des pages et données membres, CI verte.
 
 ## 11. User stories et critères d'acceptation
 

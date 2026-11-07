@@ -7,16 +7,27 @@ Stack : SvelteKit 5 (runes), Tailwind, Motion, Better Auth, Neon PostgreSQL, Clo
 
 ## 1. Ordre de lecture
 
-| Fichier                | Pourquoi                                                     |
-| ---------------------- | ------------------------------------------------------------ |
-| `docs/brief.md`        | Besoin, rôles, décisions de visibilité                       |
-| `docs/Spec.md`         | Exigences fonctionnelles et techniques pour les développeurs |
-| `docs/architecture.md` | Routes, flux d'auth, arborescence                            |
-| `docs/database.md`     | Neon, Better Auth, R2, migrations                            |
-| `docs/pwa.md`          | Manifest, service worker, notifications                      |
-| `docs/roadmap.md`      | Jalons et « Focus actuel »                                   |
-| `docs/backlog.md`      | Tâches classées                                              |
-| `docs/journal.md`      | Où la dernière session s'est arrêtée                         |
+| Fichier                                  | Pourquoi                                                     |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| `docs/brief.md`                          | Besoin, rôles, décisions de visibilité                       |
+| `docs/Spec.md`                           | Exigences fonctionnelles et techniques pour les développeurs |
+| `docs/Spec_UI.md`                        | Spécifications des pages, composants et comportements UI      |
+| `docs/Structure.md`                      | Structure du dépôt, routes, bibliothèques et services        |
+| `docs/architecture.md`                   | Routes, flux d'auth, arborescence                             |
+| `docs/database.md`                       | Neon, Better Auth, R2, migrations                             |
+| `docs/bagad-penhars-schema.mmd`           | Diagramme du schéma de base de données                        |
+| `docs/bagad-penhars-schema-drawsql.sql`   | Schéma SQL source pour DrawSQL                                |
+| `docs/drawSQL_BagadPenhars.webp`          | Illustration du schéma de base de données                     |
+| `docs/pwa.md`                            | Manifest, service worker, notifications                      |
+| `docs/agenda.md`                         | Interface et flux de l'agenda                                 |
+| `docs/event.md`                          | Règles métier des événements et réponses RSVP                 |
+| `docs/media.md`                          | Gestion des médias, stockage R2 et règles d'upload            |
+| `docs/partenaire.md`                     | Organisation et ajout des partenaires                        |
+| `docs/roadmap.md`                        | Jalons et « Focus actuel »                                    |
+| `docs/backlog.md`                        | Tâches classées                                               |
+| `docs/suivi.md`                           | Avancement du projet et priorités                             |
+| `docs/questions.md`                      | Questions ouvertes et décisions à clarifier                  |
+| `docs/journal.md`                        | Où la dernière session s'est arrêtée                          |
 
 Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` en début de session.
 
@@ -59,8 +70,12 @@ Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` 
 
 ### PWA
 
-- Le service worker ne met en cache **que** les fichiers statiques et la page `/offline`.
-- Jamais de page HTML d'espace adhérents ni de données Neon/R2 en cache.
+- La PWA sert à permettre l'activation des notifications push : son installation
+  est requise sur Android et iOS selon le besoin produit.
+- Aucun mode hors-ligne n'est prévu pour les membres : l'espace adhérents et
+  ses données nécessitent une connexion réseau.
+- Le service worker sert aux notifications push; ne pas ajouter de cache
+  applicatif, ni mettre en cache des pages ou données membres.
 - Tout changement du manifest ou du service worker est consigné dans `docs/pwa.md`.
 
 ### UI
@@ -68,7 +83,12 @@ Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` 
 - Tailwind uniquement, couleurs et espacements via les tokens du thème.
 - Motion : respecter `prefers-reduced-motion`.
 - Mobile first, accessibilité (labels, contrastes, focus visible).
-- Interface en français.
+- Site public traduit en français (`fr`), anglais (`en`) et breton (`br`) avec
+  le paquet `svelte-i18n`; l'espace adhérents et l'authentification restent en
+  français.
+- Centraliser les textes traduits dans les dictionnaires de `src/lib/i18n/`;
+  ne pas ajouter de chaînes d'interface localisées en dur dans les pages et
+  composants.
 
 ### Général
 

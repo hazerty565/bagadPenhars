@@ -156,17 +156,16 @@ avant validation par le chef de projet.
   [`Spec.md`](./Spec.md) interdit d'activer le worker PWA en production avant
   d'avoir tranché. Le choix relève principalement du front-end, mais bloque la
   validation du cache et des notifications.
-- **Proposition initiale :** Ne publier aucun worker applicatif tant que l'intégration
-  OneSignal n'a pas été vérifiée en développement et en production. Retenir
-  ensuite une seule portée de worker, avec uniquement le cache statique et
-  `/offline`; aucune page privée ni donnée membre ne doit être mise en cache.
+- **Proposition initiale :** Ne publier aucun worker applicatif tant que
+  l'intégration OneSignal n'a pas été vérifiée en développement et en
+  production. Retenir ensuite une seule portée de worker, sans cache des pages
+  ni données membres.
 - **État :** Décidée pour le produit; choix technique délégué au front-end.
-- **Décision :** Le site doit être une PWA installable et proposer les
-  notifications push OneSignal sur les appareils compatibles. Le hors-ligne
-  est limité aux ressources statiques et à `/offline`; aucune page privée ni
-  donnée personnelle n'est mise en cache. Le développeur front-end choisit et
-  teste l'architecture compatible avec OneSignal avant l'activation en
-  production.
+- **Décision :** La PWA sert aux notifications push OneSignal et doit être
+  installée sur Android et iOS pour les recevoir. Aucun mode hors-ligne n'est
+  prévu pour les membres et aucune page ni donnée membre n'est mise en cache.
+  Le développeur front-end choisit et teste l'architecture compatible avec
+  OneSignal avant l'activation en production.
 
 ### Q-2026-11-06-05 — Destinataire et confirmation du formulaire de contact
 
