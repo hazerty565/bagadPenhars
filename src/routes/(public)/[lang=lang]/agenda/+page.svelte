@@ -1,8 +1,15 @@
 <script lang="ts">
-	export let data: { events?: { id: string; title: string; date: string }[]; user?: any };
+	let {
+		data
+	}: {
+		data: {
+			events?: { id: string; title: string; date: string }[];
+			user?: Record<string, unknown>;
+		};
+	} = $props();
 
-	const events = data.events ?? [];
-	const user = data.user;
+	let events = $derived(data.events ?? []);
+	let user = $derived(data.user);
 </script>
 
 <h1>Agenda public</h1>
@@ -11,7 +18,7 @@
 	<p>Aucun événement pour le moment.</p>
 {:else}
 	<ul>
-		{#each events as ev}
+		{#each events as ev (ev.id)}
 			<li>
 				<h2>{ev.title}</h2>
 				<p>Date: {ev.date}</p>

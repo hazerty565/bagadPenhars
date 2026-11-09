@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { profiles, profilePupitres, pupitres } from '$lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 /**
  * Accès aux données des profils membres.
@@ -37,22 +37,16 @@ export interface ProfileWithPupitres {
  * Le contexte RLS doit déjà être établi par l'appelant.
  */
 export async function getProfileByAuthUserId(authUserId: string) {
-	return db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.auth_user_id, authUserId))
-		.limit(1);
+	return db.select().from(profiles).where(eq(profiles.auth_user_id, authUserId)).limit(1);
 }
 
 /**
  * Récupère un profil complet avec ses affectations de pupitre.
  */
-export async function getProfileWithPupitres(profileId: string): Promise<ProfileWithPupitres | null> {
-	const [profile] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, profileId))
-		.limit(1);
+export async function getProfileWithPupitres(
+	profileId: string
+): Promise<ProfileWithPupitres | null> {
+	const [profile] = await db.select().from(profiles).where(eq(profiles.id, profileId)).limit(1);
 
 	if (!profile) return null;
 
@@ -78,10 +72,12 @@ export async function getProfileWithPupitres(profileId: string): Promise<Profile
  */
 export async function updateOwnProfile(
 	profileId: string,
-	updates: Partial<Pick<
-		typeof profiles.$inferInsert,
-		'first_name' | 'last_name' | 'phone' | 'address' | 'musician_level' | 'bureau_position_id'
-	>>
+	updates: Partial<
+		Pick<
+			typeof profiles.$inferInsert,
+			'first_name' | 'last_name' | 'phone' | 'address' | 'musician_level' | 'bureau_position_id'
+		>
+	>
 ) {
 	return db
 		.update(profiles)
@@ -139,6 +135,6 @@ export async function suspendProfile(profileId: string) {
  * limiter le contexte à la transaction (connexion poolée).
  */
 export async function setRLSContext(userId: string, userRole: string) {
-	await db.execute`SELECT set_config('app.user_id', ${userId}, true)`;
-	await db.execute`SELECT set_config('app.user_role', ${userRole}, true)`;
+	await db.execute(sql`SELECT set_config('app.user_id', ${userId}, true)`);
+	await db.execute(sql`SELECT set_config('app.user_role', ${userRole}, true)`);
 }

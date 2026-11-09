@@ -20,7 +20,7 @@ function getConfig(): OneSignalConfig {
 		const appId = process.env.ONESIGNAL_APP_ID;
 		const restApiKey = process.env.ONESIGNAL_REST_API_KEY;
 		if (!appId || !restApiKey) {
-			throw new Error('OneSignal n\'est pas configuré (ONESIGNAL_APP_ID / ONESIGNAL_REST_API_KEY).');
+			throw new Error("OneSignal n'est pas configuré (ONESIGNAL_APP_ID / ONESIGNAL_REST_API_KEY).");
 		}
 		config = { appId, restApiKey };
 	}

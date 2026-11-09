@@ -1,10 +1,5 @@
 import { db } from '$lib/server/db';
-import {
-	invitations,
-	invitationPupitres,
-	profiles,
-	pupitres
-} from '$lib/db/schema';
+import { invitations, invitationPupitres, pupitres } from '$lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 /**
@@ -36,10 +31,7 @@ export async function createInvitation(data: {
 	createdBy: string;
 	pupitreIds: string[];
 }) {
-	const tokenHash = await crypto.subtle.digest(
-		'SHA-256',
-		new TextEncoder().encode(data.token)
-	);
+	const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data.token));
 	const hashHex = Array.from(new Uint8Array(tokenHash))
 		.map((b) => b.toString(16).padStart(2, '0'))
 		.join('');
@@ -73,9 +65,7 @@ export async function createInvitation(data: {
  */
 export async function validateInvitation(token: string, email: string) {
 	const tokenHash = Array.from(
-		new Uint8Array(
-			await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token))
-		)
+		new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))
 	)
 		.map((b) => b.toString(16).padStart(2, '0'))
 		.join('');
@@ -83,12 +73,7 @@ export async function validateInvitation(token: string, email: string) {
 	const [invitation] = await db
 		.select()
 		.from(invitations)
-		.where(
-			and(
-				eq(invitations.token_hash, tokenHash),
-				eq(invitations.email, email)
-			)
-		)
+		.where(and(eq(invitations.token_hash, tokenHash), eq(invitations.email, email)))
 		.limit(1);
 
 	if (!invitation) return null;
@@ -147,12 +132,7 @@ export async function getPendingInvitationByEmail(email: string) {
 	const [invitation] = await db
 		.select()
 		.from(invitations)
-		.where(
-			and(
-				eq(invitations.email, email),
-				eq(invitations.accepted_at, null as unknown as Date)
-			)
-		)
+		.where(and(eq(invitations.email, email), eq(invitations.accepted_at, null as unknown as Date)))
 		.limit(1);
 
 	if (!invitation) return null;

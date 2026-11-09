@@ -11,33 +11,10 @@ import type { RequestHandler } from './$types';
  * Ce point d'entrée est réservé au serveur.
  */
 
-export const GET: RequestHandler = async ({ event, url }) => {
-	return auth.api.handleGet({
-		path: url.pathname,
-		headers: event.request.headers as Headers
-	});
-};
+const handle: RequestHandler = ({ request }) => auth.handler(request);
 
-export const POST: RequestHandler = async ({ event, url }) => {
-	return auth.api.handlePost({
-		path: url.pathname,
-		headers: event.request.headers as Headers,
-		body: event.request.body
-	});
-};
-
-export const PUT: RequestHandler = async ({ event, url }) => {
-	return auth.api.handlePut({
-		path: url.pathname,
-		headers: event.request.headers as Headers,
-		body: event.request.body
-	});
-};
-
-export const DELETE: RequestHandler = async ({ event, url }) => {
-	return auth.api.handleDelete({
-		path: url.pathname,
-		headers: event.request.headers as Headers,
-		body: event.request.body
-	});
-};
+export const GET = handle;
+export const POST = handle;
+export const PUT = handle;
+export const DELETE = handle;
+export const PATCH = handle;

@@ -273,6 +273,7 @@ avant validation par le chef de projet.
 - **Problème :** Le client n'a exprimé aucun besoin fonctionnel métier concret à implémenter par le développeur backend et le développeur frontend. Le plan actuel (`equipe/PLAN.md`) couvre uniquement le focus actuel : socle Neon/Better Auth/Cloudflare, CI, gardes d'accès, contexte RLS transactionnel et policies sur les tables sensibles.
 - **Pourquoi :** Toute étape fonctionnelle supplémentaire serait une supposition interdite ; le plan ne peut pas engager les développeurs sur un besoin métier non exprimé par le client.
 - **Proposition :** Poursuivre l'implémentation du focus actuel (socle) telle que décrite aux étapes 1 à 8 de `equipe/PLAN.md`. Le besoin fonctionnel sera ajouté à ce plan (nouvelle étape ou extension d'une étape existante) une fois tranché par le client.
+
 ### Décision client — Q-2026-11-07-01
 
 Le périmètre fonctionnel du projet Bagad Penhars est déjà défini dans les documents de référence et dans les huit étapes du plan d'implémentation.
@@ -282,6 +283,7 @@ Aucun nouveau besoin fonctionnel n'est à inventer ni à demander.
 Les développeurs backend et frontend doivent réaliser les fonctionnalités décrites dans le plan, en respectant les spécifications, les décisions validées et les critères de fin de chaque étape.
 
 **Ordre de réalisation :**
+
 - Étapes 1 à 3 : socle technique et sécuritaire.
 - Étapes 4 à 7 : fonctionnalités métier de l'application.
 - Étape 8 : validation globale et qualité.
@@ -289,14 +291,17 @@ Les développeurs backend et frontend doivent réaliser les fonctionnalités dé
 Toute fonctionnalité supplémentaire non prévue devra faire l'objet d'une validation préalable du client.
 
 L'architecte doit donc s'appuyer sur les besoins déjà documentés et ne pas confondre absence de nouveau besoin avec absence de besoin fonctionnel.
+
 ### Q-2026-11-07-02 — Couleurs et icônes définitives du thème PWA
 
 - **Date :** 2026-11-07
 - **Problème :** Le fichier `docs/pwa.md` §3 indique que les couleurs du manifest sont "à remplacer par celles du thème du site", et §10 liste "Couleurs et icônes définitives du thème" comme point restant à définir. Aucune couleur primaire ni palette n'est fixée pour le site.
 - **Pourquoi :** Le design du header, du hero et des composants UI dépend de ces couleurs ; sans elles, l'intégration visuelle reste bloquée et le manifest PWA n'est pas finalisé.
 - **Proposition :** Demander au client ou au bureau de l'association de valider la couleur primaire et la palette (ou proposer une teinte par défaut cohérente avec l'identité visuelle du bagad), puis mettre à jour `docs/pwa.md`, `tailwind.config.js` et `static/manifest.webmanifest`.
-### Décision client — Q-2026-11-07-01
- il y a un exemple de design dans le dossier `src\autre`, l'icone de l'aplication arrivera plus tard dans le dossier `src\routes\public`
+
+### Décision client — Q-2026-11-07-02
+
+il y a un exemple de design dans le dossier `src\autre`, l'icone de l'aplication arrivera plus tard dans le dossier `src\routes\public`
 
 ### Q-2026-11-07-03 — Installation de l'application PWA avant ou après la connexion
 
@@ -304,5 +309,122 @@ L'architecte doit donc s'appuyer sur les besoins déjà documentés et ne pas co
 - **Problème :** `docs/pwa.md` §10 pose la question : "Faut-il proposer l'installation de l'application avant ou après la connexion ?" Aucun choix n'a été tranché.
 - **Pourquoi :** Ce choix conditionne l'affichage du bouton d'installation PWA, le parcours d'onboarding du membre et l'expérience d'activation des notifications push sur Android et iOS.
 - **Proposition :** Proposer l'installation de la PWA après la connexion (espace adhérents), car les notifications push concernent les membres actifs ; afficher une page d'aide "Installer l'application" dans l'espace adhérents, comme prévu par `docs/pwa.md` §7.
-### Décision client — Q-2026-11-07-01
- proposition validé : Proposer l'installation de la PWA après la connexion (espace adhérents)
+
+### Décision client — Q-2026-11-07-03
+
+Proposition validée : proposer l'installation de la PWA après la connexion (espace adhérents)
+
+## 2026-11-08 — Questions issues de la revue du chef de projet
+
+> Questions ouvertes avant de poursuivre l'implémentation. Tant qu'elles ne sont
+> pas tranchées, l'équipe ne doit pas les implémenter par supposition.
+
+### Q-2026-11-08-01 — Transactions RLS et driver Neon sur Cloudflare
+
+- **Date :** 2026-11-08
+- **Problème :** `src/lib/db/index.ts` utilise `drizzle-orm/neon-http`, qui ne permet pas de transaction interactive. Or `docs/database.md` exige `set_config('app.user_id', ..., true)` au début de la même transaction que les requêtes métier. Les deux exigences sont incompatibles en l'état.
+- **Pourquoi :** sans transaction unique, le contexte RLS ne peut pas être garanti ; soit le contexte fuit sur une connexion poolée, soit les policies ne voient pas l'identité et refusent tout accès privé. Cela bloque les étapes 1 à 3 du plan et tous les tests RLS.
+- **Proposition :** passer à `drizzle-orm/neon-serverless` avec un `Pool` (WebSocket) au-dessus de Cloudflare Hyperdrive, et exposer un helper unique `withUserContext(profileId, callback)` qui ouvre la transaction, exécute `set_config(..., true)`, puis les requêtes. À défaut, conserver `neon-http` et remplacer `set_config` par un contexte transmis en paramètre explicite à chaque requête, mais cette variante affaiblit la défense en profondeur RLS et doit être validée explicitement.
+
+### Décision client — Q-2026-11-08-01
+
+**Décision :** conserver `node-postgres` (`pg`) avec `drizzle-orm/node-postgres` et Cloudflare Hyperdrive. Ne pas utiliser `drizzle-orm/neon-serverless`, car le driver Neon WebSocket n'est pas destiné à être utilisé au-dessus d'Hyperdrive.
+
+Créer un helper serveur `withUserContext(profileId, callback)` qui :
+
+1. Ouvre une transaction PostgreSQL.
+2. Définit `app.user_id` avec `set_config('app.user_id', profileId, true)`.
+3. Exécute toutes les requêtes métier protégées dans cette même transaction.
+4. Valide ou annule la transaction selon le résultat.
+
+Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur. Toutes les requêtes protégées du callback doivent utiliser exclusivement l'objet transactionnel Drizzle.
+
+**Conséquence :** adapter `src/lib/db/index.ts` si nécessaire et vérifier les tests RLS avant de débloquer les étapes 1 à 3 du plan backend.
+
+### Q-2026-11-08-02 — Modèle de comptage du quota de stockage
+
+- **Date :** 2026-11-08
+- **Problème :** `docs/database.md` §5 décrit une table `storage_usage` globale (`public_bytes`, `private_bytes`, `reserved_bytes`, `updated_at`), tandis que `docs/media.md` décrit une table par bucket (`bucket_name`, `used_bytes`, `quota_bytes`, seuils, `last_sync_at`). Le schéma Drizzle actuel suit la version globale, avec des colonnes `integer` incapables de contenir 8 Go.
+- **Pourquoi :** les deux modèles imposent des requêtes, des réservations et des tests différents ; le choix conditionne la fonction de réservation atomique et l'écran d'administration du quota. La colonne `integer` provoquera un dépassement de capacité dès 2 Go.
+- **Proposition :** retenir le modèle global de `database.md` (une seule ligne, les deux buckets additionnés), passer les colonnes en `bigint`, ajouter `quota_bytes`, `alert_threshold_bytes`, `block_threshold_bytes` et `last_sync_at` à cette même table, et corriger `docs/media.md` pour supprimer la variante par bucket.
+
+### Décision client — Q-2026-11-08-02
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-03 — Transformation et diffusion des images
+
+- **Date :** 2026-11-08
+- **Problème :** `docs/media.md` décrit des URL `https://imagedelivery.net/{CF_ACCOUNT_HASH}/{r2_key}/...`, or Cloudflare Images ne sert pas directement les clés d'un bucket R2. Le document affirme aussi que Cloudflare Images « ne stocke pas les images », ce qui est faux pour les transformations d'images hébergées.
+- **Pourquoi :** le pipeline d'upload (étapes 3 à 5 de `media.md`) et l'affichage des vignettes en dépendent. Une implémentation au hasard produirait des URL mortes et un quota Cloudflare Images mal consommé.
+- **Proposition :** trancher entre (A) Cloudflare Images avec upload des images dans Images et stockage des identifiants, ou (B) R2 + Cloudflare Image Resizing à la volée sur un domaine public, ou (C) génération de vignettes WebP au moment de l'upload et stockage des deux tailles dans R2. Recommandation de l'équipe : option B, la plus proche du besoin réel (deux variantes fixes 400×400 et 2000×2000) et sans nouveau stockage.
+
+### Décision client — Q-2026-11-08-03
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-04 — Noms des bindings R2
+
+- **Date :** 2026-11-08
+- **Problème :** trois noms différents coexistent : `R2_BUCKET` (`docs/Structure.md`), `R2_BUCKET_PUBLIC` / `R2_BUCKET_PRIVATE` (`docs/media.md`) et `bagad_public` / `bagad_private` (`src/lib/server/blobs.ts`). Par ailleurs, `blobs.ts` appelle `createSignedGetUrl()`, qui n'existe pas sur un binding R2 Workers.
+- **Pourquoi :** un nom de binding erroné casse silencieusement tous les uploads et téléchargements en production ; l'API de signature inexistante empêche de servir les objets privés.
+- **Proposition :** figer `R2_PUBLIC` et `R2_PRIVATE` comme noms de bindings dans `wrangler.toml`/Cloudflare Pages et dans `.env.example`, et servir les objets privés via l'endpoint SvelteKit `/api/files/[...key]` après guard, sans URL signée. Mettre à jour `docs/Structure.md`, `docs/media.md` et `src/lib/server/blobs.ts` en conséquence.
+
+### Décision client — Q-2026-11-08-04
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-05 — État « annulé » des événements
+
+- **Date :** 2026-11-08
+- **Problème :** `docs/event.md` et `docs/Spec.md` §4.4 exigent qu'un événement puisse être annulé et que ses réponses passent en lecture seule. Le schéma `events` ne contient ni statut ni date d'annulation.
+- **Pourquoi :** sans colonne dédiée, l'annulation ne peut être ni affichée, ni testée, ni distinguée d'un événement simplement passé. Cela bloque les critères d'acceptation RSVP.
+- **Proposition :** ajouter par migration additive `cancelled_at timestamptz NULL` (et éventuellement `cancelled_by uuid`) à `events` ; l'état affiché devient `annule` si `cancelled_at` est renseigné, sinon `clos` si `event_date < (now() AT TIME ZONE 'Europe/Paris')::date`, sinon `actif`. Confirmer que seuls l'admin, la secrétaire et le chef du pupitre concerné peuvent annuler.
+
+### Décision client — Q-2026-11-08-05
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-06 — Création du compte à l'invitation
+
+- **Date :** 2026-11-08
+- **Problème :** le brief exige que le compte Auth soit créé immédiatement à l'invitation, avec confirmation d'e-mail et définition du mot de passe dans l'heure. Better Auth ne crée un utilisateur que via son flux d'inscription ou son plugin d'administration ; le dépôt ne contient ni l'un ni l'autre de façon opérationnelle.
+- **Pourquoi :** le parcours d'invitation (étape 4 du plan) dépend entièrement de ce choix : qui crée l'utilisateur, qui envoie l'e-mail, comment le lien expire, comment le profil `pending` est rattaché.
+- **Proposition :** activer le plugin `admin` de Better Auth et créer l'utilisateur côté serveur avec `admin.createUser({ email, password: aléatoire, ... })`, puis envoyer un lien de définition de mot de passe via Resend ; conserver la table `invitations` comme journal (jeton empreinté, expiration, consommation) et non comme source d'authentification. Documenter le flux dans `docs/architecture.md`.
+
+### Décision client — Q-2026-11-08-06
+
+**Décision :** Seuls le secrétaire et l'admin peuvent inviter des personnes.
+
+### Q-2026-11-08-07 — Rappels de notification : création ou J-3
+
+- **Date :** 2026-11-08
+- **Problème :** `docs/Spec.md` §4.6 prévoit un envoi automatique à la création d'un événement et une préférence de rappel sans réponse ; `docs/event.md` prévoit un cron quotidien envoyant un rappel 3 jours avant aux membres sans réponse. Les deux mécanismes ne sont pas exclusifs mais ne sont pas arbitrés pour la V1.
+- **Pourquoi :** le cron et la table `notification_rappel` (ou `notification_log`) conditionnent l'implémentation backend, les tests et la charge OneSignal. Un envoi non voulu est visible par tous les membres.
+- **Proposition :** V1 = notification push à la création de l'événement uniquement, plus un rappel J-3 pour les membres sans réponse envoyé par un Scheduled Worker Cloudflare, en respectant `notification_preferences`. Aucun envoi si la préférence correspondante est désactivée. Confirmer que les sondages publics notifient tous les membres, comme le prévoit `Spec.md`.
+
+### Décision client — Q-2026-11-08-07
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-08 — Durées de conservation et purge
+
+- **Date :** 2026-11-08
+- **Problème :** la question Q-2026-11-06-03 est toujours partiellement ouverte : aucune durée n'est fixée pour les réponses aux événements, les journaux d'audit (`activity_log`), les messages de contact et les invitations expirées.
+- **Pourquoi :** `docs/Spec.md` interdit toute purge automatique irréversible avant validation. Sans durées, l'équipe ne peut pas écrire les tâches de maintenance ni les tests de suppression, et la base grossira indéfiniment.
+- **Proposition :** fixer des durées par défaut à valider par l'association : réponses anonymisées conservées sans limite, `activity_log` 24 mois, messages de contact 12 mois, invitations expirées 30 jours. Implémenter une tâche de purge désactivée par défaut, activable par variable d'environnement après validation.
+
+### Décision client — Q-2026-11-08-08
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-09 — Sort des dossiers historiques Supabase et Netlify
+
+- **Date :** 2026-11-08
+- **Problème :** `supabase/` (migrations dépréciées) et `netlify/` subsistent alors que la cible validée est Neon + Cloudflare Pages. `AGENTS.md` interdit de réintroduire Supabase et demande de ne pas toucher à la configuration Netlify sans accord.
+- **Pourquoi :** leur présence entretient la confusion sur la plateforme réelle, pollue les recherches et peut faire échouer un futur outillage de déploiement.
+- **Proposition :** déplacer ces dossiers dans `docs/archive/` (ou les supprimer après accord explicite du client), et ajouter une note dans `docs/journal.md`. Aucune migration ni donnée n'est supprimée : les fichiers restent consultables comme historique.
+
+### Décision client — Q-2026-11-08-09
+
+**Décision :** On garde les dossiers : les migrations peuvent être copiées si elles correspondent au besoin. Ils peuvent être déplacés dans `docs/Archive/` avec une note dans `docs/journal.md`.

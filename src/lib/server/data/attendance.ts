@@ -1,10 +1,7 @@
 import { db } from '$lib/server/db';
-import {
-	eventResponses,
-	events,
-	profiles
-} from '$lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import type { Executor } from '$lib/server/db';
+import { eventResponses, events, profiles } from '$lib/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
 
 /**
  * Accès aux données des réponses de présence/absence aux événements.
@@ -25,9 +22,9 @@ export interface Actor {
 /**
  * Établit le contexte RLS pour l'acteur donné.
  */
-export async function setRLSContext(tx: typeof db, actor: Actor) {
-	await tx.execute`SELECT set_config('app.user_id', ${actor.profileId}, true)`;
-	await tx.execute`SELECT set_config('app.user_role', ${actor.role}, true)`;
+export async function setRLSContext(tx: Executor, actor: Actor) {
+	await tx.execute(sql`SELECT set_config('app.user_id', ${actor.profileId}, true)`);
+	await tx.execute(sql`SELECT set_config('app.user_role', ${actor.role}, true)`);
 }
 
 /**
@@ -58,12 +55,7 @@ export async function getResponse(eventId: string, profileId: string) {
 	const [response] = await db
 		.select()
 		.from(eventResponses)
-		.where(
-			and(
-				eq(eventResponses.event_id, eventId),
-				eq(eventResponses.profile_id, profileId)
-			)
-		)
+		.where(and(eq(eventResponses.event_id, eventId), eq(eventResponses.profile_id, profileId)))
 		.limit(1);
 	return response ?? null;
 }
@@ -72,11 +64,14 @@ export async function getResponse(eventId: string, profileId: string) {
  * Crée ou met à jour la réponse d'un profil à un événement (upsert).
  * Seul son propre profil peut être mis à jour (vérifié en amont par le guard).
  */
-export async function upsertResponse(actor: Actor, data: {
-	eventId: string;
-	profileId: string;
-	status: 'present' | 'absent';
-}) {
+export async function upsertResponse(
+	actor: Actor,
+	data: {
+		eventId: string;
+		profileId: string;
+		status: 'present' | 'absent';
+	}
+) {
 	if (data.profileId !== actor.profileId) {
 		throw new Error('Vous ne pouvez répondre que pour votre propre profil.');
 	}

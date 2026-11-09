@@ -1,8 +1,8 @@
 <script lang="ts">
-  export let error: Error;
-  export let status: number;
+	let { error }: { error: { status: number; message: string } } = $props();
 </script>
+
 <section class="p-6">
-  <h1>{status}</h1>
-  <p>{error?.message ?? 'Une erreur est survenue sur la page localisée.'}</p>
+	<h1>{error.status}</h1>
+	<p>{error?.message ?? 'Une erreur est survenue sur la page localisée.'}</p>
 </section>

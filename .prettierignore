@@ -7,3 +7,9 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Référence de design (non compilée)
+/src/autre/
+
+# Archive historique (lecture seule)
+/docs/Archive/

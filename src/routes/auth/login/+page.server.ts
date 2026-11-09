@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ locals }) => {
  * Valide les identifiants via Better Auth et établit la session.
  */
 export const actions: Actions = {
-	login: async ({ event, request }) => {
+	login: async ({ request }) => {
 		const formData = await request.formData();
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
@@ -38,10 +38,9 @@ export const actions: Actions = {
 					email: validation.data.email,
 					password: validation.data.password
 				},
-				headers: event.request.headers,
-				response: event.response as Response
+				headers: request.headers
 			});
-		} catch (err) {
+		} catch {
 			return fail(401, {
 				error: 'Email ou mot de passe invalide.',
 				email

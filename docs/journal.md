@@ -74,3 +74,43 @@
 
 - La branche `proto` est créée depuis `main` pour recevoir les changements
   locaux; `main` reste inchangée.
+
+## 2026-11-08
+
+### Arbitrages client appliqués
+
+- **Q-2026-11-08-01** : le driver reste `pg` + `drizzle-orm/node-postgres`
+  au-dessus de Cloudflare Hyperdrive; `neon-serverless` est écarté. Un helper
+  `withUserContext(profileId, callback)` ouvre la transaction, exécute
+  `set_config('app.user_id', ..., true)` et les requêtes métier dans la même
+  transaction, puis commit ou rollback.
+- **Q-2026-11-08-02** : `storage_usage` reste une ligne globale unique; toutes
+  les colonnes d'octets passent en `bigint` et `quota_bytes`,
+  `alert_threshold_bytes`, `block_threshold_bytes`, `last_sync_at` sont
+  ajoutés. `docs/media.md` est aligné.
+- **Q-2026-11-08-03** : option B retenue — R2 + Cloudflare Image Resizing à la
+  volée sur le domaine public; plus aucun téléversement dans Cloudflare Images.
+  `docs/media.md` ne mentionne plus `imagedelivery.net` ni `CF_ACCOUNT_HASH`.
+- **Q-2026-11-08-04** : bindings figés `R2_PUBLIC` / `R2_PRIVATE`; les objets
+  privés passent par `/api/files/[...key]` après guard, sans URL signée.
+  `docs/Structure.md` et `docs/database.md` sont alignés.
+- **Q-2026-11-08-05** : ajout de `cancelled_at` (et `cancelled_by`) aux
+  événements; état calculé `annule` / `clos` / `actif`.
+- **Q-2026-11-08-06** : seuls le secrétaire et l'admin peuvent inviter; le
+  mécanisme plugin `admin` Better Auth reste retenu, faute d'objection.
+- **Q-2026-11-08-07** : notification à la création + rappel J-3 aux membres
+  sans réponse via Scheduled Worker, selon `notification_preferences`.
+- **Q-2026-11-08-08** : durées retenues (réponses anonymisées sans limite,
+  `activity_log` 24 mois, contact 12 mois, invitations expirées 30 jours); purge
+  désactivée par défaut.
+- **Q-2026-11-08-09** : `supabase/` et `netlify/` sont conservés pour leurs
+  migrations, puis déplacés dans `docs/Archive/`. Aucune donnée n'est supprimée.
+- **Q-2026-11-07-02 / 03** : design de référence dans `src/autre`; icône PWA
+  fournie plus tard dans `src/routes/public`; installation proposée après la
+  connexion.
+
+### État des dépendances
+
+- `pnpm install` se bloque et `pnpm-lock.yaml` est désynchronisé de
+  `package.json`; l'installation est reprise via npm en attendant la
+  régénération du lockfile (étape 9 du plan).

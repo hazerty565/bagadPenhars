@@ -1,1 +1,1 @@
-export { db, sql, type DB } from '$lib/db';
+export { db, pool, withUserContext, type DB, type Transaction, type Executor } from '$lib/db';

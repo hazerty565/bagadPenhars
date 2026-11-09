@@ -1,79 +1,84 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import { auth } from '$lib/server/auth';
-import { db } from '$lib/server/db';
-import { profiles } from '$lib/db/schema';
-import { eq } from 'drizzle-orm';
-import { createInvitation } from '$lib/server/data/invitations';
-import { createProfile } from '$lib/server/data/profiles';
-import { requireRole } from '$lib/auth/guards';
-import type { Actions, PageServerLoad } from './$types';
+import { validateInvitation, markInvitationAccepted } from '$lib/server/data/invitations';
+import type { Action, PageServerLoad } from './$types';
 
-const INVITATION_TTL_MS = 60 * 60 * 1000; // 1 heure
+// Validation du côté serveur du token et email via les paramètres d'URL
+export const load: PageServerLoad = async ({ params }) => {
+	const { token, email } = params as { token?: string; email?: string };
 
-export const load: PageServerLoad = async ({ locals }) => {
-	// Seul admin ou secretaire peut inviter
-	requireRole(locals, 'secretaire');
-	return {};
+	if (!token || !email) {
+		return fail(400, { error: 'Token ou e-mail manquant.' });
+	}
+
+	const invitation = await validateInvitation(token, email);
+
+	if (!invitation) {
+		return fail(400, { error: 'L\'invitation est invalide, expirée ou déjà utilisée.' });
+	}
+
+	// Vérifier que le compte existe et est en pending
+	// Better Auth gère cela via la session
+
+	return {
+		valid: true,
+		email: invitation.email,
+		token
+	};
 };
 
-export const actions: Actions = {
-	invite: async ({ event, locals, request }) => {
-		requireRole(locals, 'secretaire');
-
+// Action pour accepter l'invitation
+export const actions: { accept: Action } = {
+	accept: async ({ request }) => {
 		const formData = await request.formData();
+		const token = formData.get('token') as string;
 		const email = formData.get('email') as string;
-		const firstName = formData.get('first_name') as string;
-		const lastName = formData.get('last_name') as string;
-		const pupitreIds = formData.getAll('pupitre_id') as string[];
+		const password = formData.get('password') as string;
+		const confirmPassword = formData.get('confirmPassword') as string;
 
-		if (!email || !firstName || !lastName) {
-			return fail(400, {
-				error: 'Tous les champs sont requis.',
-				email,
-				first_name: firstName,
-				last_name: lastName
-			});
+		if (!token || !email || !password || !confirmPassword) {
+			return fail(400, { error: 'Tous les champs sont requis.' });
+		}
+
+		if (password !== confirmPassword) {
+			return fail(400, { error: 'Les mots de passe ne correspondent pas.' });
+		}
+
+		if (password.length < 6) {
+			return fail(400, { error: 'Le mot de passe doit faire au moins 6 caractères.' });
+		}
+
+		// Valider l'invitation
+		const invitation = await validateInvitation(token, email);
+
+		if (!invitation) {
+			return fail(400, { error: 'L\'invitation est invalide, expirée ou déjà utilisée.' });
 		}
 
 		try {
-			// 1. Créer le compte Better Auth immédiatement (email non vérifié)
-			const { user } = await auth.api.signUpEmail({
+			// Accepter l'invitation via Better Auth
+			// Cela crée le compte et définit le mot de passe
+			await auth.api.signUpEmail({
 				body: {
-					email,
-					password: crypto.randomUUID() // mot de passe temporaire, l'invité en définit un nouveau
+					name: `${invitation.email.split('@')[0]}`,
+					email: invitation.email,
+					password
 				},
-				headers: event.request.headers,
-				response: event.response as Response
+				headers: {}
 			});
 
-			// 2. Créer le profil métier avec account_status = pending, role = member
-			await createProfile({
-				authUserId: user.id,
-				email,
-				firstName,
-				lastName
-			});
+			// Marquer l'invitation comme acceptée
+			await markInvitationAccepted(invitation.id);
 
-			// 3. Créer l'invitation avec jeton empreinté, expirant dans 1 heure
-			const token = crypto.randomUUID();
-			const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);
-
-			await createInvitation({
-				email,
-				token,
-				expiresAt,
-				createdBy: locals.profile!.id,
-				pupitreIds
-			});
-
-			// 4. Envoyer l'email d'invitation (via Resend - voir src/lib/server/email.ts)
-			// Le lien contient le jeton et redirige vers /auth/invitation/accept
-
-			return { success: true, email };
+			return {
+				success: true,
+				message: 'Votre compte a été créé. Vous pouvez maintenant vous connecter.',
+				redirectTo: '/auth/pending'
+			};
 		} catch (err) {
-			console.error('Erreur lors de l\'invitation:', err);
+			console.error("Erreur lors de l'acceptation de l'invitation:", err);
 			return fail(500, {
-				error: 'Impossible de créer l\'invitation. Vérifiez que l\'email n\'est pas déjà utilisé.'
+				error: "Impossible d'accepter l'invitation. Veuillez réessayer."
 			});
 		}
 	}

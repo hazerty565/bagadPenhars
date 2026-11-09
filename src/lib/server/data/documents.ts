@@ -1,10 +1,7 @@
 import { db } from '$lib/server/db';
-import {
-	documents,
-	pupitres,
-	profiles
-} from '$lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import type { Executor } from '$lib/server/db';
+import { documents, pupitres, profiles } from '$lib/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
 
 /**
  * Accès aux données des documents (partitions et fichiers internes).
@@ -26,19 +23,22 @@ export interface Actor {
 /**
  * Établit le contexte RLS pour l'acteur donné dans le cadre d'une transaction.
  */
-export async function setRLSContextInTx(tx: typeof db, actor: Actor) {
-	await tx.execute`SELECT set_config('app.user_id', ${actor.profileId}, true)`;
-	await tx.execute`SELECT set_config('app.user_role', ${actor.role}, true)`;
+export async function setRLSContextInTx(tx: Executor, actor: Actor) {
+	await tx.execute(sql`SELECT set_config('app.user_id', ${actor.profileId}, true)`);
+	await tx.execute(sql`SELECT set_config('app.user_role', ${actor.role}, true)`);
 }
 
 /**
  * Liste des documents actifs, optionnellement filtrés par pupitre.
  * L'appelant vérifie les permissions (guard) avant l'appel.
  */
-export async function listDocuments(actor: Actor, options?: {
-	pupitreId?: string;
-	activeOnly?: boolean;
-}) {
+export async function listDocuments(
+	actor: Actor,
+	options?: {
+		pupitreId?: string;
+		activeOnly?: boolean;
+	}
+) {
 	const pupitreId = options?.pupitreId;
 	const activeOnly = options?.activeOnly ?? true;
 
@@ -60,14 +60,20 @@ export async function listDocuments(actor: Actor, options?: {
 				created_at: documents.created_at,
 				updated_at: documents.updated_at
 			})
-			.from(documents);
+			.from(documents)
+			.$dynamic();
 
+		const conditions = [];
 		if (activeOnly) {
-			q = q.where(eq(documents.is_active, true));
+			conditions.push(eq(documents.is_active, true));
 		}
 
 		if (pupitreId) {
-			q = q.where(eq(documents.pupitre_id, pupitreId));
+			conditions.push(eq(documents.pupitre_id, pupitreId));
+		}
+
+		if (conditions.length > 0) {
+			q = q.where(and(...conditions));
 		}
 
 		return q;
@@ -79,11 +85,7 @@ export async function listDocuments(actor: Actor, options?: {
  * L'appelant vérifie les permissions (guard) avant l'appel.
  */
 export async function getDocumentById(documentId: string) {
-	const [document] = await db
-		.select()
-		.from(documents)
-		.where(eq(documents.id, documentId))
-		.limit(1);
+	const [document] = await db.select().from(documents).where(eq(documents.id, documentId)).limit(1);
 	return document ?? null;
 }
 
@@ -91,15 +93,18 @@ export async function getDocumentById(documentId: string) {
  * Crée un document (métadonnées uniquement; l'objet R2 est géré séparément).
  * L'acteur doit être autorisé à déposer pour le pupitre visé (guard).
  */
-export async function createDocument(actor: Actor, data: {
-	title: string;
-	description?: string;
-	fileKey: string;
-	bucket: string;
-	mimeType: string;
-	size: number;
-	pupitreId?: string;
-}) {
+export async function createDocument(
+	actor: Actor,
+	data: {
+		title: string;
+		description?: string;
+		fileKey: string;
+		bucket: string;
+		mimeType: string;
+		size: number;
+		pupitreId?: string;
+	}
+) {
 	return db.transaction(async (tx) => {
 		await setRLSContextInTx(tx, actor);
 
@@ -187,9 +192,7 @@ export async function documentBelongsToPupitre(documentId: string, pupitreId: st
 	const [document] = await db
 		.select({ id: documents.id })
 		.from(documents)
-		.where(
-			and(eq(documents.id, documentId), eq(documents.pupitre_id, pupitreId))
-		)
+		.where(and(eq(documents.id, documentId), eq(documents.pupitre_id, pupitreId)))
 		.limit(1);
 	return !!document;
 }

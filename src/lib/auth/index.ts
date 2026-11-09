@@ -48,15 +48,11 @@ export {
 
 export type { PermissionContext } from './permissions';
 export {
-	canInviteAndActivate,
 	canSuspend,
 	canChangeRole,
-	canManageAllEvents,
 	canManageEvent,
 	canDepositDocumentForPupitre,
 	canReadActiveDocument,
-	canManageAllContents,
-	canNotifyMultiplePupitres,
 	canNotifyPupitre,
 	canEditOwnProfile,
 	canViewTrombinoscope,

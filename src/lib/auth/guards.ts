@@ -1,4 +1,5 @@
 import type { AppRole, AccountStatus } from './roles';
+import { hasRoleOrHigher, isChefOfPupitre } from './roles';
 
 /**
  * Guards centralisés d'autorisation.
@@ -52,25 +53,17 @@ export function anonymousError(): GuardError {
 export function pendingError(): GuardError {
 	return new GuardError(
 		'account_pending',
-		'Votre compte est en attente d\'activation par un administrateur.',
+		"Votre compte est en attente d'activation par un administrateur.",
 		403
 	);
 }
 
 export function suspendedError(): GuardError {
-	return new GuardError(
-		'account_suspended',
-		'Votre compte a été suspendu.',
-		403
-	);
+	return new GuardError('account_suspended', 'Votre compte a été suspendu.', 403);
 }
 
 export function insufficientRoleError(required: AppRole): GuardError {
-	return new GuardError(
-		'insufficient_role',
-		`Le rôle ${required} ou supérieur est requis.`,
-		403
-	);
+	return new GuardError('insufficient_role', `Le rôle ${required} ou supérieur est requis.`, 403);
 }
 
 export function notOwnProfileError(): GuardError {
@@ -82,11 +75,7 @@ export function notOwnProfileError(): GuardError {
 }
 
 export function notChefOfPupitreError(): GuardError {
-	return new GuardError(
-		'not_chef_of_pupitre',
-		'Vous n\'êtes pas chef de ce pupitre.',
-		403
-	);
+	return new GuardError('not_chef_of_pupitre', "Vous n'êtes pas chef de ce pupitre.", 403);
 }
 
 // ---------------------------------------------------------------------------

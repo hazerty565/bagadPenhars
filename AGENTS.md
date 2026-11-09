@@ -7,27 +7,27 @@ Stack : SvelteKit 5 (runes), Tailwind, Motion, Better Auth, Neon PostgreSQL, Clo
 
 ## 1. Ordre de lecture
 
-| Fichier                                  | Pourquoi                                                     |
-| ---------------------------------------- | ------------------------------------------------------------ |
-| `docs/brief.md`                          | Besoin, rôles, décisions de visibilité                       |
-| `docs/Spec.md`                           | Exigences fonctionnelles et techniques pour les développeurs |
-| `docs/Spec_UI.md`                        | Spécifications des pages, composants et comportements UI      |
-| `docs/Structure.md`                      | Structure du dépôt, routes, bibliothèques et services        |
-| `docs/architecture.md`                   | Routes, flux d'auth, arborescence                             |
-| `docs/database.md`                       | Neon, Better Auth, R2, migrations                             |
-| `docs/bagad-penhars-schema.mmd`           | Diagramme du schéma de base de données                        |
-| `docs/bagad-penhars-schema-drawsql.sql`   | Schéma SQL source pour DrawSQL                                |
-| `docs/drawSQL_BagadPenhars.webp`          | Illustration du schéma de base de données                     |
-| `docs/pwa.md`                            | Manifest, service worker, notifications                      |
-| `docs/agenda.md`                         | Interface et flux de l'agenda                                 |
-| `docs/event.md`                          | Règles métier des événements et réponses RSVP                 |
-| `docs/media.md`                          | Gestion des médias, stockage R2 et règles d'upload            |
-| `docs/partenaire.md`                     | Organisation et ajout des partenaires                        |
-| `docs/roadmap.md`                        | Jalons et « Focus actuel »                                    |
-| `docs/backlog.md`                        | Tâches classées                                               |
-| `docs/suivi.md`                           | Avancement du projet et priorités                             |
-| `docs/questions.md`                      | Questions ouvertes et décisions à clarifier                  |
-| `docs/journal.md`                        | Où la dernière session s'est arrêtée                          |
+| Fichier                                 | Pourquoi                                                     |
+| --------------------------------------- | ------------------------------------------------------------ |
+| `docs/brief.md`                         | Besoin, rôles, décisions de visibilité                       |
+| `docs/Spec.md`                          | Exigences fonctionnelles et techniques pour les développeurs |
+| `docs/Spec_UI.md`                       | Spécifications des pages, composants et comportements UI     |
+| `docs/Structure.md`                     | Structure du dépôt, routes, bibliothèques et services        |
+| `docs/architecture.md`                  | Routes, flux d'auth, arborescence                            |
+| `docs/database.md`                      | Neon, Better Auth, R2, migrations                            |
+| `docs/bagad-penhars-schema.mmd`         | Diagramme du schéma de base de données                       |
+| `docs/bagad-penhars-schema-drawsql.sql` | Schéma SQL source pour DrawSQL                               |
+| `docs/drawSQL_BagadPenhars.webp`        | Illustration du schéma de base de données                    |
+| `docs/pwa.md`                           | Manifest, service worker, notifications                      |
+| `docs/agenda.md`                        | Interface et flux de l'agenda                                |
+| `docs/event.md`                         | Règles métier des événements et réponses RSVP                |
+| `docs/media.md`                         | Gestion des médias, stockage R2 et règles d'upload           |
+| `docs/partenaire.md`                    | Organisation et ajout des partenaires                        |
+| `docs/roadmap.md`                       | Jalons et « Focus actuel »                                   |
+| `docs/backlog.md`                       | Tâches classées                                              |
+| `docs/suivi.md`                         | Avancement du projet et priorités                            |
+| `docs/questions.md`                     | Questions ouvertes et décisions à clarifier                  |
+| `docs/journal.md`                       | Où la dernière session s'est arrêtée                         |
 
 Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` en début de session.
 

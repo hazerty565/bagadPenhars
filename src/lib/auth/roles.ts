@@ -9,12 +9,7 @@
 export type AppRole = 'member' | 'chef_pupitre' | 'secretaire' | 'admin';
 export type AccountStatus = 'pending' | 'active' | 'suspended';
 
-export const ALL_ROLES: AppRole[] = [
-	'member',
-	'chef_pupitre',
-	'secretaire',
-	'admin'
-];
+export const ALL_ROLES: AppRole[] = ['member', 'chef_pupitre', 'secretaire', 'admin'];
 
 export const ALL_STATUSES: AccountStatus[] = ['pending', 'active', 'suspended'];
 
@@ -95,12 +90,7 @@ export function canNotifyMultiplePupitres(role: AppRole | null | undefined): boo
 /**
  * Pupitres de l'association.
  */
-export const PUPITRES = [
-	'bombarde',
-	'caisse_claire',
-	'cornemuse',
-	'percussion'
-] as const;
+export const PUPITRES = ['bombarde', 'caisse_claire', 'cornemuse', 'percussion'] as const;
 
 export type PupitreName = (typeof PUPITRES)[number];
 
@@ -114,9 +104,7 @@ export function isChefOfPupitre(
 	pupitreName: string
 ): boolean {
 	if (!userPupitres) return false;
-	return userPupitres.some(
-		(p) => p.pupitre === pupitreName && p.is_chef
-	);
+	return userPupitres.some((p) => p.pupitre === pupitreName && p.is_chef);
 }
 
 /**

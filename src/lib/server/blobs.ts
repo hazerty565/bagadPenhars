@@ -2,9 +2,12 @@
  * Accès aux buckets Cloudflare R2.
  *
  * Deux buckets : bagad-public (objets publiés) et bagad-private (objets privés).
- * Aucun objet privé n'est accessible via une URL publique permanente.
+ * Bindings figés : `R2_PUBLIC` et `R2_PRIVATE` (décision Q-2026-11-08-04).
  *
- * Les buckets R2 sont injectés par Cloudflare Pages via les bindings d'environnement.
+ * Aucun objet privé n'est accessible via une URL publique permanente : ils sont
+ * servis par `/api/files/[...key]` après contrôle serveur. Un binding R2 Workers
+ * n'expose pas d'API de signature d'URL ; `getSignedUrl` a donc été supprimé.
+ *
  * Ce module fournit des helpers typés pour manipuler les objets R2.
  */
 
@@ -21,25 +24,31 @@ export interface R2ObjectMetadata {
  * Interface minimale d'un bucket R2 (correspond aux bindings Cloudflare).
  */
 export interface R2BucketBinding {
-	put(key: string, value: any, options?: { httpMetadata?: { contentType?: string } }): Promise<void>;
-	get(key: string): Promise<{ body: ReadableStream | null; httpMetadata?: { contentType?: string } } | null>;
+	put(
+		key: string,
+		value: ArrayBuffer | ReadableStream | Blob,
+		options?: { httpMetadata?: { contentType?: string } }
+	): Promise<void>;
+	get(key: string): Promise<{
+		body: ReadableStream | null;
+		httpMetadata?: { contentType?: string };
+	} | null>;
 	delete(key: string): Promise<void>;
-	createSignedGetUrl(key: string, options?: { expiresIn?: number }): Promise<string>;
 }
 
 /**
  * Interface des deux buckets R2 disponibles.
  */
 export interface R2Bindings {
-	bagad_public: R2BucketBinding;
-	bagad_private: R2BucketBinding;
+	R2_PUBLIC: R2BucketBinding;
+	R2_PRIVATE: R2BucketBinding;
 }
 
 /**
  * Résout le binding R2 selon le nom du bucket.
  */
 export function resolveBucket(bindings: R2Bindings, bucket: R2BucketName): R2BucketBinding {
-	return bucket === 'public' ? bindings.bagad_public : bindings.bagad_private;
+	return bucket === 'public' ? bindings.R2_PUBLIC : bindings.R2_PRIVATE;
 }
 
 /**
@@ -92,17 +101,4 @@ export async function deleteObject(
 ): Promise<void> {
 	const bucketClient = resolveBucket(bindings, bucket);
 	await bucketClient.delete(key);
-}
-
-/**
- * Génère une URL signée temporaire pour un objet privé.
- */
-export async function getSignedUrl(
-	bindings: R2Bindings,
-	bucket: R2BucketName,
-	key: string,
-	expiresInSeconds: number = 300
-): Promise<string> {
-	const bucketClient = resolveBucket(bindings, bucket);
-	return bucketClient.createSignedGetUrl(key, { expiresIn: expiresInSeconds });
 }

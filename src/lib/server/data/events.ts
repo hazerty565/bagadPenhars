@@ -1,12 +1,14 @@
 import { db } from '$lib/server/db';
+import type { Executor } from '$lib/server/db';
 import {
 	events,
 	eventPupitres,
 	eventResponses,
 	profiles,
-	pupitres
+	pupitres,
+	eventTypeEnum
 } from '$lib/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 
 /**
  * Accès aux données des événements et sondages (events.is_poll).
@@ -28,23 +30,23 @@ export interface Actor {
 /**
  * Établit le contexte RLS pour l'acteur donné dans le cadre d'une transaction.
  */
-export async function setRLSContextInTx(
-	tx: typeof db,
-	actor: Actor
-) {
-	await tx.execute`SELECT set_config('app.user_id', ${actor.profileId}, true)`;
-	await tx.execute`SELECT set_config('app.user_role', ${actor.role}, true)`;
+export async function setRLSContextInTx(tx: Executor, actor: Actor) {
+	await tx.execute(sql`SELECT set_config('app.user_id', ${actor.profileId}, true)`);
+	await tx.execute(sql`SELECT set_config('app.user_role', ${actor.role}, true)`);
 }
 
 /**
  * Liste des événements visibles pour l'utilisateur, selon son rôle et ses
  * pupitres. L'appelant est responsable du guard d'autorisation avant l'appel.
  */
-export async function listEvents(actor: Actor, options?: {
-	visibility?: 'public' | 'interne' | 'pupitre';
-	includePast?: boolean;
-	limit?: number;
-}) {
+export async function listEvents(
+	actor: Actor,
+	options?: {
+		visibility?: 'public' | 'interne' | 'pupitre';
+		includePast?: boolean;
+		limit?: number;
+	}
+) {
 	const visibility = options?.visibility;
 	const includePast = options?.includePast ?? false;
 	const limit = options?.limit;
@@ -65,15 +67,21 @@ export async function listEvents(actor: Actor, options?: {
 				created_at: events.created_at,
 				updated_at: events.updated_at
 			})
-			.from(events);
+			.from(events)
+			.$dynamic();
 
+		const conditions = [];
 		if (visibility) {
-			q = q.where(eq(events.visibility, visibility));
+			conditions.push(eq(events.visibility, visibility));
 		}
 
 		if (!includePast) {
 			const today = new Date().toISOString().slice(0, 10);
-			q = q.where(and(eq(events.event_date, today)));
+			conditions.push(eq(events.event_date, today));
+		}
+
+		if (conditions.length > 0) {
+			q = q.where(and(...conditions));
 		}
 
 		q = q.orderBy(desc(events.event_date));
@@ -91,11 +99,7 @@ export async function listEvents(actor: Actor, options?: {
  * L'appelant vérifie les permissions avant l'appel (guard).
  */
 export async function getEventById(eventId: string) {
-	const [event] = await db
-		.select()
-		.from(events)
-		.where(eq(events.id, eventId))
-		.limit(1);
+	const [event] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
 
 	if (!event) return null;
 
@@ -115,15 +119,18 @@ export async function getEventById(eventId: string) {
  * Crée un événement avec ses pupitres ciblés. Retourne l'événement créé.
  * L'acteur doit être authentifié et autorisé (vérifié par le guard).
  */
-export async function createEvent(actor: Actor, data: {
-	title: string;
-	description?: string;
-	eventDate: Date;
-	eventType: string;
-	visibility: 'public' | 'interne' | 'pupitre';
-	isPoll?: boolean;
-	pupitreIds?: string[];
-}) {
+export async function createEvent(
+	actor: Actor,
+	data: {
+		title: string;
+		description?: string;
+		eventDate: string;
+		eventType: string;
+		visibility: 'public' | 'interne' | 'pupitre';
+		isPoll?: boolean;
+		pupitreIds?: string[];
+	}
+) {
 	return db.transaction(async (tx) => {
 		await setRLSContextInTx(tx, actor);
 
@@ -133,7 +140,7 @@ export async function createEvent(actor: Actor, data: {
 				title: data.title,
 				description: data.description ?? null,
 				event_date: data.eventDate,
-				event_type: data.eventType as any,
+				event_type: data.eventType as (typeof eventTypeEnum.enumValues)[number],
 				visibility: data.visibility,
 				is_poll: data.isPoll ?? false,
 				created_by: actor.profileId
@@ -181,11 +188,7 @@ export async function updateEvent(
 		if (data.isPoll !== undefined) updates.is_poll = data.isPoll;
 		updates.updated_at = new Date();
 
-		const [event] = await tx
-			.update(events)
-			.set(updates)
-			.where(eq(events.id, eventId))
-			.returning();
+		const [event] = await tx.update(events).set(updates).where(eq(events.id, eventId)).returning();
 
 		if (data.pupitreIds !== undefined) {
 			await tx.delete(eventPupitres).where(eq(eventPupitres.event_id, eventId));
@@ -242,12 +245,7 @@ export async function getResponseByEventAndProfile(eventId: string, profileId: s
 	const [response] = await db
 		.select()
 		.from(eventResponses)
-		.where(
-			and(
-				eq(eventResponses.event_id, eventId),
-				eq(eventResponses.profile_id, profileId)
-			)
-		)
+		.where(and(eq(eventResponses.event_id, eventId), eq(eventResponses.profile_id, profileId)))
 		.limit(1);
 	return response ?? null;
 }
@@ -256,20 +254,20 @@ export async function getResponseByEventAndProfile(eventId: string, profileId: s
  * Crée ou met à jour la réponse d'un profil à un événement (upsert).
  * L'identité du répondant vient de la session (profileId), jamais du client.
  */
-export async function upsertResponse(actor: Actor, data: {
-	eventId: string;
-	profileId: string;
-	status: 'present' | 'absent';
-}) {
+export async function upsertResponse(
+	actor: Actor,
+	data: {
+		eventId: string;
+		profileId: string;
+		status: 'present' | 'absent';
+	}
+) {
 	// On ne permet de répondre que pour son propre profil (guard vérifié en amont).
 	if (data.profileId !== actor.profileId) {
 		throw new Error('Vous ne pouvez répondre que pour votre propre profil.');
 	}
 
-	const existing = await getResponseByEventAndProfile(
-		data.eventId,
-		data.profileId
-	);
+	const existing = await getResponseByEventAndProfile(data.eventId, data.profileId);
 
 	if (existing) {
 		return db

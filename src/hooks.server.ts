@@ -21,6 +21,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	event.locals.auth = session ? { session } : null;
 	event.locals.profile = null;
+	event.locals.user = null;
 	event.locals.role = null;
 	event.locals.accountStatus = null;
 
@@ -34,6 +35,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 			if (profile) {
 				event.locals.profile = profile;
+				event.locals.user = profile;
 				event.locals.role = profile.role;
 				event.locals.accountStatus = profile.account_status;
 			}

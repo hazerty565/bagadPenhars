@@ -85,10 +85,7 @@ export function canManageEvent(
  * - secretaire / admin : tous
  * - member : jamais
  */
-export function canDepositDocumentForPupitre(
-	ctx: PermissionContext,
-	pupitreId: string
-): boolean {
+export function canDepositDocumentForPupitre(ctx: PermissionContext, pupitreId: string): boolean {
 	if (isAdmin(ctx.role) || isSecretaire(ctx.role)) return true;
 	if (isChefPupitre(ctx.role)) {
 		return ctx.chefPupitres.includes(pupitreId);
@@ -134,7 +131,11 @@ export function canNotifyPupitre(ctx: PermissionContext, pupitreId: string): boo
 /**
  * L'utilisateur peut modifier son propre profil (hors rôle et pupitres).
  */
-export function canEditOwnProfile(ctx: PermissionContext, targetProfileId: string, ownProfileId: string): boolean {
+export function canEditOwnProfile(
+	ctx: PermissionContext,
+	targetProfileId: string,
+	ownProfileId: string
+): boolean {
 	if (ctx.role === null) return false;
 	return targetProfileId === ownProfileId;
 }

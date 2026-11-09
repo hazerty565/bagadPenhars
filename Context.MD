@@ -14,11 +14,13 @@ Ce document est destiné à expliquer le contexte global du projet **Bagad Penha
 **Bagad Penhars** est un site web pour un ensemble musical breton traditionnel.
 
 **Objectif** : Créer une application simple (pas de SaaS) avec :
+
 - Un site public multilingue (FR / BR / EN)
 - Une zone adhérents sécurisée (français uniquement)
 - Un système de gestion de membres, agenda et partitions
 
 **Principes** :
+
 - ✅ **Simple** : Pas d'over-engineering, fonctionnalités essentielles
 - ✅ **Sécurisé** : Validation côté serveur, guards, tokens expirants
 - ✅ **Modulaire** : Chaque page peut être développée indépendamment
@@ -27,19 +29,19 @@ Ce document est destiné à expliquer le contexte global du projet **Bagad Penha
 
 ## 🏗️ Stack technique
 
-| Composant | Technologie cible | Rôle |
-|-----------|------------------|------|
-| **Frontend** | SvelteKit 5 (runes) | Framework fullstack |
-| **Backend** | SvelteKit | Routes serveur, form actions et load functions |
-| **Authentification** | Better Auth | Identités et sessions; les rôles métier viennent de `profiles.role` |
-| **Base de données** | Neon PostgreSQL + RLS | Données relationnelles et sécurité au niveau des lignes |
+| Composant             | Technologie cible                                  | Rôle                                                                  |
+| --------------------- | -------------------------------------------------- | --------------------------------------------------------------------- |
+| **Frontend**          | SvelteKit 5 (runes)                                | Framework fullstack                                                   |
+| **Backend**           | SvelteKit                                          | Routes serveur, form actions et load functions                        |
+| **Authentification**  | Better Auth                                        | Identités et sessions; les rôles métier viennent de `profiles.role`   |
+| **Base de données**   | Neon PostgreSQL + RLS                              | Données relationnelles et sécurité au niveau des lignes               |
 | **Driver et pooling** | `@neondatabase/serverless` + Cloudflare Hyperdrive | Connexions PostgreSQL; pas de cache partagé pour les lectures privées |
-| **ORM et migrations** | Drizzle | Modèle relationnel et migrations |
-| **Stockage fichiers** | Cloudflare R2 | Partitions et médias |
-| **Styling** | TailwindCSS | CSS utility-first |
-| **i18n** | Fichiers TS custom | Traductions (fr.ts, en.ts, br.ts) |
-| **Notifications** | OneSignal | Notifications push |
-| **Déploiement** | Cloudflare Pages | Hébergement de l'application |
+| **ORM et migrations** | Drizzle                                            | Modèle relationnel et migrations                                      |
+| **Stockage fichiers** | Cloudflare R2                                      | Partitions et médias                                                  |
+| **Styling**           | TailwindCSS                                        | CSS utility-first                                                     |
+| **i18n**              | Fichiers TS custom                                 | Traductions (fr.ts, en.ts, br.ts)                                     |
+| **Notifications**     | OneSignal                                          | Notifications push                                                    |
+| **Déploiement**       | Cloudflare Pages                                   | Hébergement de l'application                                          |
 
 Les guards SvelteKit et les policies RLS sont tous deux requis pour protéger
 les données sensibles. Le contexte `set_config(..., true)` est limité à la
@@ -73,6 +75,7 @@ des dépendances historiques qui n'ont pas tous été migrés.
 ```
 
 **Comment ça marche** :
+
 - Le `hooks.server.ts` charge les traductions selon `[lang]`
 - Un cookie `preferred_lang` mémorise le choix
 - Si pas de cookie, détection via `Accept-Language` header du navigateur
@@ -180,6 +183,7 @@ Pour chaque événement, les membres autorisés peuvent répondre présent ou ab
 ### 9. **Documents = Partitions**
 
 Stockés par pupitre ou globaux.
+
 - **Member** : Peut télécharger
 - **Chef** : Peut upload pour son pupitre
 - **Admin** : Peut upload pour tous
@@ -192,7 +196,10 @@ Stockés par pupitre ou globaux.
 
 ```typescript
 // hooks.server.ts lit le cookie CHAQUE requête
-const { data: { user }, error } = await supabase.auth.getUser();
+const {
+	data: { user },
+	error
+} = await supabase.auth.getUser();
 if (error) throw error;
 event.locals.user = user;
 // Charger le rôle depuis public.profiles, jamais depuis user_metadata.
@@ -206,8 +213,8 @@ event.locals.role = profile.role;
 ```typescript
 // Chaque route protégée commence par un guard
 export const load = ({ locals }) => {
-    requireAdmin(locals); // Lance une erreur 403 si pas admin
-    // ... code sûr
+	requireAdmin(locals); // Lance une erreur 403 si pas admin
+	// ... code sûr
 };
 ```
 
@@ -216,19 +223,20 @@ export const load = ({ locals }) => {
 ```typescript
 // Chaque action revérifie les permissions
 export const actions = {
-    deleteEvent: async ({ request, locals }) => {
-        if (locals.role !== 'admin') throw error(403);
-        // ... deletion
-    }
+	deleteEvent: async ({ request, locals }) => {
+		if (locals.role !== 'admin') throw error(403);
+		// ... deletion
+	}
 };
 ```
 
 ### Permissions fines
 
 Chef ne peut modifier que son pupitre :
+
 ```typescript
 if (locals.role === 'chef_pupitre' && doc.pupitre !== locals.pupitre) {
-    throw error(403); // Bloqué côté serveur
+	throw error(403); // Bloqué côté serveur
 }
 ```
 
@@ -270,6 +278,7 @@ src/routes/dashboard/
 ```
 
 **Convention** :
+
 - Chaque section a son propre `+layout.server.ts` avec guard
 - Pas de sous-dossiers inutiles
 - Une page = une fonctionnalité
@@ -286,6 +295,7 @@ src/lib/data/
 ```
 
 **Convention** :
+
 - Une fonction par action
 - Pas de logique métier complexe
 - Accès aux données via le client Supabase serveur et des policies RLS
@@ -303,6 +313,7 @@ src/lib/components/
 ```
 
 **Convention** :
+
 - Composants réutilisables dans `ui/`
 - Composants spécifiques à une section dans leur dossier
 
@@ -327,8 +338,8 @@ export const fr = {
 ```svelte
 <!-- Dans une page -->
 <script>
-  let { data } = $props();
-  const { t, lang } = data; // t = traductions
+	let { data } = $props();
+	const { t, lang } = data; // t = traductions
 </script>
 
 <h1>{t.home.title}</h1>
@@ -353,30 +364,31 @@ export const fr = {
 ```svelte
 <!-- /dashboard/agenda/+page.svelte -->
 <script>
-  let { data } = $props();
+	let { data } = $props();
 </script>
 
 <!-- TOUS voient ça -->
 <h1>Agenda</h1>
 {#each data.events as event}
-  <!-- Présence (tous) -->
-  <form method="POST" action="?/respondEvent">
-    <button name="status" value="present">Présent</button>
-  </form>
+	<!-- Présence (tous) -->
+	<form method="POST" action="?/respondEvent">
+		<button name="status" value="present">Présent</button>
+	</form>
 
-  <!-- Modification (chef d'un pupitre cible, secrétaire ou admin) -->
-  {#if data.canEditAgenda}
-    <button onclick={() => editEvent(event.id)}>Modifier</button>
-  {/if}
+	<!-- Modification (chef d'un pupitre cible, secrétaire ou admin) -->
+	{#if data.canEditAgenda}
+		<button onclick={() => editEvent(event.id)}>Modifier</button>
+	{/if}
 {/each}
 
 <!-- Ajouter (chef d'un pupitre dirigé, secrétaire ou admin) -->
 {#if data.canEditAgenda}
-  <a href="/dashboard/agenda/create">Ajouter</a>
+	<a href="/dashboard/agenda/create">Ajouter</a>
 {/if}
 ```
 
 **Points clés** :
+
 - `data.canEditAgenda` calculé dans le `+page.server.ts`
 - Pas de logique complexe en Svelte, juste `{#if}`
 - Toute modification est protégée côté serveur (form actions)
@@ -423,61 +435,62 @@ Les chemins et rôles sont contrôlés par les policies RLS Storage.
 ## 🔄 Flow d'une feature — Exemple: "Ajouter un événement"
 
 ### 1. **Route**
+
 ```
 POST /dashboard/agenda?/addEvent
 ```
 
 ### 2. **Form HTML** (`+page.svelte`)
+
 ```svelte
 <form method="POST" action="?/addEvent">
-  <input name="title" />
-  <input name="date" type="datetime-local" />
-  <button>Ajouter</button>
+	<input name="title" />
+	<input name="date" type="datetime-local" />
+	<button>Ajouter</button>
 </form>
 ```
 
 ### 3. **Validation côté serveur** (`+page.server.ts`)
+
 ```typescript
 export const actions = {
-  addEvent: async ({ request, locals }) => {
-    // Guard 1: Authentifié ?
-    if (!locals.user) throw error(401);
-    
-    // Guard 2: Chef ou admin ?
-    if (!['chef_pupitre', 'admin'].includes(locals.role)) {
-      throw error(403);
-    }
+	addEvent: async ({ request, locals }) => {
+		// Guard 1: Authentifié ?
+		if (!locals.user) throw error(401);
 
-    // Guard 3: Valider les données
-    const { title, date } = Object.fromEntries(await request.formData());
-    if (!title || !date) return fail(400, { error: 'Données invalides' });
+		// Guard 2: Chef ou admin ?
+		if (!['chef_pupitre', 'admin'].includes(locals.role)) {
+			throw error(403);
+		}
 
-    // Créer l'événement
-    await createEvent({ title, date, createdBy: locals.user.id });
-    
-    return { success: true };
-  }
+		// Guard 3: Valider les données
+		const { title, date } = Object.fromEntries(await request.formData());
+		if (!title || !date) return fail(400, { error: 'Données invalides' });
+
+		// Créer l'événement
+		await createEvent({ title, date, createdBy: locals.user.id });
+
+		return { success: true };
+	}
 };
 ```
 
 ### 4. **Accès à la donnée** (`lib/data/events.ts`)
+
 ```typescript
 export async function createEvent(data) {
-  const { data: event, error } = await supabase
-    .from('events')
-    .insert(data)
-    .select()
-    .single();
+	const { data: event, error } = await supabase.from('events').insert(data).select().single();
 
-  if (error) throw error;
-  return event;
+	if (error) throw error;
+	return event;
 }
 ```
 
 ### 5. **Affichage** (`+page.svelte`)
+
 ```svelte
 {#if form?.success}
-  <p>Événement créé !</p>
+	<p>Événement créé !</p>
 {/if}
 ```
 
@@ -535,9 +548,9 @@ isAdmin, canEdit, hasAccess
 ```typescript
 // Noms d'actions = verbes
 export const actions = {
-  loginUser: async ({ request, event }) => {},
-  createInvitation: async ({ request, locals }) => {},
-  deleteDocument: async ({ request, locals }) => {},
+	loginUser: async ({ request, event }) => {},
+	createInvitation: async ({ request, locals }) => {},
+	deleteDocument: async ({ request, locals }) => {}
 };
 ```
 
@@ -546,11 +559,13 @@ export const actions = {
 ## 📝 Workflow de développement
 
 ### 1. **Nouvelle feature**
+
 ```bash
 git checkout -b feature/nom-feature
 ```
 
 ### 2. **Créer la structure**
+
 ```
 - Créer la route (+page.svelte)
 - Ajouter le load/action (+page.server.ts)
@@ -559,6 +574,7 @@ git checkout -b feature/nom-feature
 ```
 
 ### 3. **Implémenter**
+
 ```
 - Frontend (HTML + styling TailwindCSS)
 - Backend (load, actions, guards)
@@ -566,6 +582,7 @@ git checkout -b feature/nom-feature
 ```
 
 ### 4. **Commit + Push**
+
 ```bash
 git add .
 git commit -m "feat: ajouter gestion invitations"
@@ -573,6 +590,7 @@ git push origin feature/nom-feature
 ```
 
 ### 5. **Pull Request**
+
 ```
 Description de la feature
 Screenshots (si UI)
@@ -583,6 +601,7 @@ Screenshots (si UI)
 ## 🐛 Debugging — Tips
 
 ### Vérifier la session
+
 ```typescript
 // En développement, dans hooks.server.ts
 console.log('Session user:', event.locals.user);
@@ -591,16 +610,16 @@ console.log('Pupitre:', event.locals.pupitre);
 ```
 
 ### Vérifier une query Supabase
+
 ```typescript
-const { data, error } = await supabase
-  .from('events')
-  .select('id, title, starts_at');
+const { data, error } = await supabase.from('events').select('id, title, starts_at');
 
 if (error) throw error;
 console.log('Events:', data);
 ```
 
 ### Erreur 401/403 ?
+
 ```
 1. Vérifier le guard dans +layout.server.ts
 2. Vérifier la session dans hooks.server.ts
@@ -608,6 +627,7 @@ console.log('Events:', data);
 ```
 
 ### i18n manquante ?
+
 ```
 1. Vérifier que la clé existe dans fr.ts, en.ts, br.ts
 2. Vérifier l'accès: data.t.section.key
@@ -618,25 +638,27 @@ console.log('Events:', data);
 
 ## 📚 Fichiers clés à connaître
 
-| Fichier | Rôle | Doit savoir |
-|---------|------|-----------|
-| `hooks.server.ts` | Session + rôles | Exécuté à CHAQUE requête |
-| `lib/auth/guards.ts` | Protection routes | Utilisé dans load() |
-| `lib/auth/roles.ts` | Permissions | Fonctions can.manageAgenda() |
-| `src/lib/server/data/*.ts` | Supabase | Accès serveur aux données |
-| `lib/i18n/index.ts` | Traductions | Comment les utiliser |
-| `+layout.server.ts` | Guard section | Bloque si pas autorisé |
-| `+page.server.ts` | Load + Actions | Données + traitements |
-| `+page.svelte` | Affichage | Rendu HTML |
+| Fichier                    | Rôle              | Doit savoir                  |
+| -------------------------- | ----------------- | ---------------------------- |
+| `hooks.server.ts`          | Session + rôles   | Exécuté à CHAQUE requête     |
+| `lib/auth/guards.ts`       | Protection routes | Utilisé dans load()          |
+| `lib/auth/roles.ts`        | Permissions       | Fonctions can.manageAgenda() |
+| `src/lib/server/data/*.ts` | Supabase          | Accès serveur aux données    |
+| `lib/i18n/index.ts`        | Traductions       | Comment les utiliser         |
+| `+layout.server.ts`        | Guard section     | Bloque si pas autorisé       |
+| `+page.server.ts`          | Load + Actions    | Données + traitements        |
+| `+page.svelte`             | Affichage         | Rendu HTML                   |
 
 ---
 
 ## ⚠️ Pièges courants
 
 ### ❌ Pièce 1: Faire confiance au rôle du client
+
 ```typescript
 // MAUVAIS
-if (locals.role === 'admin') { // ✅ Ok côté serveur
+if (locals.role === 'admin') {
+	// ✅ Ok côté serveur
 }
 
 // Mais ne JAMAIS faire ça côté client:
@@ -644,29 +666,32 @@ if (locals.role === 'admin') { // ✅ Ok côté serveur
 ```
 
 ### ❌ Pièges 2: Oublier un guard
+
 ```typescript
 // MAUVAIS: Page admin sans guard
 export const load = () => {
-  // N'importe qui peut voir cette page !
+	// N'importe qui peut voir cette page !
 };
 
 // BON: Ajouter le guard
 export const load = ({ locals }) => {
-  requireAdmin(locals); // Bloque si pas admin
+	requireAdmin(locals); // Bloque si pas admin
 };
 ```
 
 ### ❌ Pièges 3: Filtrer côté client au lieu que serveur
+
 ```typescript
 // MAUVAIS: Charger TOUS les documents puis filtrer en JS
 const allDocs = await getAll();
-const myDocs = allDocs.filter(d => d.pupitre === myPupitre);
+const myDocs = allDocs.filter((d) => d.pupitre === myPupitre);
 
 // BON: Filtrer côté serveur
 const myDocs = await getDocuments({ pupitre: locals.pupitre });
 ```
 
 ### ❌ Pièges 4: Oublier la validation côté serveur
+
 ```typescript
 // MAUVAIS: Valider juste en HTML
 <input type="email" required />

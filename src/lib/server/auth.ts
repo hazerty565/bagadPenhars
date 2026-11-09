@@ -1,6 +1,9 @@
 import { betterAuth } from 'better-auth';
-import { db } from '@/lib/db';
-import { generateId } from 'lucia';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { sveltekitCookies } from 'better-auth/svelte-kit';
+import { getRequestEvent } from '$app/server';
+import { db } from '$lib/db';
+import * as schema from '$lib/db/schema';
 
 /**
  * Configuration centrale de Better Auth.
@@ -9,17 +12,28 @@ import { generateId } from 'lucia';
  * session, account, verification). Les rôles et statuts métier restent dans
  * profiles.role et profiles.account_status — jamais dans user_metadata.
  *
+ * L'adaptateur Drizzle est branché explicitement (décision : plus de `lucia`,
+ * plus de passage de `db` brut).
+ *
  * Ce module est réservé au serveur.
  */
 
 export const auth = betterAuth({
-	database: db,
+	database: drizzleAdapter(db, {
+		provider: 'pg',
+		schema: {
+			user: schema.user,
+			session: schema.session,
+			account: schema.account,
+			verification: schema.verification
+		}
+	}),
 	secret: process.env.BETTER_AUTH_SECRET,
 	baseURL: process.env.BETTER_AUTH_URL,
 	emailAndPassword: {
 		enabled: true,
 		requireEmailVerification: true,
-		sendResetEmail: async ({ user, url }) => {
+		sendResetPassword: async () => {
 			// L'envoi réel est piloté par Resend via src/lib/server/email.ts
 			// et les routes auth/ ; ce hook est laissé pour l'extensibilité.
 		}
@@ -33,25 +47,21 @@ export const auth = betterAuth({
 		}
 	},
 	emailVerification: {
-		enabled: true,
-		sendVerificationEmail: async ({ user, url }) => {
+		sendVerificationEmail: async () => {
 			// Piloté par Resend via les routes auth/
 		}
 	},
-	account: {
-		linkProviders: []
-	},
 	advanced: {
-		generateId: () => generateId(16),
 		defaultCookieAttributes: {
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'lax',
 			path: '/',
 			httpOnly: true
 		}
-	}
+	},
+	plugins: [sveltekitCookies(getRequestEvent)]
 });
 
 export type Auth = typeof auth;
 export type Session = typeof auth.$Infer.Session;
-export type User = typeof auth.$Infer.User;
+export type User = typeof auth.$Infer.Session.user;

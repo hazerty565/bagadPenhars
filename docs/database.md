@@ -7,16 +7,18 @@
 
 La base PostgreSQL s'appelle `bagadpenhars`. Elle contient deux branches :
 
-| Branche Neon | Usage | Cloudflare |
-|---|---|---|
-| `test` | Développement local, tests et preview | Preview et environnement local |
-| `production` | Données de production | Branch Cloudflare Pages de production |
+| Branche Neon | Usage                                 | Cloudflare                            |
+| ------------ | ------------------------------------- | ------------------------------------- |
+| `test`       | Développement local, tests et preview | Preview et environnement local        |
+| `production` | Données de production                 | Branch Cloudflare Pages de production |
 
 Les chaînes de connexion ne sont jamais committées. Une chaîne spécifique à
 la branche est injectée dans les variables d'environnement du runtime
 Cloudflare. Les connexions PostgreSQL transitent par Cloudflare Hyperdrive,
-avec Drizzle comme ORM et `@neondatabase/serverless` comme driver adapté au
-runtime Cloudflare.
+avec Drizzle comme ORM et **`pg` + `drizzle-orm/node-postgres`** comme driver
+(décision Q-2026-11-08-01). Le driver `drizzle-orm/neon-serverless` n'est pas
+utilisé, car le WebSocket Neon n'est pas destiné à fonctionner au-dessus
+d'Hyperdrive.
 
 ## 2. Principes
 
@@ -73,25 +75,25 @@ runtime Cloudflare.
 Les tables conceptuelles suivantes restent valides; leur implémentation Better
 Auth/Neon peut ajouter les tables d'identité requises par la bibliothèque.
 
-| Table | Rôle |
-|---|---|
-| `profiles` | Statut, rôle, identité publique et données privées du membre |
-| `pupitres` | Bombarde, Caisse claire, Cornemuse, Percussion |
-| `profile_pupitres` | Affectation membre/pupitre et responsabilité `is_chef` |
-| `bureau_positions` | Titre honorifique sans droit applicatif |
-| `invitations` | Invitation, expiration, auteur et état de consommation |
-| `invitation_pupitres` | Pupitres pré-attribués à l'invité |
-| `events` | Événements, sondages, type et visibilité indépendants |
-| `event_pupitres` | Ciblage des événements de pupitre |
-| `event_responses` | Réponse présent/absent |
-| `documents` | Métadonnées des partitions stockées dans R2 |
-| `articles` | Contenus éditoriaux publiés ou brouillons |
-| `albums` | Collections de médias publics |
-| `media` | Métadonnées des médias stockés dans R2 |
-| `notification_preferences` | Préférences de notifications par membre |
-| `notification_log` | Historique d'envoi |
-| `member_loans` | Prêts de matériel ou costumes |
-| `account_deletion_requests` | Demande et traitement de suppression |
+| Table                       | Rôle                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| `profiles`                  | Statut, rôle, identité publique et données privées du membre |
+| `pupitres`                  | Bombarde, Caisse claire, Cornemuse, Percussion               |
+| `profile_pupitres`          | Affectation membre/pupitre et responsabilité `is_chef`       |
+| `bureau_positions`          | Titre honorifique sans droit applicatif                      |
+| `invitations`               | Invitation, expiration, auteur et état de consommation       |
+| `invitation_pupitres`       | Pupitres pré-attribués à l'invité                            |
+| `events`                    | Événements, sondages, type et visibilité indépendants        |
+| `event_pupitres`            | Ciblage des événements de pupitre                            |
+| `event_responses`           | Réponse présent/absent                                       |
+| `documents`                 | Métadonnées des partitions stockées dans R2                  |
+| `articles`                  | Contenus éditoriaux publiés ou brouillons                    |
+| `albums`                    | Collections de médias publics                                |
+| `media`                     | Métadonnées des médias stockés dans R2                       |
+| `notification_preferences`  | Préférences de notifications par membre                      |
+| `notification_log`          | Historique d'envoi                                           |
+| `member_loans`              | Prêts de matériel ou costumes                                |
+| `account_deletion_requests` | Demande et traitement de suppression                         |
 
 ENUMs métier :
 
@@ -136,17 +138,21 @@ Les règles et la fenêtre de modification des réponses sont détaillées dans
 
 R2 contient les objets binaires dans deux buckets distincts :
 
-| Bucket | Contenu |
-|---|---|
-| `bagad-public` | Médias publiés et autres objets explicitement publics |
+| Bucket          | Contenu                                                |
+| --------------- | ------------------------------------------------------ |
+| `bagad-public`  | Médias publiés et autres objets explicitement publics  |
 | `bagad-private` | Profils, documents, albums privés et fichiers réservés |
 
 La capacité opérationnelle globale est **8 Go**, les deux buckets étant
 additionnés dans le même quota. Une alerte administrateur est déclenchée à
 **7 Go**; à **8 Go**, les nouveaux téléversements sont bloqués côté serveur.
 
-La table `storage_usage` conserve `public_bytes`, `private_bytes`,
-`reserved_bytes` et `updated_at`. Chaque réservation, confirmation, suppression
+La table `storage_usage` est une **ligne unique globale** (décision
+Q-2026-11-08-02) : `public_bytes`, `private_bytes`, `reserved_bytes`,
+`quota_bytes`, `alert_threshold_bytes`, `block_threshold_bytes`,
+`last_sync_at` et `updated_at`. Toutes les colonnes d'octets sont en `bigint`
+(un `integer` déborde dès 2 Go). Le volume utilisé vaut
+`public_bytes + private_bytes`. Chaque réservation, confirmation, suppression
 et remplacement met à jour le compteur. Les réservations évitent les dépassements
 pendant les uploads simultanés; les suppressions et remplacements restent
 atomiques dans la mesure permise par les opérations R2. Une synchronisation
@@ -154,10 +160,10 @@ périodique réconcilie les compteurs Neon avec le contenu réel des deux bucket
 
 - Neon conserve le nom de clé, la taille, le type MIME et les métadonnées.
 - Les objets du bucket public ont uniquement une URL publique tant qu'ils restent
-  publiés.
-- Les objets privés sont servis par un endpoint SvelteKit servant de garde.
-- Les URLs signées temporaires sont privilégiées si le workflow Better Auth/
-  Cloudflare le permet.
+  publiés. Les variantes d'affichage sont produites à la volée par Cloudflare
+  Image Resizing (Q-2026-11-08-03).
+- Les objets privés sont servis par `/api/files/[...key]` après contrôle serveur
+  (Q-2026-11-08-04) ; aucune URL signée n'est générée par le binding R2.
 - Aucun objet privé n'est placé dans un répertoire public.
 
 ## 6. Matrice de droits
@@ -165,9 +171,9 @@ périodique réconcilie les compteurs Neon avec le contenu réel des deux bucket
 La matrice de base reste celle du brief. Les guards et les politiques RLS
 doivent tous deux la faire respecter :
 
-| Rôle | Comptes | Événements | Contenus | Documents | Notifications |
-|---|---|---|---|---|---|
-| `member` | Profil propre | Lire/répondre selon visibilité | Lire le public | Lire tous les documents actifs | Préférences propres |
-| `chef_pupitre` | Aucun | Gérer ses pupitres | Aucun | Déposer pour ses pupitres | Notifier ses pupitres |
-| `secretaire` | Inviter, activer, suspendre | Tous les événements | Articles/albums | Tous les documents autorisés | Plusieurs pupitres |
-| `admin` | Tous | Tous | Tous | Tous | Tous |
+| Rôle           | Comptes                     | Événements                     | Contenus        | Documents                      | Notifications         |
+| -------------- | --------------------------- | ------------------------------ | --------------- | ------------------------------ | --------------------- |
+| `member`       | Profil propre               | Lire/répondre selon visibilité | Lire le public  | Lire tous les documents actifs | Préférences propres   |
+| `chef_pupitre` | Aucun                       | Gérer ses pupitres             | Aucun           | Déposer pour ses pupitres      | Notifier ses pupitres |
+| `secretaire`   | Inviter, activer, suspendre | Tous les événements            | Articles/albums | Tous les documents autorisés   | Plusieurs pupitres    |
+| `admin`        | Tous                        | Tous                           | Tous            | Tous                           | Tous                  |

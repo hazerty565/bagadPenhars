@@ -10,6 +10,7 @@ declare global {
 			profile: Profile | null;
 			role: AppRole | null;
 			accountStatus: AccountStatus | null;
+			user: Profile | null;
 		}
 		interface PageData {}
 		interface PageState {}
