@@ -4,6 +4,14 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
 	plugins: [sveltekit()],
+	// Better Auth 1.7.x dépend de Zod 4 (API `z.looseObject`) alors que le
+	// projet utilise Zod 3 pour ses schémas. Sans cela, le bundle SSR laisse
+	// `import * as z from "zod"` et Node résout la version 3 à la racine,
+	// ce qui casse le build. Inliner les deux laisse chaque paquet résoudre
+	// sa propre version.
+	ssr: {
+		noExternal: ['better-auth', '@better-auth/core', 'zod']
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [

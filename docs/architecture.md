@@ -36,7 +36,9 @@ fonction soit complète.
 
 - `/(public)/[lang=lang]/...` : site public localisé. Les sections repérées
   incluent l'accueil, les articles, le bagad, la formation, l'agenda, les
-  médias, les partenaires et le contact.
+  médias, les partenaires et le contact. La page d'accueil est composée de
+  `src/lib/components/home/` et partage le header/footer de
+  `src/lib/components/layout/`.
 - `/auth/...` : connexion, déconnexion, invitation, attente, mot de passe
   oublié et réinitialisation.
 - `/auth/...` et `/api/auth/...` : pages et endpoint Better Auth pour la
@@ -46,10 +48,13 @@ fonction soit complète.
 - `/dashboard/...` : espace adhérent et pages d'administration : agenda,
   documents, profil, pupitre, notifications, membres, articles, médias,
   invitations et réglages.
-- `/` : route d'entrée et sitemap.
+- `/` : redirection 307 vers `/fr` (`src/routes/(public)/+page.server.ts`) ;
+  le sitemap est servi par `/sitemap.xml`.
 
 Les pages publiques acceptent les langues `fr`, `en` et `br` selon le matcher
 `src/params/lang.ts`. Le tableau de bord est sans préfixe de langue.
+Les textes publics sont centralisés dans `src/lib/i18n/` (dictionnaires typés
+`fr`, `en`, `br`).
 
 ## Flux applicatifs attendus
 
@@ -65,9 +70,9 @@ Les pages publiques acceptent les langues `fr`, `en` et `br` selon le matcher
    utilisateur avec `set_config(..., true)`, puis exécute ses requêtes dans la
    même transaction/connexion. Les politiques RLS Neon/PostgreSQL appliquent
    les droits au niveau des lignes. Sans contexte, l'accès privé échoue fermé.
-5. Drizzle utilise `@neondatabase/serverless` et se connecte via Hyperdrive.
-   Le pooling est activé; le cache de requêtes est exclu des lectures privées
-   dépendantes de l'identité.
+5. Drizzle utilise `pg` (`drizzle-orm/node-postgres`) et se connecte via
+   Cloudflare Hyperdrive (décision Q-2026-11-08-01). Le pooling est activé; le
+   cache de requêtes est exclu des lectures privées dépendantes de l'identité.
 6. Cloudflare R2 stocke les fichiers. Neon conserve leurs métadonnées, clés,
    visibilité et identifiants de propriétaire.
 7. Les uploads passent par des routes SvelteKit exécutées sur Cloudflare Pages.

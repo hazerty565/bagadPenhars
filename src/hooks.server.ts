@@ -46,5 +46,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	return resolve(event);
+	const htmlLang =
+		event.params.lang === 'en' || event.params.lang === 'br' ? event.params.lang : 'fr';
+
+	return resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('%lang%', htmlLang)
+	});
 };

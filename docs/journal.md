@@ -114,3 +114,66 @@
 - `pnpm install` se bloque et `pnpm-lock.yaml` est désynchronisé de
   `package.json`; l'installation est reprise via npm en attendant la
   régénération du lockfile (étape 9 du plan).
+
+## 2026-11-09
+
+### Page d'accueil publique et header
+
+- **Périmètre livré (branche `proto`)** : layout public
+  `src/routes/(public)/[lang=lang]/`, header sticky, footer, lecteur audio
+  flottant en état vide, et page d'accueil composée de `Hero`, `About`,
+  `Pupitres`, `AgendaPreview`, `GalleryPreview`, `Join`.
+- **Thème** : tokens Tailwind (`ivoire`, `marine`, `or`, `ink`, `sable`,
+  `ardoise`) et polices Playfair Display + Inter chargées dans `src/app.html`.
+- **i18n** : dictionnaires typés maison dans `src/lib/i18n/` (`fr`, `en`,
+  `br`, `types`, `index`). `svelte-i18n` n'est pas installé ; voir la question
+  ouverte Q-2026-11-09-01.
+- **Routes** : `/` redirige en 307 vers `/fr` ; le paramètre `[lang=lang]`
+  accepte `fr`, `en`, `br`. `hooks.server.ts` remplace `%lang%` dans
+  `app.html`.
+- **Liens internes** : utilisation de `resolve()` de `$app/paths` et de
+  `PUBLIC_NAV` (identifiants de route SvelteKit) pour satisfaire
+  `svelte/no-navigation-without-resolve`.
+- **Contenus** : textes, coordonnées et réseaux repris du site officiel
+  `https://bagad-penhars.com/` ; ils restent à reconfirmer par le bureau.
+- **Galerie** : sélection provisoire de photographies réelles du dépôt
+  (`IMG_0877`, `IMG_0880`, `IMG_0881`) en attendant les albums R2. Les
+  légendes et textes alternatifs ont été ajustés après vérification visuelle
+  des trois images (scène, grosse caisse, atelier de percussion).
+- **Agenda** : `nextPublicEvents: []` assumé tant que la base publique n'est
+  pas branchée ; aucun événement de démonstration n'est réutilisé.
+
+### Corrections d'infrastructure rencontrées
+
+- **Better Auth / Zod** : `better-auth@1.7.18` exige Zod 4 (`z.looseObject`)
+  alors que le projet utilise Zod 3. Le bundle SSR laissait
+  `import * as z from "zod"` et Node résolvait Zod 3. Ajout de
+  `ssr.noExternal: ['better-auth', '@better-auth/core', 'zod']` dans
+  `vite.config.ts`.
+- **Variables d'environnement** : `BETTER_AUTH_SECRET` remplacé par
+  `BETTER_AUTH_API_KEY`, seul nom présent dans `.env`. Création de
+  `.env.example` (documentation des clés, sans valeurs) et ajout des fichiers
+  `.env*` à `.prettierignore`.
+- **Build local** : `src/lib/db/index.ts` lève une erreur si `DATABASE_URL`
+  est absente à l'import ; le build doit être lancé avec les variables de
+  `.env` chargées.
+
+### Validation
+
+- `npm run check` : 0 erreur, 1 avertissement préexistant
+  (`src/routes/public/[lang=lang]/contact/+page.svelte`).
+- `npm run build` : OK avec les variables de `.env`.
+- ESLint et Prettier ciblés sur les fichiers créés/modifiés : OK.
+- `npm run lint` global échoue toujours sur des fichiers préexistants non
+  formatés (`.opencode/`, `docs/maquette_UI.md`, `drizzle/meta/`,
+  `equipe/SYNTHESE.md`, `maquette/`, `scripts/`, `src/routes/public/...`) ;
+  pas de formatage massif hors périmètre.
+
+### Reste à faire
+
+- Brancher `nextPublicEvents` sur Neon (étape agenda) et `galleryPhotos` sur
+  les albums R2 (étape médias).
+- Fournir des pistes audio réelles et les métadonnées du lecteur.
+- Faire relire les textes breton et les mentions historiques par le bureau.
+- Compléter les pages publiques internes (le bagad, formation, médias,
+  partenaires, contact) actuellement à l'état d'ébauche.

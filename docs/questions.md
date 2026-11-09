@@ -428,3 +428,24 @@ Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur
 ### Décision client — Q-2026-11-08-09
 
 **Décision :** On garde les dossiers : les migrations peuvent être copiées si elles correspondent au besoin. Ils peuvent être déplacés dans `docs/Archive/` avec une note dans `docs/journal.md`.
+
+### Q-2026-11-09-01 — Bibliothèque i18n du site public
+
+- **Date :** 2026-11-09
+- **Problème :** `AGENTS.md` demande d'utiliser le paquet `svelte-i18n` pour le public (`fr`, `en`, `br`), mais le paquet n'est pas installé et la page d'accueil a été livrée avec des dictionnaires TypeScript typés maison (`src/lib/i18n/`).
+- **Pourquoi :** le choix conditionne la façon dont les prochaines pages publiques déclareront leurs textes, les tests de complétude des traductions et l'éventuelle détection automatique de la langue du navigateur.
+- **Proposition :** conserver les dictionnaires typés maison pour la V1 (aucune dépendance supplémentaire, complétude vérifiée à la compilation) et réévaluer `svelte-i18n` si un besoin de pluriels, de formats riches ou de chargement paresseux apparaît. Confirmer ce choix.
+
+### Q-2026-11-09-02 — Validation des contenus de la page d'accueil
+
+- **Date :** 2026-11-09
+- **Problème :** les textes de présentation, l'année de création (1985), l'adresse (`6 Av. des Oiseaux`, `29000 Quimper`), l'e-mail (`bagadpenhars@gmail.com`) et les liens Facebook/Instagram proviennent du site officiel `https://bagad-penhars.com/` et n'ont pas été reconfirmés par le bureau.
+- **Pourquoi :** ces informations sont publiques et engagent l'association ; une adresse ou une année erronée serait visible immédiatement.
+- **Proposition :** faire valider ces éléments par le bureau avant mise en production, ainsi que les légendes des photographies de la galerie d'accueil.
+
+### Q-2026-11-09-03 — Pistes audio du lecteur
+
+- **Date :** 2026-11-09
+- **Problème :** le lecteur flottant est livré en état vide honnête (« Aucune piste publiée ») car aucun fichier audio n'est présent dans le dépôt.
+- **Pourquoi :** l'étape 32 du plan (lecteur audio) ne peut pas être finalisée sans pistes, titres, durées et droits de diffusion.
+- **Proposition :** fournir les fichiers (MP3/OGG) et leurs métadonnées, ou valider que le lecteur reste en état vide jusqu'à l'étape 32.
