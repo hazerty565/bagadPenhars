@@ -245,13 +245,35 @@ const en: Dictionary = {
 		}
 	},
 	agenda: {
+		meta: {
+			title: 'Events — Bagad Penhars',
+			description:
+				'Outings, concerts, festivals and competitions from Bagad Penhars: find the next public dates of the association in Quimper and across Brittany.'
+		},
 		eyebrow: 'Events',
 		title: 'Upcoming dates',
-		lead: 'Find the public outings, concerts and fest-noz of Bagad Penhars.',
+		lead: 'Meet us at our next outings, concerts, festivals and competitions. Every date listed here is open to the public.',
 		cta: 'All events',
+		heroAlt: 'Bagad Penhars playing outdoors in a street in Quimper',
+		heroCaption: 'Bagad Penhars performing in the streets of Quimper.',
+		upcoming: {
+			title: 'Upcoming events',
+			lead: 'Confirmed dates, from the nearest to the furthest.'
+		},
+		past: {
+			title: 'Past events',
+			lead: 'The dates already played this season.'
+		},
+		locationLabel: 'Venue',
+		currentLabel: 'Next date',
 		emptyTitle: 'The next date will be announced soon.',
 		emptyText:
 			'Public dates are published as they are confirmed. In the meantime, discover the bagad and its music classes.',
+		contact: {
+			title: 'A question about a date?',
+			text: 'For an invitation, a festival or any information, write to us.',
+			cta: 'Contact us'
+		},
 		types: {
 			sortie: 'Outing',
 			concert: 'Concert',
@@ -262,7 +284,50 @@ const en: Dictionary = {
 			repetition: 'Rehearsal',
 			reunion: 'Meeting',
 			repas: 'Meal'
-		}
+		},
+		months: [
+			'January',
+			'February',
+			'March',
+			'April',
+			'May',
+			'June',
+			'July',
+			'August',
+			'September',
+			'October',
+			'November',
+			'December'
+		]
+	},
+	prestations: {
+		eyebrow: 'What we offer',
+		title: 'Our performances',
+		lead: 'From a concert hall to a festive street parade, Bagad Penhars adapts to every kind of event.',
+		items: {
+			aubade: {
+				title: 'Aubade',
+				description:
+					'Bagad Penhars offers stage performances built around its own musical repertoire: a complete show blending traditional Breton sounds and contemporary arrangements to delight your audience.'
+			},
+			deambulation: {
+				title: 'Déambulation',
+				description:
+					'Bagad Penhars also offers walking performances to bring streets and alleyways to life at your parties and festivals. An immersive experience that sets a whole neighbourhood moving to the rhythm of bagpipes and bombards.'
+			},
+			'fest-noz': {
+				title: 'Fest-noz / Fest-deiz',
+				description:
+					'Since the repertoire of Bagad Penhars is made up of traditional Breton tunes, the band can host your fest-noz or fest-deiz and get the crowd dancing! An unforgettable evening guaranteed at the heart of Breton tradition.'
+			},
+			'couple-trio': {
+				title: 'Couple / Trio',
+				description:
+					'For a smaller performance at a wedding, a cocktail reception or an opening, a bagpipe-and-bombard duo or a bagpipe, bombard and drum trio can step in and bring an authentic Breton touch to your event.'
+			}
+		},
+		ctaLead: 'Would you like to invite us to your event?',
+		cta: 'Contact us'
 	},
 	gallery: {
 		eyebrow: 'Gallery',

@@ -451,6 +451,78 @@ eslint .`) échouait sur **18 fichiers** mal formatés et **8 erreurs ESLint**,
 - **Validation** : `npx prettier --check .` OK, `npx eslint .` OK,
   `npm run check` 0 erreur / 0 avertissement, `npm run build` OK.
 
+### Page Agenda publique (données provisoires)
+
+- **Périmètre livré (branche `proto`)** :
+  `src/routes/(public)/[lang=lang]/agenda/+page.server.ts` et `+page.svelte`,
+  jusqu'ici une ébauche (un événement factice et une action `rsvp` inutilisée),
+  sont remplacés par une page publique complète en lecture seule.
+- **Données** : `src/lib/data/agenda.ts` contient les onze événements publiés
+  sur `https://bagad-penhars.com/agenda` (relevé du 10 novembre 2026). Ce sont
+  des données d'attente : la table `events` de Neon n'est pas encore branchée.
+  Le type `PublicAgendaEvent` ajoute un `location`, absent du schéma actuel
+  (Q-2026-11-10-09).
+- **Correction demandée par le bureau** : la sortie « Passeurs des lumières »
+  est fixée au **12 décembre 2026** (le site officiel affichait encore le 11).
+- **Partage à venir / passés** : calculé côté serveur à partir de la date de
+  `Europe/Paris` (`parisToday()`), pour éviter tout décalage lié au fuseau du
+  visiteur et toute divergence entre rendu serveur et hydratation. Un événement
+  reste « actif » jusqu'à la fin de sa journée, conformément à `docs/event.md`.
+- **Accueil** : `nextPublicEvents` est désormais alimenté par les deux
+  prochaines dates du même module, au lieu d'un tableau vide. `AgendaPreview`
+  n'utilise plus `Intl.DateTimeFormat` : les mois viennent du dictionnaire, ce
+  qui rend le rendu identique côté serveur et côté navigateur (le locale `br`
+  n'était pas garanti).
+- **i18n** : le bloc `agenda` du contrat `Dictionary` est étendu (métadonnées,
+  textes du hero, titres et chapeaux des deux sections, libellé de lieu, texte
+  du bandeau contact, douze noms de mois) en `fr`, `en` et `br`. Les titres et
+  lieux des événements sont des contenus et restent en français.
+- **Design** : hero éditorial avec `static/hero.webp` (1440 × 1123), carte mise
+  en avant du prochain rendez-vous (date en grand, type, titre, lieu), liste
+  des événements passés en archive compacte, bandeau marine de contact. Les
+  dates sont balisées en `<time datetime="…">` et les sections en
+  `aria-labelledby`.
+- **RSVP** : l'action serveur `rsvp` et l'ébauche de formulaire sont retirées.
+  La réponse présent/absent relève de l'espace adhérents (`docs/event.md`), pas
+  de la page publique.
+- **Contenus non inventés** : le site officiel ne publie ni description ni
+  horaire ; les événements restent donc sans description (`description: null`).
+- **Validation** : `npm run check` 0 erreur / 0 avertissement, Prettier OK,
+  ESLint OK, `npm run build` OK ; rendu vérifié en `fr`, `en` et `br` à 375 px
+  (aucun débordement du contenu, section « à venir » et dix événements passés).
+  Un débordement horizontal de la **navigation desktop** entre 1024 et
+  ~1380 px subsiste : il est antérieur et visible aussi sur `/fr/bagad`
+  (Q-2026-11-10-10).
+
+### Section « Prestations » sur l'accueil
+
+- **Besoin** : la maquette `maquette/Capture d'écran 2026-11-09 132021.png`
+  présente quatre formats de prestation (aubade, déambulation, fest-noz /
+  fest-deiz, couple / trio) qui manquaient au site. Le bureau a fourni les
+  textes.
+- **Livré** : `src/lib/components/home/Prestations.svelte`, inséré sur
+  l'accueil entre les pupitres et l'agenda. En-tête éditorial (« À votre
+  service », « Nos prestations », chapeau), quatre formats en deux colonnes
+  (numéro, titre serif, description), puis un filet avec la question « Vous
+  souhaitez nous inviter pour votre événement ? » et un bouton vers Contact.
+- **Contenus** : descriptions reprises **mot pour mot** des textes fournis.
+  Les titres des formats restent identiques dans les trois langues (noms
+  d'usage : Aubade, Déambulation, Fest-noz / Fest-deiz, Couple / Trio) ; seuls
+  les chapeaux et les descriptions sont traduits en anglais et en breton, à
+  faire relire par un locuteur natif.
+- **i18n** : bloc `prestations` ajouté au contrat `Dictionary` et aux trois
+  dictionnaires ; clés stables `PRESTATION_KEYS` / `PrestationKey` dans
+  `src/lib/types.ts`.
+- **Design** : fond `sable/50` pour alterner avec les sections ivoire et
+  blanche, filets `marine/20`, numéros en or, aucun état JavaScript (tout le
+  contenu est visible, pas d'accordéon : les descriptions sont courtes). Un
+  séparateur ornemental (filet fin et losange doré) marque la transition avec
+  la section des pupitres.
+- **Validation** : `npm run check` 0 erreur / 0 avertissement ; rendu vérifié
+  en `fr`, `en` et `br` à 375 px (aucun débordement du contenu, quatre
+  descriptions présentes) ; le débordement de la navigation desktop à 1280 px
+  reste celui de Q-2026-11-10-10.
+
 ### Reste à faire
 
 - Faire reconfirmer par le bureau les informations pratiques reprises du site
@@ -464,4 +536,6 @@ eslint .`) échouait sur **18 fichiers** mal formatés et **8 erreurs ESLint**,
 - Faire relire les textes bretons par un locuteur natif.
 - Faire valider les chiffres, les photographies et le crédit photo de la page
   Bagad (Q-2026-11-10-08).
+- Brancher l'agenda sur Neon (colonne de lieu à ajouter) et confirmer les onze
+  dates reprises du site officiel (Q-2026-11-10-09).
 - Traiter le sitemap globalement (toutes les routes publiques, toutes langues).

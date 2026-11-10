@@ -1,4 +1,4 @@
-import type { ContactSubject, EventType, PupitreKey } from '$lib/types';
+import type { ContactSubject, EventType, PrestationKey, PupitreKey } from '$lib/types';
 
 export type Lang = 'fr' | 'en' | 'br';
 
@@ -140,13 +140,50 @@ export interface Dictionary {
 		};
 	};
 	agenda: {
+		meta: {
+			title: string;
+			description: string;
+		};
 		eyebrow: string;
 		title: string;
 		lead: string;
 		cta: string;
+		heroAlt: string;
+		heroCaption: string;
+		upcoming: {
+			title: string;
+			lead: string;
+		};
+		past: {
+			title: string;
+			lead: string;
+		};
+		locationLabel: string;
+		currentLabel: string;
 		emptyTitle: string;
 		emptyText: string;
+		contact: {
+			title: string;
+			text: string;
+			cta: string;
+		};
 		types: Record<EventType, string>;
+		/** Douze libellés de mois, de janvier à décembre, pour un affichage déterministe. */
+		months: string[];
+	};
+	prestations: {
+		eyebrow: string;
+		title: string;
+		lead: string;
+		items: Record<
+			PrestationKey,
+			{
+				title: string;
+				description: string;
+			}
+		>;
+		ctaLead: string;
+		cta: string;
 	};
 	partners: {
 		meta: {

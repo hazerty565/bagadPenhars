@@ -505,3 +505,17 @@ Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur
 - **Problème :** la page Bagad reprend du site officiel les textes de présentation, les chiffres « 25+ musiciens actifs » et « 100+ concerts et festivals », et deux photographies (`groupe_bagad.webp`, `couple_joueur.webp`) dont la première porte un filigrane de photographe (« Bazotos Création »). Le site officiel affiche aussi « 40+ ans d'expérience » et « 40 années d'existence », ce qui ne correspond pas à une création en 1985 (41 ans en 2026) ; la page livrée n'affiche donc que « 1985 — année de création », sans nombre d'années.
 - **Pourquoi :** un effectif, un nombre de concerts ou une ancienneté erronés sont des affirmations visibles qui engagent l'association ; publier une photographie sans accord ni crédit pose en plus une question de droits.
 - **Proposition :** confirmer l'année de création, les deux chiffres, l'autorisation de publier les deux photographies et le crédit à afficher (ou fournir des photos sans filigrane). Décider enfin comment exprimer l'ancienneté : année de création seule (état actuel), formule « depuis 1985 », ou nombre d'années calculé automatiquement.
+
+### Q-2026-11-10-09 — Agenda public provisoire et lieu des événements
+
+- **Date :** 2026-11-10
+- **Problème :** la page Agenda lit `src/lib/data/agenda.ts` et non Neon. Ce module reprend les onze événements publiés sur le site officiel, mais la sortie « Passeurs des lumières » y était datée du 11 décembre 2026 : elle a été fixée au **12 décembre 2026** sur indication du bureau. Par ailleurs, la table `events` ne stocke que le titre, la date et le type : aucun lieu, alors que le site officiel en affiche un pour chaque date. Enfin, aucune description ni horaire n'est publiée par le site officiel ; rien n'a été inventé.
+- **Pourquoi :** les dates et les lieux engagent publiquement l'association, et publier un agenda factice sans le signaler peut tromper un visiteur. Le lieu étant nécessaire à l'affichage, son absence du schéma imposera une migration dès que l'agenda sera éditable.
+- **Proposition :** confirmer les onze dates et lieux ; décider de l'ajout d'une colonne `location` dans `events` (et, si besoin, d'une description et d'un horaire) par une nouvelle migration ; remplacer `agendaSections()` par une lecture Neon dans le `load` de la page et de l'accueil une fois l'agenda éditable. Les données provisoires sont signalées dans `docs/journal.md`.
+
+### Q-2026-11-10-10 — Débordement horizontal de la navigation desktop
+
+- **Date :** 2026-11-10
+- **Problème :** entre environ 1024 px et 1380 px de large, la barre de navigation desktop dépasse la largeur de la fenêtre (95 px mesurés à 1284 px), ce qui provoque un défilement horizontal. Le défaut se produit aussi sur `/fr/bagad` et les autres pages publiques : il est antérieur à la page Agenda.
+- **Pourquoi :** 1280 px est la largeur la plus courante des écrans de portables ; un défilement horizontal à cette taille se voit immédiatement.
+- **Proposition :** corriger le `Nav` (réduire les espacements, raccourcir le bouton « Écouter » ou déplacer le point de rupture). La modification touche le layout partagé, elle attend donc une validation avant d'être engagée.

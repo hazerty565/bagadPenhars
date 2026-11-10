@@ -25,6 +25,16 @@ export interface PaginatedResponse<T> {
 
 export type PupitreKey = 'bombarde' | 'cornemuse' | 'caisseClaire' | 'percussion';
 
+/**
+ * Formats de prestation proposés aux organisateurs.
+ *
+ * Ces clés sont stables : elles servent d'identifiant dans les dictionnaires
+ * i18n (`prestations.items`) et ne doivent pas être traduites.
+ */
+export const PRESTATION_KEYS = ['aubade', 'deambulation', 'fest-noz', 'couple-trio'] as const;
+
+export type PrestationKey = (typeof PRESTATION_KEYS)[number];
+
 export type EventType =
 	| 'sortie'
 	| 'concert'
@@ -68,6 +78,17 @@ export interface PublicEvent {
 	eventType: EventType;
 	isPoll: boolean;
 	state: EventState;
+}
+
+/**
+ * Événement public tel qu'affiché sur la page Agenda.
+ *
+ * Le lieu est un complément d'affichage : la table `events` ne le stocke pas
+ * encore. Il vit donc dans la couche de données et devra être ajouté au schéma
+ * (migration) lorsque l'agenda sera branché sur Neon — voir `docs/questions.md`.
+ */
+export interface PublicAgendaEvent extends PublicEvent {
+	location: string;
 }
 
 export interface PublicPhoto {

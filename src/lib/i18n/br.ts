@@ -247,13 +247,35 @@ const br: Dictionary = {
 		}
 	},
 	agenda: {
+		meta: {
+			title: 'Deiziataer — Bagad Penhars',
+			description:
+				'Sortioù, sonadegoù, gouelioù ha kenstrivadegoù Bagad Penhars : kavit an deiziadoù publik da zont eus ar gevredigezh e Kemper hag e Breizh.'
+		},
 		eyebrow: 'Deiziataer',
 		title: 'An darvoudoù da zont',
-		lead: 'Kavit ac’hanomp en hor sonadegoù, festoù-noz hag abadennoù publik.',
+		lead: 'Kavit ac’hanomp en hor sortioù, sonadegoù, gouelioù ha kenstrivadegoù da zont. Digor eo d’ar publik an holl zeiziadoù a zo amañ.',
 		cta: 'An deiziataer a-bezh',
+		heroAlt: 'Bagad Penhars o seniñ en diavaez en ur straed e Kemper',
+		heroCaption: 'Bagad Penhars o seniñ e straedoù Kemper.',
+		upcoming: {
+			title: 'Darvoudoù da zont',
+			lead: 'An deiziadoù kadarnaet, eus ar c’hentañ d’an hini pellañ.'
+		},
+		past: {
+			title: 'Darvoudoù tremenet',
+			lead: 'Ar mareoù a zo bet bevet ar c’houlzad-mañ.'
+		},
+		locationLabel: 'Lec’h',
+		currentLabel: 'An darvoud a zeu',
 		emptyTitle: 'An darvoud a zeu a vo embannet prestik.',
 		emptyText:
 			'Embannet e vez an deiziadoù publik tamm-ha-tamm. En adkaout, dizoloit ar bagad hag ar c’hentelioù.',
+		contact: {
+			title: 'Ur goulenn war un deiziad ?',
+			text: 'Evit ur pedadenn, ur gouel pe un ditour bennak, skrivit deomp.',
+			cta: 'Mont e darempred'
+		},
 		types: {
 			sortie: 'Sorti',
 			concert: 'Sonadeg',
@@ -264,7 +286,50 @@ const br: Dictionary = {
 			repetition: 'Repet',
 			reunion: 'Emvod',
 			repas: 'Pred'
-		}
+		},
+		months: [
+			'genver',
+			'c’hwevrer',
+			'meurzh',
+			'ebrel',
+			'mae',
+			'mezheven',
+			'gouere',
+			'eost',
+			'gwengolo',
+			'here',
+			'du',
+			'kerzu'
+		]
+	},
+	prestations: {
+		eyebrow: 'En ho servij',
+		title: 'Hon abadennoù',
+		lead: 'Eus ar sonadeg en ur sal d’an abadennoù kerzhet, Bagad Penhars a azasa e abadennoù ouzh ho darvoudoù a bep seurt.',
+		items: {
+			aubade: {
+				title: 'Aubade',
+				description:
+					'Bagad Penhars a ginn abadennoù war al leurenn savet diwar e repertorioù sonerezh dezhañ e-unan. Ur spektakl klok a ves sonioù hengounel Breizh hag arranzhadurioù a-vremañ evit laouenaat ho publik.'
+			},
+			deambulation: {
+				title: 'Déambulation',
+				description:
+					'Bagad Penhars a ginn ivez abadennoù kerzhet evit lakaat straedoù ha kornioù da vevañ en ho festoù hag en ho gouelioù. Un tañvadenn vev a laka ur c’harter a-bezh da drenkañ war lusk ar binioù hag ar vombardoù.'
+			},
+			'fest-noz': {
+				title: 'Fest-noz / Fest-deiz',
+				description:
+					'Pa vez savet repertorioù sonerezh Bagad Penhars diwar tonioù hengounel Breizh, e c’hall ar strollad aozañ ho festoù-noz pe ho festoù-deiz ha lakaat an dud da zañsal ! Un nozvezh dic’houzoudek a zo gwarantet e kalon hengoun Breizh.'
+			},
+			'couple-trio': {
+				title: 'Couple / Trio',
+				description:
+					'Evit un abadenn vihan da-geñver un eured, ur c’hoktel pe un digoradur… ur c’houblad binioù/bombard pe un trio binioù/bombard/taboulin a c’hall dont ha degas ul liv hengounel Breizh da wir d’ho darvoud.'
+			}
+		},
+		ctaLead: 'C’hoant hoc’h eus hor pediñ d’ho darvoud ?',
+		cta: 'Mont e darempred'
 	},
 	gallery: {
 		eyebrow: 'Skeudennoù',

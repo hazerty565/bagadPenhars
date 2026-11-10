@@ -300,16 +300,24 @@ Ordre de contenu de référence :
     détaillée.
 3.  **Formation** : aperçu des quatre pupitres avec visuels et liens
     vers la page Formation.
-4.  **Agenda** : deux prochaines représentations publiques à venir,
+4.  **Prestations** : les quatre formats proposés aux organisateurs
+    (aubade, déambulation, fest-noz / fest-deiz, couple / trio) et un
+    appel à contacter l'association.
+5.  **Agenda** : deux prochaines représentations publiques à venir,
     triées par date croissante. Si moins de deux événements sont
     disponibles, afficher ceux qui existent. Ne jamais afficher un
     événement interne ou ciblé sur un pupitre.
-5.  **Galerie** : trois photos distinctes choisies parmi les photos
+6.  **Galerie** : trois photos distinctes choisies parmi les photos
     publiées et accessibles publiquement, ou toutes les photos
     disponibles s'il y en a moins de trois. La sélection doit être
     stable entre le rendu initial et l'hydratation.
 
 Chaque aperçu renvoie vers sa page de référence.
+
+Composition livrée pour les prestations : section sur fond sable, en-tête
+(accroche « À votre service », titre, chapeau), quatre formats présentés en
+deux colonnes (numéro, titre, description fournie par le bureau), puis un
+bandeau invitant à contacter l'association.
 
 ### 8.2 Page Bagad
 
@@ -367,6 +375,13 @@ rapprocher leurs membres.
   plusieurs pupitres.
 - Proposer un accès clair à l'espace adhérent pour les événements
   privés, après authentification.
+
+Composition livrée : hero éditorial (accroche, titre, chapeau) et photographie
+du bagad en représentation, carte mise en avant du prochain rendez-vous (date en
+grand, type, titre, lieu), liste des événements à venir puis archive compacte
+des événements passés, bandeau marine invitant à contacter l'association. Les
+données sont encore provisoires (`src/lib/data/agenda.ts`) et la page est en
+lecture seule : le RSVP appartient à l'espace adhérents (Q-2026-11-10-09).
 
 ### 8.5 Médias et galerie
 

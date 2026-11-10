@@ -1,7 +1,7 @@
 ﻿<script lang="ts">
 	import { ArrowUpRight, CalendarDays } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
-	import { LOCALES, type Dictionary, type Lang } from '$lib/i18n';
+	import { type Dictionary, type Lang } from '$lib/i18n';
 	import type { PublicEvent } from '$lib/types';
 
 	let { t, lang, events }: { t: Dictionary; lang: Lang; events: PublicEvent[] } = $props();
@@ -14,15 +14,12 @@
 	);
 
 	function dateParts(value: string) {
-		const date = new Date(`${value}T12:00:00Z`);
-		const locale = LOCALES[lang];
+		const [year, month, day] = value.split('-');
 
 		return {
-			day: new Intl.DateTimeFormat(locale, { day: '2-digit', timeZone: 'UTC' }).format(date),
-			month: new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' })
-				.format(date)
-				.replace('.', ''),
-			year: new Intl.DateTimeFormat(locale, { year: 'numeric', timeZone: 'UTC' }).format(date)
+			day,
+			month: t.agenda.months[Number(month) - 1] ?? month,
+			year
 		};
 	}
 </script>

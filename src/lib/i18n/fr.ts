@@ -260,13 +260,35 @@ const fr: Dictionary = {
 		}
 	},
 	agenda: {
+		meta: {
+			title: 'Agenda — Bagad Penhars',
+			description:
+				'Sorties, concerts, festivals et concours du Bagad Penhars : retrouvez les prochaines dates publiques de l’association à Quimper et en Bretagne.'
+		},
 		eyebrow: 'Agenda',
 		title: 'Les prochains rendez-vous',
-		lead: 'Retrouvez les sorties, concerts et fest-noz du Bagad Penhars ouverts au public.',
+		lead: 'Retrouvez-nous lors de nos prochaines sorties, concerts, festivals et concours. Toutes les dates affichées ici sont ouvertes au public.',
 		cta: 'Tout l’agenda',
+		heroAlt: 'Le Bagad Penhars jouant en plein air dans une rue de Quimper',
+		heroCaption: 'Le Bagad Penhars en représentation dans les rues de Quimper.',
+		upcoming: {
+			title: 'Événements à venir',
+			lead: 'Les dates confirmées, de la plus proche à la plus lointaine.'
+		},
+		past: {
+			title: 'Événements passés',
+			lead: 'Les rendez-vous déjà vécus cette saison.'
+		},
+		locationLabel: 'Lieu',
+		currentLabel: 'Prochain rendez-vous',
 		emptyTitle: 'Le prochain rendez-vous sera bientôt annoncé.',
 		emptyText:
 			'Les dates publiques sont publiées au fil des confirmations. En attendant, découvrez le bagad et ses formations.',
+		contact: {
+			title: 'Une question sur une date ?',
+			text: 'Pour une invitation, un festival ou un simple renseignement, écrivez-nous.',
+			cta: 'Nous contacter'
+		},
 		types: {
 			sortie: 'Sortie',
 			concert: 'Concert',
@@ -277,7 +299,50 @@ const fr: Dictionary = {
 			repetition: 'Répétition',
 			reunion: 'Réunion',
 			repas: 'Repas'
-		}
+		},
+		months: [
+			'janvier',
+			'février',
+			'mars',
+			'avril',
+			'mai',
+			'juin',
+			'juillet',
+			'août',
+			'septembre',
+			'octobre',
+			'novembre',
+			'décembre'
+		]
+	},
+	prestations: {
+		eyebrow: 'À votre service',
+		title: 'Nos prestations',
+		lead: 'Du concert en salle à la déambulation festive, le Bagad Penhars s’adapte à tous vos événements.',
+		items: {
+			aubade: {
+				title: 'Aubade',
+				description:
+					'Le Bagad Penhars propose des prestations scéniques composées de son propre répertoire musical. Un spectacle complet alliant sonorités traditionnelles bretonnes et arrangements contemporains pour émerveiller votre public.'
+			},
+			deambulation: {
+				title: 'Déambulation',
+				description:
+					'Le Bagad Penhars propose aussi des prestations déambulatoires pour animer rues et ruelles dans vos fêtes et festivals. Une expérience immersive qui fait vibrer tout un quartier au rythme des cornemuses et bombardes.'
+			},
+			'fest-noz': {
+				title: 'Fest-noz / Fest-deiz',
+				description:
+					'Le répertoire musical du Bagad Penhars étant composé d’airs traditionnels bretons, le groupe peut donc animer vos fest-noz / fest-deiz et faire danser les foules ! Une soirée inoubliable garantie au cœur de la tradition bretonne.'
+			},
+			'couple-trio': {
+				title: 'Couple / Trio',
+				description:
+					'Pour une petite représentation à l’occasion d’un mariage, d’un cocktail, d’une inauguration… un couple cornemuse/bombarde ou un trio cornemuse/bombarde/batterie peut intervenir et apporter une touche bretonne authentique à votre événement.'
+			}
+		},
+		ctaLead: 'Vous souhaitez nous inviter pour votre événement ?',
+		cta: 'Nous contacter'
 	},
 	gallery: {
 		eyebrow: 'Galerie',

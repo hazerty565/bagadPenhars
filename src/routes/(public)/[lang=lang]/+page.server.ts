@@ -1,4 +1,5 @@
 import { getDict, isLang, type Lang } from '$lib/i18n';
+import { agendaSections } from '$lib/data/agenda';
 import { homeGallery } from '$lib/data/site';
 import { PUPITRES } from '$lib/data/pupitres';
 import type { PublicPhoto } from '$lib/types';
@@ -23,8 +24,8 @@ export const load: PageServerLoad = ({ params }) => {
 
 	return {
 		lang,
-		// Les événements publics seront branchés sur Neon à l'étape agenda.
-		nextPublicEvents: [],
+		// Agenda provisoire : mêmes données d'attente que la page Agenda.
+		nextPublicEvents: agendaSections().upcoming.slice(0, 2),
 		galleryPhotos,
 		pupitres: PUPITRES
 	};

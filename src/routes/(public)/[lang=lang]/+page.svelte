@@ -6,6 +6,7 @@
 	import Hero from '$lib/components/home/Hero.svelte';
 	import Join from '$lib/components/home/Join.svelte';
 	import Pupitres from '$lib/components/home/Pupitres.svelte';
+	import Prestations from '$lib/components/home/Prestations.svelte';
 	import { getDict } from '$lib/i18n';
 	import type { PageData } from './$types';
 
@@ -38,6 +39,7 @@
 <Hero {t} lang={data.lang} />
 <About {t} lang={data.lang} />
 <Pupitres {t} lang={data.lang} />
+<Prestations {t} lang={data.lang} />
 <AgendaPreview {t} lang={data.lang} events={data.nextPublicEvents} />
 <GalleryPreview {t} lang={data.lang} photos={data.galleryPhotos} />
 <Join {t} lang={data.lang} />

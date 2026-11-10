@@ -37,12 +37,23 @@ fonction soit complète.
 - `/(public)/[lang=lang]/...` : site public localisé. Les sections repérées
   incluent l'accueil, les articles, le bagad, la formation, l'agenda, les
   médias, les partenaires et le contact. La page d'accueil est composée de
-  `src/lib/components/home/` et partage le header/footer de
+  `src/lib/components/home/` (dont `Prestations.svelte`, les formats proposés
+  aux organisateurs) et partage le header/footer de
   `src/lib/components/layout/`.
 - `/(public)/[lang=lang]/bagad` : page de présentation de l'association. Contenu
   éditorial statique (histoire, mission, repères chiffrés, invitation à
   rejoindre) servi depuis les dictionnaires i18n ; aucune donnée en base. Les
   photographies sont des fichiers de `static/`.
+- `/(public)/[lang=lang]/formation` : présentation des quatre pupitres, des
+  informations pratiques et des mascottes ; contenu servi depuis les
+  dictionnaires et `src/lib/data/`.
+- `/(public)/[lang=lang]/agenda` : agenda public en lecture seule. Le `load`
+  renvoie `agendaSections()` (`src/lib/data/agenda.ts`) : données **provisoires**
+  reprises du site officiel, séparées en événements à venir (ordre croissant) et
+  passés (ordre décroissant) sur la date de `Europe/Paris`. Aucune lecture de la
+  table `events` pour l'instant ; aucune action RSVP sur la page publique
+  (Q-2026-11-10-09). L'accueil consomme les deux prochaines dates du même
+  module.
 - `/(public)/[lang=lang]/contact` : page Contact. Le `load` ne transmet que la
   clé publique Turnstile (`turnstileSiteKey()`); l'action `send` valide les
   champs avec Zod (`schema.ts`), vérifie le jeton auprès de Cloudflare
