@@ -22,7 +22,7 @@
 | E-mails             | Resend                                           | Invitations, r�initialisations Better Auth, messages de contact. Cl� API c�t� serveur uniquement.                                                                                                  |
 | Antispam contact    | Cloudflare Turnstile                             | Valid� c�t� serveur avant tout envoi.                                                                                                                                                              |
 | Notifications push  | OneSignal                                        | Cl� REST c�t� serveur uniquement. Premi�re version : push uniquement, envoi auto � la cr�ation d'un �v�nement.                                                                                     |
-| Tests               | Vitest (d�clar� dans Structure.md)               | tests/ + *.test.ts sous les routes. E2E/Playwright en r�flexion (voir backlog P2).                                                                                                                 |
+| Tests               | Vitest (d�clar� dans Structure.md)               | tests/ + \*.test.ts sous les routes. E2E/Playwright en r�flexion (voir backlog P2).                                                                                                                |
 
 **Langues :** site public fr, en, br ; espace adh�rents et authentification en fran�ais uniquement.
 

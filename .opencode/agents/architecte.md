@@ -4,7 +4,7 @@ temperature: 0.2
 color: info
 permission:
 edit:
-"*": deny
+"\*": deny
 "equipe/PLAN.md": allow
 "equipe/CONTRAT_API.md": allow
 "docs/questions.md": allow

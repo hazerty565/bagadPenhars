@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ params }) => {
 	const invitation = await validateInvitation(token, email);
 
 	if (!invitation) {
-		return fail(400, { error: 'L\'invitation est invalide, expirée ou déjà utilisée.' });
+		return fail(400, { error: "L'invitation est invalide, expirée ou déjà utilisée." });
 	}
 
 	// Vérifier que le compte existe et est en pending
@@ -52,7 +52,7 @@ export const actions: { accept: Action } = {
 		const invitation = await validateInvitation(token, email);
 
 		if (!invitation) {
-			return fail(400, { error: 'L\'invitation est invalide, expirée ou déjà utilisée.' });
+			return fail(400, { error: "L'invitation est invalide, expirée ou déjà utilisée." });
 		}
 
 		try {

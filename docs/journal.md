@@ -420,6 +420,37 @@
   rendu vérifié en `fr`, `en` et `br` (trois h2, deux photographies chargées,
   quatre liens internes) ; aucun débordement horizontal mesuré à 375 px.
 
+### Lint : Prettier global et erreurs ESLint préexistantes
+
+- **Constat** : la CI (`.github/workflows`, `pnpm run lint` = `prettier --check . &&
+eslint .`) échouait sur **18 fichiers** mal formatés et **8 erreurs ESLint**,
+  tous antérieurs aux pages livrées dans cette session. Deux fichiers touchés
+  aujourd'hui en faisaient partie (`docs/maquette_UI.md`,
+  `src/lib/server/email.ts`) : ils n'avaient jamais été passés à Prettier.
+- **Piège de vérification** : `npx prettier --check
+"src/routes/(public)/[lang=lang]/contact/+page.svelte"` ne vérifie **rien** —
+  Prettier traite `[lang=lang]` comme une classe de caractères glob et ne trouve
+  aucun fichier, sans erreur. Les contrôles « Prettier OK » des tâches
+  précédentes portaient donc sur des chemins silencieusement ignorés. Toujours
+  lancer `npx prettier --check .` (ou échapper les crochets).
+- **Correction Prettier** : `npx prettier --write .` sur les 18 fichiers
+  (markdown d'équipe et d'agents, `drizzle/meta/0000_snapshot.json`, scripts,
+  `src/lib/db/schema.ts`, pages `+error` et route vestige `src/routes/public/`).
+- **Correction ESLint** :
+  - pages `+error.svelte` (racine et publique) : la prop `error` est interdite
+    par `svelte/valid-prop-names-in-kit-pages` ; elles lisent désormais
+    `page.status` et `page.error` depuis `$app/state` ;
+  - `scripts/**/*.js` : override ESLint qui autorise `require()` (scripts
+    d'exploitation CommonJS exécutés par `node`), et suppression d'un import
+    `execSync` inutilisé dans `scripts/reset-agenda.js` ;
+  - `maquette/**` ajouté aux `ignores` : c'est une maquette de référence hors
+    application, non compilée, que le service de types ne résout pas ;
+  - route vestige `src/routes/public/[lang=lang]/contact/` : suppression du bloc
+    `<script>` mort (`handleSubmit` jamais appelé). La suppression complète du
+    dossier reste en attente de validation (Q-2026-11-10-07).
+- **Validation** : `npx prettier --check .` OK, `npx eslint .` OK,
+  `npm run check` 0 erreur / 0 avertissement, `npm run build` OK.
+
 ### Reste à faire
 
 - Faire reconfirmer par le bureau les informations pratiques reprises du site

@@ -1,20 +1,21 @@
 <script lang="ts">
-import { onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
-// Chargement des données au mount
-onMount(async () => {
-	// TODO: Récupérer les données publiques via fetch
-	// - 2 prochains événements public
-	// - 3 photos publiques
-	// - 4 pupitres
-});
+	// Chargement des données au mount
+	onMount(async () => {
+		// TODO: Récupérer les données publiques via fetch
+		// - 2 prochains événements public
+		// - 3 photos publiques
+		// - 4 pupitres
+	});
 </script>
 
 <main class="max-w-4xl mx-auto py-12">
 	<h1 class="text-3xl font-bold mb-6">Bienvenue sur le site de Bagad Penhars</h1>
 
 	<p class="text-lg mb-8">
-		L'association Bagad Penhars vous souhaite la bienvenue. Découvrez notre histoire, nos pupitres et nos prochains événements.
+		L'association Bagad Penhars vous souhaite la bienvenue. Découvrez notre histoire, nos pupitres
+		et nos prochains événements.
 	</p>
 
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

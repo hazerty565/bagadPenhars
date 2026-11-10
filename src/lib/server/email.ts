@@ -34,8 +34,7 @@ export interface EmailOptions {
  */
 export async function sendEmail(options: EmailOptions) {
 	const resendClient = getResend();
-	const from =
-		process.env.CONTACT_FROM || process.env.CONTACT_EMAIL || 'noreply@bagadpenhars.fr';
+	const from = process.env.CONTACT_FROM || process.env.CONTACT_EMAIL || 'noreply@bagadpenhars.fr';
 
 	const result = await resendClient.emails.send({
 		from,

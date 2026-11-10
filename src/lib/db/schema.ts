@@ -17,18 +17,9 @@ import { relations } from 'drizzle-orm';
 // Énumérations métier (PostgreSQL ENUM)
 // ---------------------------------------------------------------------------
 
-export const accountStatusEnum = pgEnum('account_status', [
-	'pending',
-	'active',
-	'suspended'
-]);
+export const accountStatusEnum = pgEnum('account_status', ['pending', 'active', 'suspended']);
 
-export const appRoleEnum = pgEnum('app_role', [
-	'member',
-	'chef_pupitre',
-	'secretaire',
-	'admin'
-]);
+export const appRoleEnum = pgEnum('app_role', ['member', 'chef_pupitre', 'secretaire', 'admin']);
 
 export const eventTypeEnum = pgEnum('event_type', [
 	'sortie',
@@ -42,11 +33,7 @@ export const eventTypeEnum = pgEnum('event_type', [
 	'repas'
 ]);
 
-export const eventVisibilityEnum = pgEnum('event_visibility', [
-	'public',
-	'interne',
-	'pupitre'
-]);
+export const eventVisibilityEnum = pgEnum('event_visibility', ['public', 'interne', 'pupitre']);
 
 export const responseStatusEnum = pgEnum('response_status', ['present', 'absent']);
 
@@ -236,9 +223,7 @@ export const invitationPupitres = pgTable(
 			.references(() => pupitres.id, { onDelete: 'cascade' })
 	},
 	(table) => ({
-		invitationIdx: index('invitation_pupitres_invitation_id_idx').on(
-			table.invitation_id
-		),
+		invitationIdx: index('invitation_pupitres_invitation_id_idx').on(table.invitation_id),
 		pupitreIdx: index('invitation_pupitres_pupitre_id_idx').on(table.pupitre_id)
 	})
 );
@@ -292,8 +277,7 @@ export const eventResponses = pgTable(
 		event_id: uuid('event_id')
 			.notNull()
 			.references(() => events.id, { onDelete: 'cascade' }),
-		profile_id: uuid('profile_id')
-			.references(() => profiles.id, { onDelete: 'set null' }),
+		profile_id: uuid('profile_id').references(() => profiles.id, { onDelete: 'set null' }),
 		status: responseStatusEnum('status').notNull(),
 		created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 		updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
@@ -416,9 +400,7 @@ export const notificationPreferences = pgTable(
 			.unique(),
 		events_enabled: boolean('events_enabled').notNull().default(true),
 		reminders_enabled: boolean('reminders_enabled').notNull().default(true),
-		no_response_reminder_enabled: boolean('no_response_reminder_enabled')
-			.notNull()
-			.default(true),
+		no_response_reminder_enabled: boolean('no_response_reminder_enabled').notNull().default(true),
 		created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 		updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
 	},
@@ -431,10 +413,9 @@ export const notificationLog = pgTable(
 	'notification_log',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
-		recipient_profile_id: uuid('recipient_profile_id').references(
-			() => profiles.id,
-			{ onDelete: 'set null' }
-		),
+		recipient_profile_id: uuid('recipient_profile_id').references(() => profiles.id, {
+			onDelete: 'set null'
+		}),
 		type: varchar('type', { length: 50 }).notNull(),
 		title: varchar('title', { length: 200 }).notNull(),
 		content: text('content').notNull(),
@@ -442,9 +423,7 @@ export const notificationLog = pgTable(
 		status: varchar('status', { length: 50 }).notNull().default('sent')
 	},
 	(table) => ({
-		recipientIdx: index('notification_log_recipient_profile_id_idx').on(
-			table.recipient_profile_id
-		),
+		recipientIdx: index('notification_log_recipient_profile_id_idx').on(table.recipient_profile_id),
 		typeIdx: index('notification_log_type_idx').on(table.type),
 		sentAtIdx: index('notification_log_sent_at_idx').on(table.sent_at)
 	})
@@ -483,9 +462,7 @@ export const accountDeletionRequests = pgTable(
 		admin_note: text('admin_note')
 	},
 	(table) => ({
-		profileIdx: index('account_deletion_requests_profile_id_idx').on(
-			table.profile_id
-		),
+		profileIdx: index('account_deletion_requests_profile_id_idx').on(table.profile_id),
 		statusIdx: index('account_deletion_requests_status_idx').on(table.status)
 	})
 );
@@ -508,16 +485,13 @@ export const memberLoans = pgTable(
 	})
 );
 
-export const storageUsage = pgTable(
-	'storage_usage',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		public_bytes: integer('public_bytes').notNull().default(0),
-		private_bytes: integer('private_bytes').notNull().default(0),
-		reserved_bytes: integer('reserved_bytes').notNull().default(0),
-		updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
-	}
-);
+export const storageUsage = pgTable('storage_usage', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	public_bytes: integer('public_bytes').notNull().default(0),
+	private_bytes: integer('private_bytes').notNull().default(0),
+	reserved_bytes: integer('reserved_bytes').notNull().default(0),
+	updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
+});
 
 // ---------------------------------------------------------------------------
 // Relations
@@ -648,15 +622,12 @@ export const mediaRelations = relations(media, ({ one }) => ({
 	})
 }));
 
-export const notificationPreferencesRelations = relations(
-	notificationPreferences,
-	({ one }) => ({
-		profile: one(profiles, {
-			fields: [notificationPreferences.profile_id],
-			references: [profiles.id]
-		})
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+	profile: one(profiles, {
+		fields: [notificationPreferences.profile_id],
+		references: [profiles.id]
 	})
-);
+}));
 
 export const notificationLogRelations = relations(notificationLog, ({ one }) => ({
 	recipient: one(profiles, {
@@ -672,15 +643,12 @@ export const activityLogRelations = relations(activityLog, ({ one }) => ({
 	})
 }));
 
-export const accountDeletionRequestsRelations = relations(
-	accountDeletionRequests,
-	({ one }) => ({
-		profile: one(profiles, {
-			fields: [accountDeletionRequests.profile_id],
-			references: [profiles.id]
-		})
+export const accountDeletionRequestsRelations = relations(accountDeletionRequests, ({ one }) => ({
+	profile: one(profiles, {
+		fields: [accountDeletionRequests.profile_id],
+		references: [profiles.id]
 	})
-);
+}));
 
 export const memberLoansRelations = relations(memberLoans, ({ one }) => ({
 	profile: one(profiles, {

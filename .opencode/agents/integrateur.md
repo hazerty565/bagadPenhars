@@ -8,7 +8,7 @@ edit:
 "package.json": allow
 "docker-compose.yml": allow
 "vite.config._": allow
-"scripts/**": allow
+"scripts/\*\*": allow
 "equipe/INTEGRATION.md": allow
 bash: allow (uniquement build/install/start)
 external_directory: deny

@@ -12,7 +12,7 @@ const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 
 export default defineConfig(
 	includeIgnoreFile(gitignorePath),
-	{ ignores: ['src/autre/**', 'docs/Archive/**'] },
+	{ ignores: ['src/autre/**', 'docs/Archive/**', 'maquette/**'] },
 	js.configs.recommended,
 	ts.configs.recommended,
 	svelte.configs.recommended,
@@ -38,6 +38,11 @@ export default defineConfig(
 				svelteConfig
 			}
 		}
+	},
+	{
+		// Scripts d'exploitation Node (CommonJS), exécutés par `node scripts/*.js`.
+		files: ['scripts/**/*.js'],
+		rules: { '@typescript-eslint/no-require-imports': 'off' }
 	},
 	{
 		// Override or add rule settings here, such as:

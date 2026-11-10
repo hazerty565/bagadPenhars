@@ -4,12 +4,12 @@ temperature: 0.2
 color: success
 permission:
 edit:
-"*": deny
+"\*": deny
 "drizzle/**": allow
 "drizzle.config.ts": allow
 "src/hooks.server.ts": allow
 "src/lib/server/**": allow
-"scripts/**": allow
+"scripts/\*\*": allow
 "package.json": allow
 bash: allow
 external_directory: deny
