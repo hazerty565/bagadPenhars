@@ -322,6 +322,14 @@ Ne pas inventer de dates, de résultats, de chiffres d'effectif ou
 d'informations historiques. Les informations doivent provenir du site
 actuel, des documents du Bagad ou être validées par le bureau.
 
+Composition livrée : hero éditorial (accroche, titre, chapeau) et photographie
+de groupe pleine largeur, section « Notre histoire » avec l'année de création
+mise en exergue et lien vers la Formation, section « Notre mission » avec une
+photographie de scène et trois repères chiffrés, bandeau marine d'appel à
+l'adhésion (Formation, Contact). Les textes proviennent de la page Bagad du site
+officiel ; les chiffres et les photographies restent à valider
+(Q-2026-11-10-08).
+
 ### 8.3 Page Formation
 
 Présenter les quatre pupitres :
@@ -375,6 +383,15 @@ et liens uniquement lorsque les éléments ont été fournis et validés.
 Prévoir les informations de contact validées par l'association et un
 formulaire accessible. Ne pas inventer d'adresse, de numéro ou d'adresse
 électronique.
+
+Composition livrée : hero éditorial, formulaire (nom, prénom, courriel, sujet,
+message) avec libellés visibles, erreurs par champ et vérification anti-robots
+Cloudflare Turnstile, encart de coordonnées (adresse, courriel, horaires) puis
+carte OpenStreetMap avec liens vers OpenStreetMap, Google Maps et Apple Maps. La
+carte reste en retrait du formulaire
+sur mobile et son marqueur n'est pas un relevé de l'association tant que
+l'adresse n'est pas confirmée (Q-2026-11-10-05). Le formulaire ne stocke rien :
+le message part par courriel.
 
 ### 8.8 Actualités
 

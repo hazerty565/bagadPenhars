@@ -1,4 +1,4 @@
-import type { EventType, PupitreKey } from '$lib/types';
+import type { ContactSubject, EventType, PupitreKey } from '$lib/types';
 
 export type Lang = 'fr' | 'en' | 'br';
 
@@ -61,6 +61,84 @@ export interface Dictionary {
 			}
 		>;
 	};
+	formation: {
+		meta: {
+			title: string;
+			description: string;
+		};
+		eyebrow: string;
+		title: string;
+		lead: string;
+		leadMore: string;
+		ctaContact: string;
+		mascotAlt: string;
+		mascotCaption: string;
+		sectionsEyebrow: string;
+		sectionsTitle: string;
+		sectionsLead: string;
+		tagsLabel: string;
+		items: Record<
+			PupitreKey,
+			{
+				name: string;
+				breton: string;
+				role: string;
+				photoAlt: string;
+				paragraphs: string[];
+				imageAlt: string;
+				tags: string[];
+			}
+		>;
+		practical: {
+			eyebrow: string;
+			title: string;
+			lead: string;
+			points: { title: string; text: string }[];
+			note: string;
+			cta: string;
+		};
+		join: {
+			title: string;
+			text: string;
+			cta: string;
+		};
+	};
+	bagad: {
+		meta: {
+			title: string;
+			description: string;
+		};
+		eyebrow: string;
+		title: string;
+		lead: string;
+		heroAlt: string;
+		heroCaption: string;
+		history: {
+			eyebrow: string;
+			title: string;
+			foundedLabel: string;
+			paragraphs: string[];
+			cta: string;
+		};
+		mission: {
+			eyebrow: string;
+			title: string;
+			paragraphs: string[];
+			imageAlt: string;
+			caption: string;
+			cta: string;
+		};
+		figures: {
+			title: string;
+			items: { value: string; label: string }[];
+		};
+		join: {
+			title: string;
+			text: string;
+			ctaFormation: string;
+			ctaContact: string;
+		};
+	};
 	agenda: {
 		eyebrow: string;
 		title: string;
@@ -69,6 +147,85 @@ export interface Dictionary {
 		emptyTitle: string;
 		emptyText: string;
 		types: Record<EventType, string>;
+	};
+	partners: {
+		meta: {
+			title: string;
+			description: string;
+		};
+		eyebrow: string;
+		title: string;
+		lead: string;
+		cta: string;
+		support: {
+			title: string;
+			paragraphs: string[];
+			deductionIntro: string;
+			deductions: { rate: string; label: string; text: string }[];
+			thanks: string;
+		};
+		logos: {
+			eyebrow: string;
+			title: string;
+			lead: string;
+			cta: string;
+			newTab: string;
+		};
+	};
+	contact: {
+		meta: {
+			title: string;
+			description: string;
+		};
+		eyebrow: string;
+		title: string;
+		lead: string;
+		form: {
+			title: string;
+			intro: string;
+			lastName: string;
+			firstName: string;
+			email: string;
+			subject: string;
+			subjectPlaceholder: string;
+			subjects: Record<ContactSubject, string>;
+			message: string;
+			messageHint: string;
+			captcha: string;
+			captchaHelp: string;
+			captchaUnavailable: string;
+			submit: string;
+			submitting: string;
+			successTitle: string;
+			successText: string;
+			errorTitle: string;
+			errors: {
+				invalid: string;
+				captcha: string;
+				send: string;
+				unavailable: string;
+			};
+			required: string;
+			fieldError: string;
+		};
+		details: {
+			title: string;
+			addressLabel: string;
+			emailLabel: string;
+			hoursLabel: string;
+			hours: string[];
+			hoursNote: string;
+		};
+		map: {
+			title: string;
+			text: string;
+			open: string;
+			openGoogle: string;
+			openApple: string;
+			loading: string;
+			error: string;
+			marker: string;
+		};
 	};
 	gallery: {
 		eyebrow: string;

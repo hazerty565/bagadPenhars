@@ -25,6 +25,8 @@ export interface EmailOptions {
 	subject: string;
 	html: string;
 	text?: string;
+	/** Adresse à laquelle la personne qui reçoit peut répondre directement. */
+	replyTo?: string;
 }
 
 /**
@@ -32,14 +34,16 @@ export interface EmailOptions {
  */
 export async function sendEmail(options: EmailOptions) {
 	const resendClient = getResend();
-	const from = process.env.CONTACT_EMAIL || 'noreply@bagadpenhars.fr';
+	const from =
+		process.env.CONTACT_FROM || process.env.CONTACT_EMAIL || 'noreply@bagadpenhars.fr';
 
 	const result = await resendClient.emails.send({
 		from,
 		to: options.to,
 		subject: options.subject,
 		html: options.html,
-		text: options.text
+		text: options.text,
+		replyTo: options.replyTo
 	});
 
 	return result;

@@ -1,5 +1,5 @@
-<script lang="ts">
-	import { Music2, X } from 'lucide-svelte';
+﻿<script lang="ts">
+	import { Music2, X } from '@lucide/svelte';
 	import type { Dictionary } from '$lib/i18n';
 
 	let { open, onClose, t }: { open: boolean; onClose: () => void; t: Dictionary } = $props();

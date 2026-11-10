@@ -17,7 +17,10 @@ export default {
 				},
 				ivoire: '#F5F1E8',
 				sable: '#E9E1D2',
-				ardoise: '#5C6167'
+				ardoise: '#5C6167',
+				// Réservé aux messages d'erreur de formulaire : contraste 6:1 sur
+				// blanc et sur ivoire, dans la même famille chaude que l'or.
+				danger: '#9B2F26'
 			},
 			fontFamily: {
 				serif: ['"Playfair Display"', 'Georgia', 'Cambria', 'serif'],

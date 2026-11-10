@@ -177,3 +177,260 @@
 - Faire relire les textes breton et les mentions historiques par le bureau.
 - Compléter les pages publiques internes (le bagad, formation, médias,
   partenaires, contact) actuellement à l'état d'ébauche.
+
+## 2026-11-10
+
+### Page Formation publique
+
+- **Périmètre livré (branche `proto`)** :
+  `src/routes/(public)/[lang=lang]/formation/+page.svelte`, jusqu'ici réduite à
+  une ébauche, est remplacée par la page complète : hero avec mascotte,
+  présentation des quatre pupitres (rôle, photo, texte pédagogique, repères),
+  bloc « Informations pratiques » et appel à l'action vers le contact.
+- **i18n** : clé `formation` ajoutée au contrat `Dictionary` et aux trois
+  dictionnaires publics (`fr`, `en`, `br`). L'espace adhérents reste en
+  français. Le contrat des pupitres expose désormais `paragraphs: string[]`
+  (texte long, un paragraphe par entrée) et `photoAlt` en plus de `imageAlt`
+  (mascotte).
+- **Contenus** : les textes des quatre pupitres, l'introduction, les repères et
+  les informations pratiques sont repris de la page Formation du site officiel
+  `https://bagad-penhars.com/formation`. Le hero conserve son accroche d'origine
+  (`lead`) et affiche le paragraphe de présentation officiel en second
+  (`leadMore`), ce qui évite de remplacer une phrase déjà validée. Les coquilles
+  de la source ont été corrigées (« tout âges » → « tous âges », « aprenants » →
+  « apprenants », « cour d'essai » → « cours d'essai », double point final).
+  Rien n'est inventé : les tarifs, horaires, lieu et niveaux sont ceux publiés
+  par l'association, à reconfirmer avant mise en production
+  (Q-2026-11-10-01).
+- **Photos** : chaque pupitre reçoit la photographie du site officiel, servie
+  depuis `static/` — `Formation_bombarde.webp` (cours de bombarde),
+  `IMG_0874.webp` (practice chanters), `IMG_0881.webp` (practice pads),
+  `IMG_0880.webp` (grosse caisse). Le mapping est centralisé dans
+  `PUPITRE_PHOTOS` (`src/lib/data/site.ts`). Les dimensions réelles sont
+  déclarées pour éviter tout décalage de mise en page ; chaque photo est
+  cadrée en 4/3 (`object-cover`) et l'ordre texte/photo s'inverse d'un pupitre
+  à l'autre sur desktop.
+- **Mascottes** : les quatre mascottes fournies par l'association
+  (`static/mascotte_1.svg` à `mascotte_4.svg`, silhouettes vectorielles
+  1772 × 1772) illustrent un pupitre chacune — `mascotte_2` bombarde,
+  `mascotte_3` cornemuse, `mascotte_4` caisse claire, `mascotte_1` percussion.
+  Leur fond blanc est neutralisé avec `mix-blend-mode: multiply` pour qu'elles
+  se fondent dans l'ivoire du hero et le blanc des sections, sans détourage.
+  Dans les articles, chaque mascotte accompagne le titre de son pupitre
+  (56–64 px). Le SVG d'hermine dessiné plus tôt dans la session a été remplacé
+  par ces quatre fichiers.
+- **Image de hero** : le hero réunit les quatre mascottes sur une image unique,
+  `static/mascottes-groupe.svg` (1000 × 900), composée à partir des quatre
+  fichiers sources : fond blanc retiré, silhouettes recadrées sur leur boîte
+  réelle, normalisées en hauteur et posées sur deux rangs avec une ligne de sol
+  commune. Le fichier est autonome (aucune référence externe) et pèse 75 Ko.
+  Le mapping est déclaré dans `MASCOTS_GROUP` (`src/lib/data/site.ts`).
+- **Métadonnées** : titre, description, `canonical`, `hreflang` `fr`/`en`/`br`/
+  `x-default` et Open Graph renseignés depuis le dictionnaire de la langue
+  courante.
+- **Sitemap** : `/formation` n'y est pas ajouté. `src/routes/sitemap.xml/+server.ts`
+  renvoie encore un `urlset` vide pour toutes les routes ; la question est
+  globale et sera traitée en une fois, pas route par route.
+- **Validation** : `npm run check` 0 erreur, 1 avertissement préexistant
+  (`contact/+page.svelte`) ; Prettier et ESLint ciblés OK ; `npm run build` OK ;
+  rendu vérifié en `fr`, `en` et `br` (quatre pupitres, photos chargées,
+  quatre points pratiques) ; aucun débordement horizontal mesuré à 375 px.
+  Lighthouse sur `/fr/formation` : SEO 100, bonnes pratiques 100,
+  accessibilité 96 (contrastes des petits textes secondaires, identiques à
+  l'accueil).
+
+### Page Partenaires publique
+
+- **Périmètre livré (branche `proto`)** :
+  `src/routes/(public)/[lang=lang]/partenaires/+page.svelte` passe de page vide à
+  page complète : hero (accroche, appel à l'aide vers le contact, lien d'ancre),
+  section « Rejoignez le Bagad » (investissements de l'association, déductions
+  fiscales 66 % particuliers / 60 % professionnels, remerciements) et grille des
+  quatre logos partenaires.
+- **Contenus** : textes repris de `https://bagad-penhars.com/partenaires`
+  (accroche « Le Bagad Penhars vit grâce à l'énergie… », investissements, dons,
+  déductions, remerciements, bouton « Aidez-nous » → `/contact`). La page
+  officielle étant une SPA Vue, l'URL directe renvoie une 404 : le contenu a été
+  relevé depuis `/` après navigation client.
+- **Données** : `src/lib/data/partenaires.ts` remplace le tableau fictif par
+  `PARTNERS` typé (`id`, `name`, `logo`, `width`, `height`, `url`), dans l'ordre
+  officiel : Quimper, Département du Finistère, Mederien Penhars, Fenêtres de
+  toit 29 (dénomination normalisée depuis « fenetres detoit 29 »). Les logos
+  sont ceux de `static/logos/` ; leurs dimensions réelles (404 × 144, 451 × 658,
+  225 × 225, 400 × 137) sont déclarées pour réserver la place avant chargement.
+- **Logos** : rendu homogène quelle que soit l'orientation du fichier — bloc de
+  hauteur fixe (`h-24`) et `object-contain`, donc le logo du Département, très
+  vertical, n'est ni rogné ni écrasé. Logos décoratifs (`alt=""`) ; le nom
+  visible sous le logo sert de nom accessible du lien, complété par un
+  `sr-only` « — nouvel onglet ». Liens externes en
+  `target="_blank" rel="noopener noreferrer"`.
+- **i18n** : bloc `partners` ajouté au contrat `Dictionary` et aux trois
+  dictionnaires (`meta`, `eyebrow`, `title`, `lead`, `cta`, `support`,
+  `logos`). Les noms des partenaires restent en français dans les trois langues
+  (dénominations officielles).
+- **Métadonnées** : titre, description, `canonical`, `hreflang`
+  `fr`/`en`/`br`/`x-default` et Open Graph.
+- **Validation** : `npm run check` 0 erreur, 1 avertissement préexistant
+  (`contact/+page.svelte`) ; rendu vérifié en `fr`, `en` et `br` (h1, deux h2,
+  quatre logos chargés avec leurs dimensions intrinsèques, liens corrects) ;
+  aucun débordement horizontal mesuré à 375 px.
+- **Documentation** : `docs/partenaire.md` réécrit — il décrivait un format de
+  données (`nom`, `logo`, `lien`) qui n'existait pas dans le code.
+
+### Dépendance icônes : `@lucide/svelte` et logos de réseaux sociaux
+
+- **Changement de paquet** : `lucide-svelte@1.0.1` est remplacé par
+  `@lucide/svelte@1.71.0` (paquet officiel actuel ; l'ancien nom est déprécié).
+  Les onze fichiers de `src/lib` et `src/routes` qui importaient
+  `lucide-svelte` utilisent désormais `@lucide/svelte` ; aucune icône n'a changé
+  de nom. `src/autre/` (maquette de référence, exclue du build, du `tsconfig` et
+  d'ESLint) conserve ses imports d'origine et n'est pas concerné.
+- **SSR** : `@lucide/svelte` v1 publie des composants `.svelte`. Sans
+  `noExternal`, le rendu serveur échoue avec
+  `Unknown file extension ".svelte"` ; le paquet est donc ajouté à
+  `ssr.noExternal` dans `vite.config.ts`. Le serveur de développement doit être
+  redémarré après ce changement (Vite réoptimise ses dépendances).
+- **Réseaux sociaux** : `SocialIcon.svelte` n'embarque plus de tracé maison ; il
+  affiche les fichiers fournis par l'association, `static/Facebook_icon.svg` et
+  `static/instagram_icon.svg` (marques en couleur, `alt=""` car le lien porte
+  déjà son nom accessible). Le header et le footer passent une taille explicite
+  (18 px sur desktop, 16 px dans le menu mobile) et n'utilisent plus de couleur
+  de texte pour teinter l'icône.
+- **Verrouillage** : `pnpm-lock.yaml` mis à jour (`pnpm` est le gestionnaire de
+  référence du dépôt) ; `package-lock.json`, déjà désynchronisé avant cette
+  tâche (conflit de pair `zod` 3/4 entre `@better-auth/infra` et le projet), n'a
+  pas été régénéré. `pnpm-workspace.yaml` reçoit une exception
+  `minimumReleaseAge` pour `@lucide/svelte@1.71.0`.
+
+### Page Contact publique
+
+- **Périmètre livré (branche `proto`)** :
+  `src/routes/(public)/[lang=lang]/contact/+page.svelte` remplace l'ébauche par
+  une page complète : hero éditorial, formulaire accessible, encart de
+  coordonnées et carte OpenStreetMap. Aucune donnée du formulaire n'est stockée
+  en base : le message part par courriel.
+- **i18n** : clé `contact` ajoutée au contrat `Dictionary` et aux trois
+  dictionnaires (`fr`, `en`, `br`), y compris les libellés des sujets et les
+  messages d'erreur. Les cinq sujets (`adhesion`, `information`,
+  `partenariat`, `prestation`, `autre`) sont définis une seule fois dans
+  `src/lib/types.ts` (`CONTACT_SUBJECTS`) et postés en valeurs stables : le
+  schéma Zod et l'action serveur ne dépendent donc jamais d'un libellé traduit.
+- **Schéma et tests** : `contact/schema.ts` (Zod : nom, prénom, courriel,
+  sujet, message de 10 à 5000 caractères, champs rognés) partagé par le
+  navigateur et le serveur ; `contact.test.ts` couvre le message valide, le
+  rognage, le courriel invalide, le sujet inconnu et les champs vides ou remplis
+  d'espaces (6 tests).
+- **Turnstile** : le widget est rendu explicitement (`render: 'explicit'`) parce
+  que la navigation interne de SvelteKit ne rejoue pas le scan automatique du
+  script. Le jeton vit dans un champ caché, est remis à zéro après un échec
+  (un jeton est à usage unique) et le bouton reste désactivé tant qu'il manque.
+  `$lib/server/turnstile.ts` vérifie le jeton auprès de Cloudflare et **échoue
+  de manière fermée** : secret absent, jeton manquant, réponse ambiguë ou réseau
+  injoignable refusent l'envoi, avec un repli affiché vers l'adresse électronique
+  de l'association. La clé secrète ne quitte jamais le serveur ; le `load` ne
+  transmet que la clé publique.
+- **Envoi** : ordre volontaire — validation des champs, vérification Turnstile,
+  message à l'association (avec `replyTo` de l'expéditeur pour répondre
+  directement), puis accusé de réception. Si l'envoi à l'association échoue,
+  aucun accusé n'est envoyé ; un échec de l'accusé n'est pas bloquant. Le
+  message HTML est échappé avant insertion dans le courriel.
+- **Erreurs** : l'action renvoie des codes (`invalid`, `captcha`, `send`,
+  `unavailable`) et la page les traduit ; les messages Zod ne sont jamais
+  affichés bruts. Un message localisé est posé par champ (`fieldError`), avec
+  `aria-invalid` et `aria-describedby`. Les valeurs saisies sont renvoyées en
+  cas d'échec pour ne pas perdre le texte.
+- **Carte** : `src/lib/components/shared/Map.svelte` charge Leaflet à la demande
+  dans `onMount` (jamais en SSR), affiche les tuiles OpenStreetMap avec
+  l'attribution obligatoire, un marqueur or/marine en `divIcon`, respecte
+  `prefers-reduced-motion` et propose trois liens externes pour ouvrir le lieu
+  dans OpenStreetMap, Google Maps (lien universel `google.com/maps/search/?api=1`,
+  identique sur mobile et sur le web) ou Apple Maps (`maps.apple.com`, utilisé
+  par iOS et macOS). Le
+  marqueur est placé d'après le géocodage Nominatim de « 6 Avenue des Oiseaux,
+  29000 Quimper » (47,9920253 / −4,1209120, zoom 16) — à reconfirmer
+  (Q-2026-11-10-05).
+- **Dépendances** : `leaflet@1.9.4` et `@types/leaflet@1.9.22` (types
+  uniquement en développement). Aucune autre dépendance ajoutée.
+- **Thème** : nouveau token `danger: '#9B2F26'` dans `tailwind.config.js`, pour
+  les messages d'erreur (contraste ~6:1 sur blanc et sur ivoire). Il n'existait
+  aucun rouge dans la palette.
+- **Pièges rencontrés** :
+  - Leaflet est pré-bundlé par Vite en UMD : le namespace importé n'expose que
+    `default`, pas les exports nommés. Le composant passe donc par
+    `leaflet.default ?? leaflet`.
+  - Les clés Turnstile de `.env` sont des clés de production limitées au domaine
+    `bagad-penhars.com` : sur `localhost`, `render` ne produit aucun iframe et
+    `error-callback` déclenche le repli. Le chemin de rendu a été vérifié avec la
+    clé de test `1x00000000000000000000AA`. À traiter en Q-2026-11-10-06.
+  - `CONTACT_EMAIL` (`@gmail.com`) ne peut pas servir d'expéditeur Resend : une
+    variable `CONTACT_FROM` a été ajoutée (`.env.example`), avec repli sur
+    `CONTACT_EMAIL`. Toujours en Q-2026-11-10-06.
+- **Coordonnées affichées** : Espace Chaptal, 6 avenue des Oiseaux, 29000 Quimper,
+  courriel de l'association, et trois plages horaires — mardi 17 h – 21 h,
+  vendredi 20 h – 22 h 30 et samedi 15 h – 17 h 30 (le vendredi corrigé et le
+  samedi ajouté sur demande le 2026-11-10, dans les trois langues). Elles
+  restent à confirmer (Q-2026-11-10-05).
+- **Documentation** : `docs/architecture.md` décrit la route `/contact`, son
+  `load`, son action et la carte ; `docs/questions.md` reçoit Q-2026-11-10-05
+  (coordonnées, horaires, marqueur), -06 (expéditeur Resend et clés Turnstile)
+  et -07 (route vestige).
+- **Vérifications** : `npm run check` 0 erreur, 0 avertissement ; test Vitest du
+  schéma OK ; Prettier et ESLint ciblés OK. Rendu contrôlé sur
+  `/fr/contact`, `/en/contact` et `/br/contact` : 200, titres et contenus
+  corrects, carte opérationnelle (18 tuiles chargées, 1 marqueur, 480 px en
+  desktop / 320 px en mobile), aucun débordement horizontal à 375 px. Action
+  testée en direct : champs vides → `invalid` + erreurs par champ ; message
+  valide sans jeton → `captcha`. L'envoi Resend de bout en bout n'a pas été
+  exercé, pour ne pas émettre de vrais courriels.
+
+### Page Bagad publique
+
+- **Périmètre livré (branche `proto`)** :
+  `src/routes/(public)/[lang=lang]/bagad/+page.svelte`, jusqu'ici vide, est
+  remplacée par une page complète : hero éditorial suivi de la photographie de
+  groupe, section « Notre histoire » avec l'année de création en exergue,
+  section « Notre mission » avec une photographie de scène et trois repères
+  chiffrés, bandeau marine d'appel à l'adhésion. `+page.server.ts` reste
+  inchangé (il ne renvoie rien ; la langue vient du layout).
+- **Contenus** : textes repris de la page Bagad du site officiel
+  `https://bagad-penhars.com/bagad` (histoire, mission, invitation à rejoindre),
+  avec les appels à l'action de la même page. Rien n'est inventé : les repères
+  chiffrés (4 instruments enseignés, 25+ musiciens actifs, 100+ concerts et
+  festivals) sont ceux publiés par l'association et restent à confirmer
+  (Q-2026-11-10-08).
+- **Ancienneté** : la page n'affiche que `1985` (lu depuis `site.foundedYear`)
+  et « Année de création ». Le site officiel annonce à la fois « 40+ ans
+  d'expérience » et « 40 années d'existence », incohérent avec une création en
+  1985 (41 ans en 2026) : aucun nombre d'années n'est donc affiché en dur. La
+  question est posée (Q-2026-11-10-08).
+- **Photographies** : `static/groupe_bagad.webp` (1436 × 957) en ouverture,
+  `static/couple_joueur.webp` (2048 × 1365) pour la mission ; les deux étaient
+  déjà dans le dépôt. Dimensions réelles déclarées, cadre doré décalé identique
+  aux pages Formation, légende sous chaque image, texte alternatif descriptif
+  (les personnes et les instruments sont nommés). La photographie de groupe
+  porte le filigrane du photographe : l'accord et le crédit restent à valider
+  (Q-2026-11-10-08).
+- **i18n** : clé `bagad` ajoutée au contrat `Dictionary` et aux trois
+  dictionnaires publics (`fr`, `en`, `br`). Aucune chaîne d'interface en dur
+  dans la page. Les textes bretons sont à relire par un locuteur natif.
+- **Métadonnées** : titre, description, `canonical`, `hreflang` `fr`/`en`/`br`/
+  `x-default` et Open Graph renseignés depuis le dictionnaire de la langue
+  courante.
+- **Validation** : `npm run check` 0 erreur, 0 avertissement ; Prettier OK ;
+  rendu vérifié en `fr`, `en` et `br` (trois h2, deux photographies chargées,
+  quatre liens internes) ; aucun débordement horizontal mesuré à 375 px.
+
+### Reste à faire
+
+- Faire reconfirmer par le bureau les informations pratiques reprises du site
+  officiel (niveaux, lieu, horaires, tarifs) et valider la mascotte.
+- Faire confirmer par le bureau la liste des partenaires, leurs liens et
+  l'orthographe « Fenêtres de toit 29 », ainsi que l'autorisation d'usage de
+  chaque logo (Q-2026-11-10-04).
+- Déposer les photographies `Formation_*.webp` manquantes : seule
+  `Formation_bombarde.webp` est présente, les trois autres pupitres utilisent
+  pour l'instant `IMG_0874.webp`, `IMG_0881.webp` et `IMG_0880.webp`.
+- Faire relire les textes bretons par un locuteur natif.
+- Faire valider les chiffres, les photographies et le crédit photo de la page
+  Bagad (Q-2026-11-10-08).
+- Traiter le sitemap globalement (toutes les routes publiques, toutes langues).

@@ -449,3 +449,59 @@ Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur
 - **Problème :** le lecteur flottant est livré en état vide honnête (« Aucune piste publiée ») car aucun fichier audio n'est présent dans le dépôt.
 - **Pourquoi :** l'étape 32 du plan (lecteur audio) ne peut pas être finalisée sans pistes, titres, durées et droits de diffusion.
 - **Proposition :** fournir les fichiers (MP3/OGG) et leurs métadonnées, ou valider que le lecteur reste en état vide jusqu'à l'étape 32.
+
+### Q-2026-11-10-01 — Informations pratiques de la page Formation
+
+- **Date :** 2026-11-10
+- **Problème :** `docs/maquette_UI.md` §8.3 demande de présenter, pour chaque pupitre, les instruments, les niveaux, le contenu des cours, les horaires, le lieu et les modalités de prêt d'instrument. Ces informations ne sont pas dans le dépôt ; elles ont été reprises de la page Formation du site officiel `https://bagad-penhars.com/formation` (niveaux dès 8 ans et adultes ; Espace Chaptal, 6 avenue des Oiseaux, 29000 Quimper ; mardi 17 h–21 h ; 210 € nouveaux apprenants avec prêt d'instrument la première année, 90 € cotisation bagad sans les cours Sonerion, 60 € sympathisant ; cours d'essai gratuit).
+- **Pourquoi :** ces montants et ces horaires engagent l'association. Le site officiel peut être obsolète, et une page Formation qui annoncerait un tarif ou un horaire périmé induirait en erreur les personnes qui veulent rejoindre le bagad.
+- **Proposition :** faire reconfirmer par le bureau les quatre points repris (niveaux, lieu, horaires, tarifs), en particulier la distinction entre cotisation bagad et cotisation sympathisant, puis indiquer la date de dernière mise à jour à afficher.
+
+### Q-2026-11-10-02 — Mascottes du site
+
+- **Date :** 2026-11-10
+- **Problème :** aucune charte ne prévoit de mascotte. L'association a fourni quatre silhouettes vectorielles de cerf (`static/mascotte_1.svg` à `mascotte_4.svg`), une par pupitre, désormais intégrées à la page Formation.
+- **Pourquoi :** une mascotte devient un signe de reconnaissance de l'association ; elle doit être validée comme telle, et son usage (taille, présence sur les autres pages, éventuel logo dérivé) doit être tranché.
+- **Proposition :** valider la mascotte cerf et sa déclinaison par pupitre, puis décider de son emploi hors de la page Formation. Le hero de la page Formation réunit désormais les quatre silhouettes sur une image composée (`static/mascottes-groupe.svg`) : confirmer que cette composition convient, ou fournir une illustration de groupe dessinée comme telle.
+
+### Q-2026-11-10-03 — Photographies des pupitres
+
+- **Date :** 2026-11-10
+- **Problème :** la page Formation devait utiliser les fichiers `Formation_*.webp` du dossier `static/`. Seul `Formation_bombarde.webp` est présent (renommé depuis `IMG_0873.webp`, la photo officielle de la bombarde). Les trois autres pupitres utilisent provisoirement les photographies du site officiel déjà déposées : `IMG_0874.webp` (cornemuse, practice chanters), `IMG_0881.webp` (caisse claire, practice pads) et `IMG_0880.webp` (percussions, grosse caisse).
+- **Pourquoi :** ces trois images ne suivent pas la convention `Formation_*` et pourraient être remplacées par de meilleures prises de vue ; il faut aussi s'assurer des autorisations de diffusion des personnes reconnaissables.
+- **Proposition :** déposer les fichiers `Formation_cornemuse.webp`, `Formation_caisse-claire.webp` et `Formation_percussion.webp`, ou valider définitivement les trois images actuelles ; confirmer les autorisations à l'image.
+
+### Q-2026-11-10-04 — Partenaires : liste, liens et usage des logos
+
+- **Date :** 2026-11-10
+- **Problème :** la page Partenaires affiche quatre structures reprises de la page officielle `https://bagad-penhars.com/partenaires` — Quimper, Département du Finistère, Mederien Penhars et « fenetres detoit 29 » — avec les logos fournis dans `static/logos/` et un lien vers le site de chacune. Le nom du quatrième partenaire a été normalisé en « Fenêtres de toit 29 ».
+- **Pourquoi :** `docs/maquette_UI.md` §8.6 n'autorise à publier un logo et un lien que s'ils ont été fournis et validés. La liste, les URL et l'orthographe des noms n'ont pas été reconfirmées par le bureau, et l'autorisation d'usage de chaque logo n'est pas formalisée.
+- **Proposition :** faire valider par le bureau la liste des quatre partenaires, l'ordre d'affichage, l'orthographe « Fenêtres de toit 29 », les quatre URL et l'accord de chaque partenaire pour l'affichage de son logo ; préciser s'il faut ajouter une catégorie (institutionnel, association, entreprise).
+
+### Q-2026-11-10-05 — Coordonnées et horaires affichés sur la page Contact
+
+- **Date :** 2026-11-10
+- **Problème :** la page Contact affiche l'adresse (Espace Chaptal, 6 avenue des Oiseaux, 29000 Quimper), le courriel `bagadpenhars@gmail.com` et les horaires « Mardi 17 h – 21 h », « Vendredi 20 h – 22 h 30 » et « Samedi 15 h – 17 h 30 ». Le mardi est repris de `https://bagad-penhars.com/contact` et de la page Formation du site officiel ; le vendredi et le samedi ont été corrigés ou ajoutés sur demande le 2026-11-10 et ne correspondent plus au site officiel (qui indique 18 h – 21 h le vendredi et pas de samedi). Aucun de ces éléments n'est encore reconfirmé par écrit, et seule la journée du mardi est décrite dans les informations pratiques de la formation.
+- **Pourquoi :** une adresse, un horaire ou une adresse électronique erronés sont visibles immédiatement et empêchent les visiteurs de joindre l'association. La carte place le marqueur au 6 avenue des Oiseaux d'après le géocodage OpenStreetMap (47,9920253 / −4,1209120), pas d'après un relevé de l'association.
+- **Proposition :** confirmer l'adresse complète, le nom du lieu (« Espace Chaptal »), l'adresse de réception des messages, les trois plages horaires (mardi, vendredi et samedi) et la position exacte du marqueur ; préciser aussi si les horaires concernent les cours, les répétitions ou l'accueil du public.
+
+### Q-2026-11-10-06 — Expéditeur Resend et clés Turnstile par environnement
+
+- **Date :** 2026-11-10
+- **Problème :** l'envoi Resend utilise aujourd'hui `CONTACT_EMAIL` comme adresse d'expédition (`from`). Or cette variable désigne l'adresse de réception (`bagadpenhars@gmail.com`) : Resend refuse d'expédier depuis une adresse dont le domaine n'est pas authentifié, et un expéditeur `@gmail.com` ne peut pas l'être. Par ailleurs les clés Turnstile présentes dans `.env` semblent être celles de production, limitées au domaine `bagad-penhars.com` : le widget peut donc refuser de s'afficher sur `localhost` ou sur une URL de préversion Cloudflare Pages.
+- **Pourquoi :** sans expéditeur vérifié, aucun message ne part en production ; sans clés de test, le formulaire ne peut pas être vérifié de bout en bout en développement ni en préversion.
+- **Proposition :** créer un domaine d'envoi authentifié chez Resend (par exemple `bagad-penhars.com`) et renseigner une variable `CONTACT_FROM` dédiée (déjà prévue dans `.env.example`, avec repli sur `CONTACT_EMAIL`). Fournir en complément les clés Turnstile de test ou autoriser `localhost` et les domaines `*.pages.dev` sur le widget de production. Confirmer que l'adresse d'expédition peut différer de l'adresse de réception.
+
+### Q-2026-11-10-07 — Ancienne route de contact issue du squelette
+
+- **Date :** 2026-11-10
+- **Problème :** `src/routes/public/[lang=lang]/contact/` subsiste à côté de la route réelle `src/routes/(public)/[lang=lang]/contact/`. Ce vestige du squelette expose une page à l'URL `/public/fr/contact`, poste vers `/api/[lang=lang]/contact` (endpoint inexistant), contient un gestionnaire inutilisé et une balise `<token-input>` inconnue. Il ne fait pas partie du site livré mais il est compilé et déclenche une erreur ESLint.
+- **Pourquoi :** une route morte qui répond et un formulaire factice peuvent être indexés ou confondre un futur intervenant ; `AGENTS.md` demande par ailleurs de ne pas supprimer un fichier sans l'avoir compris.
+- **Proposition :** supprimer le dossier `src/routes/public/` (vestige) après validation, ou confirmer qu'il sert encore de référence. En attendant, seule la balise auto-fermante a été corrigée pour ne plus produire d'avertissement de compilation.
+
+### Q-2026-11-10-08 — Chiffres, photos et ancienneté de la page Bagad
+
+- **Date :** 2026-11-10
+- **Problème :** la page Bagad reprend du site officiel les textes de présentation, les chiffres « 25+ musiciens actifs » et « 100+ concerts et festivals », et deux photographies (`groupe_bagad.webp`, `couple_joueur.webp`) dont la première porte un filigrane de photographe (« Bazotos Création »). Le site officiel affiche aussi « 40+ ans d'expérience » et « 40 années d'existence », ce qui ne correspond pas à une création en 1985 (41 ans en 2026) ; la page livrée n'affiche donc que « 1985 — année de création », sans nombre d'années.
+- **Pourquoi :** un effectif, un nombre de concerts ou une ancienneté erronés sont des affirmations visibles qui engagent l'association ; publier une photographie sans accord ni crédit pose en plus une question de droits.
+- **Proposition :** confirmer l'année de création, les deux chiffres, l'autorisation de publier les deux photographies et le crédit à afficher (ou fournir des photos sans filigrane). Décider enfin comment exprimer l'ancienneté : année de création seule (état actuel), formule « depuis 1985 », ou nombre d'années calculé automatiquement.

@@ -39,6 +39,19 @@ fonction soit complète.
   médias, les partenaires et le contact. La page d'accueil est composée de
   `src/lib/components/home/` et partage le header/footer de
   `src/lib/components/layout/`.
+- `/(public)/[lang=lang]/bagad` : page de présentation de l'association. Contenu
+  éditorial statique (histoire, mission, repères chiffrés, invitation à
+  rejoindre) servi depuis les dictionnaires i18n ; aucune donnée en base. Les
+  photographies sont des fichiers de `static/`.
+- `/(public)/[lang=lang]/contact` : page Contact. Le `load` ne transmet que la
+  clé publique Turnstile (`turnstileSiteKey()`); l'action `send` valide les
+  champs avec Zod (`schema.ts`), vérifie le jeton auprès de Cloudflare
+  (`$lib/server/turnstile.ts`), envoie le message à l'association via Resend
+  (`$lib/server/email.ts`) puis un accusé de réception à l'expéditeur — jamais
+  l'inverse. La carte est le composant `$lib/components/shared/Map.svelte`
+  (Leaflet chargé à la demande, tuiles OpenStreetMap) et n'entre pas dans le
+  rendu serveur. La page est servie par Cloudflare Pages ; aucune donnée du
+  formulaire n'est stockée en base.
 - `/auth/...` : connexion, déconnexion, invitation, attente, mot de passe
   oublié et réinitialisation.
 - `/auth/...` et `/api/auth/...` : pages et endpoint Better Auth pour la

@@ -1,5 +1,5 @@
-<script lang="ts">
-	import { ArrowRight, Mail } from 'lucide-svelte';
+﻿<script lang="ts">
+	import { ArrowRight, Mail } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import Ornament from '$lib/components/ui/Ornament.svelte';
 	import type { Dictionary, Lang } from '$lib/i18n';

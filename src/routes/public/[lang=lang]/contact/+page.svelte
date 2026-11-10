@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	const handleSubmit = (e: Event) => {
 		e.preventDefault();
 		const target = e.target as HTMLFormElement;
@@ -21,7 +21,7 @@
 			.then((response) => response.json())
 			.then((data) => {
 				if (data.success) {
-					alert('Votre message a été envoyé avec succès.');
+					alert('Votre message a Ã©tÃ© envoyÃ© avec succÃ¨s.');
 					target.reset();
 				} else {
 					alert('Erreur : ' + (data.error || 'Inconnu'));
@@ -54,7 +54,7 @@
 
 	<div class="mb-4">
 		<div class="flex items-center">
-			<token-input name="token" />
+			<token-input name="token"></token-input>
 		</div>
 	</div>
 

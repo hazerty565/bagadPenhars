@@ -1,5 +1,5 @@
-<script lang="ts">
-	import { ArrowUpRight, CalendarDays } from 'lucide-svelte';
+﻿<script lang="ts">
+	import { ArrowUpRight, CalendarDays } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import { LOCALES, type Dictionary, type Lang } from '$lib/i18n';
 	import type { PublicEvent } from '$lib/types';

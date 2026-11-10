@@ -81,6 +81,184 @@ const fr: Dictionary = {
 			}
 		}
 	},
+	formation: {
+		meta: {
+			title: 'Formation — Bagad Penhars',
+			description:
+				'Bombarde, cornemuse, caisse claire et percussion : découvrez les quatre pupitres du Bagad Penhars, les cours à Quimper et le prêt d’instrument.'
+		},
+		eyebrow: 'Transmission',
+		title: 'Apprendre, transmettre, sonner ensemble',
+		lead: 'Le Bagad Penhars accueille débutants et musiciens confirmés. Chaque pupitre a sa voix, son répertoire et ses gestes ; tous se retrouvent pour faire vivre la musique bretonne.',
+		leadMore:
+			'La formation est au cœur de notre projet associatif. Nous accueillons les musiciens de tous âges et de tous niveaux pour leur transmettre la richesse de la musique bretonne. Notre objectif : former des sonneurs compétents et passionnés, capables de s’épanouir au sein du bagad et sur la scène musicale bretonne.',
+		ctaContact: 'Nous écrire',
+		mascotAlt:
+			'Les quatre mascottes du Bagad Penhars : bombarde, cornemuse, caisse claire et percussions',
+		mascotCaption: 'Les quatre mascottes du bagad.',
+		sectionsEyebrow: 'Les quatre pupitres',
+		sectionsTitle: 'Une place pour chaque musicien',
+		sectionsLead: 'Découvrez l’instrument, la pédagogie et l’esprit de chaque pupitre.',
+		tagsLabel: 'En bref',
+		items: {
+			bombarde: {
+				name: 'Bombarde',
+				breton: 'Bombard',
+				role: 'La voix mélodique',
+				photoAlt:
+					'Un cours de bombarde au Bagad Penhars : quatre personnes assises autour de tables jouent du hautbois breton',
+				paragraphs: [
+					'La bombarde est un instrument à vent emblématique de la musique bretonne. Appartenant à la famille des bois, elle se distingue par sa sonorité puissante et expressive, capable de porter loin en extérieur comme en salle.',
+					'Dans le bagad, elle forme le pupitre mélodique principal aux côtés des cornemuses, offrant un son riche et éclatant.',
+					'L’apprentissage débute souvent avec un bec d’étude ou une petite bombarde, afin de travailler le souffle, la justesse et la maîtrise de l’anche avant de passer à l’instrument complet.',
+					'Dès les premiers cours, l’élève apprend les bases du jeu : position, émission du son et ornementation, puis progresse vers les airs du répertoire traditionnel.',
+					'Le travail du solfège mélodique accompagne la pratique instrumentale pour favoriser une progression harmonieuse.',
+					'Si la bombarde brille dans le jeu collectif du bagad, elle s’exprime aussi en duo avec la cornemuse, en ensemble de bombardes ou encore dans des formations modernes mêlant musiques bretonnes et contemporaines.',
+					'Par sa puissance, sa richesse sonore et son caractère affirmé, la bombarde incarne à elle seule toute l’énergie et la fierté de la tradition musicale bretonne.'
+				],
+				imageAlt: 'Mascotte du Bagad Penhars : un cerf aux grands bois joue de la bombarde',
+				tags: [
+					'Cours individuels et collectifs',
+					'Apprentissage des airs traditionnels',
+					'Technique de respiration'
+				]
+			},
+			cornemuse: {
+				name: 'Cornemuse écossaise',
+				breton: 'Binioù bras',
+				role: 'Le souffle du bagad',
+				photoAlt:
+					'Un cours de cornemuse au Bagad Penhars : trois élèves travaillent le practice chanter autour d’une table',
+				paragraphs: [
+					'La cornemuse est l’un des instruments phares du bagad et sans doute le plus emblématique de la musique celtique. Instrument à vent à anche, elle se distingue par son timbre puissant et continu, produit grâce à un système de soufflet et de réservoir d’air (le sac).',
+					'Dans le bagad, la cornemuse forme la base mélodique de l’ensemble, jouant souvent à l’unisson pour créer un son riche et harmonieux.',
+					'L’apprentissage commence par la pratique du practice chanter, un instrument d’étude plus doux permettant de travailler la justesse, le doigté et les ornementations avant de passer à la cornemuse complète.',
+					'Les élèves y apprennent progressivement les ornements caractéristiques — gracenotes, doublings, taorluaths — qui donnent toute sa couleur au jeu écossais et breton.',
+					'Le travail du souffle, de la posture et de la synchronisation avec les autres pupitres est essentiel pour atteindre la cohésion sonore propre au bagad.',
+					'En dehors du jeu collectif, la cornemuse peut également s’exprimer en solo ou en petit ensemble, notamment dans les formules inspirées des pipe bands écossais.',
+					'Alliant tradition et modernité, la cornemuse reste un symbole fort de la culture bretonne et continue de faire vibrer les scènes du monde entier.'
+				],
+				imageAlt: 'Mascotte du Bagad Penhars : un cerf aux grands bois joue de la cornemuse',
+				tags: [
+					'Maîtrise du souffle continu',
+					'Technique des doigtés',
+					'Répertoire écossais et breton'
+				]
+			},
+			caisseClaire: {
+				name: 'Caisse claire',
+				breton: 'Taboulin-snare',
+				role: 'Le rythme et la cadence',
+				photoAlt:
+					'Un cours de caisse claire au Bagad Penhars : six élèves travaillent les rudiments sur des practice pads',
+				paragraphs: [
+					'La caisse claire est une percussion mais, contrairement aux autres percussions du bagad, elle est jouée à l’unisson par plusieurs batteurs.',
+					'L’apprentissage se fait sur un instrument d’étude appelé « practice pad » (ou « pad »), qui développe moins de puissance sonore et permet de répéter assis. Travail sur pad et travail sur instrument se font donc en parallèle dès les premiers cours.',
+					'L’élève apprend tout d’abord à tenir les baguettes en travaillant des exercices simples lui permettant de comprendre l’importance de sa frappe dans le son.',
+					'Puis, progressivement, il aborde les différents motifs techniques propres à la caisse claire : fla, drags, roulements, etc.',
+					'L’apprentissage du solfège rythmique est intégré aux cours instrumentaux et permet très rapidement d’aborder des partitions simples.',
+					'Outre le jeu en bagad, la caisse claire permet de s’exprimer en soliste et en ensemble caisses claires / percussions.',
+					'La technique instrumentale ayant été développée par les batteurs de pipe bands écossais et irlandais, la formule « pipe band » (ensemble cornemuse / caisses claires / percussions) lui convient particulièrement.',
+					'Le son spécifique de l’instrument et le volume dégagé par un ensemble de plusieurs batteurs permettent aussi à la caisse claire de trouver sa place dans diverses formules musicales (jazz, rock, etc.).',
+					'Elle est également utilisée par les marching bands (ensembles de percussions de défilé), avec une technique un peu différente et très spectaculaire.'
+				],
+				imageAlt: 'Mascotte du Bagad Penhars : un cerf aux grands bois joue de la caisse claire',
+				tags: ['Rudiments de base', 'Roulements traditionnels', 'Synchronisation d’ensemble']
+			},
+			percussion: {
+				name: 'Percussions',
+				breton: 'Percussionoù',
+				role: 'La base rythmique',
+				photoAlt:
+					'Une grosse caisse du Bagad Penhars, frappée par une percussionniste lors d’une sortie',
+				paragraphs: [
+					'Tambours, grosses caisses et autres percussions complètent l’ensemble rythmique. Une section dynamique qui demande précision et coordination.'
+				],
+				imageAlt: 'Mascotte du Bagad Penhars : un cerf aux grands bois frappe une grosse caisse',
+				tags: [
+					'Grosse caisse, tambour et cymbales',
+					'Techniques de frappe',
+					'Coordination rythmique'
+				]
+			}
+		},
+		practical: {
+			eyebrow: 'Informations pratiques',
+			title: 'Venir essayer',
+			lead: 'Les cours se déroulent à Quimper, ouverts aux débutants comme aux musiciens déjà formés.',
+			points: [
+				{
+					title: 'Niveaux',
+					text: 'Cours adaptés à tous les niveaux, à partir de 8 ans, et aux adultes.'
+				},
+				{
+					title: 'Lieu des cours',
+					text: 'Espace Chaptal, 6 avenue des Oiseaux, 29000 Quimper.'
+				},
+				{
+					title: 'Horaires',
+					text: 'Les cours ont lieu le mardi entre 17 h et 21 h. Les horaires précis sont définis en début d’année avec les formateurs.'
+				},
+				{
+					title: 'Tarifs',
+					text: 'Adhésion annuelle de 210 € pour les nouveaux apprenants, cours et prêt d’instrument la première année compris. 90 € pour la cotisation bagad, sans les cours des professeurs Sonerion. 60 € pour la cotisation sympathisant.'
+				}
+			],
+			note: 'Pour toute question ou pour vous inscrire, n’hésitez pas à nous contacter. Nous serons ravis de vous accueillir.',
+			cta: 'Poser une question'
+		},
+		join: {
+			title: 'Prêt à commencer ?',
+			text: 'Contactez-nous pour réserver votre cours d’essai gratuit.',
+			cta: 'Réserver un cours d’essai'
+		}
+	},
+	bagad: {
+		meta: {
+			title: 'Le Bagad — Bagad Penhars',
+			description:
+				'Fondé en 1985, le Bagad Penhars fait vivre la musique traditionnelle bretonne à Quimper : bombardes, cornemuses, caisses claires et percussions, en concours comme en fest-noz.'
+		},
+		eyebrow: 'Le Bagad',
+		title: 'Le Bagad Penhars',
+		lead: 'Fondé en 1985, le Bagad Penhars fait vivre la musique traditionnelle bretonne à Quimper : bombardes, cornemuses, caisses claires et percussions.',
+		heroAlt:
+			'Les musiciens du Bagad Penhars réunis dans une rue de Quimper, autour de la grosse caisse',
+		heroCaption: 'Le Bagad Penhars, en tenue, dans les rues de Quimper.',
+		history: {
+			eyebrow: 'Histoire',
+			title: 'Notre histoire',
+			foundedLabel: 'Année de création',
+			paragraphs: [
+				'Fondé en 1985, le Bagad Penhars perpétue la tradition musicale bretonne avec passion et authenticité. Notre ensemble réunit des musiciens de tous âges autour des instruments emblématiques de Bretagne.'
+			],
+			cta: 'Découvrir nos formations'
+		},
+		mission: {
+			eyebrow: 'Mission',
+			title: 'Notre mission',
+			paragraphs: [
+				'Nous nous attachons à transmettre la richesse de la musique traditionnelle bretonne tout en l’adaptant aux sensibilités contemporaines. Nos concerts et festivals témoignent de cette volonté de partage culturel.'
+			],
+			imageAlt: 'Deux sonneurs du Bagad Penhars en concert, à la bombarde et à la cornemuse',
+			caption: 'Bombarde et cornemuse, sur scène.',
+			cta: 'Voir nos événements'
+		},
+		figures: {
+			title: 'Quelques repères',
+			items: [
+				{ value: '4', label: 'Instruments enseignés' },
+				{ value: '25+', label: 'Musiciens actifs' },
+				{ value: '100+', label: 'Concerts et festivals' }
+			]
+		},
+		join: {
+			title: 'Envie de nous rejoindre ?',
+			text: 'Découvrez nos formations et devenez membre de notre belle famille musicale.',
+			ctaFormation: 'Découvrir nos formations',
+			ctaContact: 'Nous contacter'
+		}
+	},
 	agenda: {
 		eyebrow: 'Agenda',
 		title: 'Les prochains rendez-vous',
@@ -107,6 +285,111 @@ const fr: Dictionary = {
 		lead: 'Quelques instants de scène, de répétition et de fête.',
 		cta: 'Voir les médias',
 		captions: ['Sonneurs et batteurs sur scène', 'Grosse caisse du bagad', 'Atelier de percussion']
+	},
+	partners: {
+		meta: {
+			title: 'Partenaires — Bagad Penhars',
+			description:
+				'Les partenaires du Bagad Penhars et les modalités de soutien : dons, mécénat et déduction fiscale pour les particuliers et les entreprises.'
+		},
+		eyebrow: 'Soutien & mécénat',
+		title: 'Nos partenaires',
+		lead: 'Le Bagad Penhars vit grâce à l’énergie de ses musiciennes et musiciens, mais aussi grâce à celles et ceux qui croient en nous. Si vous souhaitez soutenir nos projets, devenir mécène ou partenaire, ou simplement donner un petit coup de pouce pour faire résonner encore plus loin la culture bretonne, nous serions ravis de vous compter parmi nos alliés.',
+		cta: 'Aidez-nous',
+		support: {
+			title: 'Rejoignez le Bagad',
+			paragraphs: [
+				'Pour perdurer et progresser, le Bagad Penhars investit régulièrement dans sa structure, que ce soit pour la formation et les stages, l’acquisition de nouveaux instruments ou costumes, ou encore pour des projets musicaux. Il a toujours besoin de dons d’entreprises et de particuliers.'
+			],
+			deductionIntro:
+				'Dès qu’un don est effectué, il ouvre droit à une déduction d’impôt pour le donateur :',
+			deductions: [
+				{
+					rate: '66 %',
+					label: 'Pour un particulier',
+					text: 'Du montant du don, dans la limite de 20 % du revenu imposable.'
+				},
+				{
+					rate: '60 %',
+					label: 'Pour un professionnel',
+					text: 'Du montant du don, dans la limite de 20 000 € ou 5 % de votre chiffre d’affaires annuel hors taxe.'
+				}
+			],
+			thanks:
+				'Particulier ou professionnel, si vous souhaitez nous aider par un don, nous vous remercions chaleureusement !'
+		},
+		logos: {
+			eyebrow: 'Ils nous accompagnent',
+			title: 'Partenaires',
+			lead: 'Les structures qui soutiennent le Bagad Penhars.',
+			cta: 'Voir les partenaires',
+			newTab: 'nouvel onglet'
+		}
+	},
+	contact: {
+		meta: {
+			title: 'Contact — Bagad Penhars',
+			description:
+				'Une question, une envie de nous rejoindre, un projet de partenariat ? Écrivez au Bagad Penhars à Quimper ou venez nous rencontrer à l’Espace Chaptal.'
+		},
+		eyebrow: 'Nous écrire',
+		title: 'Contactez-nous',
+		lead: 'Une question ? Une envie de nous rejoindre ? N’hésitez pas à nous contacter.',
+		form: {
+			title: 'Envoyer un message',
+			intro: 'Les champs marqués d’un astérisque sont obligatoires.',
+			lastName: 'Nom de famille',
+			firstName: 'Prénom',
+			email: 'Adresse électronique',
+			subject: 'Sujet',
+			subjectPlaceholder: 'Choisir un sujet',
+			subjects: {
+				adhesion: 'Adhésion',
+				information: 'Demande d’information',
+				partenariat: 'Partenariat',
+				prestation: 'Prestation',
+				autre: 'Autre'
+			},
+			message: 'Message',
+			messageHint: 'Quelques lignes suffisent ; nous vous répondrons dès que possible.',
+			captcha: 'Vérification anti-robots',
+			captchaHelp: 'Ce contrôle protège le formulaire des envois automatisés.',
+			captchaUnavailable:
+				'Le contrôle anti-robots n’a pas pu se charger. Écrivez-nous directement par courriel.',
+			submit: 'Envoyer',
+			submitting: 'Envoi…',
+			successTitle: 'Message envoyé',
+			successText:
+				'Merci ! Votre message est bien arrivé. Nous vous répondrons dans les plus brefs délais.',
+			errorTitle: 'Envoi impossible',
+			errors: {
+				invalid: 'Merci de vérifier les champs signalés dans le formulaire.',
+				captcha: 'La vérification anti-robots a échoué. Merci de réessayer.',
+				send: 'L’envoi a échoué. Réessayez dans un instant ou écrivez-nous directement.',
+				unavailable:
+					'Le formulaire est momentanément indisponible. Écrivez-nous directement par courriel.'
+			},
+			required: 'obligatoire',
+			fieldError: 'Merci de vérifier ce champ.'
+		},
+		details: {
+			title: 'Nos coordonnées',
+			addressLabel: 'Adresse',
+			emailLabel: 'Courriel',
+			hoursLabel: 'Horaires',
+			hours: ['Mardi : 17 h – 21 h', 'Vendredi : 20 h – 22 h 30', 'Samedi : 15 h – 17 h 30'],
+			hoursNote: 'Horaires des cours et des répétitions.'
+		},
+		map: {
+			title: 'Nous trouver',
+			text: 'L’Espace Chaptal se trouve au 6 avenue des Oiseaux, à Quimper.',
+			open: 'Ouvrir dans OpenStreetMap',
+			openGoogle: 'Ouvrir dans Google Maps',
+			openApple: 'Ouvrir dans Apple Maps',
+			loading: 'Chargement de la carte…',
+			error: 'La carte n’a pas pu être chargée.',
+			marker: 'Bagad Penhars — Espace Chaptal'
+		}
 	},
 	join: {
 		eyebrow: 'Nous rejoindre',

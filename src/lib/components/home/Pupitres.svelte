@@ -1,5 +1,5 @@
-<script lang="ts">
-	import { ArrowRight } from 'lucide-svelte';
+﻿<script lang="ts">
+	import { ArrowRight } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import { PUPITRE_KEYS } from '$lib/data/site';
 	import type { Dictionary, Lang } from '$lib/i18n';

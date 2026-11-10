@@ -1,18 +1,17 @@
 /**
  * Clé publique Turnstile pour le formulaire de contact.
- * Chargeée côté serveur pour ne jamais exposer la clé secrète au navigateur.
+ *
+ * Seule la clé publique transite vers le navigateur ; la clé secrète est lue
+ * exclusivement dans `$lib/server/turnstile.ts`.
  */
 
-let siteKey: string | null = null;
+export function turnstileSiteKey(): string | null {
+	const key = process.env.TURNSTILE_SITE_KEY;
+	return key && key.trim().length > 0 ? key : null;
+}
 
-export async function turnstileSiteKey(): Promise<string> {
-	if (!siteKey) {
-		// La clé publique est configurée dans les variables d'environnement
-		const key = process.env.TURNSTILE_SITE_KEY;
-		if (!key) {
-			throw new Error('TURNSTILE_SITE_KEY n\'est pas configuré.');
-		}
-		siteKey = key;
-	}
-	return siteKey;
+/** Adresse de réception des messages du formulaire de contact. */
+export function contactInbox(): string | null {
+	const address = process.env.CONTACT_EMAIL;
+	return address && address.trim().length > 0 ? address : null;
 }

@@ -100,7 +100,7 @@ pas la base. Le branchement Neon devra :
 | Liens internes | `resolve()` de `$app/paths` + `PUBLIC_NAV` | règle `svelte/no-navigation-without-resolve`. |
 | Thème | tokens Tailwind v3 | version installée ; pas de Tailwind 4 du prototype. |
 | Polices | Google Fonts (Playfair Display + Inter) | direction éditoriale de la maquette. |
-| Icônes réseaux | `SocialIcon.svelte` | `lucide-svelte@1.0.1` n'exporte pas Facebook/Instagram. |
+| Icônes réseaux | `SocialIcon.svelte` + `static/Facebook_icon.svg`, `static/instagram_icon.svg` | marques fournies par l'association ; `@lucide/svelte` n'exporte plus Facebook/Instagram. |
 | Lecteur | état vide explicite | aucune piste audio dans le dépôt. |
 | Agenda | état vide explicite | base publique non branchée ; pas de données de démonstration. |
 

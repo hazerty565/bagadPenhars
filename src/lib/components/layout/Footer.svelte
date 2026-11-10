@@ -1,6 +1,6 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { resolve } from '$app/paths';
-	import { ArrowRight } from 'lucide-svelte';
+	import { ArrowRight } from '@lucide/svelte';
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
 	import { PUBLIC_NAV } from '$lib/data/nav';
 	import { site } from '$lib/data/site';
@@ -39,9 +39,9 @@
 					rel="external noopener noreferrer"
 					aria-label="Facebook"
 					title="Facebook"
-					class="flex h-9 w-9 items-center justify-center border border-ivoire/25 text-ivoire/70 transition-colors hover:border-or hover:text-white"
+					class="flex h-9 w-9 items-center justify-center border border-ivoire/25 transition-colors hover:border-or"
 				>
-					<SocialIcon name="facebook" />
+					<SocialIcon name="facebook" className="h-[1.15rem] w-[1.15rem]" />
 				</a>
 				<a
 					href={site.social.instagram}
@@ -49,9 +49,9 @@
 					rel="external noopener noreferrer"
 					aria-label="Instagram"
 					title="Instagram"
-					class="flex h-9 w-9 items-center justify-center border border-ivoire/25 text-ivoire/70 transition-colors hover:border-or hover:text-white"
+					class="flex h-9 w-9 items-center justify-center border border-ivoire/25 transition-colors hover:border-or"
 				>
-					<SocialIcon name="instagram" />
+					<SocialIcon name="instagram" className="h-[1.15rem] w-[1.15rem]" />
 				</a>
 			</div>
 		</div>
@@ -109,7 +109,7 @@
 		<div
 			class="container-page flex flex-col gap-2 py-5 text-xs text-ivoire/50 sm:flex-row sm:items-center sm:justify-between"
 		>
-			<p>© {year} Bagad Penhars. {t.footer.rights}</p>
+			<p>Â© {year} Bagad Penhars. {t.footer.rights}</p>
 			<p>{t.footer.madeIn}</p>
 		</div>
 	</div>

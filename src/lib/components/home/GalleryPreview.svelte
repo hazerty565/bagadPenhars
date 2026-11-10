@@ -1,5 +1,5 @@
-<script lang="ts">
-	import { ArrowUpRight, ImageOff } from 'lucide-svelte';
+﻿<script lang="ts">
+	import { ArrowUpRight, ImageOff } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import type { Dictionary, Lang } from '$lib/i18n';
 	import type { PublicPhoto } from '$lib/types';

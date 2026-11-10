@@ -1,70 +1,65 @@
-# Gestion des Partenaires
+# Gestion des partenaires
 
-## Structure des fichiers
+## Où se trouve quoi
 
-### Données des partenaires
+| Élément             | Emplacement                                                |
+| ------------------- | ---------------------------------------------------------- |
+| Données (nom, lien) | `src/lib/data/partenaires.ts` — tableau `PARTNERS`         |
+| Logos               | `static/logos/` (servis à l'URL `/logos/<fichier>`)        |
+| Page publique       | `src/routes/(public)/[lang=lang]/partenaires/+page.svelte` |
+| Textes éditoriaux   | `src/lib/i18n/fr.ts`, `en.ts`, `br.ts` — bloc `partners`   |
 
-- **Fichier principal** : `src/lib/data/partenaires.ts`
-- **Format** : TypeScript (tableau d'objets)
-- **Alternative** : `src/lib/data/partenaires.json`
+## Format d'une entrée
 
-### Images des logos
-
-- **Dossier** : `static/logos/`
-- **Formats acceptés** :
-  - `.svg` (prioritaire - vectoriel, léger, net)
-  - `.webp` (si pas de SVG disponible)
-  - `.png` (éviter si possible)
-
-## Comment ajouter un nouveau partenaire
-
-### Étape 1 : Préparer le logo
-
-1. Demander le logo en format **SVG** au partenaire
-2. Si SVG non disponible, convertir en **WebP**
-3. Nommer le fichier : `nom-entreprise.svg` ou `nom-entreprise.webp`
-4. Placer dans `static/logos/`
-
-### Étape 2 : Ajouter les données
-
-Ouvrir `src/lib/data/partenaires.ts` et ajouter :
-
-````typescript
-{
-  nom: "Nom de l'entreprise",
-  logo: "/logos/nom-entreprise.svg",
-  lien: "https://entreprise.com",
+```ts
+export interface Partner {
+	id: string; // identifiant stable, sert de clé Svelte
+	name: string; // nom affiché sous le logo (nom accessible du lien)
+	logo: string; // chemin public, ex. '/logos/Quimper.webp'
+	width: number; // largeur intrinsèque du fichier, en pixels
+	height: number; // hauteur intrinsèque du fichier, en pixels
+	url: string; // site officiel du partenaire
 }
+```
 
----
+`width` / `height` doivent correspondre aux dimensions réelles du fichier :
+elles réservent la place du logo avant son chargement et évitent les sauts de
+mise en page (CLS). Pour les relever, mesurer l'image dans le navigateur
+(`naturalWidth` / `naturalHeight`) : les `.webp` ne sont pas lisibles par
+`System.Drawing`.
 
-## 📋 Explication
+## Ajouter un partenaire
 
-Ce fichier `partenaires.md` sert de **guide pour ton agent IA** :
+1. **Logo** : demander le fichier au partenaire, en `.svg` de préférence, sinon
+   `.webp`. Nommer en kebab-case (`nom-du-partenaire.webp`) et déposer dans
+   `static/logos/`.
+2. **Dimensions** : relever la largeur et la hauteur réelles du fichier.
+3. **Données** : ajouter une entrée dans `PARTNERS` (`src/lib/data/partenaires.ts`)
+   en respectant l'ordre de la page officielle.
+4. **Vérifier** : la page doit afficher le logo, le nom sous le logo et le lien
+   qui s'ouvre dans un nouvel onglet.
 
-1. **Il explique la structure** : Où sont les fichiers, quels formats utiliser
-2. **Il donne les étapes** : Comment ajouter un partenaire de A à Z
-3. **Il liste les règles** : Nommage, bonnes pratiques, erreurs à éviter
-4. **Il montre des exemples** : Code concret pour comprendre
+## Règles
 
-### 🎯 Pourquoi un `.md` ici ?
+- **Uniquement des éléments fournis et validés** (`docs/maquette_UI.md` §8.6) :
+  pas de logo ni de lien inventé, pas de lien deviné à partir d'un nom.
+- **Logos décoratifs** : le logo porte `alt=""`, le nom visible sous le logo sert
+  de nom accessible au lien, complété par un texte `sr-only` « — nouvel onglet ».
+- **Liens externes** : toujours `target="_blank"` + `rel="noopener noreferrer"`.
+- **Orthographe** : garder la dénomination officielle du partenaire (« Département
+  du Finistère », « Fenêtres de toit 29 »), même si la page d'origine comporte
+  des coquilles.
+- **Mise en page** : la grille de logos est homogène (hauteur de bloc fixe,
+  `object-contain`), quelle que soit l'orientation du fichier ; ne pas rogner
+  un logo.
+- **Autorisations** : l'usage du logo doit être couvert par l'accord du partenaire.
+  En cas de doute, ne pas publier l'élément et poser la question dans
+  `docs/questions.md`.
 
-Contrairement au fichier de données (qui doit être `.ts` ou `.json`), ce fichier est une **documentation** :
-- Lisible par un humain
-- Lisible par un agent IA
-- Facile à mettre à jour
-- Ne sera jamais "compilé" dans ton site
+## Textes de la page
 
-### 📁 Où le placer ?
-
-Je te conseille de le mettre à la racine ou dans un dossier `docs/` :
-
-```txt
-/
-├── docs/
-│   └── partenaires.md          ← Documentation pour l'agent
-├── src/
-│   └── lib/
-│       └── data/
-│           └── partenaires.ts  ← Vraies données
-````
+Les contenus proviennent de la page officielle
+<https://bagad-penhars.com/partenaires> : accroche, « Rejoignez le Bagad »,
+déductions fiscales (66 % particuliers, 60 % professionnels) et remerciements.
+Les textes localisés sont dans le bloc `partners` des trois dictionnaires ; le
+breton doit être relu par un locuteur natif.

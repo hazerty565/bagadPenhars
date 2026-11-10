@@ -1,8 +1,8 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { afterNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { ChevronRight, LogIn, Menu, Music2, X } from 'lucide-svelte';
+	import { ChevronRight, LogIn, Menu, Music2, X } from '@lucide/svelte';
 	import LanguageSwitcher from './LanguageSwitcher.svelte';
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
 	import { PUBLIC_NAV } from '$lib/data/nav';
@@ -52,7 +52,7 @@
 		<a
 			href={resolve('/(public)/[lang=lang]', { lang })}
 			class="flex shrink-0 items-center gap-3"
-			aria-label={`${site.name} — ${t.nav.home}`}
+			aria-label={`${site.name} â€” ${t.nav.home}`}
 		>
 			<img src="/logo-penhars.svg" alt="" width="44" height="44" class="h-11 w-11 object-contain" />
 			<span class="hidden leading-none sm:block">
@@ -83,16 +83,16 @@
 		</nav>
 
 		<div class="flex items-center gap-1.5">
-			<div class="mr-1 hidden items-center gap-0.5 xl:flex">
+			<div class="mr-1 hidden items-center gap-1.5 xl:flex">
 				<a
 					href={site.social.facebook}
 					target="_blank"
 					rel="external noopener noreferrer"
 					aria-label="Facebook"
 					title="Facebook"
-					class="flex h-9 w-9 items-center justify-center text-ink/55 transition-colors hover:text-marine"
+					class="flex h-9 w-9 items-center justify-center transition-opacity hover:opacity-75"
 				>
-					<SocialIcon name="facebook" />
+					<SocialIcon name="facebook" className="h-[1.15rem] w-[1.15rem]" />
 				</a>
 				<a
 					href={site.social.instagram}
@@ -100,9 +100,9 @@
 					rel="external noopener noreferrer"
 					aria-label="Instagram"
 					title="Instagram"
-					class="flex h-9 w-9 items-center justify-center text-ink/55 transition-colors hover:text-marine"
+					class="flex h-9 w-9 items-center justify-center transition-opacity hover:opacity-75"
 				>
-					<SocialIcon name="instagram" />
+					<SocialIcon name="instagram" className="h-[1.15rem] w-[1.15rem]" />
 				</a>
 			</div>
 
@@ -195,7 +195,7 @@
 						rel="external noopener noreferrer"
 						class="inline-flex items-center gap-2 text-sm text-ink/60"
 					>
-						<SocialIcon name="facebook" />
+						<SocialIcon name="facebook" className="h-4 w-4" />
 						Facebook
 					</a>
 					<a
@@ -204,7 +204,7 @@
 						rel="external noopener noreferrer"
 						class="inline-flex items-center gap-2 text-sm text-ink/60"
 					>
-						<SocialIcon name="instagram" />
+						<SocialIcon name="instagram" className="h-4 w-4" />
 						Instagram
 					</a>
 				</div>
