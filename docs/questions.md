@@ -584,3 +584,55 @@ Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur
   objet « promotion musicale et culturelle bretonne ». Restent ouverts les
   points listés ci-dessus (téléphones, nom du directeur de la publication,
   crédits photo, précisions RGPD).
+
+## 2026-11-11 — Espace membre en mode démonstration
+
+### Q-2026-11-11-02 — Périmètre et fonctionnement de la démo
+
+- **Date :** 2026-11-11
+- **Problème :** la mission demande de livrer tout l'espace membre avec des
+  données fictives, sans Neon, avec un sélecteur de rôle absent de la
+  production. Plusieurs choix ne sont pas tranchés par les documents : le mode
+  de déploiement autorisé, l'accès au tableau de bord, la persistance, le type
+  de photos fictives, le périmètre exact des modules, l'éditeur d'articles, la
+  répartition des droits de gestion des comptes, la modification des profils,
+  les statuts simulés, l'emplacement du trombinoscope et le niveau de
+  simulation des notifications et des documents.
+- **Pourquoi :** ces choix conditionnent l'architecture, les routes, les
+  données fictives et la garantie d'absence en production. Les décider par
+  supposition exposerait à construire des écrans ou des droits que le client
+  refuserait ensuite.
+- **Proposition :** appliquer les réponses ci-dessous et les consigner dans
+  `equipe/PLAN-DEMO.md` avant toute modification de code.
+
+### Décision client — Q-2026-11-11-02
+
+**Décision :** les choix suivants sont validés le 2026-11-11.
+
+- **Mode démo :** développement local uniquement (`npm run dev`), jamais dans
+  un build de production.
+- **Accès :** sélecteur de profil permanent ; `/dashboard` accessible
+  directement.
+- **Persistance :** `localStorage` avec bouton de réinitialisation des données
+  fictives.
+- **Photos :** portraits illustrés fictifs générés localement, aucune personne
+  réelle.
+- **Périmètre :** tout le périmètre documenté — agenda/RSVP, trombinoscope,
+  profil, événements, documents, articles, médias, notifications, invitations,
+  membres, réglages.
+- **Éditeur d'articles :** Milkdown, comme prévu par `docs/Spec.md`.
+- **Comptes :** secrétaire = invitations, activation, suspension et pupitres ;
+  admin = en plus, rôles, réglages et suppression. Conforme aux documents.
+- **Profils :** chacun modifie son profil ; secrétaire/admin modifient les
+  pupitres des autres ; admin attribue les rôles ; la photo n'est modifiable
+  que par son propriétaire.
+- **Statuts :** quatre rôles actifs uniquement ; pas de parcours
+  `pending`/`suspended` simulé.
+- **Trombinoscope :** nouvelle route `/dashboard/membres`, ouverte à tous les
+  membres actifs.
+- **Notifications :** centre de notifications et envoi simulé selon le rôle,
+  sans push réel.
+- **Documents :** liste et dépôt simulé, sans upload réel.
+
+**Conséquence :** l'architecte rédige `equipe/PLAN-DEMO.md` ; aucune
+modification de code n'est engagée avant validation de ce plan.
