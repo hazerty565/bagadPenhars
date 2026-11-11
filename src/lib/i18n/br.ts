@@ -452,6 +452,99 @@ const br: Dictionary = {
 		ctaContact: 'Mont e darempred',
 		ctaFormation: 'Dizolo ar c’hentelioù'
 	},
+	legal: {
+		meta: {
+			title: 'Keloù lezennel — Bagad Penhars',
+			description:
+				'Embanner, ospitadur, perc’henniezh speredel, roadennoù personel ha cookies lec’hienn Bagad Penhars.'
+		},
+		eyebrow: 'Keloù lezennel',
+		title: 'Keloù lezennel',
+		lead: 'Embanner, ospitadur, perc’henniezh speredel ha roadennoù personel : an destadoù a reol implij al lec’hienn-mañ.',
+		updated: 'Hizivaet diwezhañ : miz Du 2026',
+		identity: {
+			title: 'Anvadur ar strollad',
+			items: [
+				{ label: 'Anv', value: 'Bagad Penhars' },
+				{ label: 'Stumm lezennel', value: 'Strollad disklêriet' },
+				{ label: 'SIREN', value: '504 354 234' },
+				{ label: 'SIRET ar sez', value: '504 354 234 00024' },
+				{ label: 'N° RNA', value: 'W294 004 157' },
+				{ label: 'Deiziad krouidigezh', value: '4 a viz Kerzu 1985' },
+				{ label: 'Sez', value: '6 avenue des Oiseaux, 29000 Kemper, Bro-C’hall' },
+				{ label: 'Pal', value: 'Brudañ sonerezh ha sevenadur Breizh' }
+			]
+		},
+		sections: [
+			{
+				title: 'Embanner al lec’hienn',
+				paragraphs: [
+					'Al lec’hienn-mañ a vez embannet gant strollad Bagad Penhars, ur strollad disklêriet hag a zo e anv hag e chomlec’hioù meneget a-us.',
+					'Ar strollad a laka sonerezh hengounel Breizh da vevañ e Kemper. Al lec’hienn a ginn e obererezhioù hag a vod e izili ; ne ginn ket gwerzh enlinenn na paeamant.'
+				]
+			},
+			{
+				title: 'Renerezh an embann',
+				paragraphs: [
+					'An embann a vez renet gant prezidant ar strollad, en e garg.',
+					'Ar goulennoù diwar-benn al lec’hienn a c’hall bezañ kaset d’ar chomlec’h darempred a zo meneget e traoñ ar bajenn.'
+				]
+			},
+			{
+				title: 'Ospitadur',
+				paragraphs: [
+					'Al lec’hienn a vez ospitet gant Cloudflare, Inc. (servij Cloudflare Pages), 101 Townsend Street, San Francisco, CA 94107, Stadoù-Unanet.',
+					'Diaz roadennoù al lodenn izili a vez ospitet gant Neon (PostgreSQL meret, Stadoù-Unanet).'
+				]
+			},
+			{
+				title: 'Perc’henniezh speredel',
+				paragraphs: [
+					'An testennoù, al logo, ar poltriji hag an elfennoù grafek eus al lec’hienn-mañ a zo gwarezet gant ar gwir aozer. Berzet eo pep eiladenn, en he fezh pe en he lodenn, hep aotre skrivet a-raok.',
+					'Ar poltriji a chom perc’henn o aozerien hag a vez embannet gant o asant.',
+					'Merkadoù ha logoioù ar genlabourerien a zo d’o ferc’henned.'
+				]
+			},
+			{
+				title: 'Roadennoù personel',
+				paragraphs: [
+					'Al lec’hienn a dreter roadennoù personel e daou gefridi : ar furmskrid darempred (anv, anv-bihan, chomlec’h postel, endalc’h ar gemennadenn) hag al lodenn izili, a zo evit an izili pedet (identelezh, chomlec’hioù, pupit, respontoù bezañs, kemennadennoù).',
+					'Ar roadennoù-se a servij hepken da respont d’ar c’hemennadennoù resevet ha da lakaat ar strollad da vevañ. Ne vezont ket gwerzhet, na roet d’un all, na implijet evit brudañ.',
+					'Mirout a reer anezho keit m’eo ret evit ar palioù-se, ha goude e vezont diverket pe anvioù-rouet, nemet e vefe rediet gant al lezenn mirout anezho.',
+					'Hervez ar RGPD, ho peus gwir da gavout, da reizhañ, da ziverkañ, da verañ ha da enebiñ. Evit ober gant ar gwirioù-se, skrivit deomp d’ar chomlec’h darempred a-is.',
+					'Prestataerien teknik (ospitadur, diaz roadennoù, kemennadennoù) a zo diazezet e-maez Unaniezh Europa ; an treuzkasoù-se a harz war gwarantoù ar RGPD.',
+					'Mard kav deoc’h, goude bezañ skrivet deomp, ne vez ket doujet d’ho kwirioù, gallout a rit kas ur c’hlemm d’ar CNIL (www.cnil.fr).'
+				]
+			},
+			{
+				title: 'Cookies ha kemennadennoù',
+				paragraphs: [
+					'Ne implij al lec’hienn nag a cookie brudañ na binvioù da heuliañ an dud.',
+					'Ur cookie teknik a vez lakaet hepken pa gennasket d’al lodenn izili : derc’hel a ra ar gennaskadenn digor ha mont a ra kuit pa vez digennasket pe pa vez aet da get. Ar furmskrid darempred a implij Cloudflare Turnstile, ur gwiriad enep-robot a c’hall lakaat elfennoù teknik e-pad ar gwiriañ.',
+					'Kemennadennoù diflugell a zo hervez c’hoant. Ne vezont enaouet nemet goude ho asant sklaer ha gallout a reont bezañ lazhet e reoladoù ar merdeer pe ho pellgomz.'
+				]
+			},
+			{
+				title: 'Liammoù diavaez',
+				paragraphs: [
+					'Al lec’hienn a gas war-du lec’hiennoù all, perzhioù sokial ar strollad ha lec’hiennoù e genlabourerien dreist-holl.',
+					'Endalc’h al lec’hiennoù-se ne vez ket e karg Bagad Penhars, ha ne vestroni ket o c’havoudegezh nag o implijoù.'
+				]
+			},
+			{
+				title: 'Gwir a dalvez',
+				paragraphs: [
+					'An destadoù-mañ a zo dindan gwir Bro-C’hall.',
+					'Ma sav un tabut, ha ma n’haller ket kavout un emglev, al lezioù-barn eus Kemper a zo barrek.'
+				]
+			}
+		],
+		contact: {
+			title: 'Mont e darempred ganeomp',
+			text: 'Ur goulenn diwar-benn al lec’hienn pe ho roadennoù personel ? Skrivit deomp.',
+			cta: 'Furmskrid darempred'
+		}
+	},
 	footer: {
 		tagline: 'Strollad sonerezh hengounel Breizh e Kemper.',
 		navTitle: 'Lañser',
@@ -461,7 +554,8 @@ const br: Dictionary = {
 		membersText: 'Deiziataer, teulioù ha buhez ar bagad : evit an izili hepken.',
 		membersCta: 'Kevreañ',
 		rights: 'Holl wirioù miret.',
-		madeIn: 'Lec’hienn strollad Bagad Penhars.'
+		madeIn: 'Lec’hienn strollad Bagad Penhars.',
+		legal: 'Keloù lezennel'
 	},
 	player: {
 		title: 'Selaou ar Bagad',

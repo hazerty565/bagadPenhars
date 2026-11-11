@@ -463,6 +463,99 @@ const fr: Dictionary = {
 		ctaContact: 'Nous contacter',
 		ctaFormation: 'Découvrir les formations'
 	},
+	legal: {
+		meta: {
+			title: 'Informations légales — Bagad Penhars',
+			description:
+				'Éditeur, hébergement, propriété intellectuelle, données personnelles et cookies du site du Bagad Penhars.'
+		},
+		eyebrow: 'Informations légales',
+		title: 'Informations légales',
+		lead: 'Éditeur, hébergement, propriété intellectuelle et traitement des données personnelles : les mentions qui encadrent l’utilisation de ce site.',
+		updated: 'Dernière mise à jour : novembre 2026',
+		identity: {
+			title: 'Identité de l’association',
+			items: [
+				{ label: 'Dénomination', value: 'Bagad Penhars' },
+				{ label: 'Forme juridique', value: 'Association déclarée' },
+				{ label: 'SIREN', value: '504 354 234' },
+				{ label: 'SIRET du siège', value: '504 354 234 00024' },
+				{ label: 'N° RNA', value: 'W294 004 157' },
+				{ label: 'Date de création', value: '4 décembre 1985' },
+				{ label: 'Siège social', value: '6 avenue des Oiseaux, 29000 Quimper, France' },
+				{ label: 'Objet', value: 'Promotion musicale et culturelle bretonne' }
+			]
+		},
+		sections: [
+			{
+				title: 'Éditeur du site',
+				paragraphs: [
+					'Ce site est édité par l’association Bagad Penhars, association déclarée dont l’identité et les coordonnées figurent ci-dessus.',
+					'L’association fait vivre la musique traditionnelle bretonne à Quimper. Le site présente ses activités et réunit ses adhérents ; il ne propose ni vente en ligne ni paiement.'
+				]
+			},
+			{
+				title: 'Direction de la publication',
+				paragraphs: [
+					'La direction de la publication est assurée par le président de l’association, en exercice.',
+					'Les demandes relatives au site peuvent être adressées à l’adresse de contact indiquée en bas de page.'
+				]
+			},
+			{
+				title: 'Hébergement',
+				paragraphs: [
+					'Le site est hébergé par Cloudflare, Inc. (service Cloudflare Pages), 101 Townsend Street, San Francisco, CA 94107, États-Unis.',
+					'La base de données de l’espace adhérents est hébergée par Neon (PostgreSQL managé, États-Unis).'
+				]
+			},
+			{
+				title: 'Propriété intellectuelle',
+				paragraphs: [
+					'Les textes, le logo, les photographies et les éléments graphiques de ce site sont protégés par le droit d’auteur. Toute reproduction, totale ou partielle, sans autorisation écrite préalable est interdite.',
+					'Les photographies restent la propriété de leurs auteurs ; elles sont diffusées avec leur accord.',
+					'Les marques et logos des partenaires appartiennent à leurs titulaires respectifs.'
+				]
+			},
+			{
+				title: 'Données personnelles',
+				paragraphs: [
+					'Le site traite des données personnelles dans deux cadres : le formulaire de contact (nom, prénom, adresse e-mail, contenu du message) et l’espace adhérents, réservé aux membres invités (identité, coordonnées, pupitre, réponses de présence, notifications).',
+					'Ces données servent uniquement à répondre aux messages reçus et à faire vivre l’association. Elles ne sont ni vendues, ni cédées, ni utilisées à des fins publicitaires.',
+					'Elles sont conservées le temps nécessaire à ces finalités, puis supprimées ou anonymisées, sous réserve des durées de conservation imposées par la loi.',
+					'Conformément au RGPD, vous disposez d’un droit d’accès, de rectification, d’effacement, de limitation et d’opposition. Pour l’exercer, écrivez-nous à l’adresse de contact ci-dessous.',
+					'Certains prestataires techniques (hébergement, base de données, notifications) sont établis hors de l’Union européenne ; ces transferts s’appuient sur les garanties prévues par le RGPD.',
+					'Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL (www.cnil.fr).'
+				]
+			},
+			{
+				title: 'Cookies et notifications',
+				paragraphs: [
+					'Le site n’utilise ni cookie publicitaire ni traceur de mesure d’audience.',
+					'Seul un cookie technique de session est posé lors de la connexion à l’espace adhérents : il maintient la session ouverte et disparaît à la déconnexion ou à son expiration. Le formulaire de contact s’appuie sur Cloudflare Turnstile, un contrôle anti-robot qui peut déposer des éléments techniques le temps de la vérification.',
+					'Les notifications push sont facultatives. Elles ne sont activées qu’après votre accord explicite et peuvent être désactivées à tout moment dans les réglages du navigateur ou de votre téléphone.'
+				]
+			},
+			{
+				title: 'Liens externes',
+				paragraphs: [
+					'Le site renvoie vers des sites tiers, notamment les réseaux sociaux de l’association et les sites de ses partenaires.',
+					'Le contenu de ces sites ne relève pas de la responsabilité du Bagad Penhars, qui n’en contrôle ni la disponibilité ni les pratiques.'
+				]
+			},
+			{
+				title: 'Droit applicable',
+				paragraphs: [
+					'Les présentes mentions sont soumises au droit français.',
+					'En cas de litige, et à défaut de solution amiable, les tribunaux compétents sont ceux de Quimper.'
+				]
+			}
+		],
+		contact: {
+			title: 'Nous contacter',
+			text: 'Une question sur le site ou sur vos données personnelles ? Écrivez-nous.',
+			cta: 'Formulaire de contact'
+		}
+	},
 	footer: {
 		tagline: 'Association de musique traditionnelle bretonne à Quimper.',
 		navTitle: 'Navigation',
@@ -472,7 +565,8 @@ const fr: Dictionary = {
 		membersText: 'Agenda, documents et vie du bagad : accès réservé aux membres.',
 		membersCta: 'Se connecter',
 		rights: 'Tous droits réservés.',
-		madeIn: 'Site de l’association Bagad Penhars.'
+		madeIn: 'Site de l’association Bagad Penhars.',
+		legal: 'Informations légales'
 	},
 	player: {
 		title: 'Écouter le Bagad',

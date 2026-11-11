@@ -21,6 +21,22 @@ export const site = {
 	}
 } as const;
 
+/**
+ * Première année de mise en ligne du site (distincte de la création du bagad).
+ */
+export const COPYRIGHT_START_YEAR = 2025;
+
+/**
+ * Libellé des années de copyright, borné à l'année en cours.
+ * Le rendu serveur et l'hydratation donnent la même valeur.
+ */
+export function copyrightYears(now: Date = new Date()): string {
+	const currentYear = now.getFullYear();
+	return currentYear > COPYRIGHT_START_YEAR
+		? `${COPYRIGHT_START_YEAR} - ${currentYear}`
+		: `${COPYRIGHT_START_YEAR}`;
+}
+
 export interface HomeGalleryItem {
 	id: string;
 	src: string;

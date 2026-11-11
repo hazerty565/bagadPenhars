@@ -3,12 +3,13 @@
 	import { ArrowRight } from '@lucide/svelte';
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
 	import { PUBLIC_NAV } from '$lib/data/nav';
-	import { site } from '$lib/data/site';
+	import { copyrightYears, site } from '$lib/data/site';
 	import type { Dictionary, Lang } from '$lib/i18n';
 
 	let { lang, t }: { lang: Lang; t: Dictionary } = $props();
 
-	const year = new Date().getFullYear();
+	const copyright = copyrightYears();
+	const legalHref = $derived(resolve('/(public)/[lang=lang]/informations-legales', { lang }));
 </script>
 
 <footer class="bg-marine text-ivoire">
@@ -107,10 +108,16 @@
 
 	<div class="border-t border-ivoire/15">
 		<div
-			class="container-page flex flex-col gap-2 py-5 text-xs text-ivoire/50 sm:flex-row sm:items-center sm:justify-between"
+			class="container-page flex flex-col gap-2 py-5 text-xs text-ivoire/50 sm:flex-row sm:items-center sm:gap-6"
 		>
-			<p>Â© {year} Bagad Penhars. {t.footer.rights}</p>
-			<p>{t.footer.madeIn}</p>
+			<p class="sm:flex-1">Copyright © {copyright} Bagad Penhars. {t.footer.rights}</p>
+			<a
+				href={legalHref}
+				class="font-semibold text-ivoire/70 underline decoration-or/40 underline-offset-4 transition-colors hover:text-ivoire hover:decoration-or sm:order-2 sm:flex-1 sm:text-center"
+			>
+				{t.footer.legal}
+			</a>
+			<p class="sm:order-3 sm:flex-1 sm:text-right">{t.footer.madeIn}</p>
 		</div>
 	</div>
 </footer>

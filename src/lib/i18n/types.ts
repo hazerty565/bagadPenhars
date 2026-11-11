@@ -288,6 +288,35 @@ export interface Dictionary {
 		membersCta: string;
 		rights: string;
 		madeIn: string;
+		legal: string;
+	};
+	legal: {
+		meta: {
+			title: string;
+			description: string;
+		};
+		eyebrow: string;
+		title: string;
+		lead: string;
+		updated: string;
+		/** Identité officielle de l'association (source : annuaire des entreprises). */
+		identity: {
+			title: string;
+			items: {
+				label: string;
+				value: string;
+			}[];
+		};
+		/** Sections dans l'ordre d'affichage, identiques dans les trois langues. */
+		sections: {
+			title: string;
+			paragraphs: string[];
+		}[];
+		contact: {
+			title: string;
+			text: string;
+			cta: string;
+		};
 	};
 	player: {
 		title: string;

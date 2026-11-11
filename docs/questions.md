@@ -519,3 +519,67 @@ Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur
 - **Problème :** entre environ 1024 px et 1380 px de large, la barre de navigation desktop dépasse la largeur de la fenêtre (95 px mesurés à 1284 px), ce qui provoque un défilement horizontal. Le défaut se produit aussi sur `/fr/bagad` et les autres pages publiques : il est antérieur à la page Agenda.
 - **Pourquoi :** 1280 px est la largeur la plus courante des écrans de portables ; un défilement horizontal à cette taille se voit immédiatement.
 - **Proposition :** corriger le `Nav` (réduire les espacements, raccourcir le bouton « Écouter » ou déplacer le point de rupture). La modification touche le layout partagé, elle attend donc une validation avant d'être engagée.
+
+### Q-2026-11-11-01 — Identité juridique à compléter sur la page « Informations légales »
+
+- **Date :** 2026-11-11
+- **Problème :** la page `/fr/informations-legales` est rédigée avec les seules
+  informations publiques déjà connues : nom de l'association, adresse du siège
+  (6 avenue des Oiseaux, 29000 Quimper), adresse e-mail de contact, hébergeur
+  (Cloudflare Pages) et hébergement de la base (Neon). Il manque les éléments
+  que la loi impose de publier et qu'aucune source du dépôt ne contient :
+  forme juridique et numéro d'immatriculation (RNA, et SIREN si l'association
+  en dispose) — **fournis le 2026-11-11, voir le dernier point** —, nom du
+  président en exercice en tant que directeur de la publication, et crédits
+  photographiques (au moins une image porte un filigrane d'auteur,
+  « Finnegan's / Bazotos Création »).
+- **Pourquoi :** ces mentions engagent juridiquement l'association ; les
+  inventer serait à la fois inexact et risqué. La page reste donc volontairement
+  générale sur ces trois points (« le président de l'association, en exercice »,
+  photographies appartenant à leurs auteurs).
+- **Proposition :** communiquer la forme juridique, le numéro RNA et, le cas
+  échéant, le SIREN, le nom du président en exercice et les crédits photo à
+  afficher ; ils seront ajoutés en tête de la section « Éditeur du site » et
+  dans une ligne de crédits. Confirmer aussi que le site n'utilise ni mesure
+  d'audience ni cookie publicitaire (vérifié dans le code à cette date) et que
+  la conservation des données décrite correspond à la pratique du bureau.
+- **Compléments relevés le 2026-11-11** en comparant la page à la fiche
+  « Mentions sur votre site internet : les obligations à respecter »
+  (economie.gouv.fr, LCEN art. 6-III et RGPD art. 13) :
+  - **Téléphone de l'association** : la LCEN impose un numéro de téléphone pour
+    contacter la personne morale ; le site n'en publie aucun et le dépôt n'en
+    contient aucun (la page Contact ne liste que l'adresse et l'e-mail). Un
+    numéro de téléphone personnel ne doit pas être publié sans accord exprès :
+    le bureau doit fournir le numéro à afficher, ou confirmer qu'aucun numéro
+    ne doit figurer.
+  - **Téléphone de l'hébergeur** : la LCEN impose nom, raison sociale, adresse
+    et numéro de téléphone de l'hébergeur. Seuls le nom et l'adresse de
+    Cloudflare, Inc. sont publiés ; le numéro à afficher doit être confirmé sur
+    le site de Cloudflare avant d'être écrit.
+  - **Base juridique des traitements** : à confirmer (consentement pour le
+    formulaire de contact, exécution de la relation d'adhésion pour l'espace
+    membres). Non rédigée à ce jour faute de validation.
+  - **Caractère obligatoire ou facultatif des données** et conséquences d'un
+    refus : à préciser pour le formulaire de contact et le profil adhérent.
+  - **Destinataires** : la page cite les prestataires techniques (Cloudflare,
+    Neon, OneSignal) mais pas les destinataires au sens du RGPD (bureau,
+    secrétaires, chefs de pupitre ayant accès aux réponses de présence).
+  - **Durée de conservation** : la page indique « le temps nécessaire » ; une
+    durée chiffrée par catégorie de données est attendue (messages de contact,
+    comptes adhérents, réponses RSVP).
+  - **Crédits photographiques** : la LCEN demande de faire figurer la propriété
+    intellectuelle des images. La page renvoie aux auteurs sans les nommer.
+  - **Non applicable** à cette association, et donc absent volontairement :
+    RCS/RNE, TVA intracommunautaire, CGV, résiliation d'abonnement en ligne,
+    activité artisanale ou réglementée. Le point mérite d'être confirmé pour
+    écarter toute ambiguïté lors d'une relecture juridique.
+- **Résolu le 2026-11-11** pour l'identité de la personne morale : les données
+  officielles ont été fournies par le bureau depuis
+  <https://annuaire-entreprises.data.gouv.fr/entreprise/bagad-penhars-504354234#association-section>
+  et figurent désormais dans l'encart « Identité de l'association » de la page :
+  dénomination « Bagad Penhars », forme juridique « Association déclarée »,
+  SIREN 504 354 234, SIRET du siège 504 354 234 00024, n° RNA W294 004 157,
+  date de création 4 décembre 1985, siège 6 avenue des Oiseaux, 29000 Quimper,
+  objet « promotion musicale et culturelle bretonne ». Restent ouverts les
+  points listés ci-dessus (téléphones, nom du directeur de la publication,
+  crédits photo, précisions RGPD).

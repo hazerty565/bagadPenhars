@@ -36,10 +36,16 @@ fonction soit complète.
 
 - `/(public)/[lang=lang]/...` : site public localisé. Les sections repérées
   incluent l'accueil, les articles, le bagad, la formation, l'agenda, les
-  médias, les partenaires et le contact. La page d'accueil est composée de
-  `src/lib/components/home/` (dont `Prestations.svelte`, les formats proposés
-  aux organisateurs) et partage le header/footer de
-  `src/lib/components/layout/`.
+  médias, les partenaires, le contact et les informations légales. La page
+  d'accueil est composée de `src/lib/components/home/` (dont
+  `Prestations.svelte`, les formats proposés aux organisateurs) et partage le
+  header/footer de `src/lib/components/layout/`.
+- `/(public)/[lang=lang]/informations-legales` : mentions légales (éditeur,
+  direction de la publication, hébergement, propriété intellectuelle, données
+  personnelles, cookies, liens externes, droit applicable), servies depuis le
+  bloc `legal` des dictionnaires i18n. Aucune donnée en base. La page est
+  reliée depuis la barre inférieure du `Footer`, à côté du copyright dont les
+  années viennent de `copyrightYears()` (`src/lib/data/site.ts`).
 - `/(public)/[lang=lang]/bagad` : page de présentation de l'association. Contenu
   éditorial statique (histoire, mission, repères chiffrés, invitation à
   rejoindre) servi depuis les dictionnaires i18n ; aucune donnée en base. Les
@@ -63,10 +69,15 @@ fonction soit complète.
   (Leaflet chargé à la demande, tuiles OpenStreetMap) et n'entre pas dans le
   rendu serveur. La page est servie par Cloudflare Pages ; aucune donnée du
   formulaire n'est stockée en base.
-- `/auth/...` : connexion, déconnexion, invitation, attente, mot de passe
-  oublié et réinitialisation.
-- `/auth/...` et `/api/auth/...` : pages et endpoint Better Auth pour la
-  connexion, la déconnexion, les invitations et la réinitialisation.
+- `/auth/login` : page de connexion autonome, en français et en `noindex`. Le
+  `load` renvoie un utilisateur actif vers `/dashboard`; l'action `login`
+  normalise l'e-mail, répond par un message unique en cas d'échec et redirige
+  vers `/dashboard` (303) une fois la session Better Auth établie.
+- `/auth/...` : déconnexion, invitation, attente, mot de passe oublié et
+  réinitialisation. Ces pages sont encore à construire ; seule la connexion est
+  livrée.
+- `/api/auth/[...all]` : endpoint Better Auth (sessions, invitations,
+  réinitialisation) appelé par les pages `/auth/...`.
 - `/api/files/[...key]` : point d'entrée prévu pour le téléchargement des
   fichiers.
 - `/dashboard/...` : espace adhérent et pages d'administration : agenda,

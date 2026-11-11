@@ -523,6 +523,81 @@ eslint .`) échouait sur **18 fichiers** mal formatés et **8 erreurs ESLint**,
   descriptions présentes) ; le débordement de la navigation desktop à 1280 px
   reste celui de Q-2026-11-10-10.
 
+## 2026-11-11
+
+### Page de connexion `/auth/login`
+
+- **Besoin** : la page de connexion de l'espace adhérents. Le fichier
+  `src/routes/auth/login/+page.svelte` était vide ; l'action serveur existait
+  mais ne redirigeait pas après succès.
+- **Livré** : page autonome (le layout racine ne monte pas le header public),
+  fond ivoire, logo dans une pastille blanche, retour vers `/fr`, en-tête
+  éditorial (« Espace adhérents », « Connexion »), formulaire e-mail / mot de
+  passe, bouton afficher-masquer le mot de passe, lien « Mot de passe oublié ? »
+  et renvoi vers le contact public.
+- **Comportement** : `use:enhance` avec état `submitting` (bouton désactivé,
+  libellé « Connexion… », `aria-busy`), valeurs conservées après échec
+  (`update({ reset: false })`), message d'erreur en `role="alert"` relié par
+  `aria-describedby`, champs marqués `aria-invalid`.
+- **Serveur** : e-mail normalisé (`trim` + minuscules) dans `schema.ts`,
+  message unique « Adresse e-mail ou mot de passe invalide. » pour ne pas
+  distinguer une adresse inconnue d'un mot de passe erroné, message distinct
+  pour une adresse non confirmée (Better Auth vérifie le mot de passe avant de
+  répondre), redirection 303 vers `/dashboard` après succès, `load` qui renvoie
+  un utilisateur actif vers `/dashboard`.
+- **Accessibilité** : page en français (`lang="fr"` posé par `hooks.server.ts`),
+  `noindex`, lien d'évitement vers le formulaire, libellés explicites,
+  `autocomplete="username"` / `current-password`, focus visible du thème.
+- **Validation** : `npm run check` 0 erreur / 0 avertissement, Prettier et
+  ESLint OK ; tests `login.test.ts` (3 cas, dont la normalisation de l'e-mail) ;
+  rendu mesuré à 375 px et 1280 px sans débordement (formulaire 335 px puis
+  448 px) ; bascule du mot de passe et affichage de l'erreur vérifiés dans le
+  navigateur.
+- **Page sans photographie** : sur demande, le visuel d'illustration a été
+  retiré ; la page tient sur une colonne centrée.
+- **Copyright** : le pied de page affiche « Copyright © 2025 - 2026 Bagad
+  Penhars ». La première année (`COPYRIGHT_START_YEAR`) est fixe, la seconde
+  vient de `copyrightYears()` dans `src/lib/data/site.ts` (année en cours, donc
+  plus besoin de la mettre à jour chaque janvier). La même mention remplace le
+  « © » abîmé (`Â©`) du pied de page public, et s'affiche aussi sous le
+  formulaire de connexion.
+
+### Page « Informations légales »
+
+- **Besoin** : une page de mentions légales, reliée depuis le pied de page.
+- **Livré** : `src/routes/(public)/[lang=lang]/informations-legales/+page.svelte`
+  (aucun `load` : la langue vient du layout public), servie en `fr`, `en` et
+  `br`. En-tête éditorial, date de mise à jour, encart « Identité de
+  l'association » (dénomination, forme juridique, SIREN, SIRET, RNA, date de
+  création, siège, objet), huit sections numérotées (éditeur, direction de la
+  publication, hébergement, propriété intellectuelle, données personnelles,
+  cookies et notifications, liens externes, droit applicable), puis un bandeau
+  de contact avec l'adresse e-mail de l'association et un bouton vers le
+  formulaire.
+- **Footer** : le lien « Informations légales » prend place dans la barre
+  inférieure, entre le copyright (« Tous droits réservés ») à gauche et la
+  mention « Site de l'association Bagad Penhars » à droite ; libellé traduit
+  dans les trois langues (`footer.legal`).
+- **Contenus** : uniquement des faits déjà présents dans le dépôt, vérifiés
+  dans le code ou fournis par le bureau — identité officielle reprise de
+  l'annuaire des entreprises (SIREN 504 354 234, SIRET 504 354 234 00024, RNA
+  W294 004 157, association déclarée depuis le 4 décembre 1985), siège, e-mail
+  de contact, hébergement Cloudflare Pages, base Neon, absence de mesure
+  d'audience, cookie de session Better Auth, contrôle Turnstile, notifications
+  OneSignal facultatives. Les éléments manquants ne sont pas inventés : le
+  directeur de la publication est désigné comme « le président de
+  l'association, en exercice » et les photographies comme appartenant à leurs
+  auteurs. Les compléments à fournir par le bureau sont consignés en
+  Q-2026-11-11-01.
+- **i18n** : bloc `legal` ajouté au contrat `Dictionary` et aux trois
+  dictionnaires ; sections identiques dans le même ordre. Les versions
+  anglaise et bretonne sont à faire relire, comme le reste du site.
+- **Validation** : `npm run check` 0 erreur / 0 avertissement, Prettier et
+  ESLint OK, `npm run build` OK ; page rendue en `fr`, `en` et `br`
+  (huit sections, 22 paragraphes, aucun débordement à 375 px), lien du footer
+  présent sur toutes les pages publiques. Le débordement de la navigation
+  desktop à 1280 px reste celui de Q-2026-11-10-10.
+
 ### Reste à faire
 
 - Faire reconfirmer par le bureau les informations pratiques reprises du site
@@ -538,4 +613,13 @@ eslint .`) échouait sur **18 fichiers** mal formatés et **8 erreurs ESLint**,
   Bagad (Q-2026-11-10-08).
 - Brancher l'agenda sur Neon (colonne de lieu à ajouter) et confirmer les onze
   dates reprises du site officiel (Q-2026-11-10-09).
+- Construire les pages encore vides liées à la connexion : mot de passe oublié
+  (`/auth/forgot-password`, déjà ciblée par le lien de la page de connexion),
+  réinitialisation, invitation et attente, ainsi que les guards de
+  `/dashboard` (statuts `pending` et `suspended`).
+- Compléter les mentions légales (téléphone de l'association et de l'hébergeur,
+  nom du président en exercice, crédits photo, base juridique et durées de
+  conservation RGPD) dès que le bureau aura fourni ces informations
+  (Q-2026-11-11-01). L'identité officielle (SIREN, SIRET, RNA, forme juridique,
+  date de création, objet) est en place depuis le 2026-11-11.
 - Traiter le sitemap globalement (toutes les routes publiques, toutes langues).

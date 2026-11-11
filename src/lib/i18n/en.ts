@@ -444,6 +444,99 @@ const en: Dictionary = {
 		ctaContact: 'Contact us',
 		ctaFormation: 'Explore the classes'
 	},
+	legal: {
+		meta: {
+			title: 'Legal information — Bagad Penhars',
+			description:
+				'Publisher, hosting, intellectual property, personal data and cookies for the Bagad Penhars website.'
+		},
+		eyebrow: 'Legal information',
+		title: 'Legal information',
+		lead: 'Publisher, hosting, intellectual property and personal data: the notices that govern use of this website.',
+		updated: 'Last updated: November 2026',
+		identity: {
+			title: 'Association details',
+			items: [
+				{ label: 'Name', value: 'Bagad Penhars' },
+				{ label: 'Legal form', value: 'Declared association' },
+				{ label: 'SIREN', value: '504 354 234' },
+				{ label: 'SIRET (registered office)', value: '504 354 234 00024' },
+				{ label: 'RNA number', value: 'W294 004 157' },
+				{ label: 'Date founded', value: '4 December 1985' },
+				{ label: 'Registered office', value: '6 avenue des Oiseaux, 29000 Quimper, France' },
+				{ label: 'Purpose', value: 'Promotion of Breton music and culture' }
+			]
+		},
+		sections: [
+			{
+				title: 'Publisher',
+				paragraphs: [
+					'This website is published by the Bagad Penhars association, a declared association whose details and contact information appear above.',
+					'The association keeps traditional Breton music alive in Quimper. The site presents its activities and brings its members together; it offers no online sales or payment.'
+				]
+			},
+			{
+				title: 'Publication director',
+				paragraphs: [
+					'The publication director is the association’s current president.',
+					'Requests concerning the site can be sent to the contact address shown at the bottom of the page.'
+				]
+			},
+			{
+				title: 'Hosting',
+				paragraphs: [
+					'The site is hosted by Cloudflare, Inc. (Cloudflare Pages service), 101 Townsend Street, San Francisco, CA 94107, United States.',
+					'The members’ area database is hosted by Neon (managed PostgreSQL, United States).'
+				]
+			},
+			{
+				title: 'Intellectual property',
+				paragraphs: [
+					'The texts, logo, photographs and graphic elements of this site are protected by copyright. Any reproduction, in whole or in part, without prior written permission is prohibited.',
+					'Photographs remain the property of their authors and are published with their agreement.',
+					'Partner trademarks and logos belong to their respective owners.'
+				]
+			},
+			{
+				title: 'Personal data',
+				paragraphs: [
+					'The site processes personal data in two contexts: the contact form (surname, first name, e-mail address, message content) and the members’ area, reserved for invited members (identity, contact details, section, attendance answers, notifications).',
+					'This data is used only to answer messages received and to run the association. It is never sold, passed on or used for advertising.',
+					'It is kept for as long as needed for these purposes, then deleted or anonymised, subject to legal retention periods.',
+					'Under the GDPR, you have the right to access, rectify, erase, restrict and object. To exercise these rights, write to the contact address below.',
+					'Some technical providers (hosting, database, notifications) are established outside the European Union; those transfers rely on the safeguards provided by the GDPR.',
+					'If, after contacting us, you believe your rights are not respected, you may lodge a complaint with the CNIL (www.cnil.fr).'
+				]
+			},
+			{
+				title: 'Cookies and notifications',
+				paragraphs: [
+					'The site uses neither advertising cookies nor audience-measurement trackers.',
+					'A single technical session cookie is set when signing in to the members’ area: it keeps the session open and disappears on sign-out or expiry. The contact form relies on Cloudflare Turnstile, a bot check that may store technical elements for the duration of the verification.',
+					'Push notifications are optional. They are enabled only after your explicit consent and can be turned off at any time in your browser or phone settings.'
+				]
+			},
+			{
+				title: 'External links',
+				paragraphs: [
+					'The site links to third-party sites, in particular the association’s social networks and its partners’ websites.',
+					'The content of those sites is not the responsibility of Bagad Penhars, which controls neither their availability nor their practices.'
+				]
+			},
+			{
+				title: 'Governing law',
+				paragraphs: [
+					'These notices are governed by French law.',
+					'In the event of a dispute, and failing an amicable solution, the courts of Quimper have jurisdiction.'
+				]
+			}
+		],
+		contact: {
+			title: 'Contact us',
+			text: 'A question about the site or your personal data? Write to us.',
+			cta: 'Contact form'
+		}
+	},
 	footer: {
 		tagline: 'Traditional Breton music association in Quimper.',
 		navTitle: 'Navigation',
@@ -453,7 +546,8 @@ const en: Dictionary = {
 		membersText: 'Calendar, documents and bagad life: members only.',
 		membersCta: 'Sign in',
 		rights: 'All rights reserved.',
-		madeIn: 'Bagad Penhars association website.'
+		madeIn: 'Bagad Penhars association website.',
+		legal: 'Legal information'
 	},
 	player: {
 		title: 'Listen to the Bagad',

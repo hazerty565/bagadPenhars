@@ -13,4 +13,14 @@ describe('login schema', () => {
 			false
 		);
 	});
+
+	it('normalises the e-mail address', () => {
+		const result = loginSchema.safeParse({
+			email: '  Marie.Dupont@Example.COM ',
+			password: 'password123'
+		});
+
+		expect(result.success).toBe(true);
+		expect(result.success && result.data.email).toBe('marie.dupont@example.com');
+	});
 });
