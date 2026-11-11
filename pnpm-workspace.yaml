@@ -4,3 +4,5 @@ allowBuilds:
   workerd: set this to true or false
 minimumReleaseAgeExclude:
   - '@lucide/svelte@1.71.0'
+packages:
+  - '.'
