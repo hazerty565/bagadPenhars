@@ -1,5 +1,5 @@
-{
-  "name":"proto-bagadpenhars",
+// wrangler.jsonc
+  "name": "bagadpenhars",
   "main": ".svelte-kit/cloudflare/_worker.js",
   "compatibility_date": "2026-11-04",
   "compatibility_flags": ["nodejs_compat"],
