@@ -1,5 +1,6 @@
 # Bagad Penhars — site de l'association
 
+
 > **Passages obsolètes :** certaines décisions décrites plus bas ont été
 > remplacées ou corrigées. Pour les règles marquées **OBsolète — ne plus
 > prendre en compte**, se référer au registre daté dans
