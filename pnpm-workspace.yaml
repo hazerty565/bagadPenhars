@@ -1,7 +1,7 @@
 allowBuilds:
   es5-ext: false
   esbuild: true
-  workerd: set this to true or false
+  workerd: true
 minimumReleaseAgeExclude:
   - '@lucide/svelte@1.71.0'
 packages:
