@@ -21,7 +21,14 @@
 		<div>
 			<a href={resolve('/(public)/[lang=lang]', { lang })} class="flex items-center gap-3">
 				<span class="flex h-14 w-14 items-center justify-center rounded-full bg-ivoire">
-					<img src="/logo-penhars.svg" alt="" width="44" height="44" class="h-11 w-11" />
+					<img
+						src="/logo-penhars.svg"
+						alt=""
+						width="44"
+						height="44"
+						fetchpriority="high"
+						class="h-11 w-11"
+					/>
 				</span>
 				<span class="leading-none">
 					<span class="block font-serif text-xl font-semibold">Bagad Penhars</span>

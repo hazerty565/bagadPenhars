@@ -49,7 +49,7 @@
 								alt={photo.caption ?? ''}
 								width="960"
 								height="1280"
-								loading="lazy"
+								fetchpriority="high"
 								decoding="async"
 								class="aspect-[3/4] w-full object-cover transition-transform duration-500 hover:scale-[1.02]"
 							/>

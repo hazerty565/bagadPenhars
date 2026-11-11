@@ -69,10 +69,6 @@
 					class="relative w-full bg-sable/40 object-cover"
 				/>
 			</div>
-			<figcaption class="mt-3 flex items-center gap-2 text-xs text-ink/50">
-				<span class="h-px w-6 bg-or" aria-hidden="true"></span>
-				{b.heroCaption}
-			</figcaption>
 		</figure>
 	</div>
 </section>
@@ -127,15 +123,11 @@
 					alt={b.mission.imageAlt}
 					width="2048"
 					height="1365"
-					loading="lazy"
+					fetchpriority="high"
 					decoding="async"
 					class="relative aspect-[4/3] w-full bg-sable/60 object-cover"
 				/>
 			</div>
-			<figcaption class="mt-3 flex items-center gap-2 text-xs text-ink/50">
-				<span class="h-px w-6 bg-or" aria-hidden="true"></span>
-				{b.mission.caption}
-			</figcaption>
 		</figure>
 
 		<div class="lg:pt-6">

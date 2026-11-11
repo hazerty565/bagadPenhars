@@ -32,7 +32,6 @@ const fr: Dictionary = {
 		ctaPrimary: 'Voir l’agenda',
 		ctaSecondary: 'Découvrir le bagad',
 		imageAlt: 'Le Bagad Penhars en représentation dans les rues de Quimper',
-		caption: 'En sortie à Quimper',
 		sinceLabel: 'Création',
 		sinceValue: '1985',
 		pupitresLabel: 'Pupitres',
@@ -95,7 +94,6 @@ const fr: Dictionary = {
 		ctaContact: 'Nous écrire',
 		mascotAlt:
 			'Les quatre mascottes du Bagad Penhars : bombarde, cornemuse, caisse claire et percussions',
-		mascotCaption: 'Les quatre mascottes du bagad.',
 		sectionsEyebrow: 'Les quatre pupitres',
 		sectionsTitle: 'Une place pour chaque musicien',
 		sectionsLead: 'Découvrez l’instrument, la pédagogie et l’esprit de chaque pupitre.',
@@ -224,7 +222,6 @@ const fr: Dictionary = {
 		lead: 'Fondé en 1985, le Bagad Penhars fait vivre la musique traditionnelle bretonne à Quimper : bombardes, cornemuses, caisses claires et percussions.',
 		heroAlt:
 			'Les musiciens du Bagad Penhars réunis dans une rue de Quimper, autour de la grosse caisse',
-		heroCaption: 'Le Bagad Penhars, en tenue, dans les rues de Quimper.',
 		history: {
 			eyebrow: 'Histoire',
 			title: 'Notre histoire',
@@ -241,7 +238,6 @@ const fr: Dictionary = {
 				'Nous nous attachons à transmettre la richesse de la musique traditionnelle bretonne tout en l’adaptant aux sensibilités contemporaines. Nos concerts et festivals témoignent de cette volonté de partage culturel.'
 			],
 			imageAlt: 'Deux sonneurs du Bagad Penhars en concert, à la bombarde et à la cornemuse',
-			caption: 'Bombarde et cornemuse, sur scène.',
 			cta: 'Voir nos événements'
 		},
 		figures: {

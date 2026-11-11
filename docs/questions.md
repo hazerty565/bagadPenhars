@@ -519,6 +519,7 @@ Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur
 - **Problème :** entre environ 1024 px et 1380 px de large, la barre de navigation desktop dépasse la largeur de la fenêtre (95 px mesurés à 1284 px), ce qui provoque un défilement horizontal. Le défaut se produit aussi sur `/fr/bagad` et les autres pages publiques : il est antérieur à la page Agenda.
 - **Pourquoi :** 1280 px est la largeur la plus courante des écrans de portables ; un défilement horizontal à cette taille se voit immédiatement.
 - **Proposition :** corriger le `Nav` (réduire les espacements, raccourcir le bouton « Écouter » ou déplacer le point de rupture). La modification touche le layout partagé, elle attend donc une validation avant d'être engagée.
+- **Avancement du 2026-11-11 :** à la demande du bureau, « Le Bagad » ne passe plus à la ligne dans la barre de navigation (`whitespace-nowrap`) et l'espacement entre les liens a été réduit de `gap-7` à `gap-5`. Mesures après correction : 74 → **45 px** de débordement à 1024 px, 112 → **82 px** à 1280 px, 24 → **0 px** à 1440 px. Le débordement résiduel vient du bloc de droite (réseaux sociaux, langues, « Écouter », « Connexion ») : le problème reste donc ouvert.
 
 ### Q-2026-11-11-01 — Identité juridique à compléter sur la page « Informations légales »
 

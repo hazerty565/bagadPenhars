@@ -132,7 +132,7 @@
 								alt=""
 								width={partner.width}
 								height={partner.height}
-								loading="lazy"
+								fetchpriority="high"
 								decoding="async"
 								class="h-full w-full object-contain"
 							/>

@@ -75,10 +75,6 @@
 				decoding="async"
 				class="relative w-full mix-blend-multiply"
 			/>
-			<figcaption class="mt-3 flex items-center gap-2 text-xs text-ink/50">
-				<span class="h-px w-6 bg-or" aria-hidden="true"></span>
-				{f.mascotCaption}
-			</figcaption>
 		</figure>
 	</div>
 </section>
@@ -114,7 +110,7 @@
 								alt={item.imageAlt}
 								width={mascot.width}
 								height={mascot.height}
-								loading="lazy"
+								fetchpriority="high"
 								decoding="async"
 								class="mt-0.5 w-14 shrink-0 mix-blend-multiply sm:w-16"
 							/>
@@ -171,7 +167,7 @@
 								alt={item.photoAlt}
 								width={photo.width}
 								height={photo.height}
-								loading="lazy"
+								fetchpriority="high"
 								decoding="async"
 								class="relative aspect-[4/3] w-full bg-sable/40 object-cover"
 							/>

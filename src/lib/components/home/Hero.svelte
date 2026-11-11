@@ -70,10 +70,6 @@
 				decoding="async"
 				class="relative aspect-[4/3] w-full object-cover"
 			/>
-			<figcaption class="mt-3 flex items-center gap-2 text-xs text-ink/50">
-				<span class="h-px w-6 bg-or" aria-hidden="true"></span>
-				{t.hero.caption}
-			</figcaption>
 		</figure>
 	</div>
 </section>

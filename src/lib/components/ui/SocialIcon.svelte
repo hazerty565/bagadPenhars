@@ -24,6 +24,7 @@
 	alt=""
 	width={icon.size}
 	height={icon.size}
+	fetchpriority="high"
 	decoding="async"
 	class={className}
 />

@@ -32,7 +32,6 @@ const en: Dictionary = {
 		ctaPrimary: 'View events',
 		ctaSecondary: 'Discover the bagad',
 		imageAlt: 'Bagad Penhars performing in the streets of Quimper',
-		caption: 'Performing in Quimper',
 		sinceLabel: 'Founded',
 		sinceValue: '1985',
 		pupitresLabel: 'Sections',
@@ -94,7 +93,6 @@ const en: Dictionary = {
 			'Training is at the heart of our association. We welcome musicians of all ages and all levels to pass on the richness of Breton music. Our goal: to train competent, passionate players, able to flourish within the bagad and on the Breton music scene.',
 		ctaContact: 'Write to us',
 		mascotAlt: 'The four Bagad Penhars mascots: bombarde, bagpipes, snare drum and percussion',
-		mascotCaption: 'The four bagad mascots.',
 		sectionsEyebrow: 'The four sections',
 		sectionsTitle: 'A place for every musician',
 		sectionsLead: 'Discover each section’s instrument, teaching approach and spirit.',
@@ -209,7 +207,6 @@ const en: Dictionary = {
 		title: 'Bagad Penhars',
 		lead: 'Founded in 1985, Bagad Penhars keeps traditional Breton music alive in Quimper: bombards, bagpipes, snare drums and percussion.',
 		heroAlt: 'The musicians of Bagad Penhars gathered in a street in Quimper, around the bass drum',
-		heroCaption: 'Bagad Penhars in full dress, in the streets of Quimper.',
 		history: {
 			eyebrow: 'History',
 			title: 'Our history',
@@ -226,7 +223,6 @@ const en: Dictionary = {
 				'We are committed to passing on the wealth of traditional Breton music while adapting it to contemporary sensibilities. Our concerts and festivals reflect this desire to share our culture.'
 			],
 			imageAlt: 'Two players of Bagad Penhars in concert, on bombarde and bagpipe',
-			caption: 'Bombarde and bagpipe, on stage.',
 			cta: 'See our events'
 		},
 		figures: {

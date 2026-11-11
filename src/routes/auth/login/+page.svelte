@@ -51,7 +51,14 @@
 			<span
 				class="flex h-12 w-12 items-center justify-center rounded-full bg-white ring-1 ring-ink/10"
 			>
-				<img src="/logo-penhars.svg" alt="" width="36" height="36" class="h-9 w-9" />
+				<img
+					src="/logo-penhars.svg"
+					alt=""
+					width="36"
+					height="36"
+					fetchpriority="high"
+					class="h-9 w-9"
+				/>
 			</span>
 			<span class="font-serif text-lg font-semibold leading-none text-marine"> Bagad Penhars </span>
 		</a>

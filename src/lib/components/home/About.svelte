@@ -15,7 +15,7 @@
 				alt={t.about.imageAlt}
 				width="2000"
 				height="1333"
-				loading="lazy"
+				fetchpriority="high"
 				decoding="async"
 				class="aspect-[4/5] w-full object-cover object-[50%_35%] sm:aspect-[5/4] lg:aspect-[4/5]"
 			/>

@@ -32,7 +32,6 @@ const br: Dictionary = {
 		ctaPrimary: 'Gwelet an deiziataer',
 		ctaSecondary: 'Dizolo ar bagad',
 		imageAlt: 'Bagad Penhars o seniñ e straedoù Kemper',
-		caption: 'E Kemper',
 		sinceLabel: 'Krouidigezh',
 		sinceValue: '1985',
 		pupitresLabel: 'Strolladoù',
@@ -95,7 +94,6 @@ const br: Dictionary = {
 		ctaContact: 'Skrivañ deomp',
 		mascotAlt:
 			'Pevar maskotenn Bagad Penhars : bombard, biniou bras, taboulin-snare ha percussionoù',
-		mascotCaption: 'Pevar maskotenn ar bagad.',
 		sectionsEyebrow: 'Ar pevar strollad',
 		sectionsTitle: 'Ul lec’h evit pep soner',
 		sectionsLead: 'Dizoloit benveg, kelennadurezh ha spered pep strollad.',
@@ -211,7 +209,6 @@ const br: Dictionary = {
 		title: 'Bagad Penhars',
 		lead: 'Krouet e 1985, Bagad Penhars a laka sonerezh hengounel Breizh da vevañ e Kemper : bombardoù, binioù, taboulinoù ha perkusion.',
 		heroAlt: 'Sonerien Bagad Penhars bodet e straed Kemper, tro-dro d’an daboulin vras',
-		heroCaption: 'Bagad Penhars en e wiskamant, e straedoù Kemper.',
 		history: {
 			eyebrow: 'Istor',
 			title: 'Hon istor',
@@ -228,7 +225,6 @@ const br: Dictionary = {
 				'Lakaat a reomp hor boan da dremen pinvidigezh sonerezh hengounel Breizh hag e azasaat ouzh ar santadurioù a-vremañ. Hor c’honcertoù hag hor gouelioù a ziskouez ar youl da rannañ sevenadur.'
 			],
 			imageAlt: 'Daou soner eus Bagad Penhars en ur sonadeg, gant ar vombard hag ar binioù',
-			caption: 'Bombard ha binioù war al leurenn.',
 			cta: 'Gwelet hon darvoudoù'
 		},
 		figures: {

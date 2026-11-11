@@ -54,7 +54,14 @@
 			class="flex shrink-0 items-center gap-3"
 			aria-label={`${site.name} â€” ${t.nav.home}`}
 		>
-			<img src="/logo-penhars.svg" alt="" width="44" height="44" class="h-11 w-11 object-contain" />
+			<img
+				src="/logo-penhars.svg"
+				alt=""
+				width="44"
+				height="44"
+				fetchpriority="high"
+				class="h-11 w-11 object-contain"
+			/>
 			<span class="hidden leading-none sm:block">
 				<span class="block font-serif text-xl font-semibold tracking-tight text-marine">
 					Bagad Penhars
@@ -65,13 +72,13 @@
 			</span>
 		</a>
 
-		<nav class="hidden items-center gap-7 lg:flex" aria-label={t.nav.main}>
+		<nav class="hidden items-center gap-5 lg:flex" aria-label={t.nav.main}>
 			{#each navItems as item (item.href)}
 				<a
 					href={item.href}
 					aria-current={item.active ? 'page' : undefined}
 					class={[
-						'border-b-2 py-1 text-[0.8rem] font-medium transition-colors',
+						'border-b-2 py-1 text-[0.8rem] font-medium whitespace-nowrap transition-colors',
 						item.active
 							? 'border-or text-marine'
 							: 'border-transparent text-ink/65 hover:border-or/50 hover:text-marine'
@@ -83,7 +90,7 @@
 		</nav>
 
 		<div class="flex items-center gap-1.5">
-			<div class="mr-1 hidden items-center gap-1.5 xl:flex">
+			<div class="mr-1 flex items-center gap-1.5 lg:hidden xl:flex">
 				<a
 					href={site.social.facebook}
 					target="_blank"
@@ -167,45 +174,13 @@
 					{/each}
 				</ul>
 
-				<div class="flex flex-wrap items-center justify-between gap-4 pt-5">
-					<LanguageSwitcher {lang} label={t.nav.language} />
-					<div class="flex items-center gap-3">
-						<a
-							href={resolve('/auth/login')}
-							class="inline-flex items-center gap-2 text-sm text-ink/70"
-						>
-							<LogIn class="h-4 w-4" />
-							{t.nav.login}
-						</a>
-						<button
-							type="button"
-							onclick={openPlayer}
-							class="inline-flex items-center gap-2 border border-or/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-marine"
-						>
-							<Music2 class="h-4 w-4" />
-							{t.nav.listen}
-						</button>
-					</div>
-				</div>
-
-				<div class="flex items-center gap-4 border-t border-ink/10 pt-4">
+				<div class="border-t border-ink/10 pt-5">
 					<a
-						href={site.social.facebook}
-						target="_blank"
-						rel="external noopener noreferrer"
-						class="inline-flex items-center gap-2 text-sm text-ink/60"
+						href={resolve('/auth/login')}
+						class="inline-flex items-center gap-2 text-sm text-ink/70"
 					>
-						<SocialIcon name="facebook" className="h-4 w-4" />
-						Facebook
-					</a>
-					<a
-						href={site.social.instagram}
-						target="_blank"
-						rel="external noopener noreferrer"
-						class="inline-flex items-center gap-2 text-sm text-ink/60"
-					>
-						<SocialIcon name="instagram" className="h-4 w-4" />
-						Instagram
+						<LogIn class="h-4 w-4" />
+						{t.nav.login}
 					</a>
 				</div>
 			</nav>

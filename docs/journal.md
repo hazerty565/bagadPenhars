@@ -598,6 +598,81 @@ eslint .`) échouait sur **18 fichiers** mal formatés et **8 erreurs ESLint**,
   présent sur toutes les pages publiques. Le débordement de la navigation
   desktop à 1280 px reste celui de Q-2026-11-10-10.
 
+### Légendes de photographies retirées
+
+- **Demande** : supprimer les légendes affichées sous certaines photographies
+  (accueil, page Bagad, page Formation).
+- **Livré** : les quatre `figcaption` concernés ont été retirés —
+  « En sortie à Quimper » (héros de l'accueil), « Le Bagad Penhars, en tenue,
+  dans les rues de Quimper. » (héros de la page Bagad), « Bombarde et
+  cornemuse, sur scène. » (section Mission de la page Bagad) et « Les quatre
+  mascottes du bagad. » (héros de la page Formation).
+- **Nettoyage** : les clés devenues inutilisées ont été supprimées du contrat
+  `Dictionary` et des trois dictionnaires (`hero.caption`,
+  `bagad.heroCaption`, `bagad.mission.caption`, `formation.mascotCaption`). Les
+  textes alternatifs (`imageAlt`, `heroAlt`, `mascotAlt`) sont conservés : ils
+  restent nécessaires à l'accessibilité et au référencement.
+- **Conservé** : les légendes de la galerie de l'accueil proviennent des
+  photographies publiées (données), pas des dictionnaires ; elles n'ont pas été
+  touchées, de même que celle du héros de l'Agenda.
+- **Validation** : `npm run check` 0 erreur / 0 avertissement, Prettier et
+  ESLint OK, `npm run build` OK ; pages Accueil, Bagad et Formation rendues sans
+  légende sous les photographies concernées.
+
+### Priorité de chargement des images
+
+- **Demande** : donner à toutes les images `fetchpriority="high"` et retirer
+  `loading="lazy"`, jugé contradictoire avec cette priorité.
+- **Livré** : les quinze balises `<img>` des pages publiques, du header, du
+  footer, du composant `SocialIcon` et de la page de connexion portent
+  désormais `fetchpriority="high"` ; les six `loading="lazy"` restants ont été
+  supprimés (les images chargées en `eager` le restent). Vérifié dans le DOM
+  rendu : aucune image sans `fetchpriority="high"`, aucune image en `lazy` sur
+  l'accueil, la formation, le bagad, les partenaires et l'agenda.
+- **À savoir** : sans `loading`, le navigateur charge toutes les images
+  immédiatement, y compris celles qui se trouvent bas de page (galerie,
+  mascottes des quatre pupitres, logos partenaires). C'est le comportement
+  demandé ; si la performance mobile devient un sujet, la piste est de garder
+  `fetchpriority="high"` sur les images du haut de page et `loading="lazy"`
+  sur celles du bas.
+- **Validation** : `npm run check` 0 erreur / 0 avertissement, Prettier et
+  ESLint OK, `npm run build` OK.
+
+### Navigation : « Le Bagad » sur une seule ligne
+
+- **Demande** : éviter que « Le Bagad » se coupe sur deux lignes dans la barre
+  de navigation desktop.
+- **Livré** : `whitespace-nowrap` sur les liens du `Nav`. Pour compenser la
+  largeur gagnée, l'espacement entre les liens passe de `gap-7` à `gap-5`.
+- **Effet sur le débordement connu (Q-2026-11-10-10)** : 1024 px 74 → 45 px,
+  1280 px 112 → 82 px, 1440 px 24 → 0 px. Le débordement restant vient du bloc
+  de droite du header (réseaux sociaux, langues, « Écouter », « Connexion »).
+- **Validation** : `npm run check` 0 erreur / 0 avertissement, Prettier et
+  ESLint OK, `npm run build` OK ; rendu contrôlé à 1024, 1280 et 1440 px.
+
+### Menu mobile allégé et réseaux sociaux dans le header
+
+- **Demande** : en tablette et téléphone, retirer la langue et le bouton
+  « Écouter » du menu déroulant (ils sont déjà dans le header) et sortir
+  Facebook et Instagram du menu pour les placer en haut, dans le header.
+- **Menu déroulant** : il ne contient plus que les sept liens de navigation et
+  « Connexion ». Le sélecteur de langue, le bouton « Écouter » et les deux
+  liens sociaux ont été retirés.
+- **Icônes sociales** : le groupe Facebook / Instagram du header passe de
+  `hidden … xl:flex` à `flex … lg:hidden xl:flex`. Il est donc visible sur
+  téléphone et tablette (moins de 1024 px) et à partir de 1280 px, mais reste
+  masqué entre 1024 et 1279 px, où le bloc de droite déborde déjà
+  (Q-2026-11-10-10).
+- **Sélecteur de langue** : inchangé dans le header (`hidden md:block`), donc
+  présent à partir de 768 px.
+- **Mesures** : aucun débordement à 375, 414, 640 et 768 px ; icônes sociales
+  visibles à ces quatre largeurs ; langue masquée à 375 / 414 / 640 px et
+  visible à 768 px et au-delà. Les valeurs à 1024 px (45 px) et 1280 px (82 px)
+  ne changent pas.
+- **Validation** : `npm run check` 0 erreur / 0 avertissement, Prettier et
+  ESLint OK, `npm run build` OK ; menu ouvert contrôlé dans le DOM rendu
+  (huit entrées, aucune langue).
+
 ### Reste à faire
 
 - Faire reconfirmer par le bureau les informations pratiques reprises du site

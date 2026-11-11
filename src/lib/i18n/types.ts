@@ -33,7 +33,6 @@ export interface Dictionary {
 		ctaPrimary: string;
 		ctaSecondary: string;
 		imageAlt: string;
-		caption: string;
 		sinceLabel: string;
 		sinceValue: string;
 		pupitresLabel: string;
@@ -72,7 +71,6 @@ export interface Dictionary {
 		leadMore: string;
 		ctaContact: string;
 		mascotAlt: string;
-		mascotCaption: string;
 		sectionsEyebrow: string;
 		sectionsTitle: string;
 		sectionsLead: string;
@@ -112,7 +110,6 @@ export interface Dictionary {
 		title: string;
 		lead: string;
 		heroAlt: string;
-		heroCaption: string;
 		history: {
 			eyebrow: string;
 			title: string;
@@ -125,7 +122,6 @@ export interface Dictionary {
 			title: string;
 			paragraphs: string[];
 			imageAlt: string;
-			caption: string;
 			cta: string;
 		};
 		figures: {
