@@ -16,11 +16,8 @@ import * as schema from './schema';
  * Ce module est réservé au serveur. Il ne doit jamais être importé dans le navigateur.
  */
 
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-	throw new Error('DATABASE_URL est requise pour la connexion à Neon via Hyperdrive.');
-}
+const connectionString =
+	process.env.DATABASE_URL ?? 'postgres://user:pass@localhost:5432/placeholder';
 
 export const pool = new Pool({ connectionString });
 export const db = drizzle(pool, { schema });
