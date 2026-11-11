@@ -24,20 +24,20 @@ défaut bloquant — et dans ce cas, uniquement après accord.
 
 ## 2. Décisions validées par le client le 2026-11-11
 
-| Sujet | Décision |
-| --- | --- |
-| Portée du mode démo | **Développement local uniquement** (`npm run dev`). Jamais dans un build de production. |
-| Accès | **Sélecteur de profil permanent** ; `/dashboard` accessible directement. |
-| Persistance | **localStorage** avec bouton de réinitialisation des données fictives. |
-| Photos des membres | **Portraits illustrés fictifs** générés localement, aucune personne réelle. |
-| Périmètre | **Tout le périmètre documenté** : agenda/RSVP, trombinoscope, profil, événements, documents, articles, médias, notifications, invitations, membres, réglages. |
-| Éditeur d'articles | **Milkdown**, comme prévu par `docs/Spec.md`. |
-| Gestion des comptes | **Conforme aux docs** : secrétaire = invitations, activation, suspension, pupitres ; admin = en plus, rôles, réglages, suppression. |
+| Sujet                    | Décision                                                                                                                                                                      |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Portée du mode démo      | **Développement local uniquement** (`npm run dev`). Jamais dans un build de production.                                                                                       |
+| Accès                    | **Sélecteur de profil permanent** ; `/dashboard` accessible directement.                                                                                                      |
+| Persistance              | **localStorage** avec bouton de réinitialisation des données fictives.                                                                                                        |
+| Photos des membres       | **Portraits illustrés fictifs** générés localement, aucune personne réelle.                                                                                                   |
+| Périmètre                | **Tout le périmètre documenté** : agenda/RSVP, trombinoscope, profil, événements, documents, articles, médias, notifications, invitations, membres, réglages.                 |
+| Éditeur d'articles       | **Milkdown**, comme prévu par `docs/Spec.md`.                                                                                                                                 |
+| Gestion des comptes      | **Conforme aux docs** : secrétaire = invitations, activation, suspension, pupitres ; admin = en plus, rôles, réglages, suppression.                                           |
 | Modification des profils | **Conforme aux docs** : chacun son profil ; secrétaire/admin modifient les pupitres des autres ; admin attribue les rôles ; photo modifiable par son propriétaire uniquement. |
-| Statuts de compte | **Quatre rôles actifs uniquement** (`member`, `chef_pupitre`, `secretaire`, `admin`) ; pas de parcours `pending`/`suspended` simulé. |
-| Trombinoscope | **Nouvelle route `/dashboard/membres`**, ouverte à tous les membres actifs. |
-| Notifications | **Centre de notifications + envoi simulé** selon le rôle, sans push réel. |
-| Documents / partitions | **Liste + dépôt simulé**, sans upload réel. |
+| Statuts de compte        | **Quatre rôles actifs uniquement** (`member`, `chef_pupitre`, `secretaire`, `admin`) ; pas de parcours `pending`/`suspended` simulé.                                          |
+| Trombinoscope            | **Nouvelle route `/dashboard/membres`**, ouverte à tous les membres actifs.                                                                                                   |
+| Notifications            | **Centre de notifications + envoi simulé** selon le rôle, sans push réel.                                                                                                     |
+| Documents / partitions   | **Liste + dépôt simulé**, sans upload réel.                                                                                                                                   |
 
 ---
 
@@ -111,16 +111,16 @@ en revanche partagés.
 
 ### 4.1 Séparation des responsabilités
 
-| Couche | Emplacement | Responsabilité |
-| --- | --- | --- |
-| Composants d'interface | `src/lib/components/dashboard/`, `events/`, `members/`, `documents/`, `articles/`, `media/`, `notifications/`, `admin/` | Présentation, accessibilité, responsive. Aucune donnée fictive codée en dur dans le markup. |
-| Données fictives | `src/lib/demo/fixtures/` | Jeu de données déterministe, typé, sans données personnelles réelles. |
-| Utilisateurs simulés | `src/lib/demo/session.svelte.ts` | Profil actif, changement de rôle, persistance de la session. |
-| Permissions | `src/lib/demo/permissions.ts` + `src/lib/auth/permissions.ts` | Fonctions pures, réutilisables, évaluées avant chaque action. |
-| Services de données | `src/lib/demo/services/` | Lecture et mutations simulées, avec contrôle de permission. Interface identique à celle que devra exposer le backend. |
-| État persistant | `src/lib/demo/store.svelte.ts` | État réactif Svelte 5, localStorage versionné, réinitialisation. |
-| Mode | `src/lib/demo/mode.ts` | Détection `dev` uniquement, chargement dynamique, absence en production. |
-| Pages | `src/routes/dashboard/**` | Assemblage des composants et des services. Mêmes composants demain avec des `load`/actions Neon. |
+| Couche                 | Emplacement                                                                                                             | Responsabilité                                                                                                        |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Composants d'interface | `src/lib/components/dashboard/`, `events/`, `members/`, `documents/`, `articles/`, `media/`, `notifications/`, `admin/` | Présentation, accessibilité, responsive. Aucune donnée fictive codée en dur dans le markup.                           |
+| Données fictives       | `src/lib/demo/fixtures/`                                                                                                | Jeu de données déterministe, typé, sans données personnelles réelles.                                                 |
+| Utilisateurs simulés   | `src/lib/demo/session.svelte.ts`                                                                                        | Profil actif, changement de rôle, persistance de la session.                                                          |
+| Permissions            | `src/lib/demo/permissions.ts` + `src/lib/auth/permissions.ts`                                                           | Fonctions pures, réutilisables, évaluées avant chaque action.                                                         |
+| Services de données    | `src/lib/demo/services/`                                                                                                | Lecture et mutations simulées, avec contrôle de permission. Interface identique à celle que devra exposer le backend. |
+| État persistant        | `src/lib/demo/store.svelte.ts`                                                                                          | État réactif Svelte 5, localStorage versionné, réinitialisation.                                                      |
+| Mode                   | `src/lib/demo/mode.ts`                                                                                                  | Détection `dev` uniquement, chargement dynamique, absence en production.                                              |
+| Pages                  | `src/routes/dashboard/**`                                                                                               | Assemblage des composants et des services. Mêmes composants demain avec des `load`/actions Neon.                      |
 
 ### 4.2 Arborescence prévue
 
@@ -368,25 +368,25 @@ nomment personne.
 
 ### 6.1 Matrice
 
-| Action | member | chef_pupitre | secretaire | admin |
-| --- | --- | --- | --- | --- |
-| Voir l'agenda selon visibilité | oui | oui | oui | oui |
-| Répondre présent/absent | oui, événements visibles | oui | oui | oui |
-| Créer/modifier/annuler un événement | non | ses pupitres uniquement, un seul pupitre cible | tous | tous |
-| Supprimer un événement | non | non (archivage/annulation) | oui | oui |
-| Voir les présences | oui, agrégées | ses pupitres | tous | tous |
-| Consulter le trombinoscope | oui | oui | oui | oui |
-| Modifier son profil | oui | oui | oui | oui |
-| Modifier les pupitres d'un autre | non | non | oui | oui |
-| Attribuer un rôle | non | non | non | oui |
-| Déposer un document | non | ses pupitres | tous | tous |
-| Lire tous les documents | oui | oui | oui | oui |
-| Gérer les articles | non | non | oui | oui |
-| Gérer les albums | non | non | oui | oui |
-| Notifier | non | ses pupitres | plusieurs pupitres | global |
-| Inviter / activer / suspendre | non | non | oui | oui |
-| Gérer les rôles et réglages | non | non | non | oui |
-| Voir la matrice des permissions | non | non | lecture | oui |
+| Action                              | member                   | chef_pupitre                                   | secretaire         | admin  |
+| ----------------------------------- | ------------------------ | ---------------------------------------------- | ------------------ | ------ |
+| Voir l'agenda selon visibilité      | oui                      | oui                                            | oui                | oui    |
+| Répondre présent/absent             | oui, événements visibles | oui                                            | oui                | oui    |
+| Créer/modifier/annuler un événement | non                      | ses pupitres uniquement, un seul pupitre cible | tous               | tous   |
+| Supprimer un événement              | non                      | non (archivage/annulation)                     | oui                | oui    |
+| Voir les présences                  | oui, agrégées            | ses pupitres                                   | tous               | tous   |
+| Consulter le trombinoscope          | oui                      | oui                                            | oui                | oui    |
+| Modifier son profil                 | oui                      | oui                                            | oui                | oui    |
+| Modifier les pupitres d'un autre    | non                      | non                                            | oui                | oui    |
+| Attribuer un rôle                   | non                      | non                                            | non                | oui    |
+| Déposer un document                 | non                      | ses pupitres                                   | tous               | tous   |
+| Lire tous les documents             | oui                      | oui                                            | oui                | oui    |
+| Gérer les articles                  | non                      | non                                            | oui                | oui    |
+| Gérer les albums                    | non                      | non                                            | oui                | oui    |
+| Notifier                            | non                      | ses pupitres                                   | plusieurs pupitres | global |
+| Inviter / activer / suspendre       | non                      | non                                            | oui                | oui    |
+| Gérer les rôles et réglages         | non                      | non                                            | non                | oui    |
+| Voir la matrice des permissions     | non                      | non                                            | lecture            | oui    |
 
 ### 6.2 Règles de portée
 
@@ -441,23 +441,23 @@ nomment personne.
 
 ### 7.2 Écrans et comportements attendus
 
-| Écran | Contenu | Interactions |
-| --- | --- | --- |
-| Accueil | Salutation, prochains événements, réponses manquantes, notifications, raccourcis | Navigation, ouverture d'un événement |
-| Agenda | Filtres, liste groupée, badges de visibilité/type, état de réponse | Répondre, modifier sa réponse, gérer un événement selon droits |
-| Détail événement | Date, type, visibilité, pupitres, description, présences | RSVP, édition, annulation, suppression admin |
-| Trombinoscope | Grille, recherche, filtre pupitre, fiche | Ouvrir une fiche, voir les champs autorisés |
-| Profil | Identité, pupitres, niveau, fonction, avatar, préférences | Modifier, enregistrer, annuler, changer d'avatar |
-| Documents | Liste, filtre, badges pupitre, taille | Télécharger (simulé), déposer (si autorisé) |
-| Articles | Liste, statut, auteur, date | Créer, éditer, prévisualiser, publier/dépublier |
-| Médias | Albums, photos, légendes | Créer/modifier un album, ajouter une photo fictive |
-| Notifications | Liste lue/non lue, filtres | Marquer lu, tout marquer lu, composer un envoi simulé |
-| Pupitre | Résumé, événements, documents, membres | Gérer son périmètre |
-| Admin membres | Tableau, filtres, statut, pupitres | Inviter, activer, suspendre, modifier pupitres, rôle (admin) |
-| Invitations | Liste, états, expiration | Inviter, renvoyer, annuler |
-| Permissions | Matrice et explication | Lecture seule |
-| Réglages | Informations association, notifications, stockage simulé | Enregistrer (admin) |
-| Sécurité | Profil actif, rôle, portée, garanties de la démo | Réinitialiser la démo |
+| Écran            | Contenu                                                                          | Interactions                                                   |
+| ---------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Accueil          | Salutation, prochains événements, réponses manquantes, notifications, raccourcis | Navigation, ouverture d'un événement                           |
+| Agenda           | Filtres, liste groupée, badges de visibilité/type, état de réponse               | Répondre, modifier sa réponse, gérer un événement selon droits |
+| Détail événement | Date, type, visibilité, pupitres, description, présences                         | RSVP, édition, annulation, suppression admin                   |
+| Trombinoscope    | Grille, recherche, filtre pupitre, fiche                                         | Ouvrir une fiche, voir les champs autorisés                    |
+| Profil           | Identité, pupitres, niveau, fonction, avatar, préférences                        | Modifier, enregistrer, annuler, changer d'avatar               |
+| Documents        | Liste, filtre, badges pupitre, taille                                            | Télécharger (simulé), déposer (si autorisé)                    |
+| Articles         | Liste, statut, auteur, date                                                      | Créer, éditer, prévisualiser, publier/dépublier                |
+| Médias           | Albums, photos, légendes                                                         | Créer/modifier un album, ajouter une photo fictive             |
+| Notifications    | Liste lue/non lue, filtres                                                       | Marquer lu, tout marquer lu, composer un envoi simulé          |
+| Pupitre          | Résumé, événements, documents, membres                                           | Gérer son périmètre                                            |
+| Admin membres    | Tableau, filtres, statut, pupitres                                               | Inviter, activer, suspendre, modifier pupitres, rôle (admin)   |
+| Invitations      | Liste, états, expiration                                                         | Inviter, renvoyer, annuler                                     |
+| Permissions      | Matrice et explication                                                           | Lecture seule                                                  |
+| Réglages         | Informations association, notifications, stockage simulé                         | Enregistrer (admin)                                            |
+| Sécurité         | Profil actif, rôle, portée, garanties de la démo                                 | Réinitialiser la démo                                          |
 
 ### 7.3 États et retours
 
@@ -572,22 +572,22 @@ pour contrôler la persistance, puis réinitialisation.
 
 ## 11. Étapes de réalisation
 
-| # | Étape | Maître d'œuvre | Critère de fin |
-| --- | --- | --- | --- |
-| 0 | Validation du plan | Client + architecte | Accord explicite ; aucune ligne de code avant. |
-| 1 | Socle démo : types, fixtures, date, store, session, permissions, services, tests | Développeur données | Seed intègre, store persistant, reset, tests permissions/RSVP/store verts. |
-| 2 | Coquille : shell, navigation, bandeau, sélecteur, reset, routes vides protégées | Développeur UI | Toutes les routes existent ; menus adaptés au rôle ; mobile/desktop. |
-| 3 | Agenda + RSVP + gestion des événements | UI + données | Parcours membre, chef, secrétaire, admin ; verrouillage correct. |
-| 4 | Trombinoscope + filtres + fiche | UI + données | Tous les champs autorisés, aucun champ privé. |
-| 5 | Profil + préférences + avatar | UI + données | Modification persistante, rôle/pupitres en lecture seule. |
-| 6 | Documents + espace pupitre | UI + données | Dépôt simulé, portée des chefs, lecture pour tous. |
-| 7 | Articles + Milkdown + aperçu | UI | Création/édition/publi, Markdown conservé, build OK. |
-| 8 | Médias / albums | UI + données | Albums, photos, ordre, légendes, persistance. |
-| 9 | Notifications | UI + données | Boîte, lu/non lu, composeur selon portée. |
-| 10 | Administration : membres, invitations, rôles, permissions, réglages, sécurité | UI + données | Matrice respectée, refus explicites. |
-| 11 | Finitions : responsive, accessibilité, états vides/erreurs, reduced motion | UI | Contrôles clavier, contrastes, aucun débordement. |
-| 12 | QA complète + audit sécurité + corrections | Testeur + sécurité | `TESTS-DEMO.md` et `AUDIT-DEMO.md` sans blocage. |
-| 13 | Documentation, validations finales, commit et push `proto` | Architecte + UI | `check`/`lint`/`build` OK, absence prod vérifiée, commit poussé. |
+| #   | Étape                                                                            | Maître d'œuvre      | Critère de fin                                                             |
+| --- | -------------------------------------------------------------------------------- | ------------------- | -------------------------------------------------------------------------- |
+| 0   | Validation du plan                                                               | Client + architecte | Accord explicite ; aucune ligne de code avant.                             |
+| 1   | Socle démo : types, fixtures, date, store, session, permissions, services, tests | Développeur données | Seed intègre, store persistant, reset, tests permissions/RSVP/store verts. |
+| 2   | Coquille : shell, navigation, bandeau, sélecteur, reset, routes vides protégées  | Développeur UI      | Toutes les routes existent ; menus adaptés au rôle ; mobile/desktop.       |
+| 3   | Agenda + RSVP + gestion des événements                                           | UI + données        | Parcours membre, chef, secrétaire, admin ; verrouillage correct.           |
+| 4   | Trombinoscope + filtres + fiche                                                  | UI + données        | Tous les champs autorisés, aucun champ privé.                              |
+| 5   | Profil + préférences + avatar                                                    | UI + données        | Modification persistante, rôle/pupitres en lecture seule.                  |
+| 6   | Documents + espace pupitre                                                       | UI + données        | Dépôt simulé, portée des chefs, lecture pour tous.                         |
+| 7   | Articles + Milkdown + aperçu                                                     | UI                  | Création/édition/publi, Markdown conservé, build OK.                       |
+| 8   | Médias / albums                                                                  | UI + données        | Albums, photos, ordre, légendes, persistance.                              |
+| 9   | Notifications                                                                    | UI + données        | Boîte, lu/non lu, composeur selon portée.                                  |
+| 10  | Administration : membres, invitations, rôles, permissions, réglages, sécurité    | UI + données        | Matrice respectée, refus explicites.                                       |
+| 11  | Finitions : responsive, accessibilité, états vides/erreurs, reduced motion       | UI                  | Contrôles clavier, contrastes, aucun débordement.                          |
+| 12  | QA complète + audit sécurité + corrections                                       | Testeur + sécurité  | `TESTS-DEMO.md` et `AUDIT-DEMO.md` sans blocage.                           |
+| 13  | Documentation, validations finales, commit et push `proto`                       | Architecte + UI     | `check`/`lint`/`build` OK, absence prod vérifiée, commit poussé.           |
 
 ---
 
@@ -615,16 +615,16 @@ pour contrôler la persistance, puis réinitialisation.
 
 ## 13. Risques et points d'attention
 
-| Risque | Mesure |
-| --- | --- |
-| Milkdown incompatible avec Svelte 5 ou le build | Composant client-only isolé, test de build ; arrêt et arbitrage client si blocage. |
-| Code de démo présent dans le build | Imports dynamiques derrière `dev`, `ssr = !dev`, recherche du marqueur `__BAGAD_DEMO__`. |
-| `hooks.server.ts` charge Neon en démo | Imports dynamiques de `auth`/`db` hors démo, test sans `DATABASE_URL`. |
-| localStorage indisponible ou plein | Repli mémoire + message, reset, aucune image en base64. |
-| Démo qui « pourrit » avec le temps | Date de référence figée `2026-11-11`, affichée dans l'interface. |
-| Duplication avec les squelettes existants | Remplir les fichiers prévus par `docs/Structure.md`, pas de nouvelles arborescences parallèles. |
-| Fuite de données réelles via les photos d'albums | Visuels illustrés ou photos déjà publiques uniquement, légendes sans noms. |
-| Régression de la partie publique | Périmètre de fichiers strict, `git diff` contrôlé, aucun changement i18n public. |
+| Risque                                           | Mesure                                                                                          |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Milkdown incompatible avec Svelte 5 ou le build  | Composant client-only isolé, test de build ; arrêt et arbitrage client si blocage.              |
+| Code de démo présent dans le build               | Imports dynamiques derrière `dev`, `ssr = !dev`, recherche du marqueur `__BAGAD_DEMO__`.        |
+| `hooks.server.ts` charge Neon en démo            | Imports dynamiques de `auth`/`db` hors démo, test sans `DATABASE_URL`.                          |
+| localStorage indisponible ou plein               | Repli mémoire + message, reset, aucune image en base64.                                         |
+| Démo qui « pourrit » avec le temps               | Date de référence figée `2026-11-11`, affichée dans l'interface.                                |
+| Duplication avec les squelettes existants        | Remplir les fichiers prévus par `docs/Structure.md`, pas de nouvelles arborescences parallèles. |
+| Fuite de données réelles via les photos d'albums | Visuels illustrés ou photos déjà publiques uniquement, légendes sans noms.                      |
+| Régression de la partie publique                 | Périmètre de fichiers strict, `git diff` contrôlé, aucun changement i18n public.                |
 
 ---
 
