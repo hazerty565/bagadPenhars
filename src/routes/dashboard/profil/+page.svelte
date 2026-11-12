@@ -1,2 +1,5 @@
-<h1>Profil</h1>
-<p>Page profil utilisateur.</p>
+<script lang="ts">
+	import DemoRoute from '$lib/components/dashboard/DemoRoute.svelte';
+</script>
+
+<DemoRoute loader={() => import('$lib/demo/pages/ProfilePage.svelte')} />

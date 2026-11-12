@@ -1,5 +1,5 @@
+import { dev } from '$app/environment';
 import { fail, redirect } from '@sveltejs/kit';
-import { auth } from '$lib/server/auth';
 import { loginSchema } from './schema';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -28,6 +28,11 @@ function isEmailNotVerified(error: unknown): boolean {
  * Redirige vers le dashboard si l'utilisateur est déjà authentifié et actif.
  */
 export const load: PageServerLoad = async ({ locals }) => {
+	if (dev) {
+		// Mode démonstration : l’espace membre est accessible directement.
+		throw redirect(303, '/dashboard');
+	}
+
 	if (locals.profile && locals.accountStatus === 'active') {
 		throw redirect(303, '/dashboard');
 	}
@@ -50,6 +55,7 @@ export const actions: Actions = {
 		}
 
 		try {
+			const { auth } = await import('$lib/server/auth');
 			await auth.api.signInEmail({
 				body: {
 					email: validation.data.email,

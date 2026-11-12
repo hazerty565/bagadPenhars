@@ -1,2 +1,5 @@
-<h1>Notifications</h1>
-<p>Préférences de notification.</p>
+<script lang="ts">
+	import DemoRoute from '$lib/components/dashboard/DemoRoute.svelte';
+</script>
+
+<DemoRoute loader={() => import('$lib/demo/pages/NotificationsPage.svelte')} />

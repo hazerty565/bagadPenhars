@@ -1,2 +1,5 @@
-<h1>Sécurité</h1>
-<p>Page de modification du mot de passe.</p>
+<script lang="ts">
+	import DemoRoute from '$lib/components/dashboard/DemoRoute.svelte';
+</script>
+
+<DemoRoute loader={() => import('$lib/demo/pages/SecurityPage.svelte')} />

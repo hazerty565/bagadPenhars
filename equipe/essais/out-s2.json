@@ -1,0 +1,169 @@
+{
+	"results": [
+		{
+			"id": "C1",
+			"name": "Agenda membre : événements visibles",
+			"status": "OK",
+			"observed": "12 cartes affichées",
+			"expected": "12 événements à venir visibles (sur 16)"
+		},
+		{
+			"id": "C2",
+			"name": "Visibilité pupitre respectée",
+			"status": "OK",
+			"observed": "bombarde=true · cornemuse=false · percussion=false",
+			"expected": "membre bombarde : voit la sienne, pas les 3 autres"
+		},
+		{
+			"id": "C3",
+			"name": "Compteurs présents / absents",
+			"status": "OK",
+			"observed": "11 présents · 3 absents | 4 présents · 1 absent | 0 présent · 0 absent",
+			"expected": "compteurs affichés par carte"
+		},
+		{
+			"id": "C4",
+			"name": "Réponse présent enregistrée",
+			"status": "OK",
+			"observed": "state=present · message=Votre présence a été enregistrée.",
+			"expected": "present + confirmation"
+		},
+		{
+			"id": "C5",
+			"name": "Réponse persistée après rechargement",
+			"status": "OK",
+			"observed": "18 NOV. 2026 Réunion Interne Réunion du bureau Salle du bureau, Espace Chaptal 1 présent · 0 absent Vous êtes présent Présent Absent Détail",
+			"expected": "badge « Vous êtes présent »"
+		},
+		{
+			"id": "C6",
+			"name": "Réponse modifiable (absent)",
+			"status": "OK",
+			"observed": "state=absent",
+			"expected": "absent après modification"
+		},
+		{
+			"id": "C7",
+			"name": "Événement passé verrouillé",
+			"status": "OK",
+			"observed": "assée, conservée pour l’historique des présences. Présences 5 PRÉSENTS 2 ABSENTS 17 SANS RÉPONSE Les réponses individuelles ne sont visibles que par les chefs des pupitres concernés, la secrétaire et l’administrateur. Ma réponse Les réponses sont closes depuis le lendemain de l’événement. Votre réponse conservée : présent. Traçabilité fic",
+			"expected": "badge Passé, message de clôture, réponse conservée"
+		},
+		{
+			"id": "C8",
+			"name": "Aucun bouton de réponse sur un passé",
+			"status": "OK",
+			"observed": "0 bouton(s)",
+			"expected": "0"
+		},
+		{
+			"id": "C9",
+			"name": "Événement annulé en lecture seule",
+			"status": "OK",
+			"observed": "nulé par l’organisateur. Les réponses restent visibles en lecture seule. Présences 3 PRÉSENTS 1 ABSENTS 20 SANS RÉPONSE Les réponses individuelles ne sont visibles que par les chefs des pupitres concernés, la secrétaire et l’administrateur. Ma réponse Cet événement est annulé : les réponses sont conservées en lecture seule. Votre réponse ",
+			"expected": "badge Annulé, message, réponse conservée"
+		},
+		{
+			"id": "C10",
+			"name": "Membre : présences agrégées seulement",
+			"status": "OK",
+			"observed": "détaillé=false · noms=false",
+			"expected": "agrégats, aucun nom"
+		},
+		{
+			"id": "C11",
+			"name": "Chef : présences nominatives de son pupitre",
+			"status": "OK",
+			"observed": "détaillé=true · nom=true",
+			"expected": "liste nominative"
+		},
+		{
+			"id": "C12",
+			"name": "Chef : pas de nominatif sur un événement global",
+			"status": "OK",
+			"observed": "détaillé=false",
+			"expected": "agrégats uniquement"
+		},
+		{
+			"id": "C13",
+			"name": "Chef : nominatif sur son autre pupitre",
+			"status": "OK",
+			"observed": "détaillé=true",
+			"expected": "liste nominative (Cornemuse)"
+		},
+		{
+			"id": "C14",
+			"name": "Chef : modifier limité à ses pupitres",
+			"status": "OK",
+			"observed": "2 lien(s) Modifier",
+			"expected": "2 (Bombarde + Cornemuse)"
+		},
+		{
+			"id": "C15",
+			"name": "Chef : pas de suppression",
+			"status": "OK",
+			"observed": "0 bouton(s) Supprimer",
+			"expected": "0"
+		},
+		{
+			"id": "C16",
+			"name": "Chef : modification multi-pupitres refusée",
+			"status": "OK",
+			"observed": "Retour à l’agenda\nAccès non autorisé\n\nCet événement est multi-pupitres, global, ou appartient à un pupitre que vous ne d",
+			"expected": "Accès non autorisé"
+		},
+		{
+			"id": "C17",
+			"name": "Chef : création sur son pupitre",
+			"status": "OK",
+			"observed": "{\"id\":\"e17\",\"title\":\"Répétition QA bombarde\",\"description\":\"\",\"date\":\"2026-11-18\",\"type\":\"repetition\",\"visibility\":\"pupitre\",\"isPoll\":false,\"status\":\"active\",\"p",
+			"expected": "1 cible Bombarde, visibilité pupitre"
+		},
+		{
+			"id": "C18",
+			"name": "Chef : formulaire contraint",
+			"status": "OK",
+			"observed": "visibilité désactivée=true · pupitres proposés=2",
+			"expected": "visibilité verrouillée, 2 pupitres"
+		},
+		{
+			"id": "C19",
+			"name": "Membre : aucune action de gestion",
+			"status": "OK",
+			"observed": "nouveau=0 · modifier=0",
+			"expected": "0 / 0"
+		},
+		{
+			"id": "C20",
+			"name": "Secrétaire : modifier/supprimer partout",
+			"status": "OK",
+			"observed": "cartes=16 · modifier=16 · supprimer=16",
+			"expected": "actions sur chaque carte"
+		},
+		{
+			"id": "C21",
+			"name": "Secrétaire : modification multi-pupitres",
+			"status": "OK",
+			"observed": "formulaire affiché",
+			"expected": "formulaire accessible"
+		},
+		{
+			"id": "C22",
+			"name": "Filtre « Passés »",
+			"status": "OK",
+			"observed": "1 carte(s)",
+			"expected": "1 (4 novembre)"
+		}
+	],
+	"summary": {
+		"ok": 22,
+		"ko": 0,
+		"total": 22
+	},
+	"logs": {
+		"console": [],
+		"pageerror": [],
+		"failed": [],
+		"requests": []
+	}
+}

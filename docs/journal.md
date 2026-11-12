@@ -745,3 +745,105 @@ eslint .`) échouait sur **18 fichiers** mal formatés et **8 erreurs ESLint**,
 - **Reste à faire** : remplacer les six articles de démonstration par la table
   `articles` de Neon, ajouter la gestion des actualités dans l'espace
   adhérents, et faire relire les textes bretons par un locuteur natif.
+
+### Espace membre en mode démonstration
+
+- **Demande** : livrer tout l'espace adhérent avec des données fictives, sans
+  Neon, pour le faire valider ; interfaces réellement manipulables, sélecteur
+  de profil permanent, persistance locale, architecture séparée
+  UI / données / session / permissions / services, remplaçable par
+  Neon/Drizzle sans reconstruire les écrans.
+- **Périmètre livré** : agenda et RSVP (présent, absent, sans réponse), détail,
+  création et modification d'événement, trombinoscope filtrable, profil et
+  photo, sécurité, documents, notifications, espace pupitre (membres,
+  documents, notifications) et administration (membres, invitations,
+  permissions, agenda, articles, médias, notifications, réglages).
+- **Socle** : `src/lib/demo/` (types miroirs de `docs/database.md`, date figée
+  `2026-11-11` en `Europe/Paris`, fixtures, store `$state` persisté sous
+  `bagadpenhars.demo.v1`, session simulée, permissions pures, services
+  contrôlés). Les services refusent les mutations non autorisées : masquer un
+  bouton n'est jamais la protection.
+- **Routes** : chaque `+page.svelte` de `/dashboard/**` monte `DemoRoute`, qui
+  charge la page par `import()` dynamique en développement et affiche sinon un
+  écran « Espace adhérents ». `ssr = !dev` et `prerender = false` dans
+  `+layout.ts` ; `+layout.server.ts` redirige vers `/auth/login` sans session
+  en production.
+- **Séparation démo / production** : le premier build a montré que les
+  `import()` gardés par `{#if dev}` étaient **quand même** analysés par Vite et
+  embarquaient les chunks de démonstration. Ajout du plugin
+  `bagad-exclude-demo-from-build` dans `vite.config.ts`, qui résout
+  `$lib/demo/pages/*` et `$lib/demo/components/*` vers un module vide au build.
+  Vérifié : `MODE DÉMONSTRATION`, `bagadpenhars.demo.v1` et les fixtures sont
+  absents de `.svelte-kit/output`. En développement et sous Vitest, le plugin
+  ne s'applique pas.
+- **Pièges rencontrés** : `structuredClone` échoue sur les proxys `$state` de
+  Svelte (remplacé par `JSON.parse(JSON.stringify(...))` dans `persist()`) ;
+  `@lucide/svelte` v1.71 n'a pas `Trash2` mais `Trash` ; les `$effect` de
+  resynchronisation (`EventFormPage`, `ArticleFormPage`, `ProfilePage`) évitent
+  de réutiliser les valeurs d'un écran précédent lors d'une navigation cliente.
+- **Tests** : `tests/demo/` couvre fixtures et validité du seed, matrice de
+  permissions, services d'événements, RSVP et verrouillage, notifications,
+  store, détection du mode et isolation (aucun import statique de `$lib/demo`
+  dans les routes, aucun accès serveur/base/secrets depuis la démo).
+  `npx vitest run tests/demo` : 8 fichiers, 72 tests, tous verts.
+- **Validation** : `pnpm run check` 0 erreur (19 avertissements
+  `state_referenced_locally`, non bloquants), Prettier et ESLint OK,
+  `pnpm run build` OK, absence du code démo vérifiée dans la sortie.
+  Parcours testés au navigateur : accès membre refusé sur admin/pupitre,
+  admin et chef OK, changement de profil (admin → membre), RSVP persistant
+  après rechargement.
+- **Reste à faire** : remplacer les services de démonstration par les
+  requêtes Neon/Drizzle (`events`, `responses`, `profiles`, `documents`,
+  `articles`, `albums`, `notifications`, `invitations`) derrière les mêmes
+  signatures, brancher les guards serveur sur ces services, puis supprimer
+  `src/lib/demo/`, `DemoRoute`, `AsyncDemoPage` et le plugin Vite.
+
+### Recette QA de la démonstration, corrections et rejeu
+
+- **Premier passage** : 171 cas répartis sur 10 axes, **162 réussis, 9 en
+  échec**, et 8 anomalies : A-01 (majeure) routes pupitre et admin accessibles
+  par URL directe ; A-02 (modérée) sélecteur de pupitre vide pour le chef ;
+  A-03 (modérée) rôle applicatif et ancienneté affichés dans la fiche du
+  trombinoscope ; A-04 (modérée) aucun titre de page ; A-05 à A-08 (mineures)
+  recherche sensible aux accents, 404 `favicon.ico`, écrans de refus sans
+  `h1`, avertissement de stockage non annoncé.
+- **Corrections appliquées** :
+  - A-01 : gardes de section dans les pages (`canSeePupitreSection`,
+    `canSeeAdminSection`), `adminMode` sur les notifications et le formulaire
+    d'événement, gestion de l'agenda réservée à la secrétaire et à
+    l'administrateur ;
+  - A-02 : `$effect` initialise le pupitre du chef sur le premier pupitre
+    qu'il dirige, sans option « Tous les pupitres » ;
+  - A-03 : fiche membre limitée aux champs de `docs/brief.md` §2 bis (nom,
+    prénom, photo, pupitres, niveau, fonction), rôle et ancienneté retirés ;
+  - A-04 : `dashboardPageTitle()` et `<svelte:head><title>` dans `DemoShell` ;
+  - A-05 : normalisation NFD, diacritiques et apostrophes retirés avant
+    comparaison ;
+  - A-06 : `static/favicon.ico` ajouté (PNG 32 × 32) ;
+  - A-07 : « Accès non autorisé » passe en `h1` dans `AccessDenied` ;
+  - A-08 : bandeau de stockage en `role="status"` + `aria-live="polite"`.
+- **Rejeu** : les 171 cas ont été rejoués après correction, **171 réussis,
+  0 échec**, et `npx vitest run tests/demo` reste à 8 fichiers / 72 tests
+  verts. Les assertions `D6` (champs autorisés) et `F11` (dépôt par défaut du
+  chef) ont été renforcées, aucun cas supprimé.
+- **Pièges rencontrés** : un `$effect` qui réassigne sa propre dépendance boucle
+  sans garde — la réinitialisation du pupitre compare la valeur courante à la
+  liste disponible avant d'écrire ; `resolve()` exige les identifiants complets
+  de route (`/(public)/[lang=lang]`, `/dashboard/agenda/[id]`) ; les sorties
+  PowerShell sont en UTF-16 et doivent être converties pour Prettier ; les
+  fichiers `tests/guards.test.ts`, `tests/i18n.test.ts` et
+  `tests/invitation.test.ts` sont vides et font échouer `npm run test`, d'où
+  l'usage de `npx vitest run tests/demo`.
+- **Rapports** : `equipe/TESTS-DEMO.md` (recette, 171/171, corrections et
+  rejeu, verdict « prêt à valider par le client ») et `equipe/AUDIT-DEMO.md`
+  (audit : réserves de démonstration levées, production non validée avec les
+  quatre constats majeurs SEC-M01 à SEC-M04 toujours ouverts).
+- **Validation finale** : `pnpm run check` 0 erreur (19 avertissements
+  `state_referenced_locally`), ESLint et Prettier conformes, `pnpm run build`
+  OK, et recherche des marqueurs de démonstration dans `.svelte-kit/output` :
+  aucune occurrence.
+- **Reste à faire** : validation client (libellés, données simulées),
+  contrastes outillés, appareils physiques, puis branchement Neon/Drizzle et
+  application des recommandations de production de `equipe/AUDIT-DEMO.md`
+  (guards serveur, RLS, fermeture de l'inscription publique, vérification
+  d'e-mail).

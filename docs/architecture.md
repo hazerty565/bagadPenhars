@@ -88,7 +88,8 @@ fonction soit complète.
   fichiers.
 - `/dashboard/...` : espace adhérent et pages d'administration : agenda,
   documents, profil, pupitre, notifications, membres, articles, médias,
-  invitations et réglages.
+  invitations et réglages. En production, `+layout.server.ts` redirige vers
+  `/auth/login` sans session Better Auth vérifiée.
 - `/` : redirection 307 vers `/fr` (`src/routes/(public)/+page.server.ts`) ;
   le sitemap est servi par `/sitemap.xml`.
 
@@ -96,6 +97,46 @@ Les pages publiques acceptent les langues `fr`, `en` et `br` selon le matcher
 `src/params/lang.ts`. Le tableau de bord est sans préfixe de langue.
 Les textes publics sont centralisés dans `src/lib/i18n/` (dictionnaires typés
 `fr`, `en`, `br`).
+
+## Espace membre et démonstration locale
+
+L'espace membre est livré en deux couches strictement séparées.
+
+**Couche de démonstration (`src/lib/demo/`)**, active uniquement en
+développement local (`dev` de `$app/environment`) :
+
+- `types.ts` reprend les noms de champs du modèle cible (`docs/database.md`) ;
+- `fixtures/` contient 24 profils, les événements, réponses, notifications,
+  documents, articles, albums et invitations fictifs ;
+- `store.svelte.ts` expose un état réactif persisté dans `localStorage`
+  (clé `bagadpenhars.demo.v1`, versionnée et validée par `fixtures/index.ts`) ;
+- `session.svelte.ts` simule la session et le profil actif ;
+- `permissions.ts` est la source de vérité unique des droits, utilisée à la
+  fois par l'interface et par les services ;
+- `services/` porte les mutations et refuse toute action non autorisée ;
+- `pages/` contient les écrans, `components/` la coquille et le sélecteur de
+  profil.
+
+**Couche de production** : les routes `/dashboard/**` ne contiennent aucune
+donnée. Chaque `+page.svelte` monte `DemoRoute`
+(`src/lib/components/dashboard/DemoRoute.svelte`) qui, en développement,
+charge la page de démonstration par `import()` dynamique ; en production, il
+affiche un écran « Espace adhérents » avec un lien vers `/auth/login`.
+
+`vite.config.ts` enregistre le plugin `bagad-exclude-demo-from-build`, qui
+résout `$lib/demo/pages/*` et `$lib/demo/components/*` vers un module vide
+pendant le build. Vérifié : `MODE DÉMONSTRATION`, `DEMO_STORAGE_KEY` et les
+données fictives sont absents de `.svelte-kit/output` en production.
+
+Règles de la démonstration :
+
+- aucun import statique de `$lib/demo` dans `src/routes/` (test
+  `tests/demo/isolation.test.ts`) ;
+- la démonstration n'importe ni `$lib/server`, ni `$lib/db`, ni `$env/` ;
+- les rôles, statuts et noms restent fictifs ; toutes les adresses utilisent
+  `example.com` ;
+- les guards serveur de production ne sont ni contournés ni dupliqués : la
+  démonstration ne crée aucune fausse API sécurisée.
 
 ## Flux applicatifs attendus
 

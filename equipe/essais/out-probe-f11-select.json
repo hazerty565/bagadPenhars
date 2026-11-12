@@ -1,0 +1,20 @@
+{
+	"info": {
+		"value": "",
+		"selectedIndex": -1,
+		"optionCount": 2,
+		"options": [
+			{
+				"value": "bombarde",
+				"label": "Bombarde",
+				"selected": false
+			},
+			{
+				"value": "cornemuse",
+				"label": "Cornemuse",
+				"selected": false
+			}
+		],
+		"outerHTML": "<select class=\"w-full border border-marine/20 bg-white px-3 py-2 text-sm text-ink placeholder:text-ardoise/60 focus:border-marine focus:outline-none focus:ring-1 focus:ring-marine/30 disabled:bg-ivoire disabled:text-ardoise mt-1\"><!----><option value=\"bombarde\">Bombarde</option><option value=\"cornemuse\">Cornemuse</option><!----></select>"
+	}
+}

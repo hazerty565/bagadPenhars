@@ -1,0 +1,31 @@
+{
+	"node": {
+		"text": "Les données enregistrées étaient corrompues : le jeu de démonstration a été rechargé.",
+		"chain": [
+			{
+				"tag": "p",
+				"role": null,
+				"ariaLive": null,
+				"class": "border-t border-or/40 px-4 py-1.5 text-[0.7rem] text-danger sm:px-6 lg:px-10"
+			},
+			{
+				"tag": "div",
+				"role": null,
+				"ariaLive": null,
+				"class": "border-b border-or/60 bg-or/20"
+			},
+			{
+				"tag": "div",
+				"role": null,
+				"ariaLive": null,
+				"class": "lg:pl-72"
+			},
+			{
+				"tag": "div",
+				"role": null,
+				"ariaLive": null,
+				"class": "min-h-screen bg-ivoire/50"
+			}
+		]
+	}
+}

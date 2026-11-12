@@ -1,0 +1,232 @@
+{
+	"results": [
+		{
+			"id": "H1",
+			"name": "Membre : navigation sans pupitre ni administration",
+			"status": "OK",
+			"observed": "aucune entrée pupitre/administration",
+			"expected": "aucune entrée réservée"
+		},
+		{
+			"id": "H2",
+			"name": "Membre : 4 routes pupitre refusées",
+			"status": "OK",
+			"observed": "4/4 refusées",
+			"expected": "4/4 refusées avec « Accès non autorisé »"
+		},
+		{
+			"id": "H3",
+			"name": "Membre : 9 routes administration refusées",
+			"status": "OK",
+			"observed": "9/9 refusées",
+			"expected": "9/9 refusées"
+		},
+		{
+			"id": "H3b",
+			"name": "Membre : formulaires de création/édition refusés",
+			"status": "OK",
+			"observed": "4/4 refusés",
+			"expected": "4/4 refusés"
+		},
+		{
+			"id": "H4",
+			"name": "Membre : services refusent les actions réservées",
+			"status": "OK",
+			"observed": "dépôt: Vous ne pouvez déposer un document que pour un pupitre que vous dirigez. · suppression: Vous ne pouvez pas supprimer ce document. · notification: Vous ne pouvez notifier que vos pupitres, ou l’ensemble du bagad si vous êtes secrétaire. · rôle: Seul l’administrateur peut attribuer un rôle. · réglages: Seul l’administrateur peut modifier les réglages.",
+			"expected": "5 refus explicites malgré l’appel direct"
+		},
+		{
+			"id": "H5",
+			"name": "Membre : aucun effet de bord après les appels directs",
+			"status": "OK",
+			"observed": "documents=seed non persisté · rôle p24=member",
+			"expected": "état inchangé"
+		},
+		{
+			"id": "H6",
+			"name": "Chef : entrée pupitre visible, pas l’administration",
+			"status": "OK",
+			"observed": "Accueil | Agenda | Membres | Documents | Notifications 3 | Mon profil | Sécurité et session | Espace pupitre",
+			"expected": "Espace pupitre présent, Administration absente"
+		},
+		{
+			"id": "H7",
+			"name": "Chef : espace pupitre limité à ses 2 pupitres",
+			"status": "OK",
+			"observed": "Bombarde | Cornemuse",
+			"expected": "Bombarde | Cornemuse"
+		},
+		{
+			"id": "H8",
+			"name": "Chef : badge « Vous dirigez » sur ses pupitres",
+			"status": "OK",
+			"observed": "2 badges",
+			"expected": "2"
+		},
+		{
+			"id": "H9",
+			"name": "Chef : membres limités à ses pupitres",
+			"status": "OK",
+			"observed": "14 membres affichés, attendu 14",
+			"expected": "14 membres des 2 pupitres"
+		},
+		{
+			"id": "H10",
+			"name": "Chef : aucune coordonnée dans la liste de ses pupitres",
+			"status": "OK",
+			"observed": "e-mails=0",
+			"expected": "0"
+		},
+		{
+			"id": "H11",
+			"name": "Chef : documents limités à ses pupitres",
+			"status": "OK",
+			"observed": "5 documents",
+			"expected": "5 (3 communs + 2 pupitres), aucun de caisse claire"
+		},
+		{
+			"id": "H12",
+			"name": "Chef : notifications limitées à ses pupitres",
+			"status": "OK",
+			"observed": "1 notification",
+			"expected": "1 (n02 bombarde)"
+		},
+		{
+			"id": "H13",
+			"name": "Chef : administration refusée",
+			"status": "OK",
+			"observed": "Accès non autorisé",
+			"expected": "refus"
+		},
+		{
+			"id": "H13b",
+			"name": "Chef : portée des formulaires d’événement",
+			"status": "OK",
+			"observed": "édition e02 (son pupitre)=true · édition e01 (global)=false",
+			"expected": "e02 autorisé, e01 refusé"
+		},
+		{
+			"id": "H13c",
+			"name": "Chef : route /dashboard/admin/agenda/new",
+			"status": "OK",
+			"observed": "formulaire affiché=false",
+			"expected": "refusée (le plan réserve admin/* à la secrétaire et à l’admin)"
+		},
+		{
+			"id": "H14",
+			"name": "Chef : services refusent hors de son périmètre",
+			"status": "OK",
+			"observed": "suppr. globale: Vous ne pouvez pas supprimer ce document. · suppr. caisse claire: Vous ne pouvez pas supprimer ce document. · dépôt caisse claire: Vous ne pouvez déposer un document que pour un pupitre que vous dirigez. · notif. tout le bagad: Vous ne pouvez notifier que vos pupitres, ou l’ensemble du bagad si vous êtes secrétaire.",
+			"expected": "4 refus explicites"
+		},
+		{
+			"id": "H15",
+			"name": "Secrétaire : administration accessible",
+			"status": "OK",
+			"observed": "Accueil | Agenda | Membres | Documents | Notifications 5 | Mon profil | Sécurité et session | Espace pupitre | Administration | Articles | Médias",
+			"expected": "Administration visible, page autorisée"
+		},
+		{
+			"id": "H16",
+			"name": "Secrétaire : 8 modules d’administration",
+			"status": "OK",
+			"observed": "10 liens",
+			"expected": "8 modules"
+		},
+		{
+			"id": "H17",
+			"name": "Secrétaire : périmètre annoncé sans rôles/réglages",
+			"status": "OK",
+			"observed": "Secrétaire : vous gérez tous les pupitres, les événements, les contenus, les invitations et les comptes. L’attribution des rôles, les réglages globaux et les suppressions restent réservés à l’administrateur.",
+			"expected": "mention explicite des limites"
+		},
+		{
+			"id": "H18",
+			"name": "Secrétaire : réglages globaux refusés",
+			"status": "OK",
+			"observed": "Accès non autorisé",
+			"expected": "refus"
+		},
+		{
+			"id": "H19",
+			"name": "Secrétaire : rôles non modifiables",
+			"status": "OK",
+			"observed": "0 sélecteur de rôle · 24 lignes",
+			"expected": "0 sélecteur, 24 lignes en lecture"
+		},
+		{
+			"id": "H20",
+			"name": "Secrétaire : peut gérer pupitres/niveau/fonction",
+			"status": "OK",
+			"observed": "24 boutons Gérer",
+			"expected": "24"
+		},
+		{
+			"id": "H21",
+			"name": "Secrétaire : services refusent rôles et réglages",
+			"status": "OK",
+			"observed": "rôle: Seul l’administrateur peut attribuer un rôle. · réglages: Seul l’administrateur peut modifier les réglages.",
+			"expected": "2 refus explicites"
+		},
+		{
+			"id": "H22",
+			"name": "Secrétaire : suppression autorisée sur un document global",
+			"status": "OK",
+			"observed": "suppression acceptée",
+			"expected": "autorisée"
+		},
+		{
+			"id": "H23",
+			"name": "Administrateur : rôles modifiables sauf le sien",
+			"status": "OK",
+			"observed": "23 sélecteurs",
+			"expected": "23 (24 − son propre profil)"
+		},
+		{
+			"id": "H24",
+			"name": "Administrateur : attribution de rôle effective",
+			"status": "OK",
+			"observed": "rôle de p24 = secretaire",
+			"expected": "secretaire"
+		},
+		{
+			"id": "H25",
+			"name": "Administrateur : réglages accessibles",
+			"status": "OK",
+			"observed": "refus=0 · bouton Enregistrer présent",
+			"expected": "page autorisée"
+		},
+		{
+			"id": "H26",
+			"name": "Administrateur : service de réglages autorisé",
+			"status": "OK",
+			"observed": "accepté",
+			"expected": "autorisé"
+		},
+		{
+			"id": "H27",
+			"name": "Administrateur : impossible de changer son propre rôle",
+			"status": "OK",
+			"observed": "Vous ne pouvez pas modifier votre propre rôle.",
+			"expected": "refus explicite"
+		},
+		{
+			"id": "H28",
+			"name": "Administrateur : vue consolidée des 4 pupitres",
+			"status": "OK",
+			"observed": "Bombarde | Cornemuse | Caisse claire | Percussion",
+			"expected": "4 pupitres"
+		}
+	],
+	"summary": {
+		"ok": 31,
+		"ko": 0,
+		"total": 31
+	},
+	"logs": {
+		"console": [],
+		"pageerror": [],
+		"failed": [],
+		"requests": []
+	}
+}
