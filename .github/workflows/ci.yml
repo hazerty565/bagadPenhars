@@ -1,4 +1,3 @@
-```yaml
 name: CI
 
 on:
@@ -45,4 +44,3 @@ jobs:
           DATABASE_URL: postgres://user:pass@localhost:5432/placeholder
           BETTER_AUTH_API_KEY: build-placeholder-secret-at-least-32-chars
           BETTER_AUTH_URL: http://localhost:5173
-```
