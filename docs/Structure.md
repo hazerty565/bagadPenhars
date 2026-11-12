@@ -227,7 +227,7 @@ alerte à 7 Go et blocage de tout nouvel upload à 8 Go.
 ### Cloudflare Pages et notifications
 
 Cloudflare Pages héberge le runtime SvelteKit et reçoit les bindings Neon via
-variables d'environnement et R2 via binding `R2_BUCKET`. OneSignal reste le
+variables d'environnement et R2 via les bindings `R2_PUBLIC` et `R2_PRIVATE`. OneSignal reste le
 service de notification push côté serveur.
 
 Le service worker OneSignal fourni dans `static/OneSignalSDKWorker.js` ne
@@ -300,7 +300,7 @@ précisés dans [`Spec_UI.md`](./Spec_UI.md).
 | `docs/Spec.md`                                                           | Exigences fonctionnelles et critères d'acceptation          |
 | `docs/Spec_UI.md`                                                        | Spécification de l'interface                                |
 | `docs/architecture.md`                                                   | Routes, flux applicatifs et architecture                    |
-| `docs/database.md`                                                       | Neon, Better Auth, R2 et droits applicatifs                  |
+| `docs/database.md`                                                       | Neon, Better Auth, R2 et droits applicatifs                 |
 | `docs/pwa.md`                                                            | Manifest, cache et notifications                            |
 | `docs/questions.md`                                                      | Décisions validées et points ouverts, avec arbitrages datés |
 | `docs/roadmap.md`, `docs/backlog.md`, `docs/suivi.md`                    | Priorités et avancement                                     |

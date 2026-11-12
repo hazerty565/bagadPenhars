@@ -18,19 +18,19 @@ Ordre de grandeur : environ 200 utilisateurs. Un site simple, fiable, facile à 
 
 ## 2. Utilisateurs et rôles
 
-| Rôle | Droits |
-|---|---|
-| **admin** | Tout : utilisateurs, rôles, contenus, notifications ; inviter et valider les comptes |
-| **secrétaire** | Gérer tous les événements, articles et albums photo ; envoyer des notifications OneSignal à plusieurs pupitres |
+| Rôle                | Droits                                                                                                                                                                                              |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **admin**           | Tout : utilisateurs, rôles, contenus, notifications ; inviter et valider les comptes                                                                                                                |
+| **secrétaire**      | Gérer tous les événements, articles et albums photo ; envoyer des notifications OneSignal à plusieurs pupitres                                                                                      |
 | **chef de pupitre** | Créer, modifier et supprimer les événements des pupitres qu'il dirige ; sélectionner une seule cible lors de la création ou de la modification ; envoyer des partitions PDF ; notifier ses pupitres |
-| **membre** | Consulter l'agenda et les documents, répondre aux événements, consulter le trombinoscope et gérer son profil |
+| **membre**          | Consulter l'agenda et les documents, répondre aux événements, consulter le trombinoscope et gérer son profil                                                                                        |
 
 Le statut du compte est indépendant du rôle applicatif :
 
-| Statut | Signification |
-|---|---|
-| `pending` | Compte créé sur invitation, en attente d'activation |
-| `active` | Compte autorisé à utiliser l'application selon son rôle |
+| Statut      | Signification                                                   |
+| ----------- | --------------------------------------------------------------- |
+| `pending`   | Compte créé sur invitation, en attente d'activation             |
+| `active`    | Compte autorisé à utiliser l'application selon son rôle         |
 | `suspended` | Compte temporairement désactivé sans suppression de ses données |
 
 Règles :

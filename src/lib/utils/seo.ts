@@ -1,3 +1,3 @@
 export function buildTitle(title: string) {
-  return `${title} | Bagad Penhars`;
+	return `${title} | Bagad Penhars`;
 }

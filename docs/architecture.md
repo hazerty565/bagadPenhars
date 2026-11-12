@@ -36,20 +36,66 @@ fonction soit complète.
 
 - `/(public)/[lang=lang]/...` : site public localisé. Les sections repérées
   incluent l'accueil, les articles, le bagad, la formation, l'agenda, les
-  médias, les partenaires et le contact.
-- `/auth/...` : connexion, déconnexion, invitation, attente, mot de passe
-  oublié et réinitialisation.
-- `/auth/...` et `/api/auth/...` : pages et endpoint Better Auth pour la
-  connexion, la déconnexion, les invitations et la réinitialisation.
+  médias, les partenaires, le contact et les informations légales. La page
+  d'accueil est composée de `src/lib/components/home/` (dont
+  `Prestations.svelte`, les formats proposés aux organisateurs) et partage le
+  header/footer de `src/lib/components/layout/`.
+- `/(public)/[lang=lang]/informations-legales` : mentions légales (éditeur,
+  direction de la publication, hébergement, propriété intellectuelle, données
+  personnelles, cookies, liens externes, droit applicable), servies depuis le
+  bloc `legal` des dictionnaires i18n. Aucune donnée en base. La page est
+  reliée depuis la barre inférieure du `Footer`, à côté du copyright dont les
+  années viennent de `copyrightYears()` (`src/lib/data/site.ts`).
+- `/(public)/[lang=lang]/bagad` : page de présentation de l'association. Contenu
+  éditorial statique (histoire, mission, repères chiffrés, invitation à
+  rejoindre) servi depuis les dictionnaires i18n ; aucune donnée en base. Les
+  photographies sont des fichiers de `static/`.
+- `/(public)/[lang=lang]/formation` : présentation des quatre pupitres, des
+  informations pratiques et des mascottes ; contenu servi depuis les
+  dictionnaires et `src/lib/data/`.
+- `/(public)/[lang=lang]/agenda` : agenda public en lecture seule. Le `load`
+  renvoie `agendaSections()` (`src/lib/data/agenda.ts`) : données **provisoires**
+  reprises du site officiel, séparées en événements à venir (ordre croissant) et
+  passés (ordre décroissant) sur la date de `Europe/Paris`. Aucune lecture de la
+  table `events` pour l'instant ; aucune action RSVP sur la page publique
+  (Q-2026-11-10-09). L'accueil consomme les deux prochaines dates du même
+  module.
+- `/(public)/[lang=lang]/articles` : Actualités publiques. La liste et le
+  détail (`articles/[slug]`) lisent `publishedArticles()` et `articleBySlug()`
+  (`src/lib/data/articles.ts`) : contenus **provisoires** de démonstration,
+  localisés en `fr`, `en` et `br`, sans lecture de la table `articles`. Le
+  slug est stable et indépendant de la langue. L'accueil affiche les trois
+  derniers articles publiés via le même module ; un slug inconnu renvoie 404.
+- `/(public)/[lang=lang]/contact` : page Contact. Le `load` ne transmet que la
+  clé publique Turnstile (`turnstileSiteKey()`); l'action `send` valide les
+  champs avec Zod (`schema.ts`), vérifie le jeton auprès de Cloudflare
+  (`$lib/server/turnstile.ts`), envoie le message à l'association via Resend
+  (`$lib/server/email.ts`) puis un accusé de réception à l'expéditeur — jamais
+  l'inverse. La carte est le composant `$lib/components/shared/Map.svelte`
+  (Leaflet chargé à la demande, tuiles OpenStreetMap) et n'entre pas dans le
+  rendu serveur. La page est servie par Cloudflare Pages ; aucune donnée du
+  formulaire n'est stockée en base.
+- `/auth/login` : page de connexion autonome, en français et en `noindex`. Le
+  `load` renvoie un utilisateur actif vers `/dashboard`; l'action `login`
+  normalise l'e-mail, répond par un message unique en cas d'échec et redirige
+  vers `/dashboard` (303) une fois la session Better Auth établie.
+- `/auth/...` : déconnexion, invitation, attente, mot de passe oublié et
+  réinitialisation. Ces pages sont encore à construire ; seule la connexion est
+  livrée.
+- `/api/auth/[...all]` : endpoint Better Auth (sessions, invitations,
+  réinitialisation) appelé par les pages `/auth/...`.
 - `/api/files/[...key]` : point d'entrée prévu pour le téléchargement des
   fichiers.
 - `/dashboard/...` : espace adhérent et pages d'administration : agenda,
   documents, profil, pupitre, notifications, membres, articles, médias,
   invitations et réglages.
-- `/` : route d'entrée et sitemap.
+- `/` : redirection 307 vers `/fr` (`src/routes/(public)/+page.server.ts`) ;
+  le sitemap est servi par `/sitemap.xml`.
 
 Les pages publiques acceptent les langues `fr`, `en` et `br` selon le matcher
 `src/params/lang.ts`. Le tableau de bord est sans préfixe de langue.
+Les textes publics sont centralisés dans `src/lib/i18n/` (dictionnaires typés
+`fr`, `en`, `br`).
 
 ## Flux applicatifs attendus
 
@@ -65,9 +111,9 @@ Les pages publiques acceptent les langues `fr`, `en` et `br` selon le matcher
    utilisateur avec `set_config(..., true)`, puis exécute ses requêtes dans la
    même transaction/connexion. Les politiques RLS Neon/PostgreSQL appliquent
    les droits au niveau des lignes. Sans contexte, l'accès privé échoue fermé.
-5. Drizzle utilise `@neondatabase/serverless` et se connecte via Hyperdrive.
-   Le pooling est activé; le cache de requêtes est exclu des lectures privées
-   dépendantes de l'identité.
+5. Drizzle utilise `pg` (`drizzle-orm/node-postgres`) et se connecte via
+   Cloudflare Hyperdrive (décision Q-2026-11-08-01). Le pooling est activé; le
+   cache de requêtes est exclu des lectures privées dépendantes de l'identité.
 6. Cloudflare R2 stocke les fichiers. Neon conserve leurs métadonnées, clés,
    visibilité et identifiants de propriétaire.
 7. Les uploads passent par des routes SvelteKit exécutées sur Cloudflare Pages.

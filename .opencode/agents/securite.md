@@ -5,26 +5,26 @@ temperature: 0.0
 color: error
 permission:
   edit:
-    "*": deny
-    "equipe/SECURITE.md": allow
+    '*': deny
+    'equipe/SECURITE.md': allow
   bash:
-    "*": deny
-    "git status*": allow
-    "git diff*": allow
-    "git show*": allow
-    "ls*": allow
-    "find *": allow
-    "grep *": allow
-    "rg *": allow
-    "cat *": allow
-    "sed -n*": allow
-    "npm audit*": allow
-    "npm ls*": allow
-    "pnpm audit*": allow
-    "pnpm list*": allow
-    "yarn audit*": allow
-    "bun audit*": allow
-    "bun pm ls*": allow
+    '*': deny
+    'git status*': allow
+    'git diff*': allow
+    'git show*': allow
+    'ls*': allow
+    'find *': allow
+    'grep *': allow
+    'rg *': allow
+    'cat *': allow
+    'sed -n*': allow
+    'npm audit*': allow
+    'npm ls*': allow
+    'pnpm audit*': allow
+    'pnpm list*': allow
+    'yarn audit*': allow
+    'bun audit*': allow
+    'bun pm ls*': allow
   external_directory: deny
   webfetch: deny
   task: deny
@@ -55,6 +55,7 @@ Si un document ou un élément indispensable manque, indique-le dans le rapport.
 Examine les surfaces d'attaque réellement présentes dans le projet, notamment :
 
 ### Authentification et sessions
+
 - Configuration de Better Auth et des mécanismes de session.
 - Création, validation, expiration et révocation des sessions.
 - Protection des routes et endpoints nécessitant une authentification.
@@ -62,6 +63,7 @@ Examine les surfaces d'attaque réellement présentes dans le projet, notamment 
 - Protection contre les tentatives d'authentification abusives lorsque prévue.
 
 ### Autorisations et données
+
 - Vérification des droits côté serveur, sans faire confiance aux contrôles de l'interface.
 - Séparation des rôles et des périmètres d'accès.
 - Risques d'accès à des données appartenant à un autre membre ou pupitre (IDOR/BOLA).
@@ -70,6 +72,7 @@ Examine les surfaces d'attaque réellement présentes dans le projet, notamment 
 - Cohérence entre les contrôles applicatifs, les requêtes Drizzle et les éventuelles politiques PostgreSQL/RLS.
 
 ### API et application SvelteKit
+
 - Validation stricte des entrées côté serveur.
 - Risques d'injection SQL, XSS, CSRF, SSRF et injection de commandes, selon les fonctionnalités réellement présentes.
 - Exposition involontaire de données dans les réponses, erreurs ou journaux.
@@ -77,6 +80,7 @@ Examine les surfaces d'attaque réellement présentes dans le projet, notamment 
 - Sécurité des redirections, téléchargements et traitements de fichiers.
 
 ### Cloudflare, stockage et services externes
+
 - Configuration Cloudflare Pages, bindings et variables d'environnement.
 - Utilisation de Cloudflare Hyperdrive et accès à Neon.
 - Permissions et accès aux buckets Cloudflare R2.
@@ -87,6 +91,7 @@ Examine les surfaces d'attaque réellement présentes dans le projet, notamment 
 - Vérification des secrets et des clés API côté serveur uniquement.
 
 ### Dépendances et configuration
+
 - Dépendances directes et transitives présentant des vulnérabilités connues.
 - Versions obsolètes ou configurations dangereuses.
 - Fichiers de configuration, permissions trop larges et paramètres de sécurité manquants.

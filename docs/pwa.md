@@ -11,31 +11,36 @@ mode hors-ligne n'est prévu pour les membres.
 
 ## 2. Fichiers
 
-| Fichier | Rôle |
-|---|---|
-| `static/manifest.webmanifest` | Nom, couleurs, icônes |
-| `static/icons/` | Icônes 192, 512, maskable 512, `apple-touch-icon` 180 |
-| Service worker OneSignal ou worker applicatif | Fonctionnement des notifications push |
-| `src/app.html` | Liens vers le manifest, `theme-color`, icône iOS |
-| Cloudflare Pages / `_headers` | En-têtes de cache du service worker et du manifest |
+| Fichier                                       | Rôle                                                  |
+| --------------------------------------------- | ----------------------------------------------------- |
+| `static/manifest.webmanifest`                 | Nom, couleurs, icônes                                 |
+| `static/icons/`                               | Icônes 192, 512, maskable 512, `apple-touch-icon` 180 |
+| Service worker OneSignal ou worker applicatif | Fonctionnement des notifications push                 |
+| `src/app.html`                                | Liens vers le manifest, `theme-color`, icône iOS      |
+| Cloudflare Pages / `_headers`                 | En-têtes de cache du service worker et du manifest    |
 
 ## 3. Manifest
 
 ```json
 {
-  "name": "Bagad Penhars",
-  "short_name": "Bagad",
-  "lang": "fr",
-  "start_url": "/",
-  "scope": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
-  "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ]
+	"name": "Bagad Penhars",
+	"short_name": "Bagad",
+	"lang": "fr",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#000000",
+	"icons": [
+		{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+		{ "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+		{
+			"src": "/icons/icon-maskable-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	]
 }
 ```
 

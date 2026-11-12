@@ -1,0 +1,7 @@
+# Normalisation des fins de ligne.
+#
+# Le dépôt est développé sous Windows (core.autocrlf=true) et validé par une CI
+# sous Linux. Sans attribut explicite, un fichier commité en LF revient en CRLF
+# dans le dossier de travail Windows, et `prettier --check .` (endOfLine « lf »)
+# échoue localement alors que la CI passe. On force donc LF partout.
+* text=auto eol=lf

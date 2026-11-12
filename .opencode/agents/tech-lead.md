@@ -5,16 +5,16 @@ temperature: 0.1
 color: warn
 permission:
   edit:
-    "*": deny
-    "equipe/REVUE.md": allow
+    '*': deny
+    'equipe/REVUE.md': allow
   bash:
-    "*": deny
-    "git diff*": allow
-    "git status*": allow
-    "git show*": allow
-    "ls*": allow
-    "cat *": allow
-    "grep *": allow
+    '*': deny
+    'git diff*': allow
+    'git status*': allow
+    'git show*': allow
+    'ls*': allow
+    'cat *': allow
+    'grep *': allow
   webfetch: deny
   task: deny
 ---
@@ -102,6 +102,7 @@ Chaque défaut doit être précis, reproductible ou vérifiable, et comporter :
 Ne formule pas de remarque vague. Ne présente pas une préférence personnelle comme une anomalie. Relie chaque défaut à une exigence, un contrat, une règle technique ou un risque concret.
 
 Distingue clairement :
+
 - Les défauts confirmés.
 - Les points à vérifier faute de preuve suffisante.
 - Les améliorations non bloquantes.

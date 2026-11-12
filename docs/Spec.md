@@ -50,7 +50,7 @@ président et le trésorier n'ont pas de droits métier liés à leur titre.
 | Rôle           | Exigences                                                                                                       |
 | -------------- | --------------------------------------------------------------------------------------------------------------- |
 | `member`       | Consulte l'agenda, les documents et le trombinoscope autorisé; répond aux événements et gère son propre profil. |
-| `chef_pupitre` | Droits d'un membre; gère les événements et les partitions/notifications des pupitres qu'il dirige.                 |
+| `chef_pupitre` | Droits d'un membre; gère les événements et les partitions/notifications des pupitres qu'il dirige.              |
 | `secretaire`   | Gère tous les événements, articles et albums; envoie des notifications aux pupitres autorisés.                  |
 | `admin`        | Gère globalement les utilisateurs, invitations, rôles, contenus et notifications; valide les comptes.           |
 
@@ -476,7 +476,7 @@ d'une réponse inscrite dans `docs/questions.md` ne commence qu'après décision
   membre, chef de pupitre, secrétaire et administrateur selon la matrice
   approuvée.
 - La base démarre vierge; aucune migration historique de comptes ou de données
-précédente n'est prévue.
+  précédente n'est prévue.
 
 **Livrable :** installation locale documentée, migrations applicables à une
 base Neon neuve, autorisations serveur testées sur chaque table et R2, tests

@@ -7,3 +7,13 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Variables d'environnement (fichiers non formatables)
+.env
+.env.*
+
+# Référence de design (non compilée)
+/src/autre/
+
+# Archive historique (lecture seule)
+/docs/Archive/

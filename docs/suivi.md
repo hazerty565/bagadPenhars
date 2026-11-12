@@ -10,13 +10,13 @@
 ## Déjà fait
 
 - [x] Mettre en place les documents de référence, la feuille de route, le
-  backlog et le journal.
+      backlog et le journal.
 - [x] Rendre `package.json` valide et ajouter la CI sur push et pull request.
 - [x] Mettre en place la structure SvelteKit.
 - [x] Mettre en place le routage multilingue FR / EN / BR du site public.
 - [x] Bloquer l'accès à l'espace adhérents pour les comptes `pending`.
 - [x] Compléter la spécification avec les décisions fonctionnelles confirmées
-  et consigner les décisions encore ouvertes.
+      et consigner les décisions encore ouvertes.
 - [x] Aligner la documentation des événements et des droits par pupitre.
 
 ## À faire — priorité bloquante

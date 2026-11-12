@@ -1,3 +1,19 @@
-# allow crawling everything by default
+# =========================================
+# Robots.txt pour Bagad Penhars
+# =========================================
+
+# S'applique à tous les robots
 User-agent: *
-Disallow:
+
+# Bloquer les pages privées / membres / admin
+Disallow: /article/new
+Disallow: /agenda-form
+Disallow: /article-delete
+Disallow: /members
+Disallow: /article/
+
+# Autoriser toutes les autres pages
+Allow: /
+
+# Sitemap pour aider les moteurs à indexer
+Sitemap: https://bagad-penhars.com/sitemap.xml

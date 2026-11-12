@@ -264,3 +264,375 @@ avant validation par le chef de projet.
   rôle, l'absence de contexte ainsi que deux utilisateurs successifs sur une
   connexion réutilisée. Le menu filtré ne constitue pas un contrôle d'accès;
   toute URL directe reste protégée par le serveur.
+
+## 2026-11-07 — Questions issues de la relecture de bout en bout
+
+### Q-2026-11-07-01 — Besoin fonctionnel concret au-delà du socle technique
+
+- **Date :** 2026-11-07
+- **Problème :** Le client n'a exprimé aucun besoin fonctionnel métier concret à implémenter par le développeur backend et le développeur frontend. Le plan actuel (`equipe/PLAN.md`) couvre uniquement le focus actuel : socle Neon/Better Auth/Cloudflare, CI, gardes d'accès, contexte RLS transactionnel et policies sur les tables sensibles.
+- **Pourquoi :** Toute étape fonctionnelle supplémentaire serait une supposition interdite ; le plan ne peut pas engager les développeurs sur un besoin métier non exprimé par le client.
+- **Proposition :** Poursuivre l'implémentation du focus actuel (socle) telle que décrite aux étapes 1 à 8 de `equipe/PLAN.md`. Le besoin fonctionnel sera ajouté à ce plan (nouvelle étape ou extension d'une étape existante) une fois tranché par le client.
+
+### Décision client — Q-2026-11-07-01
+
+Le périmètre fonctionnel du projet Bagad Penhars est déjà défini dans les documents de référence et dans les huit étapes du plan d'implémentation.
+
+Aucun nouveau besoin fonctionnel n'est à inventer ni à demander.
+
+Les développeurs backend et frontend doivent réaliser les fonctionnalités décrites dans le plan, en respectant les spécifications, les décisions validées et les critères de fin de chaque étape.
+
+**Ordre de réalisation :**
+
+- Étapes 1 à 3 : socle technique et sécuritaire.
+- Étapes 4 à 7 : fonctionnalités métier de l'application.
+- Étape 8 : validation globale et qualité.
+
+Toute fonctionnalité supplémentaire non prévue devra faire l'objet d'une validation préalable du client.
+
+L'architecte doit donc s'appuyer sur les besoins déjà documentés et ne pas confondre absence de nouveau besoin avec absence de besoin fonctionnel.
+
+### Q-2026-11-07-02 — Couleurs et icônes définitives du thème PWA
+
+- **Date :** 2026-11-07
+- **Problème :** Le fichier `docs/pwa.md` §3 indique que les couleurs du manifest sont "à remplacer par celles du thème du site", et §10 liste "Couleurs et icônes définitives du thème" comme point restant à définir. Aucune couleur primaire ni palette n'est fixée pour le site.
+- **Pourquoi :** Le design du header, du hero et des composants UI dépend de ces couleurs ; sans elles, l'intégration visuelle reste bloquée et le manifest PWA n'est pas finalisé.
+- **Proposition :** Demander au client ou au bureau de l'association de valider la couleur primaire et la palette (ou proposer une teinte par défaut cohérente avec l'identité visuelle du bagad), puis mettre à jour `docs/pwa.md`, `tailwind.config.js` et `static/manifest.webmanifest`.
+
+### Décision client — Q-2026-11-07-02
+
+il y a un exemple de design dans le dossier `src\autre`, l'icone de l'aplication arrivera plus tard dans le dossier `src\routes\public`
+
+### Q-2026-11-07-03 — Installation de l'application PWA avant ou après la connexion
+
+- **Date :** 2026-11-07
+- **Problème :** `docs/pwa.md` §10 pose la question : "Faut-il proposer l'installation de l'application avant ou après la connexion ?" Aucun choix n'a été tranché.
+- **Pourquoi :** Ce choix conditionne l'affichage du bouton d'installation PWA, le parcours d'onboarding du membre et l'expérience d'activation des notifications push sur Android et iOS.
+- **Proposition :** Proposer l'installation de la PWA après la connexion (espace adhérents), car les notifications push concernent les membres actifs ; afficher une page d'aide "Installer l'application" dans l'espace adhérents, comme prévu par `docs/pwa.md` §7.
+
+### Décision client — Q-2026-11-07-03
+
+Proposition validée : proposer l'installation de la PWA après la connexion (espace adhérents)
+
+## 2026-11-08 — Questions issues de la revue du chef de projet
+
+> Questions ouvertes avant de poursuivre l'implémentation. Tant qu'elles ne sont
+> pas tranchées, l'équipe ne doit pas les implémenter par supposition.
+
+### Q-2026-11-08-01 — Transactions RLS et driver Neon sur Cloudflare
+
+- **Date :** 2026-11-08
+- **Problème :** `src/lib/db/index.ts` utilise `drizzle-orm/neon-http`, qui ne permet pas de transaction interactive. Or `docs/database.md` exige `set_config('app.user_id', ..., true)` au début de la même transaction que les requêtes métier. Les deux exigences sont incompatibles en l'état.
+- **Pourquoi :** sans transaction unique, le contexte RLS ne peut pas être garanti ; soit le contexte fuit sur une connexion poolée, soit les policies ne voient pas l'identité et refusent tout accès privé. Cela bloque les étapes 1 à 3 du plan et tous les tests RLS.
+- **Proposition :** passer à `drizzle-orm/neon-serverless` avec un `Pool` (WebSocket) au-dessus de Cloudflare Hyperdrive, et exposer un helper unique `withUserContext(profileId, callback)` qui ouvre la transaction, exécute `set_config(..., true)`, puis les requêtes. À défaut, conserver `neon-http` et remplacer `set_config` par un contexte transmis en paramètre explicite à chaque requête, mais cette variante affaiblit la défense en profondeur RLS et doit être validée explicitement.
+
+### Décision client — Q-2026-11-08-01
+
+**Décision :** conserver `node-postgres` (`pg`) avec `drizzle-orm/node-postgres` et Cloudflare Hyperdrive. Ne pas utiliser `drizzle-orm/neon-serverless`, car le driver Neon WebSocket n'est pas destiné à être utilisé au-dessus d'Hyperdrive.
+
+Créer un helper serveur `withUserContext(profileId, callback)` qui :
+
+1. Ouvre une transaction PostgreSQL.
+2. Définit `app.user_id` avec `set_config('app.user_id', profileId, true)`.
+3. Exécute toutes les requêtes métier protégées dans cette même transaction.
+4. Valide ou annule la transaction selon le résultat.
+
+Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur. Toutes les requêtes protégées du callback doivent utiliser exclusivement l'objet transactionnel Drizzle.
+
+**Conséquence :** adapter `src/lib/db/index.ts` si nécessaire et vérifier les tests RLS avant de débloquer les étapes 1 à 3 du plan backend.
+
+### Q-2026-11-08-02 — Modèle de comptage du quota de stockage
+
+- **Date :** 2026-11-08
+- **Problème :** `docs/database.md` §5 décrit une table `storage_usage` globale (`public_bytes`, `private_bytes`, `reserved_bytes`, `updated_at`), tandis que `docs/media.md` décrit une table par bucket (`bucket_name`, `used_bytes`, `quota_bytes`, seuils, `last_sync_at`). Le schéma Drizzle actuel suit la version globale, avec des colonnes `integer` incapables de contenir 8 Go.
+- **Pourquoi :** les deux modèles imposent des requêtes, des réservations et des tests différents ; le choix conditionne la fonction de réservation atomique et l'écran d'administration du quota. La colonne `integer` provoquera un dépassement de capacité dès 2 Go.
+- **Proposition :** retenir le modèle global de `database.md` (une seule ligne, les deux buckets additionnés), passer les colonnes en `bigint`, ajouter `quota_bytes`, `alert_threshold_bytes`, `block_threshold_bytes` et `last_sync_at` à cette même table, et corriger `docs/media.md` pour supprimer la variante par bucket.
+
+### Décision client — Q-2026-11-08-02
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-03 — Transformation et diffusion des images
+
+- **Date :** 2026-11-08
+- **Problème :** `docs/media.md` décrit des URL `https://imagedelivery.net/{CF_ACCOUNT_HASH}/{r2_key}/...`, or Cloudflare Images ne sert pas directement les clés d'un bucket R2. Le document affirme aussi que Cloudflare Images « ne stocke pas les images », ce qui est faux pour les transformations d'images hébergées.
+- **Pourquoi :** le pipeline d'upload (étapes 3 à 5 de `media.md`) et l'affichage des vignettes en dépendent. Une implémentation au hasard produirait des URL mortes et un quota Cloudflare Images mal consommé.
+- **Proposition :** trancher entre (A) Cloudflare Images avec upload des images dans Images et stockage des identifiants, ou (B) R2 + Cloudflare Image Resizing à la volée sur un domaine public, ou (C) génération de vignettes WebP au moment de l'upload et stockage des deux tailles dans R2. Recommandation de l'équipe : option B, la plus proche du besoin réel (deux variantes fixes 400×400 et 2000×2000) et sans nouveau stockage.
+
+### Décision client — Q-2026-11-08-03
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-04 — Noms des bindings R2
+
+- **Date :** 2026-11-08
+- **Problème :** trois noms différents coexistent : `R2_BUCKET` (`docs/Structure.md`), `R2_BUCKET_PUBLIC` / `R2_BUCKET_PRIVATE` (`docs/media.md`) et `bagad_public` / `bagad_private` (`src/lib/server/blobs.ts`). Par ailleurs, `blobs.ts` appelle `createSignedGetUrl()`, qui n'existe pas sur un binding R2 Workers.
+- **Pourquoi :** un nom de binding erroné casse silencieusement tous les uploads et téléchargements en production ; l'API de signature inexistante empêche de servir les objets privés.
+- **Proposition :** figer `R2_PUBLIC` et `R2_PRIVATE` comme noms de bindings dans `wrangler.toml`/Cloudflare Pages et dans `.env.example`, et servir les objets privés via l'endpoint SvelteKit `/api/files/[...key]` après guard, sans URL signée. Mettre à jour `docs/Structure.md`, `docs/media.md` et `src/lib/server/blobs.ts` en conséquence.
+
+### Décision client — Q-2026-11-08-04
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-05 — État « annulé » des événements
+
+- **Date :** 2026-11-08
+- **Problème :** `docs/event.md` et `docs/Spec.md` §4.4 exigent qu'un événement puisse être annulé et que ses réponses passent en lecture seule. Le schéma `events` ne contient ni statut ni date d'annulation.
+- **Pourquoi :** sans colonne dédiée, l'annulation ne peut être ni affichée, ni testée, ni distinguée d'un événement simplement passé. Cela bloque les critères d'acceptation RSVP.
+- **Proposition :** ajouter par migration additive `cancelled_at timestamptz NULL` (et éventuellement `cancelled_by uuid`) à `events` ; l'état affiché devient `annule` si `cancelled_at` est renseigné, sinon `clos` si `event_date < (now() AT TIME ZONE 'Europe/Paris')::date`, sinon `actif`. Confirmer que seuls l'admin, la secrétaire et le chef du pupitre concerné peuvent annuler.
+
+### Décision client — Q-2026-11-08-05
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-06 — Création du compte à l'invitation
+
+- **Date :** 2026-11-08
+- **Problème :** le brief exige que le compte Auth soit créé immédiatement à l'invitation, avec confirmation d'e-mail et définition du mot de passe dans l'heure. Better Auth ne crée un utilisateur que via son flux d'inscription ou son plugin d'administration ; le dépôt ne contient ni l'un ni l'autre de façon opérationnelle.
+- **Pourquoi :** le parcours d'invitation (étape 4 du plan) dépend entièrement de ce choix : qui crée l'utilisateur, qui envoie l'e-mail, comment le lien expire, comment le profil `pending` est rattaché.
+- **Proposition :** activer le plugin `admin` de Better Auth et créer l'utilisateur côté serveur avec `admin.createUser({ email, password: aléatoire, ... })`, puis envoyer un lien de définition de mot de passe via Resend ; conserver la table `invitations` comme journal (jeton empreinté, expiration, consommation) et non comme source d'authentification. Documenter le flux dans `docs/architecture.md`.
+
+### Décision client — Q-2026-11-08-06
+
+**Décision :** Seuls le secrétaire et l'admin peuvent inviter des personnes.
+
+### Q-2026-11-08-07 — Rappels de notification : création ou J-3
+
+- **Date :** 2026-11-08
+- **Problème :** `docs/Spec.md` §4.6 prévoit un envoi automatique à la création d'un événement et une préférence de rappel sans réponse ; `docs/event.md` prévoit un cron quotidien envoyant un rappel 3 jours avant aux membres sans réponse. Les deux mécanismes ne sont pas exclusifs mais ne sont pas arbitrés pour la V1.
+- **Pourquoi :** le cron et la table `notification_rappel` (ou `notification_log`) conditionnent l'implémentation backend, les tests et la charge OneSignal. Un envoi non voulu est visible par tous les membres.
+- **Proposition :** V1 = notification push à la création de l'événement uniquement, plus un rappel J-3 pour les membres sans réponse envoyé par un Scheduled Worker Cloudflare, en respectant `notification_preferences`. Aucun envoi si la préférence correspondante est désactivée. Confirmer que les sondages publics notifient tous les membres, comme le prévoit `Spec.md`.
+
+### Décision client — Q-2026-11-08-07
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-08 — Durées de conservation et purge
+
+- **Date :** 2026-11-08
+- **Problème :** la question Q-2026-11-06-03 est toujours partiellement ouverte : aucune durée n'est fixée pour les réponses aux événements, les journaux d'audit (`activity_log`), les messages de contact et les invitations expirées.
+- **Pourquoi :** `docs/Spec.md` interdit toute purge automatique irréversible avant validation. Sans durées, l'équipe ne peut pas écrire les tâches de maintenance ni les tests de suppression, et la base grossira indéfiniment.
+- **Proposition :** fixer des durées par défaut à valider par l'association : réponses anonymisées conservées sans limite, `activity_log` 24 mois, messages de contact 12 mois, invitations expirées 30 jours. Implémenter une tâche de purge désactivée par défaut, activable par variable d'environnement après validation.
+
+### Décision client — Q-2026-11-08-08
+
+**Décision :** Proposition validée.
+
+### Q-2026-11-08-09 — Sort des dossiers historiques Supabase et Netlify
+
+- **Date :** 2026-11-08
+- **Problème :** `supabase/` (migrations dépréciées) et `netlify/` subsistent alors que la cible validée est Neon + Cloudflare Pages. `AGENTS.md` interdit de réintroduire Supabase et demande de ne pas toucher à la configuration Netlify sans accord.
+- **Pourquoi :** leur présence entretient la confusion sur la plateforme réelle, pollue les recherches et peut faire échouer un futur outillage de déploiement.
+- **Proposition :** déplacer ces dossiers dans `docs/archive/` (ou les supprimer après accord explicite du client), et ajouter une note dans `docs/journal.md`. Aucune migration ni donnée n'est supprimée : les fichiers restent consultables comme historique.
+
+### Décision client — Q-2026-11-08-09
+
+**Décision :** On garde les dossiers : les migrations peuvent être copiées si elles correspondent au besoin. Ils peuvent être déplacés dans `docs/Archive/` avec une note dans `docs/journal.md`.
+
+### Q-2026-11-09-01 — Bibliothèque i18n du site public
+
+- **Date :** 2026-11-09
+- **Problème :** `AGENTS.md` demande d'utiliser le paquet `svelte-i18n` pour le public (`fr`, `en`, `br`), mais le paquet n'est pas installé et la page d'accueil a été livrée avec des dictionnaires TypeScript typés maison (`src/lib/i18n/`).
+- **Pourquoi :** le choix conditionne la façon dont les prochaines pages publiques déclareront leurs textes, les tests de complétude des traductions et l'éventuelle détection automatique de la langue du navigateur.
+- **Proposition :** conserver les dictionnaires typés maison pour la V1 (aucune dépendance supplémentaire, complétude vérifiée à la compilation) et réévaluer `svelte-i18n` si un besoin de pluriels, de formats riches ou de chargement paresseux apparaît. Confirmer ce choix.
+
+### Q-2026-11-09-02 — Validation des contenus de la page d'accueil
+
+- **Date :** 2026-11-09
+- **Problème :** les textes de présentation, l'année de création (1985), l'adresse (`6 Av. des Oiseaux`, `29000 Quimper`), l'e-mail (`bagadpenhars@gmail.com`) et les liens Facebook/Instagram proviennent du site officiel `https://bagad-penhars.com/` et n'ont pas été reconfirmés par le bureau.
+- **Pourquoi :** ces informations sont publiques et engagent l'association ; une adresse ou une année erronée serait visible immédiatement.
+- **Proposition :** faire valider ces éléments par le bureau avant mise en production, ainsi que les légendes des photographies de la galerie d'accueil.
+
+### Q-2026-11-09-03 — Pistes audio du lecteur
+
+- **Date :** 2026-11-09
+- **Problème :** le lecteur flottant est livré en état vide honnête (« Aucune piste publiée ») car aucun fichier audio n'est présent dans le dépôt.
+- **Pourquoi :** l'étape 32 du plan (lecteur audio) ne peut pas être finalisée sans pistes, titres, durées et droits de diffusion.
+- **Proposition :** fournir les fichiers (MP3/OGG) et leurs métadonnées, ou valider que le lecteur reste en état vide jusqu'à l'étape 32.
+
+### Q-2026-11-10-01 — Informations pratiques de la page Formation
+
+- **Date :** 2026-11-10
+- **Problème :** `docs/maquette_UI.md` §8.3 demande de présenter, pour chaque pupitre, les instruments, les niveaux, le contenu des cours, les horaires, le lieu et les modalités de prêt d'instrument. Ces informations ne sont pas dans le dépôt ; elles ont été reprises de la page Formation du site officiel `https://bagad-penhars.com/formation` (niveaux dès 8 ans et adultes ; Espace Chaptal, 6 avenue des Oiseaux, 29000 Quimper ; mardi 17 h–21 h ; 210 € nouveaux apprenants avec prêt d'instrument la première année, 90 € cotisation bagad sans les cours Sonerion, 60 € sympathisant ; cours d'essai gratuit).
+- **Pourquoi :** ces montants et ces horaires engagent l'association. Le site officiel peut être obsolète, et une page Formation qui annoncerait un tarif ou un horaire périmé induirait en erreur les personnes qui veulent rejoindre le bagad.
+- **Proposition :** faire reconfirmer par le bureau les quatre points repris (niveaux, lieu, horaires, tarifs), en particulier la distinction entre cotisation bagad et cotisation sympathisant, puis indiquer la date de dernière mise à jour à afficher.
+
+### Q-2026-11-10-02 — Mascottes du site
+
+- **Date :** 2026-11-10
+- **Problème :** aucune charte ne prévoit de mascotte. L'association a fourni quatre silhouettes vectorielles de cerf (`static/mascotte_1.svg` à `mascotte_4.svg`), une par pupitre, désormais intégrées à la page Formation.
+- **Pourquoi :** une mascotte devient un signe de reconnaissance de l'association ; elle doit être validée comme telle, et son usage (taille, présence sur les autres pages, éventuel logo dérivé) doit être tranché.
+- **Proposition :** valider la mascotte cerf et sa déclinaison par pupitre, puis décider de son emploi hors de la page Formation. Le hero de la page Formation réunit désormais les quatre silhouettes sur une image composée (`static/mascottes-groupe.svg`) : confirmer que cette composition convient, ou fournir une illustration de groupe dessinée comme telle.
+
+### Q-2026-11-10-03 — Photographies des pupitres
+
+- **Date :** 2026-11-10
+- **Problème :** la page Formation devait utiliser les fichiers `Formation_*.webp` du dossier `static/`. Seul `Formation_bombarde.webp` est présent (renommé depuis `IMG_0873.webp`, la photo officielle de la bombarde). Les trois autres pupitres utilisent provisoirement les photographies du site officiel déjà déposées : `IMG_0874.webp` (cornemuse, practice chanters), `IMG_0881.webp` (caisse claire, practice pads) et `IMG_0880.webp` (percussions, grosse caisse).
+- **Pourquoi :** ces trois images ne suivent pas la convention `Formation_*` et pourraient être remplacées par de meilleures prises de vue ; il faut aussi s'assurer des autorisations de diffusion des personnes reconnaissables.
+- **Proposition :** déposer les fichiers `Formation_cornemuse.webp`, `Formation_caisse-claire.webp` et `Formation_percussion.webp`, ou valider définitivement les trois images actuelles ; confirmer les autorisations à l'image.
+
+### Q-2026-11-10-04 — Partenaires : liste, liens et usage des logos
+
+- **Date :** 2026-11-10
+- **Problème :** la page Partenaires affiche quatre structures reprises de la page officielle `https://bagad-penhars.com/partenaires` — Quimper, Département du Finistère, Mederien Penhars et « fenetres detoit 29 » — avec les logos fournis dans `static/logos/` et un lien vers le site de chacune. Le nom du quatrième partenaire a été normalisé en « Fenêtres de toit 29 ».
+- **Pourquoi :** `docs/maquette_UI.md` §8.6 n'autorise à publier un logo et un lien que s'ils ont été fournis et validés. La liste, les URL et l'orthographe des noms n'ont pas été reconfirmées par le bureau, et l'autorisation d'usage de chaque logo n'est pas formalisée.
+- **Proposition :** faire valider par le bureau la liste des quatre partenaires, l'ordre d'affichage, l'orthographe « Fenêtres de toit 29 », les quatre URL et l'accord de chaque partenaire pour l'affichage de son logo ; préciser s'il faut ajouter une catégorie (institutionnel, association, entreprise).
+
+### Q-2026-11-10-05 — Coordonnées et horaires affichés sur la page Contact
+
+- **Date :** 2026-11-10
+- **Problème :** la page Contact affiche l'adresse (Espace Chaptal, 6 avenue des Oiseaux, 29000 Quimper), le courriel `bagadpenhars@gmail.com` et les horaires « Mardi 17 h – 21 h », « Vendredi 20 h – 22 h 30 » et « Samedi 15 h – 17 h 30 ». Le mardi est repris de `https://bagad-penhars.com/contact` et de la page Formation du site officiel ; le vendredi et le samedi ont été corrigés ou ajoutés sur demande le 2026-11-10 et ne correspondent plus au site officiel (qui indique 18 h – 21 h le vendredi et pas de samedi). Aucun de ces éléments n'est encore reconfirmé par écrit, et seule la journée du mardi est décrite dans les informations pratiques de la formation.
+- **Pourquoi :** une adresse, un horaire ou une adresse électronique erronés sont visibles immédiatement et empêchent les visiteurs de joindre l'association. La carte place le marqueur au 6 avenue des Oiseaux d'après le géocodage OpenStreetMap (47,9920253 / −4,1209120), pas d'après un relevé de l'association.
+- **Proposition :** confirmer l'adresse complète, le nom du lieu (« Espace Chaptal »), l'adresse de réception des messages, les trois plages horaires (mardi, vendredi et samedi) et la position exacte du marqueur ; préciser aussi si les horaires concernent les cours, les répétitions ou l'accueil du public.
+
+### Q-2026-11-10-06 — Expéditeur Resend et clés Turnstile par environnement
+
+- **Date :** 2026-11-10
+- **Problème :** l'envoi Resend utilise aujourd'hui `CONTACT_EMAIL` comme adresse d'expédition (`from`). Or cette variable désigne l'adresse de réception (`bagadpenhars@gmail.com`) : Resend refuse d'expédier depuis une adresse dont le domaine n'est pas authentifié, et un expéditeur `@gmail.com` ne peut pas l'être. Par ailleurs les clés Turnstile présentes dans `.env` semblent être celles de production, limitées au domaine `bagad-penhars.com` : le widget peut donc refuser de s'afficher sur `localhost` ou sur une URL de préversion Cloudflare Pages.
+- **Pourquoi :** sans expéditeur vérifié, aucun message ne part en production ; sans clés de test, le formulaire ne peut pas être vérifié de bout en bout en développement ni en préversion.
+- **Proposition :** créer un domaine d'envoi authentifié chez Resend (par exemple `bagad-penhars.com`) et renseigner une variable `CONTACT_FROM` dédiée (déjà prévue dans `.env.example`, avec repli sur `CONTACT_EMAIL`). Fournir en complément les clés Turnstile de test ou autoriser `localhost` et les domaines `*.pages.dev` sur le widget de production. Confirmer que l'adresse d'expédition peut différer de l'adresse de réception.
+
+### Q-2026-11-10-07 — Ancienne route de contact issue du squelette
+
+- **Date :** 2026-11-10
+- **Problème :** `src/routes/public/[lang=lang]/contact/` subsiste à côté de la route réelle `src/routes/(public)/[lang=lang]/contact/`. Ce vestige du squelette expose une page à l'URL `/public/fr/contact`, poste vers `/api/[lang=lang]/contact` (endpoint inexistant), contient un gestionnaire inutilisé et une balise `<token-input>` inconnue. Il ne fait pas partie du site livré mais il est compilé et déclenche une erreur ESLint.
+- **Pourquoi :** une route morte qui répond et un formulaire factice peuvent être indexés ou confondre un futur intervenant ; `AGENTS.md` demande par ailleurs de ne pas supprimer un fichier sans l'avoir compris.
+- **Proposition :** supprimer le dossier `src/routes/public/` (vestige) après validation, ou confirmer qu'il sert encore de référence. En attendant, seule la balise auto-fermante a été corrigée pour ne plus produire d'avertissement de compilation.
+
+### Q-2026-11-10-08 — Chiffres, photos et ancienneté de la page Bagad
+
+- **Date :** 2026-11-10
+- **Problème :** la page Bagad reprend du site officiel les textes de présentation, les chiffres « 25+ musiciens actifs » et « 100+ concerts et festivals », et deux photographies (`groupe_bagad.webp`, `couple_joueur.webp`) dont la première porte un filigrane de photographe (« Bazotos Création »). Le site officiel affiche aussi « 40+ ans d'expérience » et « 40 années d'existence », ce qui ne correspond pas à une création en 1985 (41 ans en 2026) ; la page livrée n'affiche donc que « 1985 — année de création », sans nombre d'années.
+- **Pourquoi :** un effectif, un nombre de concerts ou une ancienneté erronés sont des affirmations visibles qui engagent l'association ; publier une photographie sans accord ni crédit pose en plus une question de droits.
+- **Proposition :** confirmer l'année de création, les deux chiffres, l'autorisation de publier les deux photographies et le crédit à afficher (ou fournir des photos sans filigrane). Décider enfin comment exprimer l'ancienneté : année de création seule (état actuel), formule « depuis 1985 », ou nombre d'années calculé automatiquement.
+
+### Q-2026-11-10-09 — Agenda public provisoire et lieu des événements
+
+- **Date :** 2026-11-10
+- **Problème :** la page Agenda lit `src/lib/data/agenda.ts` et non Neon. Ce module reprend les onze événements publiés sur le site officiel, mais la sortie « Passeurs des lumières » y était datée du 11 décembre 2026 : elle a été fixée au **12 décembre 2026** sur indication du bureau. Par ailleurs, la table `events` ne stocke que le titre, la date et le type : aucun lieu, alors que le site officiel en affiche un pour chaque date. Enfin, aucune description ni horaire n'est publiée par le site officiel ; rien n'a été inventé.
+- **Pourquoi :** les dates et les lieux engagent publiquement l'association, et publier un agenda factice sans le signaler peut tromper un visiteur. Le lieu étant nécessaire à l'affichage, son absence du schéma imposera une migration dès que l'agenda sera éditable.
+- **Proposition :** confirmer les onze dates et lieux ; décider de l'ajout d'une colonne `location` dans `events` (et, si besoin, d'une description et d'un horaire) par une nouvelle migration ; remplacer `agendaSections()` par une lecture Neon dans le `load` de la page et de l'accueil une fois l'agenda éditable. Les données provisoires sont signalées dans `docs/journal.md`.
+
+### Q-2026-11-10-10 — Débordement horizontal de la navigation desktop
+
+- **Date :** 2026-11-10
+- **Problème :** entre environ 1024 px et 1380 px de large, la barre de navigation desktop dépasse la largeur de la fenêtre (95 px mesurés à 1284 px), ce qui provoque un défilement horizontal. Le défaut se produit aussi sur `/fr/bagad` et les autres pages publiques : il est antérieur à la page Agenda.
+- **Pourquoi :** 1280 px est la largeur la plus courante des écrans de portables ; un défilement horizontal à cette taille se voit immédiatement.
+- **Proposition :** corriger le `Nav` (réduire les espacements, raccourcir le bouton « Écouter » ou déplacer le point de rupture). La modification touche le layout partagé, elle attend donc une validation avant d'être engagée.
+- **Avancement du 2026-11-11 :** à la demande du bureau, « Le Bagad » ne passe plus à la ligne dans la barre de navigation (`whitespace-nowrap`) et l'espacement entre les liens a été réduit de `gap-7` à `gap-5`. Mesures après correction : 74 → **45 px** de débordement à 1024 px, 112 → **82 px** à 1280 px, 24 → **0 px** à 1440 px. Le débordement résiduel vient du bloc de droite (réseaux sociaux, langues, « Écouter », « Connexion ») : le problème reste donc ouvert.
+
+### Q-2026-11-11-01 — Identité juridique à compléter sur la page « Informations légales »
+
+- **Date :** 2026-11-11
+- **Problème :** la page `/fr/informations-legales` est rédigée avec les seules
+  informations publiques déjà connues : nom de l'association, adresse du siège
+  (6 avenue des Oiseaux, 29000 Quimper), adresse e-mail de contact, hébergeur
+  (Cloudflare Pages) et hébergement de la base (Neon). Il manque les éléments
+  que la loi impose de publier et qu'aucune source du dépôt ne contient :
+  forme juridique et numéro d'immatriculation (RNA, et SIREN si l'association
+  en dispose) — **fournis le 2026-11-11, voir le dernier point** —, nom du
+  président en exercice en tant que directeur de la publication, et crédits
+  photographiques (au moins une image porte un filigrane d'auteur,
+  « Finnegan's / Bazotos Création »).
+- **Pourquoi :** ces mentions engagent juridiquement l'association ; les
+  inventer serait à la fois inexact et risqué. La page reste donc volontairement
+  générale sur ces trois points (« le président de l'association, en exercice »,
+  photographies appartenant à leurs auteurs).
+- **Proposition :** communiquer la forme juridique, le numéro RNA et, le cas
+  échéant, le SIREN, le nom du président en exercice et les crédits photo à
+  afficher ; ils seront ajoutés en tête de la section « Éditeur du site » et
+  dans une ligne de crédits. Confirmer aussi que le site n'utilise ni mesure
+  d'audience ni cookie publicitaire (vérifié dans le code à cette date) et que
+  la conservation des données décrite correspond à la pratique du bureau.
+- **Compléments relevés le 2026-11-11** en comparant la page à la fiche
+  « Mentions sur votre site internet : les obligations à respecter »
+  (economie.gouv.fr, LCEN art. 6-III et RGPD art. 13) :
+  - **Téléphone de l'association** : la LCEN impose un numéro de téléphone pour
+    contacter la personne morale ; le site n'en publie aucun et le dépôt n'en
+    contient aucun (la page Contact ne liste que l'adresse et l'e-mail). Un
+    numéro de téléphone personnel ne doit pas être publié sans accord exprès :
+    le bureau doit fournir le numéro à afficher, ou confirmer qu'aucun numéro
+    ne doit figurer.
+  - **Téléphone de l'hébergeur** : la LCEN impose nom, raison sociale, adresse
+    et numéro de téléphone de l'hébergeur. Seuls le nom et l'adresse de
+    Cloudflare, Inc. sont publiés ; le numéro à afficher doit être confirmé sur
+    le site de Cloudflare avant d'être écrit.
+  - **Base juridique des traitements** : à confirmer (consentement pour le
+    formulaire de contact, exécution de la relation d'adhésion pour l'espace
+    membres). Non rédigée à ce jour faute de validation.
+  - **Caractère obligatoire ou facultatif des données** et conséquences d'un
+    refus : à préciser pour le formulaire de contact et le profil adhérent.
+  - **Destinataires** : la page cite les prestataires techniques (Cloudflare,
+    Neon, OneSignal) mais pas les destinataires au sens du RGPD (bureau,
+    secrétaires, chefs de pupitre ayant accès aux réponses de présence).
+  - **Durée de conservation** : la page indique « le temps nécessaire » ; une
+    durée chiffrée par catégorie de données est attendue (messages de contact,
+    comptes adhérents, réponses RSVP).
+  - **Crédits photographiques** : la LCEN demande de faire figurer la propriété
+    intellectuelle des images. La page renvoie aux auteurs sans les nommer.
+  - **Non applicable** à cette association, et donc absent volontairement :
+    RCS/RNE, TVA intracommunautaire, CGV, résiliation d'abonnement en ligne,
+    activité artisanale ou réglementée. Le point mérite d'être confirmé pour
+    écarter toute ambiguïté lors d'une relecture juridique.
+- **Résolu le 2026-11-11** pour l'identité de la personne morale : les données
+  officielles ont été fournies par le bureau depuis
+  <https://annuaire-entreprises.data.gouv.fr/entreprise/bagad-penhars-504354234#association-section>
+  et figurent désormais dans l'encart « Identité de l'association » de la page :
+  dénomination « Bagad Penhars », forme juridique « Association déclarée »,
+  SIREN 504 354 234, SIRET du siège 504 354 234 00024, n° RNA W294 004 157,
+  date de création 4 décembre 1985, siège 6 avenue des Oiseaux, 29000 Quimper,
+  objet « promotion musicale et culturelle bretonne ». Restent ouverts les
+  points listés ci-dessus (téléphones, nom du directeur de la publication,
+  crédits photo, précisions RGPD).
+
+## 2026-11-11 — Espace membre en mode démonstration
+
+### Q-2026-11-11-02 — Périmètre et fonctionnement de la démo
+
+- **Date :** 2026-11-11
+- **Problème :** la mission demande de livrer tout l'espace membre avec des
+  données fictives, sans Neon, avec un sélecteur de rôle absent de la
+  production. Plusieurs choix ne sont pas tranchés par les documents : le mode
+  de déploiement autorisé, l'accès au tableau de bord, la persistance, le type
+  de photos fictives, le périmètre exact des modules, l'éditeur d'articles, la
+  répartition des droits de gestion des comptes, la modification des profils,
+  les statuts simulés, l'emplacement du trombinoscope et le niveau de
+  simulation des notifications et des documents.
+- **Pourquoi :** ces choix conditionnent l'architecture, les routes, les
+  données fictives et la garantie d'absence en production. Les décider par
+  supposition exposerait à construire des écrans ou des droits que le client
+  refuserait ensuite.
+- **Proposition :** appliquer les réponses ci-dessous et les consigner dans
+  `equipe/PLAN-DEMO.md` avant toute modification de code.
+
+### Décision client — Q-2026-11-11-02
+
+**Décision :** les choix suivants sont validés le 2026-11-11.
+
+- **Mode démo :** développement local uniquement (`npm run dev`), jamais dans
+  un build de production.
+- **Accès :** sélecteur de profil permanent ; `/dashboard` accessible
+  directement.
+- **Persistance :** `localStorage` avec bouton de réinitialisation des données
+  fictives.
+- **Photos :** portraits illustrés fictifs générés localement, aucune personne
+  réelle.
+- **Périmètre :** tout le périmètre documenté — agenda/RSVP, trombinoscope,
+  profil, événements, documents, articles, médias, notifications, invitations,
+  membres, réglages.
+- **Éditeur d'articles :** Milkdown, comme prévu par `docs/Spec.md`.
+- **Comptes :** secrétaire = invitations, activation, suspension et pupitres ;
+  admin = en plus, rôles, réglages et suppression. Conforme aux documents.
+- **Profils :** chacun modifie son profil ; secrétaire/admin modifient les
+  pupitres des autres ; admin attribue les rôles ; la photo n'est modifiable
+  que par son propriétaire.
+- **Statuts :** quatre rôles actifs uniquement ; pas de parcours
+  `pending`/`suspended` simulé.
+- **Trombinoscope :** nouvelle route `/dashboard/membres`, ouverte à tous les
+  membres actifs.
+- **Notifications :** centre de notifications et envoi simulé selon le rôle,
+  sans push réel.
+- **Documents :** liste et dépôt simulé, sans upload réel.
+
+**Conséquence :** l'architecte rédige `equipe/PLAN-DEMO.md` ; aucune
+modification de code n'est engagée avant validation de ce plan.

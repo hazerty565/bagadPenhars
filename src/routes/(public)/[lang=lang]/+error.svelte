@@ -1,8 +1,8 @@
 <script lang="ts">
-  export let error: Error;
-  export let status: number;
+	import { page } from '$app/state';
 </script>
+
 <section class="p-6">
-  <h1>{status}</h1>
-  <p>{error?.message ?? 'Une erreur est survenue sur la page localisée.'}</p>
+	<h1>{page.status}</h1>
+	<p>{page.error?.message ?? 'Une erreur est survenue sur la page localisée.'}</p>
 </section>
