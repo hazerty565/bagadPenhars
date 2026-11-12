@@ -98,3 +98,27 @@ export interface PublicPhoto {
 	thumbnailUrl: string;
 	fullUrl: string;
 }
+
+/**
+ * Bloc de contenu d'un article public.
+ *
+ * Les articles sont stockés en Markdown dans la future table `articles`.
+ * En attendant le branchement sur Neon, la couche de données expose des
+ * sections déjà structurées (titre intermédiaire facultatif + paragraphes)
+ * pour éviter d'ajouter un analyseur Markdown au site public.
+ */
+export interface ArticleSection {
+	heading?: string;
+	paragraphs: string[];
+}
+
+export interface PublicArticle {
+	slug: string;
+	title: string;
+	excerpt: string;
+	category: string;
+	date: string; // YYYY-MM-DD
+	image: string;
+	imageAlt: string;
+	content: ArticleSection[];
+}

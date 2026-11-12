@@ -5,6 +5,7 @@
 	import GalleryPreview from '$lib/components/home/GalleryPreview.svelte';
 	import Hero from '$lib/components/home/Hero.svelte';
 	import Join from '$lib/components/home/Join.svelte';
+	import NewsPreview from '$lib/components/home/NewsPreview.svelte';
 	import Pupitres from '$lib/components/home/Pupitres.svelte';
 	import Prestations from '$lib/components/home/Prestations.svelte';
 	import { getDict } from '$lib/i18n';
@@ -41,5 +42,6 @@
 <Pupitres {t} lang={data.lang} />
 <Prestations {t} lang={data.lang} />
 <AgendaPreview {t} lang={data.lang} events={data.nextPublicEvents} />
+<NewsPreview {t} lang={data.lang} articles={data.latestArticles} />
 <GalleryPreview {t} lang={data.lang} photos={data.galleryPhotos} />
 <Join {t} lang={data.lang} />

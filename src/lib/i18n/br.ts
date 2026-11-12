@@ -12,6 +12,7 @@ const br: Dictionary = {
 		bagad: 'Ar Bagad',
 		formation: 'Deskiñ',
 		agenda: 'Deiziataer',
+		articles: 'Keloù',
 		media: 'Mediaoù',
 		partenaires: 'Kevredidi',
 		contact: 'Daremprediñ',
@@ -297,6 +298,29 @@ const br: Dictionary = {
 			'du',
 			'kerzu'
 		]
+	},
+	articles: {
+		meta: {
+			title: 'Keloù — Bagad Penhars',
+			description:
+				'Keloù diwezhañ Bagad Penhars : sonadegoù, kenstrivadegoù, festoù-noz, stummadur ha buhez ar strollad e Kemper.'
+		},
+		eyebrow: 'Keloù',
+		title: 'Keloù diwezhañ ar bagad',
+		lead: 'Sonadegoù, kenstrivadegoù, festoù-noz, adalennoù ha buhez ar strollad : amañ e kavot keloù Bagad Penhars.',
+		readMore: 'Lenn ar pennad',
+		publishedOn: 'Embannet d’an',
+		back: 'An holl geloù',
+		moreTitle: 'Da lenn ivez',
+		emptyTitle: 'Keloù nevez a erruo abred.',
+		emptyText:
+			'Embannet e vez keloù ar bagad a-hed ar bloavezh. Da c’hortoz, sellit ouzh an deiziataer hag an deiziadoù publik da zont.',
+		home: {
+			eyebrow: 'Keloù',
+			title: 'Ar c’heloù diwezhañ',
+			lead: 'Ar pezh a dremen bremañ e Bagad Penhars.',
+			cta: 'An holl geloù'
+		}
 	},
 	prestations: {
 		eyebrow: 'En ho servij',

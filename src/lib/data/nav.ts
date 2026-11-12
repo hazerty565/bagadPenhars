@@ -5,6 +5,7 @@ export type PublicNavKey =
 	| 'bagad'
 	| 'formation'
 	| 'agenda'
+	| 'articles'
 	| 'media'
 	| 'partenaires'
 	| 'contact';
@@ -26,6 +27,7 @@ export const PUBLIC_NAV = [
 	{ key: 'bagad', route: '/(public)/[lang=lang]/bagad' },
 	{ key: 'formation', route: '/(public)/[lang=lang]/formation' },
 	{ key: 'agenda', route: '/(public)/[lang=lang]/agenda' },
+	{ key: 'articles', route: '/(public)/[lang=lang]/articles' },
 	{ key: 'media', route: '/(public)/[lang=lang]/media' },
 	{ key: 'partenaires', route: '/(public)/[lang=lang]/partenaires' },
 	{ key: 'contact', route: '/(public)/[lang=lang]/contact' }

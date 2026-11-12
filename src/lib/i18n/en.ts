@@ -12,6 +12,7 @@ const en: Dictionary = {
 		bagad: 'The Bagad',
 		formation: 'Learning',
 		agenda: 'Events',
+		articles: 'News',
 		media: 'Media',
 		partenaires: 'Partners',
 		contact: 'Contact',
@@ -295,6 +296,29 @@ const en: Dictionary = {
 			'November',
 			'December'
 		]
+	},
+	articles: {
+		meta: {
+			title: 'News — Bagad Penhars',
+			description:
+				'The latest news from Bagad Penhars: concerts, competitions, fest-noz, classes and association life in Quimper.'
+		},
+		eyebrow: 'News',
+		title: 'The latest from the bagad',
+		lead: 'Concerts, competitions, fest-noz, rehearsals and association life: find the latest news from Bagad Penhars here.',
+		readMore: 'Read the article',
+		publishedOn: 'Published on',
+		back: 'All news',
+		moreTitle: 'Also worth reading',
+		emptyTitle: 'Fresh news is on its way.',
+		emptyText:
+			'Bagad news is published throughout the season. In the meantime, take a look at the agenda and upcoming public dates.',
+		home: {
+			eyebrow: 'News',
+			title: 'The latest news',
+			lead: 'What is happening at Bagad Penhars right now.',
+			cta: 'All news'
+		}
 	},
 	prestations: {
 		eyebrow: 'What we offer',

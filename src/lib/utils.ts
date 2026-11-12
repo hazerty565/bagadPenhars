@@ -35,3 +35,20 @@ export function formatDate(date: Date | string): string {
 export function isValidEmail(email: string): boolean {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
+
+/**
+ * Formate une date `YYYY-MM-DD` pour l’affichage public.
+ *
+ * Le fuseau UTC et l’heure de midi évitent tout décalage d’un jour entre le
+ * rendu serveur et l’hydratation, quelle que soit la machine.
+ */
+export function formatArticleDate(value: string, locale: string): string {
+	const date = new Date(`${value}T12:00:00Z`);
+
+	return new Intl.DateTimeFormat(locale, {
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric',
+		timeZone: 'UTC'
+	}).format(date);
+}

@@ -72,13 +72,13 @@
 			</span>
 		</a>
 
-		<nav class="hidden items-center gap-5 lg:flex" aria-label={t.nav.main}>
+		<nav class="hidden items-center gap-3.5 xl:flex 2xl:gap-4" aria-label={t.nav.main}>
 			{#each navItems as item (item.href)}
 				<a
 					href={item.href}
 					aria-current={item.active ? 'page' : undefined}
 					class={[
-						'border-b-2 py-1 text-[0.8rem] font-medium whitespace-nowrap transition-colors',
+						'border-b-2 py-1 text-[0.74rem] font-medium whitespace-nowrap transition-colors 2xl:text-[0.8rem]',
 						item.active
 							? 'border-or text-marine'
 							: 'border-transparent text-ink/65 hover:border-or/50 hover:text-marine'
@@ -90,7 +90,7 @@
 		</nav>
 
 		<div class="flex items-center gap-1.5">
-			<div class="mr-1 flex items-center gap-1.5 lg:hidden xl:flex">
+			<div class="mr-1 hidden items-center gap-1.5 xl:flex">
 				<a
 					href={site.social.facebook}
 					target="_blank"
@@ -123,13 +123,13 @@
 				class="ml-1 inline-flex h-10 items-center gap-2 border border-or/70 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-marine transition-colors hover:bg-or/10"
 			>
 				<Music2 class="h-4 w-4" />
-				<span class="hidden xl:inline">{t.nav.listen}</span>
-				<span class="sr-only xl:hidden">{t.nav.listen}</span>
+				<span class="hidden 2xl:inline">{t.nav.listen}</span>
+				<span class="sr-only 2xl:hidden">{t.nav.listen}</span>
 			</button>
 
 			<a
 				href={resolve('/auth/login')}
-				class="hidden h-10 items-center gap-2 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ink/60 transition-colors hover:text-marine xl:inline-flex"
+				class="hidden h-10 items-center gap-2 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ink/60 transition-colors hover:text-marine 2xl:inline-flex"
 			>
 				<LogIn class="h-4 w-4" />
 				{t.nav.login}
@@ -142,7 +142,7 @@
 				aria-expanded={mobileOpen}
 				aria-controls="menu-mobile"
 				aria-label={mobileOpen ? t.nav.closeMenu : t.nav.menu}
-				class="ml-1 flex h-10 w-10 items-center justify-center border border-ink/15 text-marine transition-colors hover:border-marine lg:hidden"
+				class="ml-1 flex h-10 w-10 items-center justify-center border border-ink/15 text-marine transition-colors hover:border-marine xl:hidden"
 			>
 				{#if mobileOpen}
 					<X class="h-5 w-5" />
@@ -154,7 +154,7 @@
 	</div>
 
 	{#if mobileOpen}
-		<div id="menu-mobile" class="border-t border-ink/10 bg-ivoire lg:hidden">
+		<div id="menu-mobile" class="border-t border-ink/10 bg-ivoire xl:hidden">
 			<nav class="container-page py-3" aria-label={t.nav.main}>
 				<ul>
 					{#each navItems as item (item.href)}

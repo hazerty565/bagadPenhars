@@ -13,6 +13,7 @@ export interface Dictionary {
 		bagad: string;
 		formation: string;
 		agenda: string;
+		articles: string;
 		media: string;
 		partenaires: string;
 		contact: string;
@@ -166,6 +167,27 @@ export interface Dictionary {
 		types: Record<EventType, string>;
 		/** Douze libellés de mois, de janvier à décembre, pour un affichage déterministe. */
 		months: string[];
+	};
+	articles: {
+		meta: {
+			title: string;
+			description: string;
+		};
+		eyebrow: string;
+		title: string;
+		lead: string;
+		readMore: string;
+		publishedOn: string;
+		back: string;
+		moreTitle: string;
+		emptyTitle: string;
+		emptyText: string;
+		home: {
+			eyebrow: string;
+			title: string;
+			lead: string;
+			cta: string;
+		};
 	};
 	prestations: {
 		eyebrow: string;

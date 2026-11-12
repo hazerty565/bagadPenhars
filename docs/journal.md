@@ -698,3 +698,50 @@ eslint .`) échouait sur **18 fichiers** mal formatés et **8 erreurs ESLint**,
   (Q-2026-11-11-01). L'identité officielle (SIREN, SIRET, RNA, forme juridique,
   date de création, objet) est en place depuis le 2026-11-11.
 - Traiter le sitemap globalement (toutes les routes publiques, toutes langues).
+
+## 2026-11-12
+
+### Page publique Actualités et aperçu sur l'accueil
+
+- **Demande** : ajouter une page « Actualités » dans le menu public, avec des
+  cards à la suite, afficher les trois derniers articles publiés sur l'accueil,
+  avec de faux articles pour l'instant, puis placer la section Actualités
+  au-dessus de la galerie et sous l'agenda.
+- **Route** : réutilisation de la route existante
+  `/(public)/[lang=lang]/articles` (libellé « Actualités »), plus le détail
+  `articles/[slug]`. Le slug est stable et commun aux trois langues.
+- **Contenus provisoires** : `src/lib/data/articles.ts` contient six articles
+  localisés en `fr`, `en` et `br` (titre, chapô, catégorie, sections, texte
+  alternatif). `publishedArticles()`, `latestArticles()` et `articleBySlug()`
+  constituent la couche de données à remplacer par les requêtes sur la future
+  table `articles`, sans toucher aux composants.
+- **Composants** : `ArticleCard.svelte` (image, catégorie, date, titre, chapô,
+  lien) et `NewsPreview.svelte` pour les trois derniers articles de l'accueil.
+  Le type `PublicArticle` et le bloc `ArticleSection` sont ajoutés à
+  `src/lib/types.ts` ; `formatArticleDate()` (`src/lib/utils.ts`) formate les
+  dates en UTC à midi pour éviter tout décalage serveur/client.
+- **Navigation** : entrée `articles` ajoutée à `PUBLIC_NAV` (donc au header,
+  au menu mobile et au footer) et aux trois dictionnaires. Le menu desktop
+  passe de `lg` à `xl` avec des libellés plus compacts ; le bouton burger et
+  le menu mobile restent actifs jusqu'à 1279 px, et « Connexion » n'apparaît
+  qu'à partir de 1536 px. Cela évite le débordement connu Q-2026-11-10-10 avec
+  une huitième entrée.
+- **Accueil** : ordre final Hero, À propos, Pupitres, Prestations, Agenda,
+  Actualités, Galerie, Rejoindre. La section Actualités utilise un fond
+  `sable/50` pour rester distincte de l'agenda (blanc) et de la galerie
+  (ivoire).
+- **SEO** : titres et descriptions depuis les dictionnaires, canonical,
+  alternatives `hreflang` fr/en/br, Open Graph (y compris l'image absolue de
+  l'article), `article:published_time`, et 404 sur un slug inconnu.
+- **Validation** : `pnpm run check` 0 erreur / 0 avertissement, Prettier et
+  ESLint OK, `pnpm run build` OK. Pages vérifiées dans le navigateur en `fr`,
+  `en` et `br` : liste, détail, footer, header, 404 sur slug inconnu, absence
+  de débordement du header à 1554 px.
+- **Fichiers hors périmètre corrigés** : `.github/workflows/ci.yml` était
+  entouré de balises de code Markdown (YAML invalide) et `README.md` /
+  `wrangler.jsonc` n'étaient pas formatés, ce qui faisait échouer
+  `prettier --check`. Les trois ont été remis en état sans changement de
+  contenu fonctionnel.
+- **Reste à faire** : remplacer les six articles de démonstration par la table
+  `articles` de Neon, ajouter la gestion des actualités dans l'espace
+  adhérents, et faire relire les textes bretons par un locuteur natif.

@@ -1,5 +1,6 @@
 import { getDict, isLang, type Lang } from '$lib/i18n';
 import { agendaSections } from '$lib/data/agenda';
+import { latestArticles } from '$lib/data/articles';
 import { homeGallery } from '$lib/data/site';
 import { PUPITRES } from '$lib/data/pupitres';
 import type { PublicPhoto } from '$lib/types';
@@ -26,6 +27,8 @@ export const load: PageServerLoad = ({ params }) => {
 		lang,
 		// Agenda provisoire : mêmes données d'attente que la page Agenda.
 		nextPublicEvents: agendaSections().upcoming.slice(0, 2),
+		// Actualités provisoires : trois derniers articles publiés.
+		latestArticles: latestArticles(lang).slice(0, 3),
 		galleryPhotos,
 		pupitres: PUPITRES
 	};

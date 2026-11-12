@@ -12,6 +12,7 @@ const fr: Dictionary = {
 		bagad: 'Le Bagad',
 		formation: 'Formation',
 		agenda: 'Agenda',
+		articles: 'Actualités',
 		media: 'Médias',
 		partenaires: 'Partenaires',
 		contact: 'Contact',
@@ -310,6 +311,29 @@ const fr: Dictionary = {
 			'novembre',
 			'décembre'
 		]
+	},
+	articles: {
+		meta: {
+			title: 'Actualités — Bagad Penhars',
+			description:
+				'Les dernières actualités du Bagad Penhars : concerts, concours, fest-noz, formation et vie de l’association à Quimper.'
+		},
+		eyebrow: 'Actualités',
+		title: 'Les dernières nouvelles du bagad',
+		lead: 'Concerts, concours, fest-noz, répétitions et vie de l’association : retrouvez ici les nouvelles du Bagad Penhars.',
+		readMore: 'Lire l’article',
+		publishedOn: 'Publié le',
+		back: 'Toutes les actualités',
+		moreTitle: 'À lire aussi',
+		emptyTitle: 'Les prochaines actualités arrivent bientôt.',
+		emptyText:
+			'Les nouvelles du bagad sont publiées au fil de la saison. En attendant, découvrez l’agenda et les prochaines dates publiques.',
+		home: {
+			eyebrow: 'Actualités',
+			title: 'Les dernières nouvelles',
+			lead: 'Ce qui se passe en ce moment au Bagad Penhars.',
+			cta: 'Toutes les actualités'
+		}
 	},
 	prestations: {
 		eyebrow: 'À votre service',
