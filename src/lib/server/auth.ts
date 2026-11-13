@@ -28,9 +28,10 @@ export const auth = betterAuth({
 			verification: schema.verification
 		}
 	}),
-	// Nom aligné sur la clé privée présente dans `.env` à la racine.
-	secret: process.env.BETTER_AUTH_API_KEY,
-	baseURL: process.env.BETTER_AUTH_URL,
+	// Secret Better Auth : variable privée à définir en local et dans Cloudflare Pages.
+	secret: process.env.BETTER_AUTH_SECRET,
+	// URL publique de l'application ; fallback utile pour le déploiement Pages.
+	baseURL: process.env.BETTER_AUTH_URL || 'https://bagadpenhars.pages.dev',
 	emailAndPassword: {
 		enabled: true,
 		requireEmailVerification: true,
