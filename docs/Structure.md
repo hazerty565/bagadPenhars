@@ -237,8 +237,9 @@ Better Auth fournit l'identité et les sessions. Le rôle métier provient de
 `profiles.role`. Les guards SvelteKit s'appliquent à chaque route protégée et
 les politiques RLS Neon/PostgreSQL protègent les tables sensibles. Le contexte
 utilisateur est transactionnel (`set_config(..., true)`); les lectures privées
-ne sont pas servies depuis un cache partagé Hyperdrive. Le driver ciblé est
-`@neondatabase/serverless`.
+ne sont pas servies depuis un cache partagé Hyperdrive. Le driver est `pg`
+avec `drizzle-orm/node-postgres`, en local comme au-dessus d'Hyperdrive
+(décision Q-2026-11-08-01).
 
 Le schéma métier courant utilise notamment `profiles`, `profile_pupitres`,
 `events`, `event_pupitres` et `event_responses`. Les sondages sont représentés

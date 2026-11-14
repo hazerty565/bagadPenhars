@@ -78,7 +78,7 @@
 | #   | Besoin                                                                                                                                                                                | Source                 |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | T1  | Neon PostgreSQL, branches `test` (dev/preview) et `production`, aucune chaîne committée                                                                                               | database.md            |
-| T2  | Drizzle + `@neondatabase/serverless` + Cloudflare Hyperdrive, migrations reproductibles dans `drizzle/` + `drizzle/meta/`, migration appliquée jamais modifiée                        | AGENTS.md, database.md |
+| T2  | Drizzle + `pg`/`drizzle-orm/node-postgres` + Cloudflare Hyperdrive, migrations reproductibles dans `drizzle/` + `drizzle/meta/`, migration appliquée jamais modifiée                  | AGENTS.md, database.md |
 | T3  | Better Auth pour l'identité et les sessions ; `profiles.role` / `account_status` seules autorités métier ; `event.locals.profile/role/accountStatus`                                  | Spec §6                |
 | T4  | Guards centralisés (`src/lib/auth/guards.ts`) appliqués dans **chaque** layout, action et endpoint ; le menu filtré n'est jamais un contrôle d'accès                                  | AGENTS.md              |
 | T5  | RLS activée avec policies explicites sur toutes les tables sensibles ; `set_config(..., true)` au début de chaque transaction ; rôle runtime sans `BYPASSRLS` ni propriété des tables | Spec §5                |

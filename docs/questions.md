@@ -636,3 +636,30 @@ Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur
 
 **Conséquence :** l'architecte rédige `equipe/PLAN-DEMO.md` ; aucune
 modification de code n'est engagée avant validation de ce plan.
+
+### Q-2026-11-14-01 — Validation du modèle backend et des environnements
+
+- **Date :** 2026-11-14
+- **Problème :** la proposition décrit une table `members`, tandis que le
+  modèle, le schéma Drizzle et les règles existantes utilisent `profiles`
+  reliée à `user` par `auth_user_id`. La documentation d'architecture cite
+  aussi `@neondatabase/serverless`, alors que la décision Q-2026-11-08-01 et le
+  code retiennent `pg` avec `drizzle-orm/node-postgres`. Enfin, un fichier
+  `.env` local ne configure pas les secrets du déploiement Cloudflare Pages.
+- **Pourquoi :** le nom et les relations du profil, le driver et le stockage
+  des secrets conditionnent les migrations, les guards, les tests et
+  l'isolation des environnements. La consigne demande de valider l'architecture
+  avant l'implémentation.
+- **Proposition :** conserver le modèle relationnel existant (`user` →
+  `profiles` → `profile_pupitres`, avec `invitations`, `events`,
+  `event_responses` et les tables métier déjà documentées) et le driver
+  `pg`/`drizzle-orm/node-postgres`; utiliser localement `.env` avec Neon
+  `test`, puis Cloudflare Hyperdrive et les secrets Cloudflare propres à
+  Preview/Production. Ne pas déployer ni committer de fichier `.env` de
+  production.
+- **État :** décidée le 2026-11-14.
+- **Décision client :** conserver `profiles` reliée à `user`, ainsi que
+  `pg`/`drizzle-orm/node-postgres`. Le fichier `.env` local sert au
+  développement sur Neon `test`; Preview et Production utilisent leurs
+  environnements Cloudflare séparés pour les secrets et Hyperdrive.
+  `BETTER_AUTH_SECRET` est le nom de référence du secret Better Auth.

@@ -106,9 +106,10 @@ Les comptes ne se créent pas librement :
 ## 5. Contraintes
 
 - **Stack** : SvelteKit 5 (runes), Tailwind, Motion, Better Auth pour
-  l'identité et les sessions, Neon PostgreSQL avec RLS, Drizzle et
-  `@neondatabase/serverless`, Cloudflare Hyperdrive pour le pooling,
-  Cloudflare Pages, Cloudflare R2, Resend, Cloudflare Turnstile et OneSignal.
+  l'identité et les sessions, Neon PostgreSQL avec RLS, Drizzle,
+  `pg`/`drizzle-orm/node-postgres`, Cloudflare Hyperdrive pour le pooling des
+  connexions, Cloudflare Pages, Cloudflare R2, Resend, Cloudflare Turnstile et
+  OneSignal.
   Les rôles métier restent dans `profiles.role`. Le contexte utilisateur RLS
   est établi au début de chaque transaction; le cache partagé de requêtes est
   interdit pour les lectures privées.

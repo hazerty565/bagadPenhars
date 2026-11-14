@@ -12,13 +12,22 @@ La base PostgreSQL s'appelle `bagadpenhars`. Elle contient deux branches :
 | `test`       | Développement local, tests et preview | Preview et environnement local        |
 | `production` | Données de production                 | Branch Cloudflare Pages de production |
 
-Les chaînes de connexion ne sont jamais committées. Une chaîne spécifique à
-la branche est injectée dans les variables d'environnement du runtime
-Cloudflare. Les connexions PostgreSQL transitent par Cloudflare Hyperdrive,
-avec Drizzle comme ORM et **`pg` + `drizzle-orm/node-postgres`** comme driver
-(décision Q-2026-11-08-01). Le driver `drizzle-orm/neon-serverless` n'est pas
-utilisé, car le WebSocket Neon n'est pas destiné à fonctionner au-dessus
-d'Hyperdrive.
+| Contexte              | Connexion                                                    | Secrets                                            |
+| --------------------- | ------------------------------------------------------------ | -------------------------------------------------- |
+| Développement local   | `.env` avec `DATABASE_URL` direct vers Neon `test`, via `pg` | Fichier local ignoré par Git                       |
+| Cloudflare Preview    | Hyperdrive `bagad-dev` vers Neon `test`                      | Secrets configurés dans l'environnement Preview    |
+| Cloudflare Production | Hyperdrive `bagad-prod` vers Neon `production`               | Secrets configurés dans l'environnement Production |
+
+Cette matrice décrit la cible de déploiement. Les configurations Hyperdrive et
+les secrets doivent être créés dans Cloudflare pour chaque environnement; ni
+leurs identifiants ni leurs valeurs ne sont conservés dans le dépôt.
+Les chaînes de connexion et secrets ne sont jamais committés. `.env` est
+réservé au développement local; un éventuel `.env.production` reste un fichier
+local et n'est pas chargé par le déploiement Cloudflare. Les connexions
+Cloudflare transitent par Hyperdrive, avec Drizzle comme ORM et **`pg` +
+`drizzle-orm/node-postgres`** comme driver (décision Q-2026-11-08-01). Le
+driver `drizzle-orm/neon-serverless` n'est pas utilisé, car le WebSocket Neon
+n'est pas destiné à fonctionner au-dessus d'Hyperdrive.
 
 ## 2. Principes
 

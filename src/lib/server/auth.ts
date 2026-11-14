@@ -29,7 +29,7 @@ export const auth = betterAuth({
 		}
 	}),
 	// Nom aligné sur la clé privée présente dans `.env` à la racine.
-	secret: process.env.BETTER_AUTH_API_KEY,
+	secret: process.env.BETTER_AUTH_SECRET ?? process.env.BETTER_AUTH_API_KEY,
 	baseURL: process.env.BETTER_AUTH_URL,
 	emailAndPassword: {
 		enabled: true,

@@ -13,8 +13,9 @@ travail couvert par la présente mise à jour; les autres restent à faire.
 - [ ] Mettre en place Better Auth, Neon PostgreSQL et Cloudflare R2.
 - [ ] Configurer Drizzle, Cloudflare Hyperdrive, les deux buckets R2, Resend et
       Cloudflare Turnstile.
-- [ ] Ajouter le driver `@neondatabase/serverless` et intégrer son accès à
-      Neon via Hyperdrive.
+- [ ] Relier le driver `pg` / `drizzle-orm/node-postgres` à Neon via Cloudflare
+      Hyperdrive dans les déploiements, en conservant la connexion directe
+      locale à la branche `test`.
 - [ ] Examiner le modèle PostgreSQL sur la branche Neon `test` et établir son
       application reproductible sans modifier une migration déjà appliquée.
 - [ ] Finaliser les migrations additives nécessaires pour les invitations,

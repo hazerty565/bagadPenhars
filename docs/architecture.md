@@ -10,11 +10,14 @@
 L'application cible SvelteKit 5 (runes) et TypeScript. Better Auth gère les
 identités et sessions; les rôles métier sont lus dans `profiles.role`.
 Neon PostgreSQL fournit la base et ses politiques RLS, Drizzle le modèle et
-les migrations, `@neondatabase/serverless` le driver et Cloudflare Hyperdrive
-le pooling des connexions. Les données privées soumises à RLS ne sont pas
-servies depuis un cache partagé de requêtes Hyperdrive. Cloudflare R2 stocke
-les fichiers; Cloudflare Pages héberge l'application; Resend et Turnstile
-gèrent les e-mails et l'antispam; OneSignal fournit les notifications push.
+les migrations, `pg` avec `drizzle-orm/node-postgres` le driver et Cloudflare
+Hyperdrive le pooling des connexions (décision Q-2026-11-08-01). En local,
+`pg` se connecte directement à la branche Neon `test`; sur Cloudflare, la
+connexion passe par Hyperdrive. Les données privées soumises à RLS ne sont
+pas servies depuis un cache partagé de requêtes Hyperdrive. Cloudflare R2
+stocke les fichiers; Cloudflare Pages héberge l'application; Resend et
+Turnstile gèrent les e-mails et l'antispam; OneSignal fournit les notifications
+push.
 
 Le menu est construit côté serveur selon le profil et les permissions, puis
 transmis à l'interface. Cela améliore l'UX, mais n'est pas une barrière de
@@ -27,6 +30,24 @@ refuser tout accès direct côté serveur et RLS.
 
 La base Neon porte le nom `bagadpenhars` et deux branches sont utilisées :
 `production` et `test`. Voir [`database.md`](./database.md).
+
+### Environnements et secrets
+
+- **Développement local** : le fichier `.env` (ignoré par Git, créé à partir
+  de `.env.example`) contient les valeurs locales; `DATABASE_URL` pointe
+  directement vers Neon `test`.
+- **Cloudflare Preview** : Hyperdrive `bagad-dev` cible Neon `test`. Les
+  secrets Preview sont configurés dans l'environnement Cloudflare correspondant.
+- **Cloudflare Production** : Hyperdrive `bagad-prod` cible Neon `production`.
+  Les secrets de production sont configurés séparément dans Cloudflare
+  Production.
+- Cette matrice décrit la cible : les configurations Hyperdrive et les secrets
+  doivent être créés dans les environnements Cloudflare correspondants; leurs
+  identifiants et valeurs ne sont pas stockés dans le dépôt.
+- `.env` et un éventuel `.env.production` sont des fichiers locaux seulement;
+  ils ne sont ni committés ni utilisés comme configuration du déploiement
+  Cloudflare. Les migrations de production sont appliquées séparément, après
+  validation sur `test`.
 
 ## Routes
 

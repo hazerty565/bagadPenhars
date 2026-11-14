@@ -847,3 +847,24 @@ eslint .`) échouait sur **18 fichiers** mal formatés et **8 erreurs ESLint**,
   application des recommandations de production de `equipe/AUDIT-DEMO.md`
   (guards serveur, RLS, fermeture de l'inscription publique, vérification
   d'e-mail).
+
+## 2026-11-14
+
+### Proposition d'architecture backend
+
+- Lecture du modèle Drizzle, de la migration initiale et des documents de
+  référence. Le dépôt utilise déjà `profiles` reliée à Better Auth `user`,
+  `pg`/`drizzle-orm/node-postgres`, et un helper transactionnel RLS; la
+  migration initiale ne sera pas modifiée.
+- Une question de validation est consignée dans `docs/questions.md` :
+  conserver ce modèle et le driver existants, et réserver `.env` au
+  développement local sur Neon `test`, avec les secrets et Hyperdrive
+  configurés dans Cloudflare pour Preview/Production. Le client a validé cette
+  proposition le 2026-11-14.
+- `docs/architecture.md`, `docs/database.md` et `.env.example` précisent
+  désormais cette séparation. Aucun changement de schéma ni aucune migration
+  n'a été engagé; aucun secret du fichier `.env` local n'a été consulté ni
+  modifié.
+- `BETTER_AUTH_SECRET` devient le nom de référence; le code conserve
+  temporairement `BETTER_AUTH_API_KEY` comme alias de compatibilité pour les
+  environnements locaux existants.

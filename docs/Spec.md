@@ -366,10 +366,11 @@ incomplets. Ne pas ajouter de service tiers sans décision dans
   `event.locals.accountStatus`. Better Auth ne remplace pas `profiles.role`.
 - Utiliser Drizzle comme ORM et Cloudflare Hyperdrive comme pool/connexion
   PostgreSQL Neon pour les déploiements Cloudflare Workers.
-- Utiliser `@neondatabase/serverless` comme driver Neon. Établir le contexte
-  d'identité RLS avec `set_config(..., true)` dans la transaction avant les
-  requêtes métier; ne jamais réutiliser un contexte de session sur une
-  connexion poolée.
+- Utiliser `pg` avec `drizzle-orm/node-postgres` et Cloudflare Hyperdrive pour
+  les connexions Cloudflare; en local, `pg` se connecte directement à la
+  branche Neon `test`. Établir le contexte d'identité RLS avec
+  `set_config(..., true)` dans la transaction avant les requêtes métier; ne
+  jamais réutiliser un contexte de session sur une connexion poolée.
 - Filtrer les liens du menu côté serveur à partir des permissions résolues.
   Cela ne remplace pas les guards dans chaque `+page.server.ts`, action et
   endpoint; toute URL connue doit toujours être protégée côté serveur.
