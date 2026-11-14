@@ -1,4 +1,3 @@
-import { dev } from '$app/environment';
 import { fail, redirect } from '@sveltejs/kit';
 import { loginSchema } from './schema';
 import type { Actions, PageServerLoad } from './$types';
@@ -25,16 +24,14 @@ function isEmailNotVerified(error: unknown): boolean {
 
 /**
  * Chargement de la page de connexion.
- * Redirige vers le dashboard si l'utilisateur est déjà authentifié et actif.
+ * Redirige selon l'état réel du compte lu dans `profiles`.
  */
 export const load: PageServerLoad = async ({ locals }) => {
-	if (dev) {
-		// Mode démonstration : l’espace membre est accessible directement.
+	if (locals.accountStatus === 'active' && locals.role) {
 		throw redirect(303, '/dashboard');
 	}
-
-	if (locals.profile && locals.accountStatus === 'active') {
-		throw redirect(303, '/dashboard');
+	if (locals.accountStatus === 'pending') {
+		throw redirect(303, '/auth/pending');
 	}
 	return {};
 };
@@ -44,7 +41,7 @@ export const load: PageServerLoad = async ({ locals }) => {
  * Valide les identifiants via Better Auth et établit la session.
  */
 export const actions: Actions = {
-	login: async ({ request }) => {
+	login: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const email = String(formData.get('email') ?? '');
 		const password = String(formData.get('password') ?? '');
@@ -54,9 +51,15 @@ export const actions: Actions = {
 			return fail(400, { error: GENERIC_ERROR, email });
 		}
 
+		if (!locals.auth) {
+			return fail(503, {
+				error: 'Le service de connexion est momentanément indisponible.',
+				email
+			});
+		}
+
 		try {
-			const { auth } = await import('$lib/server/auth');
-			await auth.api.signInEmail({
+			await locals.auth.api.signInEmail({
 				body: {
 					email: validation.data.email,
 					password: validation.data.password
@@ -78,8 +81,8 @@ export const actions: Actions = {
 		}
 
 		// La session (cookie) est posée par le plugin Better Auth pour SvelteKit
-		// avant la redirection. Le contrôle du statut du compte appartient aux
-		// guards de l'espace adhérents.
+		// avant la redirection. Le statut du compte est contrôlé par le layout
+		// du tableau de bord, qui renvoie les comptes non actifs vers /auth/pending.
 		throw redirect(303, '/dashboard');
 	}
 };

@@ -1,0 +1,1664 @@
+{
+  "profiles": [
+    {
+      "id": "p01",
+      "firstName": "Yann",
+      "lastName": "Le Goff",
+      "email": "yann.le-goff@example.com",
+      "role": "admin",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": "Président",
+      "pupitres": [
+        {
+          "pupitreId": "bombarde",
+          "isChef": false
+        },
+        {
+          "pupitreId": "cornemuse",
+          "isChef": false
+        }
+      ],
+      "avatar": 1,
+      "joinedAt": "2012-09-01"
+    },
+    {
+      "id": "p02",
+      "firstName": "Rozenn",
+      "lastName": "Kerloc'h",
+      "email": "rozenn.kerloch@example.com",
+      "role": "secretaire",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": "Secrétaire",
+      "pupitres": [
+        {
+          "pupitreId": "cornemuse",
+          "isChef": false
+        },
+        {
+          "pupitreId": "caisse-claire",
+          "isChef": false
+        }
+      ],
+      "avatar": 2,
+      "joinedAt": "2014-09-01"
+    },
+    {
+      "id": "p03",
+      "firstName": "Bleuenn",
+      "lastName": "Le Roux",
+      "email": "bleuenn.le-roux@example.com",
+      "role": "chef_pupitre",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": "Cheffe de pupitre",
+      "pupitres": [
+        {
+          "pupitreId": "bombarde",
+          "isChef": true
+        },
+        {
+          "pupitreId": "cornemuse",
+          "isChef": true
+        }
+      ],
+      "avatar": 3,
+      "joinedAt": "2013-09-01"
+    },
+    {
+      "id": "p04",
+      "firstName": "Gwendal",
+      "lastName": "Guivarc'h",
+      "email": "gwendal.guivarch@example.com",
+      "role": "chef_pupitre",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": "Chef de pupitre",
+      "pupitres": [
+        {
+          "pupitreId": "caisse-claire",
+          "isChef": true
+        }
+      ],
+      "avatar": 4,
+      "joinedAt": "2015-09-01"
+    },
+    {
+      "id": "p05",
+      "firstName": "Soizic",
+      "lastName": "Le Bris",
+      "email": "soizic.le-bris@example.com",
+      "role": "chef_pupitre",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": "Cheffe de pupitre",
+      "pupitres": [
+        {
+          "pupitreId": "percussion",
+          "isChef": true
+        }
+      ],
+      "avatar": 5,
+      "joinedAt": "2016-09-01"
+    },
+    {
+      "id": "p06",
+      "firstName": "Maël",
+      "lastName": "Kerdraon",
+      "email": "mael.kerdraon@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "bombarde",
+          "isChef": false
+        }
+      ],
+      "avatar": 6,
+      "joinedAt": "2018-09-01"
+    },
+    {
+      "id": "p07",
+      "firstName": "Annaïg",
+      "lastName": "Jaffré",
+      "email": "annaig.jaffre@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagadig",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "bombarde",
+          "isChef": false
+        },
+        {
+          "pupitreId": "cornemuse",
+          "isChef": false
+        }
+      ],
+      "avatar": 7,
+      "joinedAt": "2021-09-01"
+    },
+    {
+      "id": "p08",
+      "firstName": "Tanguy",
+      "lastName": "Le Floc'h",
+      "email": "tanguy.le-floch@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "cornemuse",
+          "isChef": false
+        }
+      ],
+      "avatar": 8,
+      "joinedAt": "2017-09-01"
+    },
+    {
+      "id": "p09",
+      "firstName": "Nolwenn",
+      "lastName": "Salaün",
+      "email": "nolwenn.salaun@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "cornemuse",
+          "isChef": false
+        },
+        {
+          "pupitreId": "caisse-claire",
+          "isChef": false
+        }
+      ],
+      "avatar": 9,
+      "joinedAt": "2019-09-01"
+    },
+    {
+      "id": "p10",
+      "firstName": "Erwan",
+      "lastName": "Morvan",
+      "email": "erwan.morvan@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "percussion",
+          "isChef": false
+        }
+      ],
+      "avatar": 10,
+      "joinedAt": "2016-09-01"
+    },
+    {
+      "id": "p11",
+      "firstName": "Lenaïg",
+      "lastName": "Quéméneur",
+      "email": "lenaig.quemeneur@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagadig",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "caisse-claire",
+          "isChef": false
+        }
+      ],
+      "avatar": 11,
+      "joinedAt": "2022-09-01"
+    },
+    {
+      "id": "p12",
+      "firstName": "Gaël",
+      "lastName": "Le Gall",
+      "email": "gael.le-gall@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "skolaj",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "bombarde",
+          "isChef": false
+        }
+      ],
+      "avatar": 12,
+      "joinedAt": "2024-09-01"
+    },
+    {
+      "id": "p13",
+      "firstName": "Aziliz",
+      "lastName": "Cariou",
+      "email": "aziliz.cariou@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "skolaj",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "cornemuse",
+          "isChef": false
+        }
+      ],
+      "avatar": 13,
+      "joinedAt": "2024-09-01"
+    },
+    {
+      "id": "p14",
+      "firstName": "Ronan",
+      "lastName": "Le Bihan",
+      "email": "ronan.le-bihan@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "percussion",
+          "isChef": false
+        },
+        {
+          "pupitreId": "bombarde",
+          "isChef": false
+        }
+      ],
+      "avatar": 14,
+      "joinedAt": "2015-09-01"
+    },
+    {
+      "id": "p15",
+      "firstName": "Katell",
+      "lastName": "Riou",
+      "email": "katell.riou@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagadig",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "percussion",
+          "isChef": false
+        }
+      ],
+      "avatar": 15,
+      "joinedAt": "2022-09-01"
+    },
+    {
+      "id": "p16",
+      "firstName": "Loïc",
+      "lastName": "Pennarun",
+      "email": "loic.pennarun@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "caisse-claire",
+          "isChef": false
+        }
+      ],
+      "avatar": 16,
+      "joinedAt": "2014-09-01"
+    },
+    {
+      "id": "p17",
+      "firstName": "Maiwenn",
+      "lastName": "Le Corre",
+      "email": "maiwenn.le-corre@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "bombarde",
+          "isChef": false
+        },
+        {
+          "pupitreId": "caisse-claire",
+          "isChef": false
+        }
+      ],
+      "avatar": 17,
+      "joinedAt": "2018-09-01"
+    },
+    {
+      "id": "p18",
+      "firstName": "Youenn",
+      "lastName": "Abgrall",
+      "email": "youenn.abgrall@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagadig",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "cornemuse",
+          "isChef": false
+        }
+      ],
+      "avatar": 18,
+      "joinedAt": "2023-09-01"
+    },
+    {
+      "id": "p19",
+      "firstName": "Solenn",
+      "lastName": "Derrien",
+      "email": "solenn.derrien@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "percussion",
+          "isChef": false
+        }
+      ],
+      "avatar": 19,
+      "joinedAt": "2019-09-01"
+    },
+    {
+      "id": "p20",
+      "firstName": "Ewen",
+      "lastName": "Le Saux",
+      "email": "ewen.le-saux@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "skolaj",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "caisse-claire",
+          "isChef": false
+        }
+      ],
+      "avatar": 20,
+      "joinedAt": "2025-09-01"
+    },
+    {
+      "id": "p21",
+      "firstName": "Morgane",
+      "lastName": "Guillou",
+      "email": "morgane.guillou@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "cornemuse",
+          "isChef": false
+        },
+        {
+          "pupitreId": "percussion",
+          "isChef": false
+        }
+      ],
+      "avatar": 21,
+      "joinedAt": "2017-09-01"
+    },
+    {
+      "id": "p22",
+      "firstName": "Alan",
+      "lastName": "Crozon",
+      "email": "alan.crozon@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagad",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "bombarde",
+          "isChef": false
+        }
+      ],
+      "avatar": 22,
+      "joinedAt": "2016-09-01"
+    },
+    {
+      "id": "p23",
+      "firstName": "Fanny",
+      "lastName": "Le Ster",
+      "email": "fanny.le-ster@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "bagadig",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "caisse-claire",
+          "isChef": false
+        }
+      ],
+      "avatar": 23,
+      "joinedAt": "2023-09-01"
+    },
+    {
+      "id": "p24",
+      "firstName": "Hugo",
+      "lastName": "Berthou",
+      "email": "hugo.berthou@example.com",
+      "role": "member",
+      "accountStatus": "active",
+      "level": "skolaj",
+      "bureauPosition": null,
+      "pupitres": [
+        {
+          "pupitreId": "percussion",
+          "isChef": false
+        }
+      ],
+      "avatar": 24,
+      "joinedAt": "2025-09-01"
+    }
+  ],
+  "events": [
+    {
+      "id": "e01",
+      "title": "Répétition générale",
+      "description": "Répétition de l’ensemble du bagad avant la série de concerts de novembre. Prévoir les partitions du set 2026.",
+      "date": "2026-11-12",
+      "type": "repetition",
+      "visibility": "interne",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [],
+      "createdBy": "p02",
+      "location": "Espace Chaptal, Quimper"
+    },
+    {
+      "id": "e02",
+      "title": "Répétition bombarde",
+      "description": "Mise en place des harmonies et travail des ornements sur le set de concours.",
+      "date": "2026-11-13",
+      "type": "repetition",
+      "visibility": "pupitre",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [
+        "bombarde"
+      ],
+      "createdBy": "p03",
+      "location": "Salle 1, Espace Chaptal"
+    },
+    {
+      "id": "e03",
+      "title": "Répétition cornemuse",
+      "description": "Réglage des anches et répétition du medley de fest-noz.",
+      "date": "2026-11-14",
+      "type": "repetition",
+      "visibility": "pupitre",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [
+        "cornemuse"
+      ],
+      "createdBy": "p03",
+      "location": "Salle 2, Espace Chaptal"
+    },
+    {
+      "id": "e04",
+      "title": "Répétition percussion",
+      "description": "Travail des breaks et des fins de morceaux.",
+      "date": "2026-11-15",
+      "type": "repetition",
+      "visibility": "pupitre",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [
+        "percussion"
+      ],
+      "createdBy": "p05",
+      "location": "Salle 1, Espace Chaptal"
+    },
+    {
+      "id": "e05",
+      "title": "Répétition caisse claire",
+      "description": "Répétition des rythmes binaires et ternaires du répertoire.",
+      "date": "2026-11-16",
+      "type": "repetition",
+      "visibility": "pupitre",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [
+        "caisse-claire"
+      ],
+      "createdBy": "p04",
+      "location": "Salle 3, Espace Chaptal"
+    },
+    {
+      "id": "e06",
+      "title": "Répétition bombarde et caisse claire",
+      "description": "Passage commun des morceaux de concours, pupitres bombarde et caisse claire réunis.",
+      "date": "2026-11-20",
+      "type": "repetition",
+      "visibility": "pupitre",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [
+        "bombarde",
+        "caisse-claire"
+      ],
+      "createdBy": "p02",
+      "location": "Grande salle, Espace Chaptal"
+    },
+    {
+      "id": "e07",
+      "title": "Concert de la Sainte-Cécile",
+      "description": "Concert annuel du bagad. Rendez-vous à 19 h 30 pour l’échauffement, tenue complète et instruments accordés.",
+      "date": "2026-11-21",
+      "type": "concert",
+      "visibility": "public",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [],
+      "createdBy": "p02",
+      "location": "Théâtre de Cornouaille, Quimper"
+    },
+    {
+      "id": "e08",
+      "title": "Repas de fin d’année",
+      "description": "Repas convivial de l’association. Répondez présent ou absent ; le nombre de convives sera arrêté le 10 décembre.",
+      "date": "2026-12-19",
+      "type": "repas",
+      "visibility": "interne",
+      "isPoll": true,
+      "status": "active",
+      "pupitreIds": [],
+      "createdBy": "p02",
+      "location": "Salle des fêtes de Penhars"
+    },
+    {
+      "id": "e09",
+      "title": "Fest-noz de décembre",
+      "description": "Prestation du bagad puis session ouverte. Départ groupé depuis l’Espace Chaptal.",
+      "date": "2026-12-05",
+      "type": "fest-noz",
+      "visibility": "public",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [],
+      "createdBy": "p02",
+      "location": "Salle Omnisports, Quimper"
+    },
+    {
+      "id": "e10",
+      "title": "Sortie « Passeurs des lumières »",
+      "description": "Sortie publique au départ de Quimper. Prévoir un pique-nique et une tenue de scène.",
+      "date": "2026-12-12",
+      "type": "sortie",
+      "visibility": "public",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [],
+      "createdBy": "p02",
+      "location": "Départ : place Saint-Corentin"
+    },
+    {
+      "id": "e11",
+      "title": "Réunion du bureau",
+      "description": "Préparation du budget 2027 et calendrier des sorties du premier semestre.",
+      "date": "2026-11-18",
+      "type": "reunion",
+      "visibility": "interne",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [],
+      "createdBy": "p01",
+      "location": "Salle du bureau, Espace Chaptal"
+    },
+    {
+      "id": "e12",
+      "title": "Concours de printemps",
+      "description": "Concours national, catégorie bagad. Déplacement en car, départ le matin.",
+      "date": "2027-03-14",
+      "type": "concours",
+      "visibility": "interne",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [],
+      "createdBy": "p02",
+      "location": "Lorient"
+    },
+    {
+      "id": "e13",
+      "title": "Gala de l’association",
+      "description": "Soirée de gala avec les partenaires et les bénévoles. Tenue de cérémonie.",
+      "date": "2027-01-24",
+      "type": "gala",
+      "visibility": "public",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [],
+      "createdBy": "p02",
+      "location": "Hôtel de ville, Quimper"
+    },
+    {
+      "id": "e14",
+      "title": "Répétition du 4 novembre",
+      "description": "Répétition passée, conservée pour l’historique des présences.",
+      "date": "2026-11-04",
+      "type": "repetition",
+      "visibility": "interne",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [],
+      "createdBy": "p02",
+      "location": "Espace Chaptal, Quimper"
+    },
+    {
+      "id": "e15",
+      "title": "Concert de Noël — annulé",
+      "description": "Concert annulé par l’organisateur. Les réponses restent visibles en lecture seule.",
+      "date": "2026-12-01",
+      "type": "concert",
+      "visibility": "public",
+      "isPoll": false,
+      "status": "cancelled",
+      "pupitreIds": [],
+      "createdBy": "p02",
+      "location": "Place de la Résistance, Quimper"
+    },
+    {
+      "id": "e16",
+      "title": "Festival interceltique",
+      "description": "Participation au festival. Programme détaillé communiqué en juin.",
+      "date": "2027-08-08",
+      "type": "festival",
+      "visibility": "public",
+      "isPoll": false,
+      "status": "active",
+      "pupitreIds": [],
+      "createdBy": "p02",
+      "location": "Lorient"
+    }
+  ],
+  "responses": [
+    {
+      "eventId": "e01",
+      "profileId": "p03",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p06",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p07",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p08",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p09",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p10",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p11",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p14",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p16",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p17",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p18",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p21",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p22",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e01",
+      "profileId": "p23",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e02",
+      "profileId": "p06",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e02",
+      "profileId": "p07",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e02",
+      "profileId": "p12",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e02",
+      "profileId": "p14",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e02",
+      "profileId": "p22",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e03",
+      "profileId": "p07",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e03",
+      "profileId": "p08",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e03",
+      "profileId": "p09",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e03",
+      "profileId": "p13",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e03",
+      "profileId": "p18",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e03",
+      "profileId": "p21",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e04",
+      "profileId": "p10",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e04",
+      "profileId": "p14",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e04",
+      "profileId": "p15",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e04",
+      "profileId": "p19",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e04",
+      "profileId": "p24",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e05",
+      "profileId": "p09",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e05",
+      "profileId": "p11",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e05",
+      "profileId": "p16",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e05",
+      "profileId": "p20",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e05",
+      "profileId": "p23",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p01",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p03",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p06",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p08",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p09",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p10",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p12",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p14",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p16",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p17",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p19",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p21",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e07",
+      "profileId": "p22",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e08",
+      "profileId": "p01",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e08",
+      "profileId": "p03",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e08",
+      "profileId": "p06",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e08",
+      "profileId": "p07",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e08",
+      "profileId": "p09",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e08",
+      "profileId": "p11",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e08",
+      "profileId": "p15",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e08",
+      "profileId": "p21",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e09",
+      "profileId": "p03",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e09",
+      "profileId": "p06",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e09",
+      "profileId": "p07",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e09",
+      "profileId": "p10",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e09",
+      "profileId": "p18",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e09",
+      "profileId": "p22",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e14",
+      "profileId": "p03",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e14",
+      "profileId": "p06",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e14",
+      "profileId": "p08",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e14",
+      "profileId": "p09",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e14",
+      "profileId": "p10",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e14",
+      "profileId": "p16",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e14",
+      "profileId": "p17",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e15",
+      "profileId": "p06",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e15",
+      "profileId": "p07",
+      "status": "absent",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e15",
+      "profileId": "p09",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    },
+    {
+      "eventId": "e15",
+      "profileId": "p14",
+      "status": "present",
+      "updatedAt": "2026-11-10T18:30:00.000Z"
+    }
+  ],
+  "documents": [
+    {
+      "id": "d01",
+      "title": "Réglement intérieur 2026",
+      "description": "Version approuvée en assemblée générale. À lire par tous les adhérents.",
+      "pupitreId": null,
+      "fileName": "reglement-interieur-2026.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 348160,
+      "uploadedBy": "p02",
+      "uploadedAt": "2026-11-05"
+    },
+    {
+      "id": "d02",
+      "title": "Partitions — set de concours bombarde",
+      "description": "Trois morceaux du set de concours, avec les ornements annotés.",
+      "pupitreId": "bombarde",
+      "fileName": "partitions-concours-bombarde.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 1204224,
+      "uploadedBy": "p03",
+      "uploadedAt": "2026-11-08"
+    },
+    {
+      "id": "d03",
+      "title": "Partitions — medley fest-noz cornemuse",
+      "description": "Medley de fest-noz, tonalités et réglages d’anche.",
+      "pupitreId": "cornemuse",
+      "fileName": "medley-fest-noz-cornemuse.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 986112,
+      "uploadedBy": "p03",
+      "uploadedAt": "2026-11-07"
+    },
+    {
+      "id": "d04",
+      "title": "Grille de caisse claire — niveau bagadig",
+      "description": "Exercices et grilles de travail pour les élèves du bagadig.",
+      "pupitreId": "caisse-claire",
+      "fileName": "grilles-caisse-claire-bagadig.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 512000,
+      "uploadedBy": "p04",
+      "uploadedAt": "2026-10-28"
+    },
+    {
+      "id": "d05",
+      "title": "Plan de scène — Fest-noz de décembre",
+      "description": "Implantation des pupitres, retours et conduites micro.",
+      "pupitreId": null,
+      "fileName": "plan-scene-fest-noz-decembre.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 734003,
+      "uploadedBy": "p02",
+      "uploadedAt": "2026-11-02"
+    },
+    {
+      "id": "d06",
+      "title": "Fiche technique — concert de la Sainte-Cécile",
+      "description": "Besoins techniques, horaires de montage et contacts sur place.",
+      "pupitreId": null,
+      "fileName": "fiche-technique-sainte-cecile.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 421888,
+      "uploadedBy": "p02",
+      "uploadedAt": "2026-11-09"
+    }
+  ],
+  "articles": [
+    {
+      "id": "a01",
+      "title": "Retour sur le concert de la Sainte-Cécile",
+      "slug": "retour-concert-sainte-cecile",
+      "excerpt": "Une salle comble, un programme renouvelé et une belle soirée partagée avec les partenaires du bagad.",
+      "status": "published",
+      "authorId": "p02",
+      "publishedAt": "2026-11-10",
+      "updatedAt": "2026-11-10T18:00:00.000Z",
+      "contentMarkdown": "## Une soirée de partage\n\nLe concert annuel a réuni plus de trois cents personnes au Théâtre de Cornouaille. Le programme mêlait les airs traditionnels du répertoire et deux créations arrangées par les chefs de pupitre.\n\n## Merci aux bénévoles\n\nLe montage, l’accueil du public et la logistique ont été assurés par une équipe de bénévoles. Un grand merci à toutes les personnes qui ont donné de leur temps.\n\n## Prochains rendez-vous\n\n- **5 décembre** : fest-noz de décembre\n- **12 décembre** : sortie « Passeurs des lumières »\n- **19 décembre** : repas de fin d’année\n\nLes inscriptions se font depuis l’agenda de l’espace adhérents."
+    },
+    {
+      "id": "a02",
+      "title": "Les nouveaux élèves du bagadig",
+      "slug": "nouveaux-eleves-bagadig",
+      "excerpt": "Douze jeunes musiciens ont rejoint les rangs du bagadig cette saison. Présentation du parcours et des pupitres.",
+      "status": "published",
+      "authorId": "p02",
+      "publishedAt": "2026-10-24",
+      "updatedAt": "2026-10-24T09:30:00.000Z",
+      "contentMarkdown": "## Une rentrée encourageante\n\nDouze élèves ont intégré le bagadig à la rentrée. Ils suivent une séance hebdomadaire par pupitre et participent aux répétitions communes une fois par mois.\n\n## Le rôle des chefs de pupitre\n\nChaque chef de pupitre accompagne les nouveaux arrivants : réglage des instruments, travail de lecture et préparation des premières sorties.\n\n> « Le plus important est de prendre du plaisir à jouer ensemble », rappelle l’équipe pédagogique.\n\nLes familles peuvent poser leurs questions depuis le formulaire de contact du site public."
+    },
+    {
+      "id": "a03",
+      "title": "Préparer le concours de printemps",
+      "slug": "preparer-concours-printemps",
+      "excerpt": "Le calendrier de travail, les pupitres concernés et les répétitions supplémentaires jusqu’au mois de mars.",
+      "status": "published",
+      "authorId": "p03",
+      "publishedAt": "2026-10-12",
+      "updatedAt": "2026-10-12T20:15:00.000Z",
+      "contentMarkdown": "## Un travail par pupitre\n\nLa préparation du concours de printemps commence dès le mois de novembre. Chaque pupitre travaille ses parties séparément avant les répétitions communes.\n\n## Calendrier indicatif\n\n1. Novembre : mise en place des partitions\n2. Décembre : travail des harmonies\n3. Janvier : premières répétitions complètes\n4. Février : filage et corrections\n5. Mars : concours\n\n## Points d’attention\n\nLes instruments doivent être réglés avant chaque répétition commune. Les partitions annotées sont disponibles dans l’espace Documents."
+    },
+    {
+      "id": "a04",
+      "title": "Brouillon — bilan de la saison 2026",
+      "slug": "bilan-saison-2026",
+      "excerpt": "Brouillon en cours de relecture par le bureau.",
+      "status": "draft",
+      "authorId": "p01",
+      "publishedAt": null,
+      "updatedAt": "2026-11-11T08:45:00.000Z",
+      "contentMarkdown": "## Chiffres de la saison\n\n- Concerts et sorties : à compléter\n- Nouveaux adhérents : à compléter\n- Heures de répétition : à compléter\n\n## Bilan moral\n\nTexte à relire par le bureau avant publication."
+    }
+  ],
+  "albums": [
+    {
+      "id": "al01",
+      "title": "Concert de la Sainte-Cécile",
+      "description": "Quelques images de la soirée au Théâtre de Cornouaille.",
+      "date": "2026-11-09",
+      "published": true,
+      "photos": [
+        {
+          "id": "m01",
+          "albumId": "al01",
+          "src": "/IMG_0877.webp",
+          "alt": "Le bagad en tenue sur scène, éclairé par les projecteurs.",
+          "caption": "Le bagad en tenue, sur scène.",
+          "order": 1
+        },
+        {
+          "id": "m02",
+          "albumId": "al01",
+          "src": "/IMG_0878.webp",
+          "alt": "Un musicien du bagad en pleine prestation.",
+          "caption": "Prestation instrumentale.",
+          "order": 2
+        },
+        {
+          "id": "m03",
+          "albumId": "al01",
+          "src": "/IMG_0879.webp",
+          "alt": "Vue du groupe pendant le concert.",
+          "caption": "Le groupe pendant le concert.",
+          "order": 3
+        }
+      ]
+    },
+    {
+      "id": "al02",
+      "title": "Répétitions à l’Espace Chaptal",
+      "description": "Le travail des pupitres, semaine après semaine.",
+      "date": "2026-10-18",
+      "published": true,
+      "photos": [
+        {
+          "id": "m04",
+          "albumId": "al02",
+          "src": "/IMG_0880.webp",
+          "alt": "Grosse caisse et percussions en répétition.",
+          "caption": "Travail de la grosse caisse.",
+          "order": 1
+        },
+        {
+          "id": "m05",
+          "albumId": "al02",
+          "src": "/IMG_0881.webp",
+          "alt": "Practice pads et baguettes posés sur une table.",
+          "caption": "Atelier de percussion.",
+          "order": 2
+        },
+        {
+          "id": "m06",
+          "albumId": "al02",
+          "src": "/IMG_0874.webp",
+          "alt": "Pratique des practice chanters en cercle.",
+          "caption": "Travail des practice chanters.",
+          "order": 3
+        }
+      ]
+    },
+    {
+      "id": "al03",
+      "title": "Sortie de groupe",
+      "description": "Album en préparation, non publié sur le site public.",
+      "date": "2026-11-02",
+      "published": false,
+      "photos": [
+        {
+          "id": "m07",
+          "albumId": "al03",
+          "src": "/groupe_bagad.webp",
+          "alt": "Photographie de groupe du bagad en extérieur.",
+          "caption": "Photo de groupe.",
+          "order": 1
+        },
+        {
+          "id": "m08",
+          "albumId": "al03",
+          "src": "/couple_jeune.webp",
+          "alt": "Deux musiciens du bagad en tenue.",
+          "caption": "Deux instrumentistes.",
+          "order": 2
+        }
+      ]
+    }
+  ],
+  "notifications": [
+    {
+      "id": "n01",
+      "title": "Répétition générale jeudi 12 novembre",
+      "body": "La répétition de l’ensemble du bagad est avancée à 19 h. Merci de confirmer votre présence.",
+      "createdAt": "2026-11-09T08:15:00.000Z",
+      "audience": "all",
+      "audienceIds": [],
+      "sentBy": "p02",
+      "readBy": [
+        "p01",
+        "p03",
+        "p06",
+        "p08"
+      ]
+    },
+    {
+      "id": "n02",
+      "title": "Nouvelles partitions disponibles",
+      "body": "Les partitions du set de concours sont déposées dans l’espace Documents, pupitre Bombarde.",
+      "createdAt": "2026-11-08T17:40:00.000Z",
+      "audience": "pupitre",
+      "audienceIds": [
+        "bombarde"
+      ],
+      "sentBy": "p03",
+      "readBy": [
+        "p03",
+        "p06"
+      ]
+    },
+    {
+      "id": "n03",
+      "title": "Rappel : concert du 21 novembre",
+      "body": "Rendez-vous à 19 h 30 au Théâtre de Cornouaille. Tenue complète et instruments accordés.",
+      "createdAt": "2026-11-07T10:00:00.000Z",
+      "audience": "all",
+      "audienceIds": [],
+      "sentBy": "p02",
+      "readBy": [
+        "p03"
+      ]
+    },
+    {
+      "id": "n04",
+      "title": "Sondage repas de fin d’année",
+      "body": "Merci de répondre avant le 10 décembre pour permettre la réservation de la salle.",
+      "createdAt": "2026-11-06T19:20:00.000Z",
+      "audience": "all",
+      "audienceIds": [],
+      "sentBy": "p02",
+      "readBy": []
+    },
+    {
+      "id": "n05",
+      "title": "Réglement intérieur mis à jour",
+      "body": "La version 2026 du réglement intérieur est disponible dans les documents communs.",
+      "createdAt": "2026-11-05T09:05:00.000Z",
+      "audience": "all",
+      "audienceIds": [],
+      "sentBy": "p01",
+      "readBy": [
+        "p01",
+        "p02",
+        "p03",
+        "p04",
+        "p05",
+        "p06",
+        "p09",
+        "p10"
+      ]
+    },
+    {
+      "id": "n06",
+      "title": "Réunion du bureau mercredi 18 novembre",
+      "body": "Ordre du jour : budget 2027, calendrier des sorties, bilan du mois d’octobre.",
+      "createdAt": "2026-11-04T16:30:00.000Z",
+      "audience": "profiles",
+      "audienceIds": [
+        "p01",
+        "p02",
+        "p03",
+        "p04",
+        "p05"
+      ],
+      "sentBy": "p01",
+      "readBy": [
+        "p01"
+      ]
+    },
+    {
+      "id": "n07",
+      "title": "Bienvenue sur l’espace adhérents",
+      "body": "Cet espace est en démonstration : toutes les données sont fictives. Explorez librement les menus.",
+      "createdAt": "2026-11-03T12:00:00.000Z",
+      "audience": "all",
+      "audienceIds": [],
+      "sentBy": "p01",
+      "readBy": [
+        "p06",
+        "p07",
+        "p08",
+        "p09",
+        "p10",
+        "p11",
+        "p12"
+      ]
+    },
+    {
+      "id": "n08",
+      "title": "Photo de groupe disponible",
+      "body": "La photo de groupe du festival est publiée dans les albums. Merci au photographe bénévole.",
+      "createdAt": "2026-11-01T11:15:00.000Z",
+      "audience": "all",
+      "audienceIds": [],
+      "sentBy": "p02",
+      "readBy": [
+        "p01",
+        "p02",
+        "p03",
+        "p04",
+        "p05",
+        "p06",
+        "p07",
+        "p08",
+        "p09",
+        "p10"
+      ]
+    }
+  ],
+  "invitations": [
+    {
+      "id": "i01",
+      "email": "nina.le-guen@example.com",
+      "firstName": "Nina",
+      "lastName": "Le Guen",
+      "pupitreIds": [
+        "cornemuse"
+      ],
+      "status": "pending",
+      "sentAt": "2026-11-09",
+      "expiresAt": "2026-11-16",
+      "invitedBy": "p02"
+    },
+    {
+      "id": "i02",
+      "email": "jules.pere@example.com",
+      "firstName": "Jules",
+      "lastName": "Péré",
+      "pupitreIds": [
+        "caisse-claire"
+      ],
+      "status": "accepted",
+      "sentAt": "2026-10-30",
+      "expiresAt": "2026-11-06",
+      "invitedBy": "p02"
+    },
+    {
+      "id": "i03",
+      "email": "elise.keravel@example.com",
+      "firstName": "Élise",
+      "lastName": "Keravel",
+      "pupitreIds": [
+        "percussion"
+      ],
+      "status": "expired",
+      "sentAt": "2026-10-20",
+      "expiresAt": "2026-10-27",
+      "invitedBy": "p02"
+    }
+  ],
+  "preferences": [
+    {
+      "profileId": "p01",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p02",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p03",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p04",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p05",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p06",
+      "global": true,
+      "reminders": false,
+      "events": true
+    },
+    {
+      "profileId": "p07",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p08",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p09",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p10",
+      "global": false,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p11",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p12",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p13",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p14",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p15",
+      "global": true,
+      "reminders": true,
+      "events": false
+    },
+    {
+      "profileId": "p16",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p17",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p18",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p19",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p20",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p21",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p22",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p23",
+      "global": true,
+      "reminders": true,
+      "events": true
+    },
+    {
+      "profileId": "p24",
+      "global": true,
+      "reminders": true,
+      "events": true
+    }
+  ],
+  "settings": {
+    "associationName": "Bagad Penhars",
+    "email": "contact@bagad-penhars.com",
+    "address": "Espace Chaptal, 6 avenue des Oiseaux, 29000 Quimper",
+    "website": "https://bagad-penhars.com",
+    "storageUsedBytes": 5771038720,
+    "storageQuotaBytes": 8589934592,
+    "storageAlertBytes": 7516192768,
+    "notifyOnEventCreate": true,
+    "notifyReminderDays": 3
+  }
+}

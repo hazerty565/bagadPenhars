@@ -1,66 +1,63 @@
-import { demo } from '../store.svelte';
-import type { DemoDocument, DemoPupitreId } from '../types';
-import { canDeleteDocument, canDepositDocument, DemoPermissionError } from '../permissions';
-import { actorFor, isNonEmpty, nextId, nowIso } from './helpers';
+import { member } from '../store.svelte';
+import type { MemberDocument, MemberPupitreId } from '../types';
+import { actorOf, canDeleteDocument, canDepositDocument, MemberPermissionError } from '../permissions';
+import { isNonEmpty } from './helpers';
 
-export interface DemoDocumentInput {
+export interface MemberDocumentInput {
 	title: string;
 	description: string;
-	pupitreId: DemoPupitreId | null;
+	pupitreId: MemberPupitreId | null;
 	fileName: string;
 }
 
 /**
- * Dépôt simulé : seules les métadonnées sont enregistrées, aucun fichier
- * n’est lu, téléversé ni conservé.
+ * Dépôt de document.
+ *
+ * Aucun binaire n'est téléversé à ce stade : seules les métadonnées sont
+ * enregistrées côté serveur, avec une clé de fichier symbolique.
  */
-export function addDocument(actorProfileId: string, input: DemoDocumentInput): DemoDocument {
-	const actor = actorFor(actorProfileId);
+export async function addDocument(
+	_actorProfileId: string,
+	input: MemberDocumentInput
+): Promise<void> {
+	const actor = actorOf(member.profile);
 	if (!canDepositDocument(actor, input.pupitreId)) {
-		throw new DemoPermissionError(
+		throw new MemberPermissionError(
 			'Vous ne pouvez déposer un document que pour un pupitre que vous dirigez.'
 		);
 	}
 	if (!isNonEmpty(input.title, 3)) {
-		throw new DemoPermissionError('Le titre doit contenir au moins trois caractères.');
+		throw new MemberPermissionError('Le titre doit contenir au moins trois caractères.');
 	}
 	if (!isNonEmpty(input.fileName, 3)) {
-		throw new DemoPermissionError('Le nom du fichier est obligatoire.');
+		throw new MemberPermissionError('Le nom du fichier est obligatoire.');
 	}
 
 	const fileName = input.fileName.trim().toLowerCase().endsWith('.pdf')
 		? input.fileName.trim()
 		: `${input.fileName.trim()}.pdf`;
 
-	const document: DemoDocument = {
-		id: nextId('d', demo.documents),
+	await member.request('document.create', {
 		title: input.title.trim(),
 		description: input.description.trim(),
 		pupitreId: input.pupitreId,
-		fileName,
-		mimeType: 'application/pdf',
-		sizeBytes: 180_000 + (input.title.length + fileName.length) * 8192,
-		uploadedBy: actor.id,
-		uploadedAt: nowIso().slice(0, 10)
-	};
-
-	demo.documents = [document, ...demo.documents];
-	demo.persist();
-	return document;
+		fileName
+	});
 }
 
-export function deleteDocument(actorProfileId: string, documentId: string): void {
-	const actor = actorFor(actorProfileId);
-	const document = demo.documents.find((item) => item.id === documentId);
-	if (!document) throw new DemoPermissionError('Document introuvable.');
-	if (!canDeleteDocument(actor, document.pupitreId)) {
-		throw new DemoPermissionError('Vous ne pouvez pas supprimer ce document.');
+export async function deleteDocument(
+	_actorProfileId: string,
+	documentId: string
+): Promise<void> {
+	const document = member.documents.find((item) => item.id === documentId);
+	if (!document) throw new MemberPermissionError('Document introuvable.');
+	if (!canDeleteDocument(actorOf(member.profile), document.pupitreId)) {
+		throw new MemberPermissionError('Vous ne pouvez pas supprimer ce document.');
 	}
-	demo.documents = demo.documents.filter((item) => item.id !== documentId);
-	demo.persist();
+	await member.request('document.delete', { documentId });
 }
 
-/** Téléchargement simulé : aucun fichier binaire n’existe. */
-export function simulateDownload(document: DemoDocument): string {
-	return `Téléchargement simulé de « ${document.fileName} » (${document.sizeBytes} octets fictifs). Aucun fichier réel n’est produit en mode démonstration.`;
+/** Message de téléchargement : aucun fichier binaire n'est stocké à ce stade. */
+export function simulateDownload(document: MemberDocument): string {
+	return `Téléchargement simulé de « ${document.fileName} » (${document.sizeBytes} octets). Aucun fichier réel n’est encore produit.`;
 }

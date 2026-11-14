@@ -1,30 +1,28 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Database, KeyRound, Lock, RotateCcw, ShieldCheck, UserRound } from '@lucide/svelte';
+	import { KeyRound, Lock, LogOut, ShieldCheck, UserRound } from '@lucide/svelte';
 	import PageHeader from '$lib/components/dashboard/PageHeader.svelte';
 	import Badge from '$lib/components/dashboard/Badge.svelte';
 	import RoleBadge from '$lib/components/dashboard/RoleBadge.svelte';
-	import InlineConfirm from '$lib/components/dashboard/InlineConfirm.svelte';
 	import Avatar from '$lib/components/dashboard/Avatar.svelte';
 	import { secondaryButtonClass } from '$lib/components/dashboard/form';
-	import { demo, DEMO_STORAGE_KEY } from '$lib/demo/store.svelte';
-	import { actorOf, canSeeAdminSection, chefPupitreIds } from '$lib/demo/permissions';
-	import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '$lib/demo/labels';
-	import { pupitreName } from '$lib/demo/fixtures/pupitres';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf, canSeeAdminSection, chefPupitreIds } from '$lib/member/permissions';
+	import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '$lib/member/labels';
+	import { pupitreName } from '$lib/member/fixtures/pupitres';
 
-	const profile = $derived(demo.activeProfile);
+	const profile = $derived(member.activeProfile);
 	const actor = $derived(actorOf(profile));
 	const chefs = $derived(chefPupitreIds(actor));
 
-	function reset() {
-		demo.reset();
-	}
+	const loginHref = resolve('/auth/login');
+	const logoutHref = resolve('/auth/logout');
 </script>
 
 <PageHeader
 	eyebrow="Mon compte"
 	title="Sécurité et session"
-	description="Vue de la session simulée de la démonstration. Aucun mot de passe, cookie ou jeton réel n’est utilisé ici."
+	description="Votre session Better Auth, votre rôle et les droits associés. Les rôles métier sont lus dans la base, jamais dans le navigateur."
 />
 
 <div class="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
@@ -32,7 +30,7 @@
 		<section class="border border-marine/10 bg-white p-5" aria-labelledby="session-titre">
 			<h2 id="session-titre" class="flex items-center gap-2 font-serif text-xl text-marine">
 				<ShieldCheck size={18} />
-				Session simulée
+				Session active
 			</h2>
 			<div class="mt-4 flex items-center gap-4">
 				<Avatar {profile} size="lg" />
@@ -43,20 +41,20 @@
 					</p>
 					<p class="mt-1 flex flex-wrap items-center gap-2">
 						<RoleBadge role={profile.role} size="md" />
-						<Badge tone="muted">Démonstration</Badge>
+						<Badge tone="success">Compte actif</Badge>
 					</p>
 				</div>
 			</div>
 			<dl class="mt-5 grid gap-4 text-sm sm:grid-cols-2">
 				<div>
 					<dt class="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ardoise">
-						Identifiant fictif
+						Identifiant de profil
 					</dt>
 					<dd class="mt-1 font-mono text-xs text-ink">{profile.id}</dd>
 				</div>
 				<div>
 					<dt class="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ardoise">
-						Adresse fictive
+						Adresse e-mail
 					</dt>
 					<dd class="mt-1 text-ink">{profile.email}</dd>
 				</div>
@@ -82,10 +80,16 @@
 			<p
 				class="mt-4 border border-marine/10 bg-ivoire/70 px-3 py-2 text-xs leading-relaxed text-ardoise"
 			>
-				Le profil actif est stocké dans les données de démonstration, pas dans un cookie de session.
-				Les futurs guards Better Auth s’appuieront sur une session serveur vérifiée et resteront
-				seuls autoritaires.
+				La session est un cookie Better Auth vérifié à chaque requête. Le rôle et le statut du
+				compte sont relus dans <code class="bg-white px-1 py-0.5">profiles</code> : modifier le
+				navigateur ne change aucun droit.
 			</p>
+			<form method="POST" action={logoutHref} class="mt-4">
+				<button type="submit" class={secondaryButtonClass}>
+					<LogOut size={15} />
+					Se déconnecter
+				</button>
+			</form>
 		</section>
 
 		<section class="border border-marine/10 bg-white p-5" aria-labelledby="mot-de-passe">
@@ -94,65 +98,28 @@
 				Mot de passe
 			</h2>
 			<p class="mt-2 text-sm leading-relaxed text-ardoise">
-				La modification du mot de passe est volontairement désactivée en démonstration : il n’existe
-				aucun compte réel, aucun secret et aucune table d’authentification. Le formulaire de
-				sécurité sera branché sur Better Auth lors de l’intégration Neon.
+				Le mot de passe est géré par Better Auth : il n’est jamais stocké en clair ni transmis au
+				navigateur. Pour le réinitialiser, utilisez le lien « Mot de passe oublié ? » depuis la page
+				de connexion : un e-mail signé est envoyé à votre adresse.
 			</p>
-			<ul class="mt-3 list-disc space-y-1 pl-5 text-xs text-ardoise">
-				<li>Aucun mot de passe n’est demandé ni conservé.</li>
-				<li>Aucun e-mail de réinitialisation n’est envoyé.</li>
-				<li>Aucun jeton de vérification n’est généré.</li>
-			</ul>
-		</section>
-
-		<section class="border border-marine/10 bg-white p-5" aria-labelledby="stockage-local">
-			<h2 id="stockage-local" class="flex items-center gap-2 font-serif text-xl text-marine">
-				<Database size={18} />
-				Données locales
-			</h2>
-			<p class="mt-2 text-sm leading-relaxed text-ardoise">
-				Toutes les modifications de la démonstration sont conservées dans le
-				<code class="bg-ivoire px-1 py-0.5 text-xs">localStorage</code> de ce navigateur, sous la
-				clé
-				<code class="bg-ivoire px-1 py-0.5 text-xs">{DEMO_STORAGE_KEY}</code>.
-			</p>
-			<ul class="mt-3 list-disc space-y-1 pl-5 text-xs text-ardoise">
-				<li>Les données sont fictives et ne quittent pas le navigateur.</li>
-				<li>Elles sont partagées entre les onglets ouverts du site en développement.</li>
-				<li>La réinitialisation recharge le jeu de données d’origine.</li>
-				<li>Vider le stockage du site produit le même effet.</li>
-			</ul>
-			<div class="mt-4 flex flex-wrap items-center gap-4">
-				<InlineConfirm
-					label="Réinitialiser la démonstration"
-					confirmLabel="Confirmer la réinitialisation"
-					message="Toutes les modifications locales seront perdues."
-					tone="neutral"
-					onconfirm={reset}
-				>
-					<RotateCcw size={14} />
-				</InlineConfirm>
-				<a href={resolve('/(public)/[lang=lang]', { lang: 'fr' })} class={secondaryButtonClass}>
-					Quitter l’espace adhérents
-				</a>
-			</div>
+			<a href={loginHref} class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-marine underline underline-offset-4">
+				<KeyRound size={14} />
+				Ouvrir la page de connexion
+			</a>
 		</section>
 	</div>
 
 	<aside class="space-y-4">
 		<section class="border border-marine/15 bg-marine p-5 text-ivoire">
 			<h2 class="flex items-center gap-2 font-serif text-xl text-white">
-				<KeyRound size={18} />
+				<ShieldCheck size={18} />
 				Ce qui protège réellement
 			</h2>
 			<ul class="mt-3 space-y-2 text-xs leading-relaxed text-ivoire/80">
-				<li>
-					Les services de démonstration refusent les actions interdites, même si un bouton est
-					forcé.
-				</li>
-				<li>En production, chaque load et chaque action revérifiera la session côté serveur.</li>
+				<li>Chaque commande est revalidée côté serveur, puis soumise aux politiques RLS.</li>
+				<li>Les rôles et statuts viennent de <code>profiles.role</code> et <code>profiles.account_status</code>.</li>
 				<li>Masquer un bouton n’est jamais considéré comme une protection.</li>
-				<li>Les données sensibles ne seront jamais envoyées au client sans contrôle.</li>
+				<li>Le client ne reçoit que les données que PostgreSQL l’autorise à lire.</li>
 			</ul>
 		</section>
 

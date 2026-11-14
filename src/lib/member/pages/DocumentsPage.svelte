@@ -12,7 +12,7 @@
 		primaryButtonClass,
 		secondaryButtonClass
 	} from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
+	import { member } from '$lib/member/store.svelte';
 	import {
 		actorOf,
 		canDeleteDocument,
@@ -21,14 +21,14 @@
 		chefPupitreIds,
 		isChefOf,
 		scopedPupitreIds
-	} from '$lib/demo/permissions';
-	import { addDocument, deleteDocument, simulateDownload } from '$lib/demo/services/documents';
-	import { formatBytes } from '$lib/demo/clock';
-	import { DEMO_PUPITRES, pupitreName } from '$lib/demo/fixtures/pupitres';
-	import type { DemoPupitreId } from '$lib/demo/types';
+	} from '$lib/member/permissions';
+	import { addDocument, deleteDocument, simulateDownload } from '$lib/member/services/documents';
+	import { formatBytes } from '$lib/member/clock';
+	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/fixtures/pupitres';
+	import type { MemberPupitreId } from '$lib/member/types';
 
 	interface Props {
-		pupitreScope?: DemoPupitreId[];
+		pupitreScope?: MemberPupitreId[];
 		/** Mode espace pupitre : le périmètre est calculé depuis le rôle actif. */
 		pupitreMode?: boolean;
 		title?: string;
@@ -43,25 +43,25 @@
 	}: Props = $props();
 
 	let search = $state('');
-	let pupitreFilter = $state<DemoPupitreId | 'all'>('all');
+	let pupitreFilter = $state<MemberPupitreId | 'all'>('all');
 	let showForm = $state(false);
 	let formTitle = $state('');
 	let formDescription = $state('');
 	let formFileName = $state('');
-	let formPupitre = $state<DemoPupitreId | 'all'>('all');
+	let formPupitre = $state<MemberPupitreId | 'all'>('all');
 	let formError = $state<string | null>(null);
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const denied = $derived(pupitreMode && !canSeePupitreSection(actor));
 	const scope = $derived(pupitreMode ? scopedPupitreIds(actor) : pupitreScope);
 	const scoped = $derived(scope.length > 0);
 
 	const availablePupitres = $derived(
 		scoped
-			? DEMO_PUPITRES.filter((pupitre) => scope.includes(pupitre.id))
+			? MEMBER_PUPITRES.filter((pupitre) => scope.includes(pupitre.id))
 			: actor.role === 'chef_pupitre'
-				? DEMO_PUPITRES.filter((pupitre) => isChefOf(actor, pupitre.id))
-				: DEMO_PUPITRES
+				? MEMBER_PUPITRES.filter((pupitre) => isChefOf(actor, pupitre.id))
+				: MEMBER_PUPITRES
 	);
 
 	// Un chef ne dispose pas de l’option « tous les pupitres » : le sélecteur
@@ -85,7 +85,7 @@
 	);
 
 	const documents = $derived(
-		demo.documents
+		member.documents
 			.filter((document) => {
 				if (scoped && document.pupitreId !== null && !scope.includes(document.pupitreId)) {
 					return false;
@@ -107,8 +107,8 @@
 	);
 
 	function download(fileName: string, sizeBytes: number) {
-		const document = demo.documents.find((item) => item.fileName === fileName);
-		demo.notify(
+		const document = member.documents.find((item) => item.fileName === fileName);
+		member.notify(
 			'info',
 			document
 				? simulateDownload(document)
@@ -120,13 +120,13 @@
 		event.preventDefault();
 		formError = null;
 		try {
-			addDocument(demo.activeProfileId, {
+			addDocument(member.activeProfileId, {
 				title: formTitle,
 				description: formDescription,
 				fileName: formFileName,
 				pupitreId: formPupitre === 'all' ? null : formPupitre
 			});
-			demo.notify('success', 'Document déposé (simulation : aucun fichier n’a été envoyé).');
+			member.notify('success', 'Document déposé (simulation : aucun fichier n’a été envoyé).');
 			formTitle = '';
 			formDescription = '';
 			formFileName = '';
@@ -134,16 +134,16 @@
 			showForm = false;
 		} catch (error) {
 			formError = error instanceof Error ? error.message : 'Dépôt impossible.';
-			demo.notify('error', formError);
+			member.notify('error', formError);
 		}
 	}
 
 	function remove(documentId: string) {
 		try {
-			deleteDocument(demo.activeProfileId, documentId);
-			demo.notify('success', 'Document supprimé.');
+			deleteDocument(member.activeProfileId, documentId);
+			member.notify('success', 'Document supprimé.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');
 		}
 	}
 </script>

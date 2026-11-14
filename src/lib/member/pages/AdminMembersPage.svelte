@@ -11,33 +11,33 @@
 		primaryButtonClass,
 		secondaryButtonClass
 	} from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf, canChangeRole, canManageMembers } from '$lib/demo/permissions';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf, canChangeRole, canManageMembers } from '$lib/member/permissions';
 	import {
 		assignRole,
 		updateBureauPosition,
 		updateMemberLevel,
 		updateMemberPupitres
-	} from '$lib/demo/services/profiles';
-	import { ROLE_DESCRIPTIONS, ROLE_LABELS, LEVEL_LABELS } from '$lib/demo/labels';
-	import { DEMO_PUPITRES, pupitreName } from '$lib/demo/fixtures/pupitres';
+	} from '$lib/member/services/profiles';
+	import { ROLE_DESCRIPTIONS, ROLE_LABELS, LEVEL_LABELS } from '$lib/member/labels';
+	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/fixtures/pupitres';
 	import type { AppRole } from '$lib/auth/roles';
-	import type { DemoLevel, DemoProfilePupitre, DemoPupitreId } from '$lib/demo/types';
+	import type { MemberLevel, MemberProfilePupitre, MemberPupitreId } from '$lib/member/types';
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canManageMembers(actor));
 
 	let search = $state('');
 	let roleFilter = $state<AppRole | 'all'>('all');
-	let pupitreFilter = $state<DemoPupitreId | 'all'>('all');
+	let pupitreFilter = $state<MemberPupitreId | 'all'>('all');
 	let expandedId = $state<string | null>(null);
-	let editPupitres = $state<DemoProfilePupitre[]>([]);
-	let editLevel = $state<DemoLevel>('bagad');
+	let editPupitres = $state<MemberProfilePupitre[]>([]);
+	let editLevel = $state<MemberLevel>('bagad');
 	let editBureau = $state('');
 	let editError = $state<string | null>(null);
 
 	const members = $derived(
-		demo.profiles
+		member.profiles
 			.filter((profile) => {
 				if (roleFilter !== 'all' && profile.role !== roleFilter) return false;
 				if (
@@ -58,7 +58,7 @@
 	);
 
 	function openEditor(profileId: string) {
-		const profile = demo.profiles.find((item) => item.id === profileId);
+		const profile = member.profiles.find((item) => item.id === profileId);
 		if (!profile) return;
 		expandedId = expandedId === profileId ? null : profileId;
 		editPupitres = profile.pupitres.map((pupitre) => ({ ...pupitre }));
@@ -67,7 +67,7 @@
 		editError = null;
 	}
 
-	function togglePupitre(id: DemoPupitreId, checked: boolean) {
+	function togglePupitre(id: MemberPupitreId, checked: boolean) {
 		if (checked) {
 			editPupitres = [...editPupitres, { pupitreId: id, isChef: false }];
 		} else {
@@ -75,7 +75,7 @@
 		}
 	}
 
-	function toggleChef(id: DemoPupitreId, checked: boolean) {
+	function toggleChef(id: MemberPupitreId, checked: boolean) {
 		editPupitres = editPupitres.map((pupitre) =>
 			pupitre.pupitreId === id ? { ...pupitre, isChef: checked } : pupitre
 		);
@@ -84,27 +84,27 @@
 	function save(profileId: string) {
 		editError = null;
 		try {
-			if (profileId !== demo.activeProfileId) {
-				updateMemberPupitres(demo.activeProfileId, profileId, editPupitres);
+			if (profileId !== member.activeProfileId) {
+				updateMemberPupitres(member.activeProfileId, profileId, editPupitres);
 			}
-			updateMemberLevel(demo.activeProfileId, profileId, editLevel);
+			updateMemberLevel(member.activeProfileId, profileId, editLevel);
 			if (canChangeRole(actor)) {
-				updateBureauPosition(demo.activeProfileId, profileId, editBureau);
+				updateBureauPosition(member.activeProfileId, profileId, editBureau);
 			}
-			demo.notify('success', 'Fiche membre mise à jour.');
+			member.notify('success', 'Fiche membre mise à jour.');
 			expandedId = null;
 		} catch (error) {
 			editError = error instanceof Error ? error.message : 'Enregistrement impossible.';
-			demo.notify('error', editError);
+			member.notify('error', editError);
 		}
 	}
 
 	function changeRole(profileId: string, role: AppRole) {
 		try {
-			assignRole(demo.activeProfileId, profileId, role);
-			demo.notify('success', `Rôle modifié : ${ROLE_LABELS[role]}.`);
+			assignRole(member.activeProfileId, profileId, role);
+			member.notify('success', `Rôle modifié : ${ROLE_LABELS[role]}.`);
 		} catch (error) {
-			demo.notify(
+			member.notify(
 				'error',
 				error instanceof Error ? error.message : 'Changement de rôle impossible.'
 			);
@@ -155,7 +155,7 @@
 				<span class={labelClass}>Pupitre</span>
 				<select bind:value={pupitreFilter} class="{inputClass} mt-1">
 					<option value="all">Tous les pupitres</option>
-					{#each DEMO_PUPITRES as pupitre (pupitre.id)}
+					{#each MEMBER_PUPITRES as pupitre (pupitre.id)}
 						<option value={pupitre.id}>{pupitre.name}</option>
 					{/each}
 				</select>
@@ -180,7 +180,7 @@
 			</thead>
 			<tbody class="divide-y divide-marine/10">
 				{#each members as profile (profile.id)}
-					{@const isSelf = profile.id === demo.activeProfileId}
+					{@const isSelf = profile.id === member.activeProfileId}
 					<tr class="align-top">
 						<td class="px-4 py-3">
 							<div class="flex items-center gap-3">
@@ -245,7 +245,7 @@
 											</p>
 										{:else}
 											<div class="mt-2 space-y-2">
-												{#each DEMO_PUPITRES as pupitre (pupitre.id)}
+												{#each MEMBER_PUPITRES as pupitre (pupitre.id)}
 													{@const assigned = editPupitres.find(
 														(item) => item.pupitreId === pupitre.id
 													)}

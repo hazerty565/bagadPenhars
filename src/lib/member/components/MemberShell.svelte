@@ -11,7 +11,6 @@
 		LayoutDashboard,
 		LogOut,
 		Menu,
-		RotateCcw,
 		ShieldCheck,
 		UserRound,
 		Users,
@@ -19,13 +18,10 @@
 	} from '@lucide/svelte';
 	import Avatar from '$lib/components/dashboard/Avatar.svelte';
 	import RoleBadge from '$lib/components/dashboard/RoleBadge.svelte';
-	import InlineConfirm from '$lib/components/dashboard/InlineConfirm.svelte';
-	import DemoRoleSwitcher from './DemoRoleSwitcher.svelte';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf, canSeeAdminSection, canSeePupitreSection } from '$lib/demo/permissions';
-	import { dashboardPageTitle } from '$lib/demo/labels';
-	import { unreadCount } from '$lib/demo/services/notifications';
-	import { formatDemoDate, DEMO_TODAY } from '$lib/demo/clock';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf, canSeeAdminSection, canSeePupitreSection } from '$lib/member/permissions';
+	import { dashboardPageTitle } from '$lib/member/labels';
+	import { unreadCount } from '$lib/member/services/notifications';
 
 	interface Props {
 		children?: Snippet;
@@ -34,12 +30,12 @@
 	let { children }: Props = $props();
 
 	let drawerOpen = $state(false);
-	let switcherOpen = $state(false);
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const profile = $derived(member.profile);
+	const actor = $derived(actorOf(profile));
 	const adminVisible = $derived(canSeeAdminSection(actor));
 	const pupitreVisible = $derived(canSeePupitreSection(actor));
-	const unread = $derived(unreadCount(demo.activeProfileId));
+	const unread = $derived(unreadCount(member.activeProfileId));
 
 	type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; badge?: number };
 
@@ -84,33 +80,19 @@
 		drawerOpen = false;
 	}
 
-	function switchProfile() {
-		closeDrawer();
-		switcherOpen = true;
-	}
-
-	function resetDemo() {
-		demo.reset();
-		closeDrawer();
-	}
-
 	afterNavigate(() => {
 		drawerOpen = false;
 	});
 
 	$effect(() => {
-		const notice = demo.notice;
+		const notice = member.notice;
 		if (!notice) return;
-		const timer = setTimeout(() => demo.clearNotice(), 5200);
+		const timer = setTimeout(() => member.clearNotice(), 5200);
 		return () => clearTimeout(timer);
 	});
 
-	$effect(() => {
-		if (typeof window === 'undefined') return;
-		return demo.startCrossTabSync();
-	});
-
 	const publicHome = resolve('/(public)/[lang=lang]', { lang: 'fr' });
+	const logoutHref = resolve('/auth/logout');
 	const bottomNav = $derived(mainNav.slice(0, 4));
 	const pageTitle = $derived(`${dashboardPageTitle(page.url.pathname)} — Bagad Penhars`);
 </script>
@@ -143,22 +125,16 @@
 			</a>
 		</div>
 
-		<button
-			type="button"
-			class="flex items-center gap-3 border-b border-ivoire/15 px-5 py-4 text-left transition-colors hover:bg-white/5"
-			onclick={switchProfile}
-		>
-			<Avatar profile={demo.activeProfile} size="sm" decorative />
+		<div class="flex items-center gap-3 border-b border-ivoire/15 px-5 py-4">
+			<Avatar {profile} size="sm" decorative />
 			<span class="min-w-0 flex-1">
 				<span class="block truncate text-sm font-semibold text-white">
-					{demo.activeProfile.firstName}
-					{demo.activeProfile.lastName}
+					{profile.firstName}
+					{profile.lastName}
 				</span>
-				<span class="mt-1 block"><RoleBadge role={demo.activeProfile.role} /></span>
+				<span class="mt-1 block"><RoleBadge role={profile.role} /></span>
 			</span>
-			<span class="text-[0.6rem] font-semibold uppercase tracking-wider text-or-light">Changer</span
-			>
-		</button>
+		</div>
 
 		<nav class="flex-1 overflow-y-auto px-3 py-4" aria-label="Navigation de l’espace adhérents">
 			<p class="px-2 pb-2 text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-ivoire/40">
@@ -271,60 +247,24 @@
 			{/if}
 		</nav>
 
-		<div class="border-t border-ivoire/15 px-4 py-3 text-xs">
+		<div class="space-y-3 border-t border-ivoire/15 px-4 py-3 text-xs">
 			<a href={publicHome} class="inline-flex items-center gap-2 text-ivoire/70 hover:text-white">
 				<ArrowLeft size={14} />
 				Retour au site public
 			</a>
-			<p class="mt-3 text-[0.68rem] leading-relaxed text-ivoire/45">
-				Démonstration locale — données fictives. Aucune base de données.
-			</p>
+			<form method="POST" action={logoutHref}>
+				<button
+					type="submit"
+					class="inline-flex items-center gap-2 text-ivoire/70 hover:text-white"
+				>
+					<LogOut size={14} />
+					Se déconnecter
+				</button>
+			</form>
 		</div>
 	</aside>
 
 	<div class="lg:pl-72">
-		<!-- Bandeau de démonstration -->
-		<div class="border-b border-or/60 bg-or/20">
-			<div
-				class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-xs text-ink sm:px-6 lg:px-10"
-			>
-				<span
-					class="inline-flex items-center gap-1.5 font-semibold uppercase tracking-[0.14em] text-or-dark"
-				>
-					<ShieldCheck size={14} />
-					Mode démonstration
-				</span>
-				<span class="text-ink/70">
-					Données fictives · date de démonstration : {formatDemoDate(DEMO_TODAY)}
-				</span>
-				<span class="ml-auto hidden items-center gap-3 sm:flex">
-					<button
-						type="button"
-						class="font-semibold text-marine underline underline-offset-4"
-						onclick={switchProfile}
-					>
-						Changer de profil
-					</button>
-					<InlineConfirm
-						label="Réinitialiser"
-						confirmLabel="Réinitialiser la démo"
-						message="Toutes les modifications locales seront perdues."
-						tone="neutral"
-						onconfirm={resetDemo}
-					/>
-				</span>
-			</div>
-			{#if demo.storageNotice}
-				<p
-					class="border-t border-or/40 px-4 py-1.5 text-[0.7rem] text-danger sm:px-6 lg:px-10"
-					role="status"
-					aria-live="polite"
-				>
-					{demo.storageNotice}
-				</p>
-			{/if}
-		</div>
-
 		<!-- Barre supérieure mobile -->
 		<header
 			class="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-marine/10 bg-ivoire px-4 py-3 lg:hidden"
@@ -339,14 +279,9 @@
 				<Menu size={22} />
 			</button>
 			<a href={resolve('/dashboard')} class="font-serif text-lg text-marine">Espace adhérents</a>
-			<button
-				type="button"
-				class="flex items-center gap-2"
-				onclick={switchProfile}
-				aria-label="Changer de profil"
-			>
-				<Avatar profile={demo.activeProfile} size="xs" decorative />
-			</button>
+			<span class="flex items-center gap-2" aria-hidden="true">
+				<Avatar {profile} size="xs" decorative />
+			</span>
 		</header>
 
 		<main
@@ -401,20 +336,16 @@
 						<X size={20} />
 					</button>
 				</div>
-				<button
-					type="button"
-					class="flex items-center gap-3 border-b border-ivoire/15 px-4 py-4 text-left"
-					onclick={switchProfile}
-				>
-					<Avatar profile={demo.activeProfile} size="sm" decorative />
+				<div class="flex items-center gap-3 border-b border-ivoire/15 px-4 py-4">
+					<Avatar {profile} size="sm" decorative />
 					<span>
 						<span class="block text-sm font-semibold text-white">
-							{demo.activeProfile.firstName}
-							{demo.activeProfile.lastName}
+							{profile.firstName}
+							{profile.lastName}
 						</span>
-						<span class="mt-1 block"><RoleBadge role={demo.activeProfile.role} /></span>
+						<span class="mt-1 block"><RoleBadge role={profile.role} /></span>
 					</span>
-				</button>
+				</div>
 				<nav class="flex-1 overflow-y-auto px-3 py-3" aria-label="Navigation mobile">
 					<ul class="space-y-1">
 						{#each allNav as item (item.href)}
@@ -442,49 +373,46 @@
 				</nav>
 				<div class="space-y-3 border-t border-ivoire/15 px-4 py-4 text-xs">
 					<a href={publicHome} class="inline-flex items-center gap-2 text-ivoire/70">
-						<LogOut size={14} />
+						<ArrowLeft size={14} />
 						Retour au site public
 					</a>
-					<div class="flex items-center gap-3">
-						<InlineConfirm
-							label="Réinitialiser la démo"
-							confirmLabel="Confirmer"
-							message="Les modifications locales seront perdues."
-							tone="neutral"
-							onconfirm={resetDemo}
-						/>
-						<RotateCcw size={14} class="text-ivoire/40" />
-					</div>
+					<form method="POST" action={logoutHref}>
+						<button
+							type="submit"
+							class="inline-flex items-center gap-2 text-ivoire/70 hover:text-white"
+						>
+							<LogOut size={14} />
+							Se déconnecter
+						</button>
+					</form>
 				</div>
 			</div>
 		</div>
 	{/if}
 
 	<!-- Message global -->
-	{#if demo.notice}
+	{#if member.notice}
 		<div
-			class="fixed bottom-20 left-1/2 z-[80] w-[92%] max-w-md -translate-x-1/2 border px-4 py-3 text-sm shadow-xl lg:bottom-6 {demo
+			class="fixed bottom-20 left-1/2 z-[80] w-[92%] max-w-md -translate-x-1/2 border px-4 py-3 text-sm shadow-xl lg:bottom-6 {member
 				.notice.kind === 'error'
 				? 'border-danger bg-danger text-white'
-				: demo.notice.kind === 'success'
+				: member.notice.kind === 'success'
 					? 'border-marine bg-marine text-white'
 					: 'border-or bg-ivoire text-ink'}"
 			role="status"
 			aria-live="polite"
 		>
 			<div class="flex items-start gap-3">
-				<p class="flex-1">{demo.notice.text}</p>
+				<p class="flex-1">{member.notice.text}</p>
 				<button
 					type="button"
 					class="shrink-0 p-1 opacity-70 hover:opacity-100"
 					aria-label="Fermer le message"
-					onclick={() => demo.clearNotice()}
+					onclick={() => member.clearNotice()}
 				>
 					<X size={16} />
 				</button>
 			</div>
 		</div>
 	{/if}
-
-	<DemoRoleSwitcher bind:open={switcherOpen} />
 </div>

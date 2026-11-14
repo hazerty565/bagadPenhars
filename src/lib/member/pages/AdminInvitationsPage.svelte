@@ -11,51 +11,51 @@
 		primaryButtonClass,
 		secondaryButtonClass
 	} from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf } from '$lib/demo/permissions';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf } from '$lib/member/permissions';
 	import { canInviteAndActivate } from '$lib/auth/roles';
 	import {
 		cancelInvitation,
 		createInvitation,
 		invitationStatusLabel,
 		resendInvitation
-	} from '$lib/demo/services/invitations';
-	import { formatDemoDate } from '$lib/demo/clock';
-	import { DEMO_PUPITRES, pupitreName } from '$lib/demo/fixtures/pupitres';
-	import type { DemoInvitationStatus, DemoPupitreId } from '$lib/demo/types';
+	} from '$lib/member/services/invitations';
+	import { formatDate } from '$lib/member/clock';
+	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/fixtures/pupitres';
+	import type { MemberInvitationStatus, MemberPupitreId } from '$lib/member/types';
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canInviteAndActivate(actor.role));
 
-	let filter = $state<DemoInvitationStatus | 'all'>('all');
+	let filter = $state<MemberInvitationStatus | 'all'>('all');
 	let composing = $state(false);
 	let formEmail = $state('');
 	let formFirstName = $state('');
 	let formLastName = $state('');
-	let formPupitres = $state<DemoPupitreId[]>([]);
+	let formPupitres = $state<MemberPupitreId[]>([]);
 	let formError = $state<string | null>(null);
 
 	const invitations = $derived(
-		[...demo.invitations]
+		[...member.invitations]
 			.filter((invitation) => filter === 'all' || invitation.status === filter)
 			.sort((a, b) => b.sentAt.localeCompare(a.sentAt))
 	);
 
 	const counts = $derived({
-		pending: demo.invitations.filter((item) => item.status === 'pending').length,
-		accepted: demo.invitations.filter((item) => item.status === 'accepted').length,
-		expired: demo.invitations.filter((item) => item.status === 'expired').length,
-		cancelled: demo.invitations.filter((item) => item.status === 'cancelled').length
+		pending: member.invitations.filter((item) => item.status === 'pending').length,
+		accepted: member.invitations.filter((item) => item.status === 'accepted').length,
+		expired: member.invitations.filter((item) => item.status === 'expired').length,
+		cancelled: member.invitations.filter((item) => item.status === 'cancelled').length
 	});
 
-	function toneFor(status: DemoInvitationStatus) {
+	function toneFor(status: MemberInvitationStatus) {
 		if (status === 'accepted') return 'success' as const;
 		if (status === 'pending') return 'gold' as const;
 		if (status === 'expired') return 'danger' as const;
 		return 'muted' as const;
 	}
 
-	function togglePupitre(id: DemoPupitreId, checked: boolean) {
+	function togglePupitre(id: MemberPupitreId, checked: boolean) {
 		formPupitres = checked ? [...formPupitres, id] : formPupitres.filter((item) => item !== id);
 	}
 
@@ -63,13 +63,13 @@
 		event.preventDefault();
 		formError = null;
 		try {
-			createInvitation(demo.activeProfileId, {
+			createInvitation(member.activeProfileId, {
 				email: formEmail,
 				firstName: formFirstName,
 				lastName: formLastName,
 				pupitreIds: formPupitres
 			});
-			demo.notify('success', 'Invitation créée (aucun e-mail réellement envoyé).');
+			member.notify('success', 'Invitation créée (aucun e-mail réellement envoyé).');
 			formEmail = '';
 			formFirstName = '';
 			formLastName = '';
@@ -77,25 +77,25 @@
 			composing = false;
 		} catch (error) {
 			formError = error instanceof Error ? error.message : 'Invitation impossible.';
-			demo.notify('error', formError);
+			member.notify('error', formError);
 		}
 	}
 
 	function resend(id: string) {
 		try {
-			resendInvitation(demo.activeProfileId, id);
-			demo.notify('success', 'Invitation relancée (simulation).');
+			resendInvitation(member.activeProfileId, id);
+			member.notify('success', 'Invitation relancée (simulation).');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Relance impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Relance impossible.');
 		}
 	}
 
 	function cancel(id: string) {
 		try {
-			cancelInvitation(demo.activeProfileId, id);
-			demo.notify('info', 'Invitation annulée.');
+			cancelInvitation(member.activeProfileId, id);
+			member.notify('info', 'Invitation annulée.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Annulation impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Annulation impossible.');
 		}
 	}
 </script>
@@ -173,7 +173,7 @@
 				<fieldset class="sm:col-span-2">
 					<legend class={labelClass}>Pupitres *</legend>
 					<div class="mt-2 grid gap-2 sm:grid-cols-2">
-						{#each DEMO_PUPITRES as pupitre (pupitre.id)}
+						{#each MEMBER_PUPITRES as pupitre (pupitre.id)}
 							<label
 								class="flex items-center gap-2 border border-marine/15 bg-white px-3 py-2 text-sm"
 							>
@@ -209,7 +209,7 @@
 					? 'border-marine bg-marine text-white'
 					: 'border-marine/20 bg-white text-marine hover:border-marine'}"
 				aria-pressed={filter === value}
-				onclick={() => (filter = value as DemoInvitationStatus | 'all')}
+				onclick={() => (filter = value as MemberInvitationStatus | 'all')}
 			>
 				{label}
 			</button>
@@ -236,7 +236,7 @@
 								<Badge tone="muted">{pupitreName(id)}</Badge>
 							{/each}
 							<span
-								>Envoyée le {formatDemoDate(invitation.sentAt)} · expire le {formatDemoDate(
+								>Envoyée le {formatDate(invitation.sentAt)} · expire le {formatDate(
 									invitation.expiresAt
 								)}</span
 							>

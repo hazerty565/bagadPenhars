@@ -5,18 +5,18 @@
 	import StatCard from '$lib/components/dashboard/StatCard.svelte';
 	import Badge from '$lib/components/dashboard/Badge.svelte';
 	import { primaryButtonClass, secondaryButtonClass } from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf, canSeeAdminSection, canSeePupitreSection } from '$lib/demo/permissions';
-	import { eventAudience, visibleEvents } from '$lib/demo/services/members';
-	import { presenceSummary, responseOf } from '$lib/demo/services/responses';
-	import { notificationsFor, unreadCount } from '$lib/demo/services/notifications';
-	import { formatDateTime, formatDemoDate, isPast, DEMO_TODAY } from '$lib/demo/clock';
-	import { EVENT_TYPE_LABELS } from '$lib/demo/labels';
-	import { pupitreName } from '$lib/demo/fixtures/pupitres';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf, canSeeAdminSection, canSeePupitreSection } from '$lib/member/permissions';
+	import { eventAudience, visibleEvents } from '$lib/member/services/members';
+	import { presenceSummary, responseOf } from '$lib/member/services/responses';
+	import { notificationsFor, unreadCount } from '$lib/member/services/notifications';
+	import { formatDateTime, formatDate, isPast, MEMBER_TODAY } from '$lib/member/clock';
+	import { EVENT_TYPE_LABELS } from '$lib/member/labels';
+	import { pupitreName } from '$lib/member/fixtures/pupitres';
 
-	const actor = $derived(actorOf(demo.activeProfile));
-	const profile = $derived(demo.activeProfile);
-	const todayLabel = $derived(formatDemoDate(DEMO_TODAY));
+	const actor = $derived(actorOf(member.activeProfile));
+	const profile = $derived(member.activeProfile);
+	const todayLabel = $derived(formatDate(MEMBER_TODAY));
 
 	const upcoming = $derived(
 		visibleEvents(actor)
@@ -29,19 +29,19 @@
 			(event) =>
 				event.status === 'active' &&
 				!isPast(event.date) &&
-				responseOf(event.id, demo.activeProfileId) === null
+				responseOf(event.id, member.activeProfileId) === null
 		)
 	);
 
-	const unread = $derived(unreadCount(demo.activeProfileId));
-	const latestNotifications = $derived(notificationsFor(demo.activeProfileId).slice(0, 3));
+	const unread = $derived(unreadCount(member.activeProfileId));
+	const latestNotifications = $derived(notificationsFor(member.activeProfileId).slice(0, 3));
 
 	const myPupitres = $derived(profile.pupitres);
 	const chefPupitres = $derived(myPupitres.filter((pupitre) => pupitre.isChef));
-	const documentsCount = $derived(demo.documents.length);
+	const documentsCount = $derived(member.documents.length);
 
 	function summaryOf(eventId: string) {
-		const event = demo.events.find((item) => item.id === eventId);
+		const event = member.events.find((item) => item.id === eventId);
 		if (!event) return { present: 0, absent: 0 };
 		const summary = presenceSummary(
 			eventId,
@@ -134,13 +134,13 @@
 
 		<ul class="mt-3 divide-y divide-marine/10 border border-marine/10 bg-white">
 			{#each upcoming as event (event.id)}
-				{@const response = responseOf(event.id, demo.activeProfileId)}
+				{@const response = responseOf(event.id, member.activeProfileId)}
 				{@const summary = summaryOf(event.id)}
 				<li class="p-4">
 					<div class="flex flex-wrap items-start justify-between gap-3">
 						<div class="min-w-0">
 							<p class="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-ardoise">
-								{EVENT_TYPE_LABELS[event.type]} · {formatDemoDate(event.date, { withYear: false })}
+								{EVENT_TYPE_LABELS[event.type]} · {formatDate(event.date, { withYear: false })}
 							</p>
 							<a
 								href={resolve('/dashboard/agenda/[id]', { id: event.id })}
@@ -213,7 +213,7 @@
 			</div>
 			<ul class="mt-3 divide-y divide-marine/10 border border-marine/10 bg-white">
 				{#each latestNotifications as notification (notification.id)}
-					{@const read = notification.readBy.includes(demo.activeProfileId)}
+					{@const read = notification.readBy.includes(member.activeProfileId)}
 					<li class="p-4">
 						<div class="flex items-start gap-2">
 							<span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {read ? 'bg-marine/20' : 'bg-or'}"
@@ -275,7 +275,7 @@
 								href={resolve('/dashboard/agenda/[id]', { id: event.id })}
 								class="block text-sm font-semibold text-marine underline underline-offset-4"
 							>
-								{event.title} — {formatDemoDate(event.date, { withYear: false })}
+								{event.title} — {formatDate(event.date, { withYear: false })}
 							</a>
 						</li>
 					{/each}

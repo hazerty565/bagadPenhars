@@ -10,34 +10,34 @@
 		primaryButtonClass,
 		secondaryButtonClass
 	} from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
-	import { updateAvatar, updateOwnProfile, updatePreferences } from '$lib/demo/services/profiles';
-	import { ROLE_LABELS, LEVEL_LABELS } from '$lib/demo/labels';
-	import { formatDemoDate } from '$lib/demo/clock';
-	import { pupitreName } from '$lib/demo/fixtures/pupitres';
-	import type { DemoLevel } from '$lib/demo/types';
+	import { member } from '$lib/member/store.svelte';
+	import { updateAvatar, updateOwnProfile, updatePreferences } from '$lib/member/services/profiles';
+	import { ROLE_LABELS, LEVEL_LABELS } from '$lib/member/labels';
+	import { formatDate } from '$lib/member/clock';
+	import { pupitreName } from '$lib/member/fixtures/pupitres';
+	import type { MemberLevel } from '$lib/member/types';
 
-	const profile = $derived(demo.activeProfile);
+	const profile = $derived(member.activeProfile);
 
 	let syncedId = $state('');
 	let firstName = $state(profile.firstName);
 	let lastName = $state(profile.lastName);
 	let email = $state(profile.email);
-	let level = $state<DemoLevel>(profile.level);
+	let level = $state<MemberLevel>(profile.level);
 	let global = $state(true);
 	let reminders = $state(true);
 	let events = $state(true);
 	let feedback = $state<string | null>(null);
 
 	$effect(() => {
-		const current = demo.activeProfile;
+		const current = member.activeProfile;
 		if (current.id !== syncedId) {
 			syncedId = current.id;
 			firstName = current.firstName;
 			lastName = current.lastName;
 			email = current.email;
 			level = current.level;
-			const preferences = demo.preferences.find((item) => item.profileId === current.id);
+			const preferences = member.preferences.find((item) => item.profileId === current.id);
 			global = preferences?.global ?? true;
 			reminders = preferences?.reminders ?? true;
 			events = preferences?.events ?? true;
@@ -50,28 +50,28 @@
 		try {
 			updateOwnProfile(profile.id, { firstName, lastName, email, level });
 			feedback = 'Vos informations ont été enregistrées.';
-			demo.notify('success', 'Profil mis à jour.');
+			member.notify('success', 'Profil mis à jour.');
 		} catch (error) {
 			feedback = error instanceof Error ? error.message : 'Enregistrement impossible.';
-			demo.notify('error', feedback);
+			member.notify('error', feedback);
 		}
 	}
 
 	function chooseAvatar(avatar: number) {
 		try {
 			updateAvatar(profile.id, avatar);
-			demo.notify('success', 'Portrait mis à jour.');
+			member.notify('success', 'Portrait mis à jour.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Portrait non modifié.');
+			member.notify('error', error instanceof Error ? error.message : 'Portrait non modifié.');
 		}
 	}
 
 	function savePreferences() {
 		try {
 			updatePreferences(profile.id, { global, reminders, events });
-			demo.notify('success', 'Préférences de notifications enregistrées.');
+			member.notify('success', 'Préférences de notifications enregistrées.');
 		} catch (error) {
-			demo.notify(
+			member.notify(
 				'error',
 				error instanceof Error ? error.message : 'Préférences non enregistrées.'
 			);
@@ -212,7 +212,7 @@
 				</div>
 			</div>
 			<p class="mt-3 text-xs leading-relaxed text-ardoise">
-				{ROLE_LABELS[profile.role]} · membre depuis {formatDemoDate(profile.joinedAt)}.
+				{ROLE_LABELS[profile.role]} · membre depuis {formatDate(profile.joinedAt)}.
 			</p>
 		</section>
 

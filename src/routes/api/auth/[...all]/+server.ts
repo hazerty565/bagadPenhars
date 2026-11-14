@@ -7,14 +7,15 @@ import type { RequestHandler } from './$types';
  * réinitialisation de mot de passe, vérification d'email) passent par ce
  * handler. Better Auth gère les sessions, les comptes et les jetons.
  *
- * Ce point d'entrée est réservé au serveur. Le module Better Auth est importé
- * à la demande pour que le mode démonstration local fonctionne sans Neon ni
- * secret d'authentification.
+ * L'instance est créée par le hook serveur avec la connexion PostgreSQL de la
+ * requête (Hyperdrive en production, `DATABASE_URL_APP` en local).
  */
 
-const handle: RequestHandler = async ({ request }) => {
-	const { auth } = await import('$lib/server/auth');
-	return auth.handler(request);
+const handle: RequestHandler = async ({ request, locals }) => {
+	if (!locals.auth) {
+		return new Response("Service d'authentification indisponible.", { status: 503 });
+	}
+	return locals.auth.handler(request);
 };
 
 export const GET = handle;

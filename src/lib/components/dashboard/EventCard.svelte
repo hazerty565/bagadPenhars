@@ -3,14 +3,14 @@
 	import { resolve } from '$app/paths';
 	import { MapPin } from '@lucide/svelte';
 	import Badge from './Badge.svelte';
-	import type { DemoEvent, DemoResponseStatus } from '$lib/demo/types';
-	import { EVENT_TYPE_LABELS, VISIBILITY_LABELS } from '$lib/demo/labels';
-	import { isPast } from '$lib/demo/clock';
-	import { pupitreName } from '$lib/demo/fixtures/pupitres';
+	import type { MemberEvent, MemberResponseStatus } from '$lib/member/types';
+	import { EVENT_TYPE_LABELS, VISIBILITY_LABELS } from '$lib/member/labels';
+	import { isPast } from '$lib/member/clock';
+	import { pupitreName } from '$lib/member/fixtures/pupitres';
 
 	interface Props {
-		event: DemoEvent;
-		response?: DemoResponseStatus | null;
+		event: MemberEvent;
+		response?: MemberResponseStatus | null;
 		present?: number;
 		absent?: number;
 		actions?: Snippet;

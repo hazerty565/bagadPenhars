@@ -1,9 +1,9 @@
 <script lang="ts">
-	import DemoRoute from '$lib/components/dashboard/DemoRoute.svelte';
+	import MemberRoute from '$lib/components/dashboard/MemberRoute.svelte';
 </script>
 
-<DemoRoute
-	loader={() => import('$lib/demo/pages/MembersPage.svelte')}
+<MemberRoute
+	loader={() => import('$lib/member/pages/MembersPage.svelte')}
 	props={{
 		pupitreMode: true,
 		title: 'Membres de mes pupitres',

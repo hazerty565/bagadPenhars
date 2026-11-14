@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { AppRole } from '$lib/auth/roles';
-	import { ROLE_LABELS } from '$lib/demo/labels';
+	import { ROLE_LABELS } from '$lib/member/labels';
 
 	interface Props {
 		role: AppRole;

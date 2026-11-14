@@ -9,7 +9,7 @@
 	import Avatar from '$lib/components/dashboard/Avatar.svelte';
 	import AccessDenied from '$lib/components/dashboard/AccessDenied.svelte';
 	import { secondaryButtonClass } from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
+	import { member } from '$lib/member/store.svelte';
 	import {
 		actorOf,
 		canDeleteEvents,
@@ -18,14 +18,14 @@
 		canViewEvent,
 		canViewPresenceDetail,
 		responseLockMessage
-	} from '$lib/demo/permissions';
-	import { eventAudience } from '$lib/demo/services/members';
-	import { presenceSummary, responseOf, setResponse } from '$lib/demo/services/responses';
-	import { cancelEvent, deleteEvent, reactivateEvent } from '$lib/demo/services/events';
-	import { formatDemoDate, formatDateTime, isPast } from '$lib/demo/clock';
-	import { EVENT_TYPE_LABELS, LEVEL_LABELS, VISIBILITY_LABELS } from '$lib/demo/labels';
-	import { pupitreName } from '$lib/demo/fixtures/pupitres';
-	import type { DemoResponseStatus } from '$lib/demo/types';
+	} from '$lib/member/permissions';
+	import { eventAudience } from '$lib/member/services/members';
+	import { presenceSummary, responseOf, setResponse } from '$lib/member/services/responses';
+	import { cancelEvent, deleteEvent, reactivateEvent } from '$lib/member/services/events';
+	import { formatDate, formatDateTime, isPast } from '$lib/member/clock';
+	import { EVENT_TYPE_LABELS, LEVEL_LABELS, VISIBILITY_LABELS } from '$lib/member/labels';
+	import { pupitreName } from '$lib/member/fixtures/pupitres';
+	import type { MemberResponseStatus } from '$lib/member/types';
 
 	interface Props {
 		eventId: string;
@@ -33,8 +33,8 @@
 
 	let { eventId }: Props = $props();
 
-	const actor = $derived(actorOf(demo.activeProfile));
-	const event = $derived(demo.events.find((item) => item.id === eventId) ?? null);
+	const actor = $derived(actorOf(member.activeProfile));
+	const event = $derived(member.events.find((item) => item.id === eventId) ?? null);
 	const visible = $derived(event ? canViewEvent(actor, event) : false);
 	const audience = $derived(event ? eventAudience(event) : []);
 	const summary = $derived(
@@ -45,53 +45,53 @@
 				)
 			: null
 	);
-	const myResponse = $derived(responseOf(eventId, demo.activeProfileId));
+	const myResponse = $derived(responseOf(eventId, member.activeProfileId));
 	const lockMessage = $derived(event ? responseLockMessage(event) : null);
 
-	function respond(status: DemoResponseStatus) {
+	function respond(status: MemberResponseStatus) {
 		try {
-			setResponse(demo.activeProfileId, eventId, status);
-			demo.notify(
+			setResponse(member.activeProfileId, eventId, status);
+			member.notify(
 				'success',
 				status === 'present' ? 'Présence enregistrée.' : 'Absence enregistrée.'
 			);
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Réponse impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Réponse impossible.');
 		}
 	}
 
 	function cancel() {
 		if (!event) return;
 		try {
-			cancelEvent(demo.activeProfileId, eventId);
-			demo.notify('info', 'Événement annulé.');
+			cancelEvent(member.activeProfileId, eventId);
+			member.notify('info', 'Événement annulé.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Annulation impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Annulation impossible.');
 		}
 	}
 
 	function reactivate() {
 		try {
-			reactivateEvent(demo.activeProfileId, eventId);
-			demo.notify('success', 'Événement réactivé.');
+			reactivateEvent(member.activeProfileId, eventId);
+			member.notify('success', 'Événement réactivé.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Réactivation impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Réactivation impossible.');
 		}
 	}
 
 	function remove() {
 		try {
-			deleteEvent(demo.activeProfileId, eventId);
-			demo.notify('success', 'Événement supprimé.');
+			deleteEvent(member.activeProfileId, eventId);
+			member.notify('success', 'Événement supprimé.');
 			goto(resolve('/dashboard/agenda'));
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');
 		}
 	}
 
-	function statusOf(profileId: string): DemoResponseStatus | null {
+	function statusOf(profileId: string): MemberResponseStatus | null {
 		return (
-			demo.responses.find(
+			member.responses.find(
 				(response) => response.eventId === eventId && response.profileId === profileId
 			)?.status ?? null
 		);
@@ -174,7 +174,7 @@
 					<dt class="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ardoise">
 						Date
 					</dt>
-					<dd class="mt-1 text-sm text-ink">{formatDemoDate(event.date)}</dd>
+					<dd class="mt-1 text-sm text-ink">{formatDate(event.date)}</dd>
 				</div>
 				<div>
 					<dt class="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ardoise">
@@ -324,15 +324,15 @@
 			>
 				<p class="font-semibold text-marine">Traçabilité fictive</p>
 				<p class="mt-2">
-					Créé par {demo.profiles.find((profile) => profile.id === event.createdBy)?.firstName ??
+					Créé par {member.profiles.find((profile) => profile.id === event.createdBy)?.firstName ??
 						'un membre'}.
 				</p>
 				{#if myResponse}
 					<p class="mt-1">
 						Dernière réponse enregistrée : {formatDateTime(
-							demo.responses.find(
+							member.responses.find(
 								(response) =>
-									response.eventId === eventId && response.profileId === demo.activeProfileId
+									response.eventId === eventId && response.profileId === member.activeProfileId
 							)?.updatedAt ?? ''
 						)}.
 					</p>

@@ -10,19 +10,19 @@
 		primaryButtonClass,
 		secondaryButtonClass
 	} from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
+	import { member } from '$lib/member/store.svelte';
 	import {
 		actorOf,
 		canManageEvent,
 		canSeeAdminSection,
 		chefPupitreIds
-	} from '$lib/demo/permissions';
-	import { createEvent, updateEvent } from '$lib/demo/services/events';
-	import { addDays } from '$lib/demo/services/helpers';
-	import { DEMO_PUPITRES } from '$lib/demo/fixtures/pupitres';
-	import { DEMO_TODAY } from '$lib/demo/clock';
-	import { EVENT_TYPE_LABELS } from '$lib/demo/labels';
-	import type { DemoEventType, DemoEventVisibility, DemoPupitreId } from '$lib/demo/types';
+	} from '$lib/member/permissions';
+	import { createEvent, updateEvent } from '$lib/member/services/events';
+	import { addDays } from '$lib/member/services/helpers';
+	import { MEMBER_PUPITRES } from '$lib/member/fixtures/pupitres';
+	import { MEMBER_TODAY } from '$lib/member/clock';
+	import { EVENT_TYPE_LABELS } from '$lib/member/labels';
+	import type { MemberEventType, MemberEventVisibility, MemberPupitreId } from '$lib/member/types';
 
 	interface Props {
 		eventId?: string | null;
@@ -32,9 +32,9 @@
 
 	let { eventId = null, adminMode = false }: Props = $props();
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const existing = $derived(
-		eventId ? (demo.events.find((event) => event.id === eventId) ?? null) : null
+		eventId ? (member.events.find((event) => event.id === eventId) ?? null) : null
 	);
 	const isSecretary = $derived(canSeeAdminSection(actor));
 	const chefPupils = $derived(chefPupitreIds(actor));
@@ -47,14 +47,14 @@
 
 	let title = $state(existing?.title ?? '');
 	let description = $state(existing?.description ?? '');
-	let date = $state(existing?.date ?? addDays(DEMO_TODAY, 7));
-	let type = $state<DemoEventType>(existing?.type ?? 'repetition');
-	let visibility = $state<DemoEventVisibility>(
+	let date = $state(existing?.date ?? addDays(MEMBER_TODAY, 7));
+	let type = $state<MemberEventType>(existing?.type ?? 'repetition');
+	let visibility = $state<MemberEventVisibility>(
 		existing?.visibility ?? (actor.role === 'chef_pupitre' ? 'pupitre' : 'interne')
 	);
 	let location = $state(existing?.location ?? 'Espace Chaptal, Quimper');
 	let isPoll = $state(existing?.isPoll ?? false);
-	let pupitreIds = $state<DemoPupitreId[]>(
+	let pupitreIds = $state<MemberPupitreId[]>(
 		existing?.pupitreIds ?? (actor.role === 'chef_pupitre' ? chefPupils.slice(0, 1) : [])
 	);
 	let error = $state<string | null>(null);
@@ -69,7 +69,7 @@
 		syncedKey = key;
 		title = existing?.title ?? '';
 		description = existing?.description ?? '';
-		date = existing?.date ?? addDays(DEMO_TODAY, 7);
+		date = existing?.date ?? addDays(MEMBER_TODAY, 7);
 		type = existing?.type ?? 'repetition';
 		visibility = existing?.visibility ?? (actor.role === 'chef_pupitre' ? 'pupitre' : 'interne');
 		location = existing?.location ?? 'Espace Chaptal, Quimper';
@@ -80,10 +80,10 @@
 	});
 
 	const availablePupitres = $derived(
-		isSecretary ? DEMO_PUPITRES : DEMO_PUPITRES.filter((pupitre) => chefPupils.includes(pupitre.id))
+		isSecretary ? MEMBER_PUPITRES : MEMBER_PUPITRES.filter((pupitre) => chefPupils.includes(pupitre.id))
 	);
 
-	function togglePupitre(id: DemoPupitreId, checked: boolean) {
+	function togglePupitre(id: MemberPupitreId, checked: boolean) {
 		if (checked) {
 			if (!isSecretary && actor.role === 'chef_pupitre') {
 				pupitreIds = [id];
@@ -123,9 +123,9 @@
 				location
 			};
 			const saved = existing
-				? (updateEvent(demo.activeProfileId, existing.id, input), existing)
-				: createEvent(demo.activeProfileId, input);
-			demo.notify('success', existing ? 'Événement mis à jour.' : 'Événement créé.');
+				? (updateEvent(member.activeProfileId, existing.id, input), existing)
+				: createEvent(member.activeProfileId, input);
+			member.notify('success', existing ? 'Événement mis à jour.' : 'Événement créé.');
 			goto(resolve('/dashboard/agenda/[id]', { id: saved.id }));
 		} catch (reason) {
 			error = reason instanceof Error ? reason.message : 'L’événement n’a pas pu être enregistré.';

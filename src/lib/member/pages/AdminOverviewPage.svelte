@@ -13,12 +13,12 @@
 	import PageHeader from '$lib/components/dashboard/PageHeader.svelte';
 	import StatCard from '$lib/components/dashboard/StatCard.svelte';
 	import AccessDenied from '$lib/components/dashboard/AccessDenied.svelte';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf, canSeeAdminSection } from '$lib/demo/permissions';
-	import { unreadCount } from '$lib/demo/services/notifications';
-	import { formatBytes } from '$lib/demo/clock';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf, canSeeAdminSection } from '$lib/member/permissions';
+	import { unreadCount } from '$lib/member/services/notifications';
+	import { formatBytes } from '$lib/member/clock';
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canSeeAdminSection(actor));
 
 	const links = $derived([
@@ -92,7 +92,7 @@
 	>
 		<StatCard
 			label="Membres"
-			value={demo.profiles.length}
+			value={member.profiles.length}
 			hint="Profils fictifs actifs"
 			tone="marine"
 		>
@@ -100,22 +100,22 @@
 		</StatCard>
 		<StatCard
 			label="Invitations en attente"
-			value={demo.invitations.filter((item) => item.status === 'pending').length}
+			value={member.invitations.filter((item) => item.status === 'pending').length}
 			hint="Sans envoi d’e-mail réel"
 		>
 			{#snippet icon()}<Mail size={18} />{/snippet}
 		</StatCard>
 		<StatCard
 			label="Articles publiés"
-			value={demo.articles.filter((article) => article.status === 'published').length}
-			hint={`${demo.articles.filter((article) => article.status === 'draft').length} brouillon(s)`}
+			value={member.articles.filter((article) => article.status === 'published').length}
+			hint={`${member.articles.filter((article) => article.status === 'draft').length} brouillon(s)`}
 		>
 			{#snippet icon()}<BookOpen size={18} />{/snippet}
 		</StatCard>
 		<StatCard
 			label="Notifications non lues"
-			value={unreadCount(demo.activeProfileId)}
-			hint={`Stockage fictif : ${formatBytes(demo.settings.storageUsedBytes)}`}
+			value={unreadCount(member.activeProfileId)}
+			hint={`Stockage fictif : ${formatBytes(member.settings.storageUsedBytes)}`}
 		>
 			{#snippet icon()}<Bell size={18} />{/snippet}
 		</StatCard>

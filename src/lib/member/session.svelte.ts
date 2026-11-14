@@ -1,5 +1,5 @@
 import { actorOf } from './permissions';
-import { demo } from './store.svelte';
+import { member } from './store.svelte';
 
 /**
  * Session simulée de la démonstration.
@@ -10,12 +10,12 @@ import { demo } from './store.svelte';
  */
 export const session = {
 	get profile() {
-		return demo.activeProfile;
+		return member.activeProfile;
 	},
 	get actor() {
-		return actorOf(demo.activeProfile);
+		return actorOf(member.activeProfile);
 	},
 	switchTo(profileId: string): boolean {
-		return demo.setActiveProfile(profileId);
+		return member.setActiveProfile(profileId);
 	}
 };

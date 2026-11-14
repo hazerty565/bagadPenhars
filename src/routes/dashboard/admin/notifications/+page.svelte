@@ -1,9 +1,9 @@
 <script lang="ts">
-	import DemoRoute from '$lib/components/dashboard/DemoRoute.svelte';
+	import MemberRoute from '$lib/components/dashboard/MemberRoute.svelte';
 </script>
 
-<DemoRoute
-	loader={() => import('$lib/demo/pages/NotificationsPage.svelte')}
+<MemberRoute
+	loader={() => import('$lib/member/pages/NotificationsPage.svelte')}
 	props={{
 		adminMode: true,
 		title: 'Envoi de notifications',

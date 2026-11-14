@@ -11,14 +11,14 @@
 		primaryButtonClass,
 		secondaryButtonClass
 	} from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
+	import { member } from '$lib/member/store.svelte';
 	import {
 		actorOf,
 		canSeeAdminSection,
 		canSeePupitreSection,
 		chefPupitreIds,
 		scopedPupitreIds
-	} from '$lib/demo/permissions';
+	} from '$lib/member/permissions';
 	import {
 		markAllRead,
 		markRead,
@@ -27,14 +27,14 @@
 		notificationsFor,
 		sendNotification,
 		unreadCount
-	} from '$lib/demo/services/notifications';
-	import { formatDateTime } from '$lib/demo/clock';
-	import { AUDIENCE_LABELS } from '$lib/demo/labels';
-	import { DEMO_PUPITRES, pupitreName } from '$lib/demo/fixtures/pupitres';
-	import type { DemoNotificationAudience, DemoPupitreId } from '$lib/demo/types';
+	} from '$lib/member/services/notifications';
+	import { formatDateTime } from '$lib/member/clock';
+	import { AUDIENCE_LABELS } from '$lib/member/labels';
+	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/fixtures/pupitres';
+	import type { MemberNotificationAudience, MemberPupitreId } from '$lib/member/types';
 
 	interface Props {
-		pupitreScope?: DemoPupitreId[];
+		pupitreScope?: MemberPupitreId[];
 		/** Mode espace pupitre : le périmètre est calculé depuis le rôle actif. */
 		pupitreMode?: boolean;
 		/** Mode administration : la page est réservée à la secrétaire et à l’administrateur. */
@@ -55,12 +55,12 @@
 	let composing = $state(false);
 	let formTitle = $state('');
 	let formBody = $state('');
-	let formAudience = $state<DemoNotificationAudience>('all');
-	let formPupitres = $state<DemoPupitreId[]>([]);
+	let formAudience = $state<MemberNotificationAudience>('all');
+	let formPupitres = $state<MemberPupitreId[]>([]);
 	let formProfiles = $state<string[]>([]);
 	let formError = $state<string | null>(null);
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const denied = $derived(
 		(pupitreMode && !canSeePupitreSection(actor)) || (adminMode && !canSeeAdminSection(actor))
 	);
@@ -73,26 +73,26 @@
 
 	const availablePupitres = $derived(
 		scoped
-			? DEMO_PUPITRES.filter((pupitre) => scope.includes(pupitre.id))
+			? MEMBER_PUPITRES.filter((pupitre) => scope.includes(pupitre.id))
 			: actor.role === 'chef_pupitre'
-				? DEMO_PUPITRES.filter((pupitre) => chefPupitreIds(actor).includes(pupitre.id))
-				: DEMO_PUPITRES
+				? MEMBER_PUPITRES.filter((pupitre) => chefPupitreIds(actor).includes(pupitre.id))
+				: MEMBER_PUPITRES
 	);
 
 	const items = $derived(
-		notificationsFor(demo.activeProfileId).filter((notification) => {
+		notificationsFor(member.activeProfileId).filter((notification) => {
 			if (scoped) {
 				if (notification.audience !== 'pupitre') return false;
-				if (!notification.audienceIds.some((id) => scope.includes(id as DemoPupitreId)))
+				if (!notification.audienceIds.some((id) => scope.includes(id as MemberPupitreId)))
 					return false;
 			}
-			if (filter === 'unread') return !notification.readBy.includes(demo.activeProfileId);
-			if (filter === 'read') return notification.readBy.includes(demo.activeProfileId);
+			if (filter === 'unread') return !notification.readBy.includes(member.activeProfileId);
+			if (filter === 'read') return notification.readBy.includes(member.activeProfileId);
 			return true;
 		})
 	);
 
-	const unread = $derived(unreadCount(demo.activeProfileId));
+	const unread = $derived(unreadCount(member.activeProfileId));
 
 	$effect(() => {
 		if (actor.role === 'chef_pupitre' && formAudience === 'all') {
@@ -100,7 +100,7 @@
 		}
 	});
 
-	function togglePupitre(id: DemoPupitreId, checked: boolean) {
+	function togglePupitre(id: MemberPupitreId, checked: boolean) {
 		formPupitres = checked ? [...formPupitres, id] : formPupitres.filter((item) => item !== id);
 		if (actor.role === 'chef_pupitre') formPupitres = formPupitres.slice(-1);
 	}
@@ -113,14 +113,14 @@
 		event.preventDefault();
 		formError = null;
 		try {
-			sendNotification(demo.activeProfileId, {
+			sendNotification(member.activeProfileId, {
 				title: formTitle,
 				body: formBody,
 				audience: formAudience,
 				pupitreIds: formPupitres,
 				profileIds: formProfiles
 			});
-			demo.notify('success', 'Notification envoyée dans la démonstration (aucun envoi réel).');
+			member.notify('success', 'Notification envoyée dans la démonstration (aucun envoi réel).');
 			formTitle = '';
 			formBody = '';
 			formPupitres = [];
@@ -128,23 +128,23 @@
 			composing = false;
 		} catch (error) {
 			formError = error instanceof Error ? error.message : 'Envoi impossible.';
-			demo.notify('error', formError);
+			member.notify('error', formError);
 		}
 	}
 
 	function markAsRead(id: string) {
 		try {
-			markRead(demo.activeProfileId, id);
+			markRead(member.activeProfileId, id);
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Action impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Action impossible.');
 		}
 	}
 
 	function unreadAction(id: string) {
 		try {
-			markUnread(demo.activeProfileId, id);
+			markUnread(member.activeProfileId, id);
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Action impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Action impossible.');
 		}
 	}
 </script>
@@ -171,7 +171,7 @@
 			<button
 				type="button"
 				class={secondaryButtonClass}
-				onclick={() => markAllRead(demo.activeProfileId)}
+				onclick={() => markAllRead(member.activeProfileId)}
 				disabled={unread === 0}
 			>
 				<Check size={16} />
@@ -245,7 +245,7 @@
 					<fieldset>
 						<legend class={labelClass}>Membres</legend>
 						<div class="mt-2 max-h-48 overflow-y-auto border border-marine/15 bg-white p-2">
-							{#each demo.profiles as profile (profile.id)}
+							{#each member.profiles as profile (profile.id)}
 								<label class="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-ivoire/60">
 									<input
 										type="checkbox"
@@ -295,7 +295,7 @@
 
 	<ul class="mt-3 space-y-2">
 		{#each items as notification (notification.id)}
-			{@const read = notification.readBy.includes(demo.activeProfileId)}
+			{@const read = notification.readBy.includes(member.activeProfileId)}
 			{@const recipients = notificationRecipients(notification)}
 			<li class="border border-marine/10 bg-white p-4 {read ? 'opacity-80' : ''}">
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

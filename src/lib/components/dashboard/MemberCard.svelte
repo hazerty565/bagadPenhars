@@ -2,12 +2,12 @@
 	import { ChevronRight } from '@lucide/svelte';
 	import Avatar from './Avatar.svelte';
 	import Badge from './Badge.svelte';
-	import type { DemoProfile } from '$lib/demo/types';
-	import { LEVEL_LABELS } from '$lib/demo/labels';
-	import { pupitreName } from '$lib/demo/fixtures/pupitres';
+	import type { MemberProfile } from '$lib/member/types';
+	import { LEVEL_LABELS } from '$lib/member/labels';
+	import { pupitreName } from '$lib/member/fixtures/pupitres';
 
 	interface Props {
-		profile: DemoProfile;
+		profile: MemberProfile;
 		onselect?: (profileId: string) => void;
 	}
 

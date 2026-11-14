@@ -7,53 +7,53 @@
 	import InlineConfirm from '$lib/components/dashboard/InlineConfirm.svelte';
 	import AccessDenied from '$lib/components/dashboard/AccessDenied.svelte';
 	import { primaryButtonClass, secondaryButtonClass } from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf, canManageContents } from '$lib/demo/permissions';
-	import { deleteArticle, setArticleStatus } from '$lib/demo/services/articles';
-	import { formatDemoDateShort } from '$lib/demo/clock';
-	import { ARTICLE_STATUS_LABELS } from '$lib/demo/labels';
-	import type { DemoArticleStatus } from '$lib/demo/types';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf, canManageContents } from '$lib/member/permissions';
+	import { deleteArticle, setArticleStatus } from '$lib/member/services/articles';
+	import { formatDateShort } from '$lib/member/clock';
+	import { ARTICLE_STATUS_LABELS } from '$lib/member/labels';
+	import type { MemberArticleStatus } from '$lib/member/types';
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canManageContents(actor));
 
-	let filter = $state<DemoArticleStatus | 'all'>('all');
+	let filter = $state<MemberArticleStatus | 'all'>('all');
 
 	const articles = $derived(
-		[...demo.articles]
+		[...member.articles]
 			.filter((article) => filter === 'all' || article.status === filter)
 			.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 	);
 
 	function publish(id: string) {
 		try {
-			setArticleStatus(demo.activeProfileId, id, 'published');
-			demo.notify('success', 'Article publié.');
+			setArticleStatus(member.activeProfileId, id, 'published');
+			member.notify('success', 'Article publié.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Publication impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Publication impossible.');
 		}
 	}
 
 	function unpublish(id: string) {
 		try {
-			setArticleStatus(demo.activeProfileId, id, 'draft');
-			demo.notify('info', 'Article repassé en brouillon.');
+			setArticleStatus(member.activeProfileId, id, 'draft');
+			member.notify('info', 'Article repassé en brouillon.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Dépublication impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Dépublication impossible.');
 		}
 	}
 
 	function remove(id: string) {
 		try {
-			deleteArticle(demo.activeProfileId, id);
-			demo.notify('success', 'Article supprimé.');
+			deleteArticle(member.activeProfileId, id);
+			member.notify('success', 'Article supprimé.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');
 		}
 	}
 
 	function authorName(id: string): string {
-		const author = demo.profiles.find((profile) => profile.id === id);
+		const author = member.profiles.find((profile) => profile.id === id);
 		return author ? `${author.firstName} ${author.lastName}` : 'Auteur inconnu';
 	}
 </script>
@@ -86,7 +86,7 @@
 					? 'border-marine bg-marine text-white'
 					: 'border-marine/20 bg-white text-marine hover:border-marine'}"
 				aria-pressed={filter === value}
-				onclick={() => (filter = value as DemoArticleStatus | 'all')}
+				onclick={() => (filter = value as MemberArticleStatus | 'all')}
 			>
 				{label}
 			</button>
@@ -107,11 +107,11 @@
 						{article.excerpt || 'Aucun chapeau.'}
 					</p>
 					<p class="mt-1 text-[0.68rem] text-ardoise/80">
-						{authorName(article.authorId)} · modifié le {formatDemoDateShort(
+						{authorName(article.authorId)} · modifié le {formatDateShort(
 							article.updatedAt.slice(0, 10)
 						)}
 						{#if article.publishedAt}
-							· publié le {formatDemoDateShort(article.publishedAt)}
+							· publié le {formatDateShort(article.publishedAt)}
 						{/if}
 					</p>
 				</div>

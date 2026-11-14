@@ -7,16 +7,16 @@
 	import Avatar from '$lib/components/dashboard/Avatar.svelte';
 	import Badge from '$lib/components/dashboard/Badge.svelte';
 	import { inputClass, labelClass } from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf, canSeePupitreSection, scopedPupitreIds } from '$lib/demo/permissions';
-	import { visibleProfiles } from '$lib/demo/services/members';
-	import { LEVEL_LABELS } from '$lib/demo/labels';
-	import { DEMO_PUPITRES, pupitreName } from '$lib/demo/fixtures/pupitres';
-	import type { DemoLevel, DemoPupitreId } from '$lib/demo/types';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf, canSeePupitreSection, scopedPupitreIds } from '$lib/member/permissions';
+	import { visibleProfiles } from '$lib/member/services/members';
+	import { LEVEL_LABELS } from '$lib/member/labels';
+	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/fixtures/pupitres';
+	import type { MemberLevel, MemberPupitreId } from '$lib/member/types';
 
 	interface Props {
 		/** Limite l’affichage aux pupitres dirigés (espace pupitre du chef). */
-		pupitreScope?: DemoPupitreId[];
+		pupitreScope?: MemberPupitreId[];
 		/** Mode espace pupitre : le périmètre est calculé depuis le rôle actif. */
 		pupitreMode?: boolean;
 		title?: string;
@@ -31,16 +31,16 @@
 	}: Props = $props();
 
 	let search = $state('');
-	let pupitreFilter = $state<DemoPupitreId | 'all'>('all');
-	let levelFilter = $state<DemoLevel | 'all'>('all');
+	let pupitreFilter = $state<MemberPupitreId | 'all'>('all');
+	let levelFilter = $state<MemberLevel | 'all'>('all');
 	let selectedId = $state<string | null>(null);
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const denied = $derived(pupitreMode && !canSeePupitreSection(actor));
 	const scope = $derived(pupitreMode ? scopedPupitreIds(actor) : pupitreScope);
 	const scoped = $derived(scope.length > 0);
 	const availablePupitres = $derived(
-		scoped ? DEMO_PUPITRES.filter((pupitre) => scope.includes(pupitre.id)) : DEMO_PUPITRES
+		scoped ? MEMBER_PUPITRES.filter((pupitre) => scope.includes(pupitre.id)) : MEMBER_PUPITRES
 	);
 
 	/** Recherche insensible aux accents et aux apostrophes typographiques. */
@@ -70,7 +70,7 @@
 		})
 	);
 
-	const selected = $derived(demo.profiles.find((profile) => profile.id === selectedId) ?? null);
+	const selected = $derived(member.profiles.find((profile) => profile.id === selectedId) ?? null);
 
 	function close() {
 		selectedId = null;

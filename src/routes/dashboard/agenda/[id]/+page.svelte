@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import DemoRoute from '$lib/components/dashboard/DemoRoute.svelte';
+	import MemberRoute from '$lib/components/dashboard/MemberRoute.svelte';
 </script>
 
-<DemoRoute
-	loader={() => import('$lib/demo/pages/EventDetailPage.svelte')}
+<MemberRoute
+	loader={() => import('$lib/member/pages/EventDetailPage.svelte')}
 	props={{ eventId: page.params.id ?? '' }}
 />

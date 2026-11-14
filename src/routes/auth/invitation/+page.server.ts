@@ -1,84 +1,73 @@
 import { fail } from '@sveltejs/kit';
-import { auth } from '$lib/server/auth';
-import { validateInvitation, markInvitationAccepted } from '$lib/server/data/invitations';
+import {
+	acceptInvitation,
+	InvitationError,
+	validateInvitationToken
+} from '$lib/server/invitations';
 import type { Action, PageServerLoad } from './$types';
 
-// Validation du côté serveur du token et email via les paramètres d'URL
-export const load: PageServerLoad = async ({ params }) => {
-	const { token, email } = params as { token?: string; email?: string };
+/**
+ * Acceptation d'une invitation.
+ *
+ * Le lien reçu par e-mail porte le jeton en clair (`?token=...`) et l'adresse
+ * (`?email=...`). Le jeton n'est jamais journalisé ; seule son empreinte est
+ * stockée en base.
+ */
 
-	if (!token || !email) {
-		return fail(400, { error: 'Token ou e-mail manquant.' });
+export const load: PageServerLoad = async ({ url, platform }) => {
+	const token = url.searchParams.get('token') ?? '';
+	const email = url.searchParams.get('email') ?? undefined;
+
+	if (!token) {
+		return { valid: false, error: 'Lien incomplet : le jeton est absent.' };
 	}
 
-	const invitation = await validateInvitation(token, email);
-
+	const invitation = await validateInvitationToken(platform, token, email);
 	if (!invitation) {
-		return fail(400, { error: "L'invitation est invalide, expirée ou déjà utilisée." });
+		return {
+			valid: false,
+			error: 'Cette invitation est invalide, expirée ou déjà utilisée.'
+		};
 	}
-
-	// Vérifier que le compte existe et est en pending
-	// Better Auth gère cela via la session
 
 	return {
 		valid: true,
+		error: null,
 		email: invitation.email,
+		firstName: invitation.firstName,
+		lastName: invitation.lastName,
+		pupitres: invitation.pupitres.map((pupitre) => pupitre.name),
 		token
 	};
 };
 
-// Action pour accepter l'invitation
 export const actions: { accept: Action } = {
-	accept: async ({ request }) => {
+	accept: async ({ request, platform }) => {
 		const formData = await request.formData();
-		const token = formData.get('token') as string;
-		const email = formData.get('email') as string;
-		const password = formData.get('password') as string;
-		const confirmPassword = formData.get('confirmPassword') as string;
+		const token = String(formData.get('token') ?? '');
+		const password = String(formData.get('password') ?? '');
+		const confirmPassword = String(formData.get('confirmPassword') ?? '');
 
-		if (!token || !email || !password || !confirmPassword) {
-			return fail(400, { error: 'Tous les champs sont requis.' });
+		if (!token) {
+			return fail(400, { error: 'Jeton manquant.' });
 		}
-
+		if (password.length < 8) {
+			return fail(400, { error: 'Le mot de passe doit contenir au moins huit caractères.' });
+		}
 		if (password !== confirmPassword) {
-			return fail(400, { error: 'Les mots de passe ne correspondent pas.' });
-		}
-
-		if (password.length < 6) {
-			return fail(400, { error: 'Le mot de passe doit faire au moins 6 caractères.' });
-		}
-
-		// Valider l'invitation
-		const invitation = await validateInvitation(token, email);
-
-		if (!invitation) {
-			return fail(400, { error: "L'invitation est invalide, expirée ou déjà utilisée." });
+			return fail(400, { error: 'Les deux mots de passe ne correspondent pas.' });
 		}
 
 		try {
-			// Accepter l'invitation via Better Auth
-			// Cela crée le compte et définit le mot de passe
-			await auth.api.signUpEmail({
-				body: {
-					name: `${invitation.email.split('@')[0]}`,
-					email: invitation.email,
-					password
-				},
-				headers: {}
-			});
-
-			// Marquer l'invitation comme acceptée
-			await markInvitationAccepted(invitation.id);
-
-			return {
-				success: true,
-				message: 'Votre compte a été créé. Vous pouvez maintenant vous connecter.',
-				redirectTo: '/auth/pending'
-			};
-		} catch (err) {
-			console.error("Erreur lors de l'acceptation de l'invitation:", err);
+			const result = await acceptInvitation(platform, token, password);
+			return { success: true, email: result.email, firstName: result.firstName };
+		} catch (error) {
+			if (error instanceof InvitationError) {
+				return fail(400, { error: error.message });
+			}
+			console.error("Erreur lors de l'acceptation de l'invitation :", error);
 			return fail(500, {
-				error: "Impossible d'accepter l'invitation. Veuillez réessayer."
+				error: "Impossible d'accepter l'invitation pour le moment. Réessayez plus tard."
 			});
 		}
 	}

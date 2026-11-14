@@ -6,37 +6,37 @@
 	import AccessDenied from '$lib/components/dashboard/AccessDenied.svelte';
 	import EventCard from '$lib/components/dashboard/EventCard.svelte';
 	import { secondaryButtonClass } from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
+	import { member } from '$lib/member/store.svelte';
 	import {
 		actorOf,
 		canSeePupitreSection,
 		chefPupitreIds,
 		scopedPupitreIds
-	} from '$lib/demo/permissions';
+	} from '$lib/member/permissions';
 	import {
 		activeChefs,
 		eventAudience,
 		manageableEvents,
 		profilesOfPupitre
-	} from '$lib/demo/services/members';
-	import { presenceSummary } from '$lib/demo/services/responses';
-	import { unreadCount } from '$lib/demo/services/notifications';
-	import { DEMO_TODAY } from '$lib/demo/clock';
-	import { pupitreName } from '$lib/demo/fixtures/pupitres';
+	} from '$lib/member/services/members';
+	import { presenceSummary } from '$lib/member/services/responses';
+	import { unreadCount } from '$lib/member/services/notifications';
+	import { MEMBER_TODAY } from '$lib/member/clock';
+	import { pupitreName } from '$lib/member/fixtures/pupitres';
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canSeePupitreSection(actor));
 	const scope = $derived(scopedPupitreIds(actor));
 
 	const upcomingEvents = $derived(
 		manageableEvents(actor)
-			.filter((event) => event.status === 'active' && event.date >= DEMO_TODAY)
+			.filter((event) => event.status === 'active' && event.date >= MEMBER_TODAY)
 			.sort((a, b) => a.date.localeCompare(b.date))
 			.slice(0, 4)
 	);
 
 	function summary(eventId: string) {
-		const event = demo.events.find((item) => item.id === eventId);
+		const event = member.events.find((item) => item.id === eventId);
 		if (!event) return { present: 0, absent: 0 };
 		const result = presenceSummary(
 			eventId,
@@ -50,7 +50,7 @@
 	}
 
 	function documentsCount(pupitreId: (typeof scope)[number]): number {
-		return demo.documents.filter((document) => document.pupitreId === pupitreId).length;
+		return member.documents.filter((document) => document.pupitreId === pupitreId).length;
 	}
 
 	function chefsLabel(pupitreId: (typeof scope)[number]): string {
@@ -86,9 +86,9 @@
 			<a href={resolve('/dashboard/pupitre/notifications')} class={secondaryButtonClass}>
 				<Bell size={16} />
 				Notifications
-				{#if unreadCount(demo.activeProfileId)}
+				{#if unreadCount(member.activeProfileId)}
 					<span class="rounded-full bg-or px-1.5 text-[0.62rem] font-bold text-ink"
-						>{unreadCount(demo.activeProfileId)}</span
+						>{unreadCount(member.activeProfileId)}</span
 					>
 				{/if}
 			</a>
@@ -123,11 +123,11 @@
 					</div>
 					<div class="bg-ivoire p-3">
 						<p class="font-serif text-2xl text-marine">
-							{demo.events.filter(
+							{member.events.filter(
 								(event) =>
 									event.pupitreIds.includes(pupitreId) &&
 									event.status === 'active' &&
-									event.date >= DEMO_TODAY
+									event.date >= MEMBER_TODAY
 							).length}
 						</p>
 						<p class="text-[0.62rem] uppercase tracking-wider text-ardoise">À venir</p>

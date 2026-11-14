@@ -3,8 +3,8 @@
 	import PageHeader from '$lib/components/dashboard/PageHeader.svelte';
 	import AccessDenied from '$lib/components/dashboard/AccessDenied.svelte';
 	import Badge from '$lib/components/dashboard/Badge.svelte';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf } from '$lib/demo/permissions';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf } from '$lib/member/permissions';
 	import {
 		canCreateEvent,
 		canDeleteEvents,
@@ -20,16 +20,16 @@
 		canViewPermissionMatrix,
 		canViewPresenceDetail,
 		canChangeRole,
-		type DemoActor
-	} from '$lib/demo/permissions';
+		type MemberActor
+	} from '$lib/member/permissions';
 	import { canInviteAndActivate } from '$lib/auth/roles';
 	import type { AppRole } from '$lib/auth/roles';
-	import type { DemoEvent } from '$lib/demo/types';
+	import type { MemberEvent } from '$lib/member/types';
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canViewPermissionMatrix(actor));
 
-	type Column = { role: AppRole; label: string; actor: DemoActor };
+	type Column = { role: AppRole; label: string; actor: MemberActor };
 
 	const columns: Column[] = [
 		{
@@ -62,7 +62,7 @@
 		}
 	];
 
-	const scopedEvent: DemoEvent = {
+	const scopedEvent: MemberEvent = {
 		id: 'x-event',
 		title: 'Événement de pupitre',
 		description: '',
@@ -76,7 +76,7 @@
 		location: 'Salle 1'
 	};
 
-	const rows: { label: string; hint?: string; check: (actor: DemoActor) => boolean }[] = [
+	const rows: { label: string; hint?: string; check: (actor: MemberActor) => boolean }[] = [
 		{ label: 'Consulter l’agenda', check: () => true },
 		{ label: 'Répondre présent ou absent', check: () => true },
 		{
@@ -147,7 +147,7 @@
 			Hiérarchie : administrateur &gt; secrétaire &gt; chef de pupitre &gt; membre
 		</p>
 		<p class="mt-2">
-			Chaque droit ci-dessous est évalué par une fonction pure de <code>$lib/demo/permissions</code
+			Chaque droit ci-dessous est évalué par une fonction pure de <code>$lib/member/permissions</code
 			>. Le profil actif est <Badge tone="marine">{actor.role}</Badge> ; les colonnes servent de référence.
 		</p>
 	</div>

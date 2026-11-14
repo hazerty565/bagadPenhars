@@ -2,11 +2,11 @@
 	import { resolve } from '$app/paths';
 	import { Lock } from '@lucide/svelte';
 	import { secondaryButtonClass } from './form';
-	import type { DemoActor } from '$lib/demo/permissions';
-	import { ROLE_LABELS } from '$lib/demo/labels';
+	import type { MemberActor } from '$lib/member/permissions';
+	import { ROLE_LABELS } from '$lib/member/labels';
 
 	interface Props {
-		actor: DemoActor;
+		actor: MemberActor;
 		required?: string;
 		message?: string;
 	}

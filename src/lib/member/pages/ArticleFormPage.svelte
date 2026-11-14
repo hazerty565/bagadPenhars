@@ -11,10 +11,10 @@
 		primaryButtonClass,
 		secondaryButtonClass
 	} from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf, canManageContents } from '$lib/demo/permissions';
-	import { saveArticle } from '$lib/demo/services/articles';
-	import type { DemoArticleStatus } from '$lib/demo/types';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf, canManageContents } from '$lib/member/permissions';
+	import { saveArticle } from '$lib/member/services/articles';
+	import type { MemberArticleStatus } from '$lib/member/types';
 
 	interface Props {
 		articleId?: string | null;
@@ -22,16 +22,16 @@
 
 	let { articleId = null }: Props = $props();
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canManageContents(actor));
 	const existing = $derived(
-		articleId ? (demo.articles.find((article) => article.id === articleId) ?? null) : null
+		articleId ? (member.articles.find((article) => article.id === articleId) ?? null) : null
 	);
 
 	let title = $state(existing?.title ?? '');
 	let excerpt = $state(existing?.excerpt ?? '');
 	let contentMarkdown = $state(existing?.contentMarkdown ?? '');
-	let status = $state<DemoArticleStatus>(existing?.status ?? 'draft');
+	let status = $state<MemberArticleStatus>(existing?.status ?? 'draft');
 	let error = $state<string | null>(null);
 	let preview = $state(true);
 	let submitting = $state(false);
@@ -58,11 +58,11 @@
 		submitting = true;
 		try {
 			saveArticle(
-				demo.activeProfileId,
+				member.activeProfileId,
 				{ title, excerpt, contentMarkdown, status },
 				existing?.id ?? null
 			);
-			demo.notify('success', existing ? 'Article mis à jour.' : 'Article créé.');
+			member.notify('success', existing ? 'Article mis à jour.' : 'Article créé.');
 			goto(resolve('/dashboard/admin/articles'));
 		} catch (reason) {
 			error = reason instanceof Error ? reason.message : 'Enregistrement impossible.';

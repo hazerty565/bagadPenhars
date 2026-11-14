@@ -1,17 +1,38 @@
-import { dev } from '$app/environment';
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
+import { withUserContext } from '$lib/db';
+import { buildMemberSnapshot } from '$lib/server/member/snapshot';
 import type { LayoutServerLoad } from './$types';
 
 /**
- * En production, l’espace membre exige une session Better Auth vérifiée.
- * En développement, aucune session n’est créée : les données sont fictives et
- * le profil actif est choisi dans la coquille de démonstration.
+ * Chargement de l'espace adhérents.
+ *
+ * Le profil vient de la session Better Auth vérifiée dans `hooks.server.ts`.
+ * Le statut métier est lu dans `profiles.account_status` : un compte en
+ * attente ou suspendu n'accède à aucune donnée. L'instantané est construit
+ * sous RLS, dans une transaction portant l'identité du profil.
  */
 export const load: LayoutServerLoad = async ({ locals, url }) => {
-	if (!dev && !locals.user) {
-		const redirectTo = encodeURIComponent(url.pathname + url.search);
+	const redirectTo = encodeURIComponent(url.pathname + url.search);
+
+	if (!locals.session || !locals.profile) {
 		throw redirect(303, `/auth/login?redirectTo=${redirectTo}`);
 	}
 
-	return { user: locals.user };
+	const status = locals.profile.account_status;
+	if (status === 'pending') {
+		throw redirect(303, '/auth/pending');
+	}
+	if (status === 'suspended') {
+		throw redirect(303, '/auth/login?error=suspended');
+	}
+	if (!locals.db) {
+		throw error(503, 'Base de données indisponible.');
+	}
+
+	const profileId = locals.profile.id;
+	const snapshot = await withUserContext(locals.db, profileId, (tx) =>
+		buildMemberSnapshot(tx, profileId)
+	);
+
+	return { snapshot };
 };

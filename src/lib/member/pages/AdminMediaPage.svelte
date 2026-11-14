@@ -12,19 +12,19 @@
 		primaryButtonClass,
 		secondaryButtonClass
 	} from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf, canManageContents } from '$lib/demo/permissions';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf, canManageContents } from '$lib/member/permissions';
 	import {
-		DEMO_PHOTO_LIBRARY,
+		MEMBER_PHOTO_LIBRARY,
 		addPhoto,
 		deleteAlbum,
 		movePhoto,
 		removePhoto,
 		saveAlbum
-	} from '$lib/demo/services/albums';
-	import { formatDemoDate } from '$lib/demo/clock';
+	} from '$lib/member/services/albums';
+	import { formatDate } from '$lib/member/clock';
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canManageContents(actor));
 
 	let showForm = $state(false);
@@ -35,24 +35,24 @@
 	let formError = $state<string | null>(null);
 
 	let photoAlbumId = $state<string | null>(null);
-	let photoSrc = $state(DEMO_PHOTO_LIBRARY[0].src);
+	let photoSrc = $state(MEMBER_PHOTO_LIBRARY[0].src);
 	let photoAlt = $state('');
 	let photoCaption = $state('');
 	let photoError = $state<string | null>(null);
 
-	const albums = $derived([...demo.albums].sort((a, b) => b.date.localeCompare(a.date)));
+	const albums = $derived([...member.albums].sort((a, b) => b.date.localeCompare(a.date)));
 
 	function submitAlbum(event: SubmitEvent) {
 		event.preventDefault();
 		formError = null;
 		try {
-			saveAlbum(demo.activeProfileId, {
+			saveAlbum(member.activeProfileId, {
 				title: formTitle,
 				description: formDescription,
 				date: formDate,
 				published: formPublished
 			});
-			demo.notify('success', 'Album créé.');
+			member.notify('success', 'Album créé.');
 			formTitle = '';
 			formDescription = '';
 			formPublished = false;
@@ -66,7 +66,7 @@
 		photoAlbumId = photoAlbumId === albumId ? null : albumId;
 		photoAlt = '';
 		photoCaption = '';
-		photoSrc = DEMO_PHOTO_LIBRARY[0].src;
+		photoSrc = MEMBER_PHOTO_LIBRARY[0].src;
 		photoError = null;
 	}
 
@@ -74,12 +74,12 @@
 		event.preventDefault();
 		photoError = null;
 		try {
-			addPhoto(demo.activeProfileId, albumId, {
+			addPhoto(member.activeProfileId, albumId, {
 				src: photoSrc,
 				alt: photoAlt,
 				caption: photoCaption
 			});
-			demo.notify('success', 'Photo ajoutée (visuel public existant).');
+			member.notify('success', 'Photo ajoutée (visuel public existant).');
 			photoAlbumId = null;
 		} catch (error) {
 			photoError = error instanceof Error ? error.message : 'Ajout impossible.';
@@ -88,36 +88,36 @@
 
 	function move(albumId: string, photoId: string, direction: -1 | 1) {
 		try {
-			movePhoto(demo.activeProfileId, albumId, photoId, direction);
+			movePhoto(member.activeProfileId, albumId, photoId, direction);
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Déplacement impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Déplacement impossible.');
 		}
 	}
 
 	function remove(albumId: string, photoId: string) {
 		try {
-			removePhoto(demo.activeProfileId, albumId, photoId);
-			demo.notify('success', 'Photo retirée.');
+			removePhoto(member.activeProfileId, albumId, photoId);
+			member.notify('success', 'Photo retirée.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Retrait impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Retrait impossible.');
 		}
 	}
 
 	function removeAlbum(albumId: string) {
 		try {
-			deleteAlbum(demo.activeProfileId, albumId);
-			demo.notify('success', 'Album supprimé.');
+			deleteAlbum(member.activeProfileId, albumId);
+			member.notify('success', 'Album supprimé.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');
 		}
 	}
 
 	function togglePublished(albumId: string) {
-		const album = demo.albums.find((item) => item.id === albumId);
+		const album = member.albums.find((item) => item.id === albumId);
 		if (!album) return;
 		try {
 			saveAlbum(
-				demo.activeProfileId,
+				member.activeProfileId,
 				{
 					title: album.title,
 					description: album.description,
@@ -126,9 +126,9 @@
 				},
 				album.id
 			);
-			demo.notify('success', album.published ? 'Album dépublié.' : 'Album publié.');
+			member.notify('success', album.published ? 'Album dépublié.' : 'Album publié.');
 		} catch (error) {
-			demo.notify('error', error instanceof Error ? error.message : 'Action impossible.');
+			member.notify('error', error instanceof Error ? error.message : 'Action impossible.');
 		}
 	}
 </script>
@@ -203,7 +203,7 @@
 							>
 						</div>
 						<p class="mt-1 text-xs text-ardoise">
-							{album.description} · {formatDemoDate(album.date)}
+							{album.description} · {formatDate(album.date)}
 						</p>
 					</div>
 					<div class="flex flex-wrap items-center gap-3">
@@ -247,7 +247,7 @@
 							<label>
 								<span class={labelClass}>Visuel de la galerie publique *</span>
 								<select class="{inputClass} mt-1" bind:value={photoSrc}>
-									{#each DEMO_PHOTO_LIBRARY as photo (photo.src)}
+									{#each MEMBER_PHOTO_LIBRARY as photo (photo.src)}
 										<option value={photo.src}>{photo.src.replace('/', '')}</option>
 									{/each}
 								</select>

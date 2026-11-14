@@ -1,36 +1,36 @@
-import { demo } from '../store.svelte';
+import { member } from '../store.svelte';
 import type {
-	DemoNotification,
-	DemoNotificationAudience,
-	DemoProfile,
-	DemoPupitreId
+	MemberNotification,
+	MemberNotificationAudience,
+	MemberProfile,
+	MemberPupitreId
 } from '../types';
-import { canNotify, DemoPermissionError } from '../permissions';
-import { actorFor, isNonEmpty, nextId, nowIso } from './helpers';
+import { actorOf, canNotify, MemberPermissionError } from '../permissions';
+import { isNonEmpty } from './helpers';
 
-export interface DemoNotificationInput {
+export interface MemberNotificationInput {
 	title: string;
 	body: string;
-	audience: DemoNotificationAudience;
-	pupitreIds: DemoPupitreId[];
+	audience: MemberNotificationAudience;
+	pupitreIds: MemberPupitreId[];
 	profileIds: string[];
 }
 
-export function sendNotification(
-	actorProfileId: string,
-	input: DemoNotificationInput
-): DemoNotification {
-	const actor = actorFor(actorProfileId);
+export async function sendNotification(
+	_actorProfileId: string,
+	input: MemberNotificationInput
+): Promise<void> {
+	const actor = actorOf(member.profile);
 	const audience =
 		input.audience === 'pupitre' ? 'pupitre' : input.audience === 'profiles' ? 'profiles' : 'all';
 
 	if (!canNotify(actor, audience === 'all' ? 'all' : 'pupitre', input.pupitreIds)) {
-		throw new DemoPermissionError(
+		throw new MemberPermissionError(
 			'Vous ne pouvez notifier que vos pupitres, ou l’ensemble du bagad si vous êtes secrétaire.'
 		);
 	}
 	if (!isNonEmpty(input.title, 3) || !isNonEmpty(input.body, 5)) {
-		throw new DemoPermissionError('Le titre et le message sont obligatoires.');
+		throw new MemberPermissionError('Le titre et le message sont obligatoires.');
 	}
 
 	const audienceIds =
@@ -40,40 +40,33 @@ export function sendNotification(
 				? [...new Set(input.profileIds)]
 				: [];
 	if (audience !== 'all' && audienceIds.length === 0) {
-		throw new DemoPermissionError('Choisissez au moins un destinataire.');
+		throw new MemberPermissionError('Choisissez au moins un destinataire.');
 	}
 
-	const notification: DemoNotification = {
-		id: nextId('n', demo.notifications),
+	await member.request('notification.send', {
 		title: input.title.trim(),
 		body: input.body.trim(),
-		createdAt: nowIso(),
 		audience,
-		audienceIds,
-		sentBy: actor.id,
-		readBy: [actor.id]
-	};
-	demo.notifications = [notification, ...demo.notifications];
-	demo.persist();
-	return notification;
+		audienceIds
+	});
 }
 
-/** Destinataires réels d’une notification, calculés à partir des profils. */
-export function notificationRecipients(notification: DemoNotification): DemoProfile[] {
-	if (notification.audience === 'all') return demo.profiles;
+/** Destinataires réels d'une notification, calculés à partir des profils visibles. */
+export function notificationRecipients(notification: MemberNotification): MemberProfile[] {
+	if (notification.audience === 'all') return member.profiles;
 	if (notification.audience === 'profiles') {
-		return demo.profiles.filter((profile) => notification.audienceIds.includes(profile.id));
+		return member.profiles.filter((profile) => notification.audienceIds.includes(profile.id));
 	}
-	return demo.profiles.filter((profile) =>
+	return member.profiles.filter((profile) =>
 		profile.pupitres.some((pupitre) => notification.audienceIds.includes(pupitre.pupitreId))
 	);
 }
 
-export function notificationsFor(profileId: string): DemoNotification[] {
-	const profile = demo.profiles.find((item) => item.id === profileId);
+export function notificationsFor(profileId: string): MemberNotification[] {
+	const profile = member.profiles.find((item) => item.id === profileId);
 	if (!profile) return [];
-	const preferences = demo.preferences.find((item) => item.profileId === profileId);
-	return demo.notifications
+	const preferences = member.preferences.find((item) => item.profileId === profileId);
+	return member.notifications
 		.filter((notification) => {
 			if (notification.audience === 'all') return preferences?.global !== false;
 			if (notification.audience === 'profiles') return notification.audienceIds.includes(profileId);
@@ -85,31 +78,30 @@ export function notificationsFor(profileId: string): DemoNotification[] {
 		.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function isRead(notification: DemoNotification, profileId: string): boolean {
+export function isRead(notification: MemberNotification, profileId: string): boolean {
 	return notification.readBy.includes(profileId);
 }
 
-export function markRead(profileId: string, notificationId: string): void {
-	const notification = demo.notifications.find((item) => item.id === notificationId);
-	if (!notification) throw new DemoPermissionError('Notification introuvable.');
-	if (!notification.readBy.includes(profileId)) {
-		notification.readBy.push(profileId);
-		demo.persist();
-	}
+export async function markRead(profileId: string, notificationId: string): Promise<void> {
+	const notification = member.notifications.find((item) => item.id === notificationId);
+	if (!notification) throw new MemberPermissionError('Notification introuvable.');
+	if (notification.readBy.includes(profileId)) return;
+	await member.request('notification.read', { notificationId });
 }
 
-export function markUnread(profileId: string, notificationId: string): void {
-	const notification = demo.notifications.find((item) => item.id === notificationId);
-	if (!notification) throw new DemoPermissionError('Notification introuvable.');
-	notification.readBy = notification.readBy.filter((id) => id !== profileId);
-	demo.persist();
+export async function markUnread(profileId: string, notificationId: string): Promise<void> {
+	const notification = member.notifications.find((item) => item.id === notificationId);
+	if (!notification) throw new MemberPermissionError('Notification introuvable.');
+	if (!notification.readBy.includes(profileId)) return;
+	await member.request('notification.unread', { notificationId });
 }
 
-export function markAllRead(profileId: string): void {
-	for (const notification of notificationsFor(profileId)) {
-		if (!notification.readBy.includes(profileId)) notification.readBy.push(profileId);
-	}
-	demo.persist();
+export async function markAllRead(profileId: string): Promise<void> {
+	const unread = notificationsFor(profileId).filter(
+		(notification) => !notification.readBy.includes(profileId)
+	);
+	if (unread.length === 0) return;
+	await member.request('notification.readAll', {});
 }
 
 export function unreadCount(profileId: string): number {
@@ -118,13 +110,15 @@ export function unreadCount(profileId: string): number {
 	).length;
 }
 
-export function deleteNotification(actorProfileId: string, notificationId: string): void {
-	const actor = actorFor(actorProfileId);
-	if (actor.role !== 'admin' && actor.role !== 'secretaire') {
-		throw new DemoPermissionError(
+export async function deleteNotification(
+	_actorProfileId: string,
+	notificationId: string
+): Promise<void> {
+	const role = member.profile.role;
+	if (role !== 'admin' && role !== 'secretaire') {
+		throw new MemberPermissionError(
 			'Seuls la secrétaire et l’administrateur peuvent supprimer une notification.'
 		);
 	}
-	demo.notifications = demo.notifications.filter((item) => item.id !== notificationId);
-	demo.persist();
+	await member.request('notification.delete', { notificationId });
 }

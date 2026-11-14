@@ -1,7 +1,7 @@
-import type { DemoPupitre } from '../types';
+import type { MemberPupitre } from '../types';
 
 /** Les quatre pupitres, alignés sur `src/lib/data/pupitres.ts`. */
-export const DEMO_PUPITRES: DemoPupitre[] = [
+export const MEMBER_PUPITRES: MemberPupitre[] = [
 	{ id: 'bombarde', name: 'Bombarde', description: 'Anches et bombardes du bagad.' },
 	{ id: 'cornemuse', name: 'Cornemuse', description: 'Cornemuses écossaises et binious.' },
 	{ id: 'caisse-claire', name: 'Caisse claire', description: 'Batterie et caisses claires.' },
@@ -9,5 +9,5 @@ export const DEMO_PUPITRES: DemoPupitre[] = [
 ];
 
 export function pupitreName(id: string): string {
-	return DEMO_PUPITRES.find((pupitre) => pupitre.id === id)?.name ?? id;
+	return MEMBER_PUPITRES.find((pupitre) => pupitre.id === id)?.name ?? id;
 }

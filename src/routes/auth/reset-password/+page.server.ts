@@ -1,5 +1,4 @@
 import { fail } from '@sveltejs/kit';
-import { auth } from '$lib/server/auth';
 import { resetPasswordSchema } from './schema';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -8,7 +7,7 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-	requestReset: async ({ request }) => {
+	requestReset: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const email = formData.get('email') as string;
 
@@ -20,8 +19,15 @@ export const actions: Actions = {
 			});
 		}
 
+		if (!locals.auth) {
+			return fail(503, {
+				error: 'Le service de réinitialisation est momentanément indisponible.',
+				email
+			});
+		}
+
 		try {
-			await auth.api.requestPasswordReset({
+			await locals.auth.api.requestPasswordReset({
 				body: {
 					email: validation.data.email,
 					// URL de redirection après réinitialisation (front-end)

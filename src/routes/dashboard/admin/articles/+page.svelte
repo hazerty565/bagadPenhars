@@ -1,5 +1,5 @@
 <script lang="ts">
-	import DemoRoute from '$lib/components/dashboard/DemoRoute.svelte';
+	import MemberRoute from '$lib/components/dashboard/MemberRoute.svelte';
 </script>
 
-<DemoRoute loader={() => import('$lib/demo/pages/AdminArticlesPage.svelte')} />
+<MemberRoute loader={() => import('$lib/member/pages/AdminArticlesPage.svelte')} />

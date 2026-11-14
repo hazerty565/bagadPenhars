@@ -1,11 +1,11 @@
 import type { AppRole } from '$lib/auth/roles';
 import type {
-	DemoArticleStatus,
-	DemoEventStatus,
-	DemoEventType,
-	DemoEventVisibility,
-	DemoLevel,
-	DemoNotificationAudience
+	MemberArticleStatus,
+	MemberEventStatus,
+	MemberEventType,
+	MemberEventVisibility,
+	MemberLevel,
+	MemberNotificationAudience
 } from './types';
 
 export const ROLE_LABELS: Record<AppRole, string> = {
@@ -22,13 +22,13 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
 	admin: 'Dispose en plus des rôles, des réglages globaux et des suppressions.'
 };
 
-export const LEVEL_LABELS: Record<DemoLevel, string> = {
+export const LEVEL_LABELS: Record<MemberLevel, string> = {
 	skolaj: 'Skolaj',
 	bagadig: 'Bagadig',
 	bagad: 'Bagad'
 };
 
-export const EVENT_TYPE_LABELS: Record<DemoEventType, string> = {
+export const EVENT_TYPE_LABELS: Record<MemberEventType, string> = {
 	sortie: 'Sortie',
 	concert: 'Concert',
 	'fest-noz': 'Fest-noz',
@@ -40,23 +40,23 @@ export const EVENT_TYPE_LABELS: Record<DemoEventType, string> = {
 	repas: 'Repas'
 };
 
-export const VISIBILITY_LABELS: Record<DemoEventVisibility, string> = {
+export const VISIBILITY_LABELS: Record<MemberEventVisibility, string> = {
 	public: 'Public',
 	interne: 'Interne',
 	pupitre: 'Pupitre'
 };
 
-export const EVENT_STATUS_LABELS: Record<DemoEventStatus, string> = {
+export const EVENT_STATUS_LABELS: Record<MemberEventStatus, string> = {
 	active: 'Actif',
 	cancelled: 'Annulé'
 };
 
-export const ARTICLE_STATUS_LABELS: Record<DemoArticleStatus, string> = {
+export const ARTICLE_STATUS_LABELS: Record<MemberArticleStatus, string> = {
 	draft: 'Brouillon',
 	published: 'Publié'
 };
 
-export const AUDIENCE_LABELS: Record<DemoNotificationAudience, string> = {
+export const AUDIENCE_LABELS: Record<MemberNotificationAudience, string> = {
 	all: 'Tout le bagad',
 	pupitre: 'Pupitres',
 	profiles: 'Membres choisis'

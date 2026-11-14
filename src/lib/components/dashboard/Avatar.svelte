@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { DemoProfile } from '$lib/demo/types';
+	import type { MemberProfile } from '$lib/member/types';
 
 	interface Props {
-		profile: DemoProfile;
+		profile: MemberProfile;
 		size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 		decorative?: boolean;
 	}

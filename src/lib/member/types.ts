@@ -1,21 +1,18 @@
-import type { AppRole } from '$lib/auth/roles';
+import type { AccountStatus, AppRole } from '$lib/auth/roles';
 
 /**
- * Types miroirs du modèle de `docs/database.md`.
+ * Types de l'espace adhérents.
  *
- * Ils portent les mêmes noms de champs que les futures entités serveur afin
- * que le remplacement des services de démonstration par Neon/Drizzle ne
- * change pas les composants d'interface.
- *
- * Toutes les données sont fictives. Aucune information personnelle réelle ne
- * doit être ajoutée dans ce dossier.
+ * Ils reprennent les noms de champs utilisés par les composants depuis la
+ * première maquette, mais les données viennent désormais de Neon (snapshot
+ * serveur filtré par le rôle du profil connecté) et non plus du `localStorage`.
  */
 
-export type DemoPupitreId = 'bombarde' | 'cornemuse' | 'caisse-claire' | 'percussion';
+export type MemberPupitreId = 'bombarde' | 'cornemuse' | 'caisse-claire' | 'percussion';
 
-export type DemoLevel = 'skolaj' | 'bagadig' | 'bagad';
+export type MemberLevel = 'skolaj' | 'bagadig' | 'bagad';
 
-export type DemoEventType =
+export type MemberEventType =
 	| 'sortie'
 	| 'concert'
 	| 'fest-noz'
@@ -26,68 +23,69 @@ export type DemoEventType =
 	| 'reunion'
 	| 'repas';
 
-export type DemoEventVisibility = 'public' | 'interne' | 'pupitre';
+export type MemberEventVisibility = 'public' | 'interne' | 'pupitre';
 
-export type DemoEventStatus = 'active' | 'cancelled';
+export type MemberEventStatus = 'active' | 'cancelled';
 
-export type DemoResponseStatus = 'present' | 'absent';
+export type MemberResponseStatus = 'present' | 'absent';
 
-export type DemoNotificationAudience = 'all' | 'pupitre' | 'profiles';
+export type MemberNotificationAudience = 'all' | 'pupitre' | 'profiles';
 
-export type DemoArticleStatus = 'draft' | 'published';
+export type MemberArticleStatus = 'draft' | 'published';
 
-export type DemoInvitationStatus = 'pending' | 'accepted' | 'expired' | 'cancelled';
+export type MemberInvitationStatus = 'pending' | 'accepted' | 'expired' | 'cancelled';
 
-export interface DemoProfilePupitre {
-	pupitreId: DemoPupitreId;
+export interface MemberProfilePupitre {
+	pupitreId: MemberPupitreId;
 	isChef: boolean;
 }
 
-export interface DemoProfile {
+export interface MemberProfile {
 	id: string;
 	firstName: string;
 	lastName: string;
+	/** Vide pour les lignes issues de l'annuaire restreint (autres membres). */
 	email: string;
 	role: AppRole;
-	accountStatus: 'active';
-	level: DemoLevel;
+	accountStatus: AccountStatus;
+	level: MemberLevel;
 	/** Fonction au bureau, informative : ne donne aucun droit. */
 	bureauPosition: string | null;
-	pupitres: DemoProfilePupitre[];
+	pupitres: MemberProfilePupitre[];
 	/** Identifiant de palette du portrait illustré (1 à 12). */
 	avatar: number;
 	joinedAt: string;
 }
 
-export interface DemoEvent {
+export interface MemberEvent {
 	id: string;
 	title: string;
 	description: string;
 	/** Date civile `YYYY-MM-DD`, sans heure (docs/event.md). */
 	date: string;
-	type: DemoEventType;
-	visibility: DemoEventVisibility;
+	type: MemberEventType;
+	visibility: MemberEventVisibility;
 	isPoll: boolean;
-	status: DemoEventStatus;
+	status: MemberEventStatus;
 	/** Vide = tous les pupitres (événement global). */
-	pupitreIds: DemoPupitreId[];
+	pupitreIds: MemberPupitreId[];
 	createdBy: string;
 	location: string;
 }
 
-export interface DemoResponse {
+export interface MemberResponse {
 	eventId: string;
 	profileId: string;
-	status: DemoResponseStatus;
+	status: MemberResponseStatus;
 	updatedAt: string;
 }
 
-export interface DemoNotification {
+export interface MemberNotification {
 	id: string;
 	title: string;
 	body: string;
 	createdAt: string;
-	audience: DemoNotificationAudience;
+	audience: MemberNotificationAudience;
 	/** Pupitres ou profils ciblés selon `audience`. */
 	audienceIds: string[];
 	sentBy: string;
@@ -95,12 +93,12 @@ export interface DemoNotification {
 	readBy: string[];
 }
 
-export interface DemoDocument {
+export interface MemberDocument {
 	id: string;
 	title: string;
 	description: string;
 	/** `null` = document commun à tous les pupitres. */
-	pupitreId: DemoPupitreId | null;
+	pupitreId: MemberPupitreId | null;
 	fileName: string;
 	mimeType: string;
 	sizeBytes: number;
@@ -108,19 +106,19 @@ export interface DemoDocument {
 	uploadedAt: string;
 }
 
-export interface DemoArticle {
+export interface MemberArticle {
 	id: string;
 	title: string;
 	slug: string;
 	excerpt: string;
 	contentMarkdown: string;
-	status: DemoArticleStatus;
+	status: MemberArticleStatus;
 	authorId: string;
 	publishedAt: string | null;
 	updatedAt: string;
 }
 
-export interface DemoMedia {
+export interface MemberMedia {
 	id: string;
 	albumId: string;
 	src: string;
@@ -129,28 +127,28 @@ export interface DemoMedia {
 	order: number;
 }
 
-export interface DemoAlbum {
+export interface MemberAlbum {
 	id: string;
 	title: string;
 	description: string;
 	date: string;
 	published: boolean;
-	photos: DemoMedia[];
+	photos: MemberMedia[];
 }
 
-export interface DemoInvitation {
+export interface MemberInvitation {
 	id: string;
 	email: string;
 	firstName: string;
 	lastName: string;
-	pupitreIds: DemoPupitreId[];
-	status: DemoInvitationStatus;
+	pupitreIds: MemberPupitreId[];
+	status: MemberInvitationStatus;
 	sentAt: string;
 	expiresAt: string;
 	invitedBy: string;
 }
 
-export interface DemoPreferences {
+export interface MemberPreferences {
 	profileId: string;
 	/** Notifications générales de l'association. */
 	global: boolean;
@@ -160,7 +158,7 @@ export interface DemoPreferences {
 	events: boolean;
 }
 
-export interface DemoSettings {
+export interface MemberSettings {
 	associationName: string;
 	email: string;
 	address: string;
@@ -172,26 +170,29 @@ export interface DemoSettings {
 	notifyReminderDays: number;
 }
 
-export interface DemoState {
-	version: number;
-	activeProfileId: string;
-	profiles: DemoProfile[];
-	events: DemoEvent[];
-	responses: DemoResponse[];
-	notifications: DemoNotification[];
-	documents: DemoDocument[];
-	articles: DemoArticle[];
-	albums: DemoAlbum[];
-	invitations: DemoInvitation[];
-	preferences: DemoPreferences[];
-	settings: DemoSettings;
+/**
+ * Photographie complète de l'état visible par un profil.
+ *
+ * Elle est produite côté serveur dans une transaction dont le contexte RLS est
+ * celui du profil : le client ne reçoit que ce que PostgreSQL l'autorise à
+ * lire. Chaque mutation renvoie un nouveau snapshot.
+ */
+export interface MemberSnapshot {
+	profile: MemberProfile;
+	profiles: MemberProfile[];
+	events: MemberEvent[];
+	responses: MemberResponse[];
+	notifications: MemberNotification[];
+	documents: MemberDocument[];
+	articles: MemberArticle[];
+	albums: MemberAlbum[];
+	invitations: MemberInvitation[];
+	preferences: MemberPreferences[];
+	settings: MemberSettings;
 }
 
-export interface DemoPupitre {
-	id: DemoPupitreId;
+export interface MemberPupitre {
+	id: MemberPupitreId;
 	name: string;
 	description: string;
 }
-
-/** Identifiant du profil utilisé pour la première visite. */
-export const DEFAULT_PROFILE_ID = 'p06';

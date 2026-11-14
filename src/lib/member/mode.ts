@@ -9,16 +9,16 @@ import { dev } from '$app/environment';
  * concaténation pour qu’il ne soit jamais présent en clair dans le bundle de
  * production (contrôle d’isolation du plan de démonstration).
  */
-const MARKER = '__BAGAD_' + 'DEMO__';
+const MARKER = '__BAGAD_' + 'MEMBER__';
 
-export function isDemoMode(): boolean {
+export function isMemberMode(): boolean {
 	return dev && MARKER.length > 0;
 }
 
-export function assertDemoMode(): void {
-	if (!isDemoMode()) {
+export function assertMemberMode(): void {
+	if (!isMemberMode()) {
 		throw new Error('Les données de démonstration ne sont disponibles qu’en développement local.');
 	}
 }
 
-export { MARKER as DEMO_MARKER };
+export { MARKER as MEMBER_MARKER };

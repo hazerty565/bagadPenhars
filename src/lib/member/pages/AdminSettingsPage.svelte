@@ -4,16 +4,16 @@
 	import AccessDenied from '$lib/components/dashboard/AccessDenied.svelte';
 	import StatCard from '$lib/components/dashboard/StatCard.svelte';
 	import { inputClass, labelClass, primaryButtonClass } from '$lib/components/dashboard/form';
-	import { demo } from '$lib/demo/store.svelte';
-	import { actorOf, canManageSettings } from '$lib/demo/permissions';
-	import { storagePercent, updateSettings } from '$lib/demo/services/settings';
-	import { formatBytes } from '$lib/demo/clock';
-	import type { DemoSettings } from '$lib/demo/types';
+	import { member } from '$lib/member/store.svelte';
+	import { actorOf, canManageSettings } from '$lib/member/permissions';
+	import { storagePercent, updateSettings } from '$lib/member/services/settings';
+	import { formatBytes } from '$lib/member/clock';
+	import type { MemberSettings } from '$lib/member/types';
 
-	const actor = $derived(actorOf(demo.activeProfile));
+	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canManageSettings(actor));
 
-	let form = $state<DemoSettings>({ ...demo.settings });
+	let form = $state<MemberSettings>({ ...member.settings });
 	let feedback = $state<string | null>(null);
 	let error = $state<string | null>(null);
 
@@ -23,12 +23,12 @@
 		event.preventDefault();
 		error = null;
 		try {
-			updateSettings(demo.activeProfileId, form);
+			updateSettings(member.activeProfileId, form);
 			feedback = 'Réglages enregistrés dans la démonstration.';
-			demo.notify('success', 'Réglages enregistrés.');
+			member.notify('success', 'Réglages enregistrés.');
 		} catch (reason) {
 			error = reason instanceof Error ? reason.message : 'Enregistrement impossible.';
-			demo.notify('error', error);
+			member.notify('error', error);
 		}
 	}
 </script>
@@ -49,7 +49,7 @@
 	<section class="mt-6 grid gap-3 sm:grid-cols-3" aria-label="Stockage simulé">
 		<StatCard
 			label="Stockage utilisé"
-			value={formatBytes(demo.settings.storageUsedBytes)}
+			value={formatBytes(member.settings.storageUsedBytes)}
 			hint={`${percent} % du quota`}
 			tone="marine"
 		>
@@ -57,12 +57,12 @@
 		</StatCard>
 		<StatCard
 			label="Quota"
-			value={formatBytes(demo.settings.storageQuotaBytes)}
+			value={formatBytes(member.settings.storageQuotaBytes)}
 			hint="Capacité fictive du bucket R2"
 		/>
 		<StatCard
 			label="Seuil d’alerte"
-			value={formatBytes(demo.settings.storageAlertBytes)}
+			value={formatBytes(member.settings.storageAlertBytes)}
 			hint="Alerte simulée avant saturation"
 		/>
 	</section>

@@ -1,4 +1,5 @@
 import {
+	bigint,
 	boolean,
 	date,
 	index,
@@ -11,7 +12,7 @@ import {
 	uuid,
 	varchar
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 // ---------------------------------------------------------------------------
 // Énumérations métier (PostgreSQL ENUM)
@@ -38,6 +39,12 @@ export const eventVisibilityEnum = pgEnum('event_visibility', ['public', 'intern
 export const responseStatusEnum = pgEnum('response_status', ['present', 'absent']);
 
 export const musicianLevelEnum = pgEnum('musician_level', ['skolaj', 'bagadig', 'bagad']);
+
+export const notificationAudienceEnum = pgEnum('notification_audience', [
+	'all',
+	'pupitre',
+	'profiles'
+]);
 
 // ---------------------------------------------------------------------------
 // Tables Better Auth (identité et sessions)
@@ -131,17 +138,22 @@ export const profiles = pgTable(
 		phone: varchar('phone', { length: 50 }),
 		address: text('address'),
 		musician_level: musicianLevelEnum('musician_level'),
-		bureau_position_id: uuid('bureau_position_id'),
+		bureau_position_id: uuid('bureau_position_id').references(() => bureauPositions.id, {
+			onDelete: 'set null'
+		}),
 		avatar_url: varchar('avatar_url', { length: 500 }),
+		/** Palette de portrait illustré (1 à 12), utilisée tant qu'aucune photo n'est déposée. */
+		avatar: integer('avatar').notNull().default(1),
 		email_confirmed: boolean('email_confirmed').notNull().default(false),
 		created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 		updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
 	},
 	(table) => ({
 		authUserIdx: index('profiles_auth_user_id_idx').on(table.auth_user_id),
-		emailIdx: index('profiles_email_idx').on(table.email),
+		emailUnique: uniqueIndex('profiles_email_unique').on(table.email),
 		roleIdx: index('profiles_role_idx').on(table.role),
-		statusIdx: index('profiles_account_status_idx').on(table.account_status)
+		statusIdx: index('profiles_account_status_idx').on(table.account_status),
+		bureauIdx: index('profiles_bureau_position_id_idx').on(table.bureau_position_id)
 	})
 );
 
@@ -150,11 +162,13 @@ export const pupitres = pgTable(
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
 		name: varchar('name', { length: 100 }).notNull().unique(),
+		slug: varchar('slug', { length: 50 }).notNull().unique(),
 		description: text('description'),
 		created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
 	},
 	(table) => ({
-		nameIdx: index('pupitres_name_idx').on(table.name)
+		nameIdx: index('pupitres_name_idx').on(table.name),
+		slugIdx: index('pupitres_slug_idx').on(table.slug)
 	})
 );
 
@@ -174,7 +188,11 @@ export const profilePupitres = pgTable(
 	(table) => ({
 		profileIdx: index('profile_pupitres_profile_id_idx').on(table.profile_id),
 		pupitreIdx: index('profile_pupitres_pupitre_id_idx').on(table.pupitre_id),
-		chefIdx: index('profile_pupitres_is_chef_idx').on(table.is_chef)
+		chefIdx: index('profile_pupitres_is_chef_idx').on(table.is_chef),
+		profilePupitreUnique: uniqueIndex('profile_pupitres_profile_id_pupitre_id_unique').on(
+			table.profile_id,
+			table.pupitre_id
+		)
 	})
 );
 
@@ -196,9 +214,13 @@ export const invitations = pgTable(
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
 		email: varchar('email', { length: 255 }).notNull(),
+		first_name: varchar('first_name', { length: 100 }).notNull().default(''),
+		last_name: varchar('last_name', { length: 100 }).notNull().default(''),
 		token_hash: varchar('token_hash', { length: 255 }).notNull().unique(),
 		expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
 		accepted_at: timestamp('accepted_at', { withTimezone: true }),
+		cancelled_at: timestamp('cancelled_at', { withTimezone: true }),
+		last_sent_at: timestamp('last_sent_at', { withTimezone: true }).notNull().defaultNow(),
 		created_by: uuid('created_by')
 			.notNull()
 			.references(() => profiles.id, { onDelete: 'restrict' }),
@@ -207,7 +229,10 @@ export const invitations = pgTable(
 	(table) => ({
 		emailIdx: index('invitations_email_idx').on(table.email),
 		tokenIdx: index('invitations_token_hash_idx').on(table.token_hash),
-		expiresIdx: index('invitations_expires_at_idx').on(table.expires_at)
+		expiresIdx: index('invitations_expires_at_idx').on(table.expires_at),
+		pendingEmailIdx: index('invitations_pending_email_idx')
+			.on(table.email)
+			.where(sql`${table.accepted_at} is null and ${table.cancelled_at} is null`)
 	})
 );
 
@@ -224,7 +249,10 @@ export const invitationPupitres = pgTable(
 	},
 	(table) => ({
 		invitationIdx: index('invitation_pupitres_invitation_id_idx').on(table.invitation_id),
-		pupitreIdx: index('invitation_pupitres_pupitre_id_idx').on(table.pupitre_id)
+		pupitreIdx: index('invitation_pupitres_pupitre_id_idx').on(table.pupitre_id),
+		invitationPupitreUnique: uniqueIndex(
+			'invitation_pupitres_invitation_id_pupitre_id_unique'
+		).on(table.invitation_id, table.pupitre_id)
 	})
 );
 
@@ -237,7 +265,10 @@ export const events = pgTable(
 		event_date: date('event_date').notNull(),
 		event_type: eventTypeEnum('event_type').notNull(),
 		visibility: eventVisibilityEnum('visibility').notNull().default('public'),
+		location: varchar('location', { length: 200 }).notNull().default(''),
 		is_poll: boolean('is_poll').notNull().default(false),
+		cancelled_at: timestamp('cancelled_at', { withTimezone: true }),
+		cancelled_by: uuid('cancelled_by').references(() => profiles.id, { onDelete: 'set null' }),
 		created_by: uuid('created_by')
 			.notNull()
 			.references(() => profiles.id, { onDelete: 'restrict' }),
@@ -248,6 +279,7 @@ export const events = pgTable(
 		dateIdx: index('events_event_date_idx').on(table.event_date),
 		typeIdx: index('events_event_type_idx').on(table.event_type),
 		visibilityIdx: index('events_visibility_idx').on(table.visibility),
+		cancelledIdx: index('events_cancelled_at_idx').on(table.cancelled_at),
 		pollIdx: index('events_is_poll_idx').on(table.is_poll),
 		creatorIdx: index('events_created_by_idx').on(table.created_by)
 	})
@@ -266,7 +298,11 @@ export const eventPupitres = pgTable(
 	},
 	(table) => ({
 		eventIdx: index('event_pupitres_event_id_idx').on(table.event_id),
-		pupitreIdx: index('event_pupitres_pupitre_id_idx').on(table.pupitre_id)
+		pupitreIdx: index('event_pupitres_pupitre_id_idx').on(table.pupitre_id),
+		eventPupitreUnique: uniqueIndex('event_pupitres_event_id_pupitre_id_unique').on(
+			table.event_id,
+			table.pupitre_id
+		)
 	})
 );
 
@@ -300,6 +336,7 @@ export const documents = pgTable(
 		title: varchar('title', { length: 200 }).notNull(),
 		description: text('description'),
 		file_key: varchar('file_key', { length: 500 }).notNull().unique(),
+		file_name: varchar('file_name', { length: 255 }).notNull().default(''),
 		bucket: varchar('bucket', { length: 50 }).notNull(),
 		mime_type: varchar('mime_type', { length: 100 }).notNull(),
 		size: integer('size').notNull(),
@@ -328,6 +365,7 @@ export const articles = pgTable(
 		id: uuid('id').primaryKey().defaultRandom(),
 		title: varchar('title', { length: 200 }).notNull(),
 		slug: varchar('slug', { length: 200 }).notNull().unique(),
+		excerpt: text('excerpt').notNull().default(''),
 		content: text('content').notNull(),
 		is_published: boolean('is_published').notNull().default(false),
 		published_at: timestamp('published_at', { withTimezone: true }),
@@ -350,6 +388,7 @@ export const albums = pgTable(
 		id: uuid('id').primaryKey().defaultRandom(),
 		title: varchar('title', { length: 200 }).notNull(),
 		description: text('description'),
+		album_date: date('album_date').notNull().default(sql`current_date`),
 		is_published: boolean('is_published').notNull().default(false),
 		created_by: uuid('created_by')
 			.notNull()
@@ -370,6 +409,10 @@ export const media = pgTable(
 		title: varchar('title', { length: 200 }).notNull(),
 		description: text('description'),
 		file_key: varchar('file_key', { length: 500 }).notNull().unique(),
+		public_url: varchar('public_url', { length: 500 }),
+		alt: text('alt').notNull().default(''),
+		caption: text('caption').notNull().default(''),
+		position: integer('position').notNull().default(0),
 		bucket: varchar('bucket', { length: 50 }).notNull(),
 		mime_type: varchar('mime_type', { length: 100 }).notNull(),
 		size: integer('size').notNull(),
@@ -398,6 +441,7 @@ export const notificationPreferences = pgTable(
 			.notNull()
 			.references(() => profiles.id, { onDelete: 'cascade' })
 			.unique(),
+		global_enabled: boolean('global_enabled').notNull().default(true),
 		events_enabled: boolean('events_enabled').notNull().default(true),
 		reminders_enabled: boolean('reminders_enabled').notNull().default(true),
 		no_response_reminder_enabled: boolean('no_response_reminder_enabled').notNull().default(true),
@@ -408,6 +452,118 @@ export const notificationPreferences = pgTable(
 		profileIdx: index('notification_preferences_profile_id_idx').on(table.profile_id)
 	})
 );
+
+// Centre de notifications in-app. Les destinataires sont explicites afin que
+// l'historique reste lisible même si les affectations de pupitre changent.
+export const notifications = pgTable(
+	'notifications',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		title: varchar('title', { length: 200 }).notNull(),
+		body: text('body').notNull(),
+		audience: notificationAudienceEnum('audience').notNull().default('all'),
+		sent_by: uuid('sent_by')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'restrict' }),
+		created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => ({
+		createdIdx: index('notifications_created_at_idx').on(table.created_at),
+		senderIdx: index('notifications_sent_by_idx').on(table.sent_by),
+		audienceIdx: index('notifications_audience_idx').on(table.audience)
+	})
+);
+
+export const notificationPupitres = pgTable(
+	'notification_pupitres',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		notification_id: uuid('notification_id')
+			.notNull()
+			.references(() => notifications.id, { onDelete: 'cascade' }),
+		pupitre_id: uuid('pupitre_id')
+			.notNull()
+			.references(() => pupitres.id, { onDelete: 'cascade' })
+	},
+	(table) => ({
+		notificationIdx: index('notification_pupitres_notification_id_idx').on(table.notification_id),
+		pupitreIdx: index('notification_pupitres_pupitre_id_idx').on(table.pupitre_id),
+		uniqueTarget: uniqueIndex('notification_pupitres_notification_pupitre_unique').on(
+			table.notification_id,
+			table.pupitre_id
+		)
+	})
+);
+
+export const notificationProfiles = pgTable(
+	'notification_profiles',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		notification_id: uuid('notification_id')
+			.notNull()
+			.references(() => notifications.id, { onDelete: 'cascade' }),
+		profile_id: uuid('profile_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' })
+	},
+	(table) => ({
+		notificationIdx: index('notification_profiles_notification_id_idx').on(table.notification_id),
+		profileIdx: index('notification_profiles_profile_id_idx').on(table.profile_id),
+		uniqueTarget: uniqueIndex('notification_profiles_notification_profile_unique').on(
+			table.notification_id,
+			table.profile_id
+		)
+	})
+);
+
+export const notificationReads = pgTable(
+	'notification_reads',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		notification_id: uuid('notification_id')
+			.notNull()
+			.references(() => notifications.id, { onDelete: 'cascade' }),
+		profile_id: uuid('profile_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		read_at: timestamp('read_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => ({
+		notificationIdx: index('notification_reads_notification_id_idx').on(table.notification_id),
+		profileIdx: index('notification_reads_profile_id_idx').on(table.profile_id),
+		uniqueRead: uniqueIndex('notification_reads_notification_profile_unique').on(
+			table.notification_id,
+			table.profile_id
+		)
+	})
+);
+
+export const pushSubscriptions = pgTable(
+	'push_subscriptions',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		profile_id: uuid('profile_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		onesignal_player_id: varchar('onesignal_player_id', { length: 255 }).notNull().unique(),
+		created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+		last_seen_at: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => ({
+		profileIdx: index('push_subscriptions_profile_id_idx').on(table.profile_id)
+	})
+);
+
+export const appSettings = pgTable('app_settings', {
+	id: integer('id').primaryKey().default(1),
+	association_name: varchar('association_name', { length: 200 }).notNull().default('Bagad Penhars'),
+	contact_email: varchar('contact_email', { length: 255 }).notNull().default(''),
+	contact_address: text('contact_address').notNull().default(''),
+	website: varchar('website', { length: 255 }).notNull().default(''),
+	notify_on_event_create: boolean('notify_on_event_create').notNull().default(true),
+	notify_reminder_days: integer('notify_reminder_days').notNull().default(3),
+	updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
+});
 
 export const notificationLog = pgTable(
 	'notification_log',
@@ -485,11 +641,24 @@ export const memberLoans = pgTable(
 	})
 );
 
+/**
+ * Ligne unique globale : les deux buckets R2 partagent le même quota
+ * (décision Q-2026-11-08-02). Toutes les tailles sont en `bigint` : un
+ * `integer` déborde dès 2 Go.
+ */
 export const storageUsage = pgTable('storage_usage', {
 	id: uuid('id').primaryKey().defaultRandom(),
-	public_bytes: integer('public_bytes').notNull().default(0),
-	private_bytes: integer('private_bytes').notNull().default(0),
-	reserved_bytes: integer('reserved_bytes').notNull().default(0),
+	public_bytes: bigint('public_bytes', { mode: 'number' }).notNull().default(0),
+	private_bytes: bigint('private_bytes', { mode: 'number' }).notNull().default(0),
+	reserved_bytes: bigint('reserved_bytes', { mode: 'number' }).notNull().default(0),
+	quota_bytes: bigint('quota_bytes', { mode: 'number' }).notNull().default(8_589_934_592),
+	alert_threshold_bytes: bigint('alert_threshold_bytes', { mode: 'number' })
+		.notNull()
+		.default(7_516_192_768),
+	block_threshold_bytes: bigint('block_threshold_bytes', { mode: 'number' })
+		.notNull()
+		.default(8_589_934_592),
+	last_sync_at: timestamp('last_sync_at', { withTimezone: true }),
 	updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
 });
 
@@ -636,6 +805,56 @@ export const notificationLogRelations = relations(notificationLog, ({ one }) => 
 	})
 }));
 
+export const notificationsRelations = relations(notifications, ({ one, many }) => ({
+	sender: one(profiles, {
+		fields: [notifications.sent_by],
+		references: [profiles.id]
+	}),
+	pupitres: many(notificationPupitres),
+	profiles: many(notificationProfiles),
+	reads: many(notificationReads)
+}));
+
+export const notificationPupitresRelations = relations(notificationPupitres, ({ one }) => ({
+	notification: one(notifications, {
+		fields: [notificationPupitres.notification_id],
+		references: [notifications.id]
+	}),
+	pupitre: one(pupitres, {
+		fields: [notificationPupitres.pupitre_id],
+		references: [pupitres.id]
+	})
+}));
+
+export const notificationProfilesRelations = relations(notificationProfiles, ({ one }) => ({
+	notification: one(notifications, {
+		fields: [notificationProfiles.notification_id],
+		references: [notifications.id]
+	}),
+	profile: one(profiles, {
+		fields: [notificationProfiles.profile_id],
+		references: [profiles.id]
+	})
+}));
+
+export const notificationReadsRelations = relations(notificationReads, ({ one }) => ({
+	notification: one(notifications, {
+		fields: [notificationReads.notification_id],
+		references: [notifications.id]
+	}),
+	profile: one(profiles, {
+		fields: [notificationReads.profile_id],
+		references: [profiles.id]
+	})
+}));
+
+export const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one }) => ({
+	profile: one(profiles, {
+		fields: [pushSubscriptions.profile_id],
+		references: [profiles.id]
+	})
+}));
+
 export const activityLogRelations = relations(activityLog, ({ one }) => ({
 	actor: one(profiles, {
 		fields: [activityLog.actor_profile_id],
@@ -677,6 +896,12 @@ export const tables = {
 	media,
 	notificationPreferences,
 	notificationLog,
+	notifications,
+	notificationPupitres,
+	notificationProfiles,
+	notificationReads,
+	pushSubscriptions,
+	appSettings,
 	activityLog,
 	accountDeletionRequests,
 	memberLoans,

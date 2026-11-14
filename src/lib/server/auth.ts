@@ -2,8 +2,9 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
-import { db } from '$lib/db';
+import type { DB } from '$lib/db';
 import * as schema from '$lib/db/schema';
+import { sendEmail } from '$lib/server/email';
 
 /**
  * Configuration centrale de Better Auth.
@@ -12,57 +13,105 @@ import * as schema from '$lib/db/schema';
  * session, account, verification). Les rôles et statuts métier restent dans
  * profiles.role et profiles.account_status — jamais dans user_metadata.
  *
- * L'adaptateur Drizzle est branché explicitement (décision : plus de `lucia`,
- * plus de passage de `db` brut).
+ * L'instance est créée par requête avec la connexion Drizzle de la requête :
+ * sur Cloudflare, les objets d'E/S ne peuvent pas être partagés entre
+ * requêtes. `getAuth()` retrouve l'instance placée dans `event.locals` par le
+ * hook serveur.
  *
  * Ce module est réservé au serveur.
  */
 
-export const auth = betterAuth({
-	database: drizzleAdapter(db, {
-		provider: 'pg',
-		schema: {
-			user: schema.user,
-			session: schema.session,
-			account: schema.account,
-			verification: schema.verification
-		}
-	}),
-	// Nom aligné sur la clé privée présente dans `.env` à la racine.
-	secret: process.env.BETTER_AUTH_SECRET ?? process.env.BETTER_AUTH_API_KEY,
-	baseURL: process.env.BETTER_AUTH_URL,
-	emailAndPassword: {
-		enabled: true,
-		requireEmailVerification: true,
-		sendResetPassword: async () => {
-			// L'envoi réel est piloté par Resend via src/lib/server/email.ts
-			// et les routes auth/ ; ce hook est laissé pour l'extensibilité.
-		}
-	},
-	session: {
-		expiresIn: 60 * 60 * 24 * 30, // 30 jours
-		updateAge: 60 * 60 * 24, // 1 jour
-		cookieCache: {
-			enabled: true,
-			maxAge: 60 * 60 // 1 heure
-		}
-	},
-	emailVerification: {
-		sendVerificationEmail: async () => {
-			// Piloté par Resend via les routes auth/
-		}
-	},
-	advanced: {
-		defaultCookieAttributes: {
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'lax',
-			path: '/',
-			httpOnly: true
-		}
-	},
-	plugins: [sveltekitCookies(getRequestEvent)]
-});
+type Env = Record<string, unknown> | undefined;
 
-export type Auth = typeof auth;
-export type Session = typeof auth.$Infer.Session;
-export type User = typeof auth.$Infer.Session.user;
+function readEnv(env: Env, key: string): string | undefined {
+	const fromPlatform = env?.[key];
+	if (typeof fromPlatform === 'string' && fromPlatform.length > 0) return fromPlatform;
+	const fromProcess = process.env[key];
+	return fromProcess && fromProcess.length > 0 ? fromProcess : undefined;
+}
+
+export function createAuth(db: DB, env?: Env) {
+	const secret = readEnv(env, 'BETTER_AUTH_SECRET') ?? readEnv(env, 'BETTER_AUTH_API_KEY');
+	if (!secret || secret.length < 32) {
+		throw new Error('BETTER_AUTH_SECRET est absent ou trop court (32 caractères minimum).');
+	}
+
+	const baseURL = readEnv(env, 'BETTER_AUTH_URL') ?? 'http://localhost:5173';
+	const secureCookies = baseURL.startsWith('https://');
+
+	return betterAuth({
+		database: drizzleAdapter(db, {
+			provider: 'pg',
+			schema: {
+				user: schema.user,
+				session: schema.session,
+				account: schema.account,
+				verification: schema.verification
+			}
+		}),
+		secret,
+		baseURL,
+		trustedOrigins: [baseURL],
+		emailAndPassword: {
+			enabled: true,
+			// L'inscription publique est fermée : seuls les administrateurs et
+			// secrétaires invitent, et l'acceptation crée le compte côté serveur.
+			disableSignUp: true,
+			requireEmailVerification: true,
+			sendResetPassword: async ({ user, url }) => {
+				await sendEmail({
+					to: user.email,
+					subject: 'Réinitialisation de votre mot de passe — Bagad Penhars',
+					html: `<p>Bonjour ${user.name},</p>
+<p>Pour choisir un nouveau mot de passe, ouvrez ce lien :</p>
+<p><a href="${url}">Réinitialiser mon mot de passe</a></p>
+<p>Ce lien expire rapidement. Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.</p>`,
+					text: `Bonjour ${user.name},\n\nRéinitialisez votre mot de passe : ${url}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.`
+				});
+			}
+		},
+		emailVerification: {
+			sendVerificationEmail: async ({ user, url }) => {
+				await sendEmail({
+					to: user.email,
+					subject: 'Confirmez votre adresse — Bagad Penhars',
+					html: `<p>Bonjour ${user.name},</p>
+<p>Confirmez votre adresse e-mail pour activer votre compte :</p>
+<p><a href="${url}">Confirmer mon adresse</a></p>`,
+					text: `Bonjour ${user.name},\n\nConfirmez votre adresse : ${url}`
+				});
+			}
+		},
+		session: {
+			expiresIn: 60 * 60 * 24 * 30, // 30 jours
+			updateAge: 60 * 60 * 24, // 1 jour
+			cookieCache: {
+				enabled: true,
+				maxAge: 60 * 60 // 1 heure
+			}
+		},
+		advanced: {
+			defaultCookieAttributes: {
+				secure: secureCookies,
+				sameSite: 'lax',
+				path: '/',
+				httpOnly: true
+			}
+		},
+		plugins: [sveltekitCookies(getRequestEvent)]
+	});
+}
+
+export type Auth = ReturnType<typeof createAuth>;
+
+/**
+ * Retourne l'instance Better Auth de la requête courante. Le hook serveur
+ * l'a créée avec la connexion Drizzle associée.
+ */
+export function getAuth(): Auth {
+	const event = getRequestEvent();
+	if (!event.locals.auth) {
+		throw new Error("L'instance Better Auth n'est pas initialisée pour cette requête.");
+	}
+	return event.locals.auth;
+}
