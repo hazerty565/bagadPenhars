@@ -1,4 +1,4 @@
-import type { AppRole } from '$lib/auth/roles';
+import type { AccountStatus, AppRole } from '$lib/auth/roles';
 import type {
 	MemberArticleStatus,
 	MemberEventStatus,
@@ -26,6 +26,12 @@ export const LEVEL_LABELS: Record<MemberLevel, string> = {
 	skolaj: 'Skolaj',
 	bagadig: 'Bagadig',
 	bagad: 'Bagad'
+};
+
+export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
+	pending: 'En attente',
+	active: 'Actif',
+	suspended: 'Suspendu'
 };
 
 export const EVENT_TYPE_LABELS: Record<MemberEventType, string> = {

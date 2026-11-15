@@ -53,6 +53,27 @@ Qualité : `npm run check` 0 erreur (20 avertissements
 formulaires), ESLint/Prettier conformes, `npm run build` OK (adapter
 Cloudflare).
 
+### Correctif de recette : activation des comptes invités
+
+Premier parcours réel : invitation envoyée, acceptée, mot de passe créé — puis
+blocage sur `/auth/pending`, le compte restant `pending` indéfiniment.
+
+- **Cause** : ce n'est pas un bug de l'invitation mais un écran manquant. La
+  commande serveur `member.status` existait depuis le début (réservée à la
+  secrétaire et à l'administrateur, via
+  `app.set_profile_account_status`), mais **aucune interface ne l'appelait**.
+- **Correctif** : Administration → Membres gagne une colonne « Compte »
+  (badge Actif / En attente / Suspendu), un filtre par statut, un bandeau
+  signalant les comptes en attente, et les actions Activer / Réactiver /
+  Suspendre (jamais proposées sur son propre compte).
+- **Effet produit** : l'invitation reste une autorisation d'accès, pas une
+  autorisation d'usage ; c'est l'activation qui ouvre la connexion.
+- **Bug collatéral corrigé** : `save()` et `changeRole()` de cette page
+  appelaient des services passés en asynchrone sans `await` (erreurs avalées,
+  message de succès affiché trop tôt).
+- **Validation curl** : `pending` → 200, `active` → 200, snapshot à jour ;
+  tentative par un simple membre → 403.
+
 ## 2. Ce qui reste
 
 1. **Parcours navigateur complet** : RSVP, albums, rédaction d'articles,

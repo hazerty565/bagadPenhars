@@ -918,3 +918,27 @@ db-admin}.ts`, `src/lib/server/data/contact.ts` et
   `tests/` (absence de contexte, isolation entre utilisateurs), branchement
   OneSignal pour `notification.send`, et traitement des 57 vulnérabilités
   Dependabot (2 critiques).
+
+### Activation des comptes invités
+
+- **Constat de recette** : une invitation acceptée crée bien un profil
+  `pending` (comportement voulu), mais aucun écran ne permettait de le passer
+  à `active`. La commande serveur `member.status` existait depuis le début
+  (`SET` via `app.set_profile_account_status`, réservée au secrétariat et à
+  l'administration) ; elle n'avait **aucun appelant côté client**. Un compte
+  invité restait donc bloqué sur `/auth/pending` sans issue dans l'interface.
+- **Correctif** : `updateMemberStatus()` dans
+  `src/lib/member/services/profiles.ts`, `ACCOUNT_STATUS_LABELS` dans
+  `src/lib/member/labels.ts`, et dans `AdminMembersPage` une colonne
+  « Compte » (badge Actif / En attente / Suspendu), un filtre par statut, un
+  bandeau signalant les comptes en attente et les actions Activer / Réactiver /
+  Suspendre (jamais sur son propre compte, règle déjà appliquée côté serveur).
+- **Bug corrigé au passage** : sur cette même page, `save()` et `changeRole()`
+  appelaient des services devenus asynchrones sans `await` — les erreurs
+  n'étaient pas interceptées et le message de succès s'affichait avant la fin
+  de la requête.
+- **Validation (curl, serveur dev)** : `member.status` en `pending` puis
+  `active` sur un profil de test → 200 et snapshot à jour à chaque étape ;
+  tentative par un simple membre (`mael.kerdraon`) → 403 « Action réservée à
+  la secrétaire et à l'administrateur ». `npm run check`, `npm run lint` et
+  `npm run build` conformes.

@@ -17,11 +17,17 @@
 		assignRole,
 		updateBureauPosition,
 		updateMemberLevel,
-		updateMemberPupitres
+		updateMemberPupitres,
+		updateMemberStatus
 	} from '$lib/member/services/profiles';
-	import { ROLE_DESCRIPTIONS, ROLE_LABELS, LEVEL_LABELS } from '$lib/member/labels';
+	import {
+		ACCOUNT_STATUS_LABELS,
+		ROLE_DESCRIPTIONS,
+		ROLE_LABELS,
+		LEVEL_LABELS
+	} from '$lib/member/labels';
 	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/pupitres';
-	import type { AppRole } from '$lib/auth/roles';
+	import { ALL_STATUSES, type AccountStatus, type AppRole } from '$lib/auth/roles';
 	import type { MemberLevel, MemberProfilePupitre, MemberPupitreId } from '$lib/member/types';
 
 	const actor = $derived(actorOf(member.activeProfile));
@@ -30,6 +36,7 @@
 	let search = $state('');
 	let roleFilter = $state<AppRole | 'all'>('all');
 	let pupitreFilter = $state<MemberPupitreId | 'all'>('all');
+	let statusFilter = $state<AccountStatus | 'all'>('all');
 	let expandedId = $state<string | null>(null);
 	let editPupitres = $state<MemberProfilePupitre[]>([]);
 	let editLevel = $state<MemberLevel>('bagad');
@@ -40,6 +47,7 @@
 		member.profiles
 			.filter((profile) => {
 				if (roleFilter !== 'all' && profile.role !== roleFilter) return false;
+				if (statusFilter !== 'all' && profile.accountStatus !== statusFilter) return false;
 				if (
 					pupitreFilter !== 'all' &&
 					!profile.pupitres.some((pupitre) => pupitre.pupitreId === pupitreFilter)
@@ -55,6 +63,10 @@
 			.sort((a, b) =>
 				`${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, 'fr')
 			)
+	);
+
+	const pendingCount = $derived(
+		member.profiles.filter((profile) => profile.accountStatus === 'pending').length
 	);
 
 	function openEditor(profileId: string) {
@@ -81,15 +93,15 @@
 		);
 	}
 
-	function save(profileId: string) {
+	async function save(profileId: string) {
 		editError = null;
 		try {
 			if (profileId !== member.activeProfileId) {
-				updateMemberPupitres(member.activeProfileId, profileId, editPupitres);
+				await updateMemberPupitres(member.activeProfileId, profileId, editPupitres);
 			}
-			updateMemberLevel(member.activeProfileId, profileId, editLevel);
+			await updateMemberLevel(member.activeProfileId, profileId, editLevel);
 			if (canChangeRole(actor)) {
-				updateBureauPosition(member.activeProfileId, profileId, editBureau);
+				await updateBureauPosition(member.activeProfileId, profileId, editBureau);
 			}
 			member.notify('success', 'Fiche membre mise à jour.');
 			expandedId = null;
@@ -99,9 +111,9 @@
 		}
 	}
 
-	function changeRole(profileId: string, role: AppRole) {
+	async function changeRole(profileId: string, role: AppRole) {
 		try {
-			assignRole(member.activeProfileId, profileId, role);
+			await assignRole(member.activeProfileId, profileId, role);
 			member.notify('success', `Rôle modifié : ${ROLE_LABELS[role]}.`);
 		} catch (error) {
 			member.notify(
@@ -109,6 +121,30 @@
 				error instanceof Error ? error.message : 'Changement de rôle impossible.'
 			);
 		}
+	}
+
+	async function changeStatus(profileId: string, status: AccountStatus) {
+		try {
+			await updateMemberStatus(member.activeProfileId, profileId, status);
+			member.notify(
+				'success',
+				status === 'active'
+					? 'Compte activé : le membre peut maintenant se connecter.'
+					: status === 'suspended'
+						? 'Compte suspendu : la connexion est refusée.'
+						: 'Compte remis en attente d’activation.'
+			);
+		} catch (error) {
+			member.notify(
+				'error',
+				error instanceof Error ? error.message : 'Changement de statut impossible.'
+			);
+		}
+	}
+
+	function statusTone(status: AccountStatus): 'success' | 'gold' | 'danger' {
+		if (status === 'active') return 'success';
+		return status === 'pending' ? 'gold' : 'danger';
 	}
 </script>
 
@@ -122,11 +158,18 @@
 	<PageHeader
 		eyebrow="Administration"
 		title="Membres"
-		description="Modifiez les pupitres, le niveau et la fonction au bureau. Seul l’administrateur attribue les rôles. Chaque membre peut modifier son propre profil depuis « Mon profil »."
+		description="Activez les comptes en attente, modifiez les pupitres, le niveau et la fonction au bureau. Seul l’administrateur attribue les rôles. Chaque membre peut modifier son propre profil depuis « Mon profil »."
 	/>
 
+	{#if pendingCount > 0}
+		<div class="mt-4 border-l-2 border-or bg-or/10 px-4 py-3 text-sm text-ink" role="status">
+			{pendingCount} compte{pendingCount > 1 ? 's' : ''} en attente d’activation. Un compte créé par invitation
+			ne peut pas se connecter avant d’avoir été activé ici.
+		</div>
+	{/if}
+
 	<section class="mt-6 border border-marine/10 bg-white p-4" aria-label="Filtres des membres">
-		<div class="grid gap-3 sm:grid-cols-3">
+		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 			<label>
 				<span class={labelClass}>Rechercher</span>
 				<span class="relative mt-1 block">
@@ -160,18 +203,28 @@
 					{/each}
 				</select>
 			</label>
+			<label>
+				<span class={labelClass}>Statut du compte</span>
+				<select bind:value={statusFilter} class="{inputClass} mt-1">
+					<option value="all">Tous les statuts</option>
+					{#each ALL_STATUSES as status (status)}
+						<option value={status}>{ACCOUNT_STATUS_LABELS[status]}</option>
+					{/each}
+				</select>
+			</label>
 		</div>
 		<p class="mt-3 text-xs text-ardoise">{members.length} membre(s) affiché(s).</p>
 	</section>
 
 	<div class="mt-4 overflow-x-auto border border-marine/10 bg-white">
-		<table class="w-full min-w-[52rem] text-left text-sm">
+		<table class="w-full min-w-[58rem] text-left text-sm">
 			<thead
 				class="border-b border-marine/10 bg-ivoire/70 text-[0.65rem] uppercase tracking-[0.14em] text-ardoise"
 			>
 				<tr>
 					<th scope="col" class="px-4 py-3">Membre</th>
 					<th scope="col" class="px-4 py-3">Rôle</th>
+					<th scope="col" class="px-4 py-3">Compte</th>
 					<th scope="col" class="px-4 py-3">Pupitres</th>
 					<th scope="col" class="px-4 py-3">Niveau</th>
 					<th scope="col" class="px-4 py-3">Bureau</th>
@@ -210,6 +263,11 @@
 							{/if}
 						</td>
 						<td class="px-4 py-3">
+							<Badge tone={statusTone(profile.accountStatus)}>
+								{ACCOUNT_STATUS_LABELS[profile.accountStatus]}
+							</Badge>
+						</td>
+						<td class="px-4 py-3">
 							<div class="flex max-w-48 flex-wrap gap-1">
 								{#each profile.pupitres as pupitre (pupitre.pupitreId)}
 									<Badge tone="muted"
@@ -223,19 +281,40 @@
 						<td class="px-4 py-3 text-xs text-ink">{LEVEL_LABELS[profile.level]}</td>
 						<td class="px-4 py-3 text-xs text-ink">{profile.bureauPosition ?? '—'}</td>
 						<td class="px-4 py-3 text-right">
-							<button
-								type="button"
-								class="inline-flex items-center gap-1 text-xs font-semibold text-marine underline underline-offset-4"
-								onclick={() => openEditor(profile.id)}
-							>
-								<Pencil size={13} />
-								{expandedId === profile.id ? 'Fermer' : 'Gérer'}
-							</button>
+							<div class="flex flex-wrap items-center justify-end gap-3">
+								{#if !isSelf}
+									{#if profile.accountStatus === 'active'}
+										<button
+											type="button"
+											class="text-xs font-semibold text-danger underline underline-offset-4"
+											onclick={() => changeStatus(profile.id, 'suspended')}
+										>
+											Suspendre
+										</button>
+									{:else}
+										<button
+											type="button"
+											class="text-xs font-semibold text-marine underline underline-offset-4"
+											onclick={() => changeStatus(profile.id, 'active')}
+										>
+											{profile.accountStatus === 'pending' ? 'Activer' : 'Réactiver'}
+										</button>
+									{/if}
+								{/if}
+								<button
+									type="button"
+									class="inline-flex items-center gap-1 text-xs font-semibold text-marine underline underline-offset-4"
+									onclick={() => openEditor(profile.id)}
+								>
+									<Pencil size={13} />
+									{expandedId === profile.id ? 'Fermer' : 'Gérer'}
+								</button>
+							</div>
 						</td>
 					</tr>
 					{#if expandedId === profile.id}
 						<tr class="bg-ivoire/50">
-							<td colspan="6" class="px-4 py-4">
+							<td colspan="7" class="px-4 py-4">
 								<div class="grid gap-5 lg:grid-cols-3">
 									<fieldset>
 										<legend class={labelClass}>Pupitres et direction</legend>

@@ -1,5 +1,5 @@
 import { member } from '../store.svelte';
-import type { AppRole } from '$lib/auth/roles';
+import type { AccountStatus, AppRole } from '$lib/auth/roles';
 import type { MemberLevel, MemberProfilePupitre, MemberPupitreId } from '../types';
 import {
 	actorOf,
@@ -7,6 +7,7 @@ import {
 	canChangeRole,
 	canEditMemberPupitres,
 	canEditOwnProfile,
+	canManageMembers,
 	MemberPermissionError
 } from '../permissions';
 import { isNonEmpty } from './helpers';
@@ -109,6 +110,30 @@ export async function assignRole(
 	}
 
 	await member.request('member.role', { profileId: targetProfileId, role });
+}
+
+/**
+ * Change le statut d'un compte : activation après invitation, suspension ou
+ * retour en attente (secrétaire ou administrateur).
+ *
+ * Un compte créé par invitation reste `pending` tant que le secrétariat ne
+ * l'a pas activé : c'est cette transition qui autorise la connexion.
+ */
+export async function updateMemberStatus(
+	actorProfileId: string,
+	targetProfileId: string,
+	status: AccountStatus
+): Promise<void> {
+	const actor = actorOf(member.profile);
+	if (!canManageMembers(actor)) {
+		throw new MemberPermissionError(
+			'Seuls la secrétaire et l’administrateur peuvent changer le statut d’un compte.'
+		);
+	}
+	if (actor.id === targetProfileId && status !== 'active') {
+		throw new MemberPermissionError('Vous ne pouvez pas désactiver votre propre compte.');
+	}
+	await member.request('member.status', { profileId: targetProfileId, status });
 }
 
 /** Change le niveau musical d'un membre (secrétaire ou admin). */

@@ -160,6 +160,14 @@ sur les lignes.
   (jamais un lien `GET`) et l'e-mail de connexion Better Auth n'est pas
   modifiable dans l'espace adhérents.
 
+**Cycle de vie d'un compte invité :** l'invitation acceptée crée un profil au
+statut `pending` ; la connexion est alors refusée et l'utilisateur est renvoyé
+sur `/auth/pending`. Seule la secrétaire ou l'administrateur peut passer le
+compte à `active` (commande `member.status`, fonction
+`app.set_profile_account_status`, écran Administration → Membres). La
+suspension et le retour en attente utilisent la même commande ; personne ne
+peut désactiver son propre compte.
+
 `vite.config.ts` conserve le plugin `bagad-exclude-demo-from-build` comme
 garde-fou : la couche de démonstration `src/lib/demo/` a été retirée du dépôt
 et le plugin n'a plus de module à exclure.
