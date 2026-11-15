@@ -164,9 +164,12 @@ class MemberStore {
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ action, payload })
 			});
-			const body = (await response.json().catch(() => null)) as
-				| { message?: string; code?: string; snapshot?: MemberSnapshot; result?: T }
-				| null;
+			const body = (await response.json().catch(() => null)) as {
+				message?: string;
+				code?: string;
+				snapshot?: MemberSnapshot;
+				result?: T;
+			} | null;
 
 			if (!response.ok) {
 				throw new MemberApiError(
@@ -187,10 +190,7 @@ class MemberStore {
 	async refresh(): Promise<void> {
 		const response = await fetch('/api/member', { headers: { accept: 'application/json' } });
 		if (!response.ok) {
-			throw new MemberApiError(
-				'Impossible de recharger l’espace adhérents.',
-				response.status
-			);
+			throw new MemberApiError('Impossible de recharger l’espace adhérents.', response.status);
 		}
 		const body = (await response.json()) as { snapshot?: MemberSnapshot };
 		if (body.snapshot) this.applySnapshot(body.snapshot);

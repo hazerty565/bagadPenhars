@@ -14,7 +14,7 @@ import { isLocked } from './clock';
  */
 
 export class MemberPermissionError extends Error {
-	readonly code = 'demo_permission_denied';
+	readonly code = 'permission_denied';
 
 	constructor(message = 'Action non autorisée avec le profil actif.') {
 		super(message);

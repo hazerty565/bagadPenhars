@@ -1,6 +1,7 @@
 import { Client } from 'pg';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
-import * as schema from './schema';
+import { serverEnv } from '$lib/server/env';
+import * as schema from '../db/schema';
 
 /**
  * Connexion PostgreSQL propriétaire (rôle `neondb_owner`) réservée aux
@@ -24,7 +25,7 @@ export type AdminDB = NodePgDatabase<typeof schema>;
 export function resolveAdminDatabaseUrl(platform: App.Platform | undefined): string | null {
 	const fromPlatform = platform?.env?.DATABASE_URL_ADMIN ?? platform?.env?.DATABASE_URL;
 	if (typeof fromPlatform === 'string' && fromPlatform.trim().length > 0) return fromPlatform;
-	const fromProcess = process.env.DATABASE_URL_ADMIN ?? process.env.DATABASE_URL;
+	const fromProcess = serverEnv('DATABASE_URL_ADMIN') ?? serverEnv('DATABASE_URL');
 	return fromProcess && fromProcess.trim().length > 0 ? fromProcess : null;
 }
 
@@ -39,7 +40,7 @@ export async function connectAdminDatabase(
 	const connectionString = resolveAdminDatabaseUrl(platform);
 	if (!connectionString) {
 		throw new Error(
-			"Connexion propriétaire indisponible : DATABASE_URL_ADMIN (ou DATABASE_URL en local) est absente."
+			'Connexion propriétaire indisponible : DATABASE_URL_ADMIN (ou DATABASE_URL en local) est absente.'
 		);
 	}
 	const client = new Client({

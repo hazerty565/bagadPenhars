@@ -1,4 +1,4 @@
-import type { MemberPupitre } from '../types';
+import type { MemberPupitre } from './types';
 
 /** Les quatre pupitres, alignés sur `src/lib/data/pupitres.ts`. */
 export const MEMBER_PUPITRES: MemberPupitre[] = [

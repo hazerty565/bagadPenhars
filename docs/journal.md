@@ -868,3 +868,53 @@ eslint .`) échouait sur **18 fichiers** mal formatés et **8 erreurs ESLint**,
 - `BETTER_AUTH_SECRET` devient le nom de référence; le code conserve
   temporairement `BETTER_AUTH_API_KEY` comme alias de compatibilité pour les
   environnements locaux existants.
+
+## 2026-11-15
+
+### Branchement de l'espace adhérents sur le backend réel
+
+- Fin de l'adaptation des pages aux commandes asynchrones : `AdminInvitationsPage`
+  passe par `createInvitation` / `resendInvitation` / `cancelInvitation` en
+  `await`, et tous les libellés de démonstration sont remplacés (envoi réel via
+  Resend, expiration 7 jours, compte « en attente » jusqu'au choix du mot de
+  passe).
+- Nettoyage du module client `src/lib/member` : suppression de `mode.ts` et
+  `session.svelte.ts` (aucune référence restante), correction des imports
+  `$lib/member/fixtures/pupitres` → `$lib/member/pupitres`, `MEMBER_TODAY` →
+  `TODAY` (horloge `Europe/Paris`), `addDays` ramené de `services/helpers` vers
+  `clock`, code d'erreur `demo_permission_denied` renommé `permission_denied`.
+  README du dossier réécrit pour décrire le nouveau fonctionnement (snapshot
+  serveur, `member.request`, plus de `localStorage`).
+- Suppression de `tests/demo/` : la couche `$lib/demo` ayant été retirée du
+  dépôt, ces tests n'avaient plus de cible. Les fichiers vides préexistants
+  (`tests/guards.test.ts`, `tests/i18n.test.ts`, `tests/invitation.test.ts`)
+  restent en place pour les tests d'autorisation à écrire.
+- Découverte et correction d'un bug bloquant : Vite 8 n'injecte plus les
+  variables de `.env` dans `process.env` côté serveur, donc Better Auth et la
+  connexion Neon restaient désactivés en dev (503 « Service d'authentification
+  indisponible »). Nouveau helper `src/lib/server/env.ts`
+  (`$env/dynamic/private` avec repli `process.env` pour les scripts Node),
+  adopté par `src/lib/db/index.ts`, `src/lib/server/{auth,email,turnstile,
+db-admin}.ts`, `src/lib/server/data/contact.ts` et
+  `src/lib/notifications/server.ts`.
+- `commands.ts` : contrôle inutile retiré dans `event.delete` (le chargement
+  garantit déjà le 404), imports non utilisés (`inArray`, `canChangeRole`)
+  supprimés, `idBySlug` retiré du snapshot.
+- **Validation de bout en bout (curl sur `npm run dev`)** : connexion Better
+  Auth de `yann.le-goff@example.com` (compte seed p01) → 200 ; `/dashboard` →
+  200 ; `GET /api/member` → snapshot complet (16 événements, 24 profils,
+  3 invitations…) ; `POST /api/member/action profile.update` → 200 sous RLS ;
+  erreurs correctement mappées (401 sans session, 400 payload invalide ou
+  action inconnue). Mot de passe de seed lu en mémoire, jamais affiché.
+- **Validation qualité** : `npm run check` 0 erreur (20 avertissements
+  `state_referenced_locally`, motif volontaire d'initialisation des
+  formulaires), ESLint/Prettier conformes, `npm run build` OK (adapter
+  Cloudflare).
+- `docs/architecture.md` (section « Espace adhérents » réécrite),
+  `docs/database.md` (nouvelle section « Fonctions SECURITY DEFINER ») et
+  `src/lib/member/README.md` mis à jour.
+- **Reste à faire** : validation navigateur des parcours adhérents complets
+  (RSVP, albums, invitations réelles avec Resend), tests d'autorisation dans
+  `tests/` (absence de contexte, isolation entre utilisateurs), branchement
+  OneSignal pour `notification.send`, et traitement des 57 vulnérabilités
+  Dependabot (2 critiques).

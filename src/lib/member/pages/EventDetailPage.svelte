@@ -24,7 +24,7 @@
 	import { cancelEvent, deleteEvent, reactivateEvent } from '$lib/member/services/events';
 	import { formatDate, formatDateTime, isPast } from '$lib/member/clock';
 	import { EVENT_TYPE_LABELS, LEVEL_LABELS, VISIBILITY_LABELS } from '$lib/member/labels';
-	import { pupitreName } from '$lib/member/fixtures/pupitres';
+	import { pupitreName } from '$lib/member/pupitres';
 	import type { MemberResponseStatus } from '$lib/member/types';
 
 	interface Props {
@@ -48,9 +48,9 @@
 	const myResponse = $derived(responseOf(eventId, member.activeProfileId));
 	const lockMessage = $derived(event ? responseLockMessage(event) : null);
 
-	function respond(status: MemberResponseStatus) {
+	async function respond(status: MemberResponseStatus) {
 		try {
-			setResponse(member.activeProfileId, eventId, status);
+			await setResponse(member.activeProfileId, eventId, status);
 			member.notify(
 				'success',
 				status === 'present' ? 'Présence enregistrée.' : 'Absence enregistrée.'
@@ -60,28 +60,28 @@
 		}
 	}
 
-	function cancel() {
+	async function cancel() {
 		if (!event) return;
 		try {
-			cancelEvent(member.activeProfileId, eventId);
+			await cancelEvent(member.activeProfileId, eventId);
 			member.notify('info', 'Événement annulé.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Annulation impossible.');
 		}
 	}
 
-	function reactivate() {
+	async function reactivate() {
 		try {
-			reactivateEvent(member.activeProfileId, eventId);
+			await reactivateEvent(member.activeProfileId, eventId);
 			member.notify('success', 'Événement réactivé.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Réactivation impossible.');
 		}
 	}
 
-	function remove() {
+	async function remove() {
 		try {
-			deleteEvent(member.activeProfileId, eventId);
+			await deleteEvent(member.activeProfileId, eventId);
 			member.notify('success', 'Événement supprimé.');
 			goto(resolve('/dashboard/agenda'));
 		} catch (error) {

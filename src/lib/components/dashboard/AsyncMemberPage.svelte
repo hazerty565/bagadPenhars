@@ -21,10 +21,7 @@
 			})
 			.catch((reason: unknown) => {
 				if (!cancelled) {
-					error =
-						reason instanceof Error
-							? reason.message
-							: 'La page n’a pas pu être chargée.';
+					error = reason instanceof Error ? reason.message : 'La page n’a pas pu être chargée.';
 				}
 			});
 		return () => {

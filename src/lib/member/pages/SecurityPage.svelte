@@ -9,7 +9,7 @@
 	import { member } from '$lib/member/store.svelte';
 	import { actorOf, canSeeAdminSection, chefPupitreIds } from '$lib/member/permissions';
 	import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '$lib/member/labels';
-	import { pupitreName } from '$lib/member/fixtures/pupitres';
+	import { pupitreName } from '$lib/member/pupitres';
 
 	const profile = $derived(member.activeProfile);
 	const actor = $derived(actorOf(profile));
@@ -81,8 +81,8 @@
 				class="mt-4 border border-marine/10 bg-ivoire/70 px-3 py-2 text-xs leading-relaxed text-ardoise"
 			>
 				La session est un cookie Better Auth vérifié à chaque requête. Le rôle et le statut du
-				compte sont relus dans <code class="bg-white px-1 py-0.5">profiles</code> : modifier le
-				navigateur ne change aucun droit.
+				compte sont relus dans <code class="bg-white px-1 py-0.5">profiles</code> : modifier le navigateur
+				ne change aucun droit.
 			</p>
 			<form method="POST" action={logoutHref} class="mt-4">
 				<button type="submit" class={secondaryButtonClass}>
@@ -102,7 +102,10 @@
 				navigateur. Pour le réinitialiser, utilisez le lien « Mot de passe oublié ? » depuis la page
 				de connexion : un e-mail signé est envoyé à votre adresse.
 			</p>
-			<a href={loginHref} class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-marine underline underline-offset-4">
+			<a
+				href={loginHref}
+				class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-marine underline underline-offset-4"
+			>
 				<KeyRound size={14} />
 				Ouvrir la page de connexion
 			</a>
@@ -117,7 +120,10 @@
 			</h2>
 			<ul class="mt-3 space-y-2 text-xs leading-relaxed text-ivoire/80">
 				<li>Chaque commande est revalidée côté serveur, puis soumise aux politiques RLS.</li>
-				<li>Les rôles et statuts viennent de <code>profiles.role</code> et <code>profiles.account_status</code>.</li>
+				<li>
+					Les rôles et statuts viennent de <code>profiles.role</code> et
+					<code>profiles.account_status</code>.
+				</li>
 				<li>Masquer un bouton n’est jamais considéré comme une protection.</li>
 				<li>Le client ne reçoit que les données que PostgreSQL l’autorise à lire.</li>
 			</ul>

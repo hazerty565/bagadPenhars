@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { and, asc, eq, inArray, ne, sql } from 'drizzle-orm';
+import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import type { Transaction } from '$lib/db';
 import {
 	albums,
@@ -33,7 +33,6 @@ import {
 	canManageEvent,
 	canManageSettings,
 	canRespondToEvent,
-	canChangeRole,
 	type MemberActor
 } from '$lib/member/permissions';
 import { isAllowedPhoto } from '$lib/member/photos';
@@ -205,7 +204,11 @@ interface ResolvedActor {
 	accountStatus: AccountStatus;
 }
 
-async function resolveActor(tx: Transaction, profileId: string, maps: PupitreMaps): Promise<ResolvedActor> {
+async function resolveActor(
+	tx: Transaction,
+	profileId: string,
+	maps: PupitreMaps
+): Promise<ResolvedActor> {
 	const rows = await tx
 		.select({ id: profiles.id, role: profiles.role, account_status: profiles.account_status })
 		.from(profiles)
@@ -265,11 +268,7 @@ interface EventRow {
 	pupitreIds: MemberPupitreId[];
 }
 
-async function loadEvent(
-	tx: Transaction,
-	eventId: string,
-	maps: PupitreMaps
-): Promise<EventRow> {
+async function loadEvent(tx: Transaction, eventId: string, maps: PupitreMaps): Promise<EventRow> {
 	const rows = await tx.select().from(events).where(eq(events.id, eventId)).limit(1);
 	const row = rows[0];
 	if (!row) fail(404, 'not_found', 'Événement introuvable.');
@@ -410,9 +409,9 @@ export async function runMemberCommand(
 
 			const targets = pupitreUuids(input.pupitreIds, maps);
 			if (targets.length > 0) {
-				await tx.insert(eventPupitres).values(
-					targets.map((target) => ({ event_id: created.id, pupitre_id: target.id }))
-				);
+				await tx
+					.insert(eventPupitres)
+					.values(targets.map((target) => ({ event_id: created.id, pupitre_id: target.id })));
 			}
 			return { id: created.id };
 		}
@@ -449,9 +448,9 @@ export async function runMemberCommand(
 			await tx.delete(eventPupitres).where(eq(eventPupitres.event_id, eventId));
 			const targets = pupitreUuids(input.pupitreIds, maps);
 			if (targets.length > 0) {
-				await tx.insert(eventPupitres).values(
-					targets.map((target) => ({ event_id: eventId, pupitre_id: target.id }))
-				);
+				await tx
+					.insert(eventPupitres)
+					.values(targets.map((target) => ({ event_id: eventId, pupitre_id: target.id })));
 			}
 			return { id: eventId };
 		}
@@ -491,8 +490,8 @@ export async function runMemberCommand(
 					'Seuls la secrétaire et l’administrateur peuvent supprimer un événement.'
 				);
 			}
-			const existing = await loadEvent(tx, eventId, maps);
-			if (existing.cancelled_at === undefined) fail(404, 'not_found', 'Événement introuvable.');
+			// Le chargement garantit un 404 explicite si l'événement n'existe pas.
+			await loadEvent(tx, eventId, maps);
 			await tx.delete(events).where(eq(events.id, eventId));
 			return { id: eventId };
 		}
@@ -589,11 +588,7 @@ export async function runMemberCommand(
 		/* --- Articles ------------------------------------------------------ */
 		case 'article.save': {
 			if (!canManageContents(actor)) {
-				fail(
-					403,
-					'forbidden',
-					'Seuls la secrétaire et l’administrateur gèrent les articles.'
-				);
+				fail(403, 'forbidden', 'Seuls la secrétaire et l’administrateur gèrent les articles.');
 			}
 			const input = asRecord(payload.input);
 			const title = readString(input, 'title', { min: 3, max: 200, label: 'titre' });
@@ -655,11 +650,7 @@ export async function runMemberCommand(
 
 		case 'article.status': {
 			if (!canManageContents(actor)) {
-				fail(
-					403,
-					'forbidden',
-					'Seuls la secrétaire et l’administrateur gèrent les articles.'
-				);
+				fail(403, 'forbidden', 'Seuls la secrétaire et l’administrateur gèrent les articles.');
 			}
 			const articleId = readUuid(payload, 'articleId');
 			const status = readString(payload, 'status');
@@ -695,11 +686,7 @@ export async function runMemberCommand(
 
 		case 'article.delete': {
 			if (!canManageContents(actor)) {
-				fail(
-					403,
-					'forbidden',
-					'Seuls la secrétaire et l’administrateur gèrent les articles.'
-				);
+				fail(403, 'forbidden', 'Seuls la secrétaire et l’administrateur gèrent les articles.');
 			}
 			const articleId = readUuid(payload, 'articleId');
 			const deleted = await tx
@@ -1040,7 +1027,10 @@ export async function runMemberCommand(
 			if (!canInviteAndActivate(actor.role)) {
 				fail(403, 'forbidden', 'Seuls la secrétaire et l’administrateur peuvent inviter.');
 			}
-			const email = readString(payload, 'email', { max: 255, label: 'adresse e-mail' }).toLowerCase();
+			const email = readString(payload, 'email', {
+				max: 255,
+				label: 'adresse e-mail'
+			}).toLowerCase();
 			if (!EMAIL_PATTERN.test(email)) {
 				fail(400, 'invalid_payload', 'L’adresse e-mail est invalide.');
 			}
@@ -1091,9 +1081,9 @@ export async function runMemberCommand(
 				.returning({ id: invitations.id });
 
 			const targets = pupitreUuids(pupitreIds, maps);
-			await tx.insert(invitationPupitres).values(
-				targets.map((target) => ({ invitation_id: created.id, pupitre_id: target.id }))
-			);
+			await tx
+				.insert(invitationPupitres)
+				.values(targets.map((target) => ({ invitation_id: created.id, pupitre_id: target.id })));
 
 			return {
 				id: created.id,
@@ -1148,12 +1138,7 @@ export async function runMemberCommand(
 			const updated = await tx
 				.update(invitations)
 				.set({ cancelled_at: new Date() })
-				.where(
-					and(
-						eq(invitations.id, invitationId),
-						sql`${invitations.cancelled_at} is null`
-					)
-				)
+				.where(and(eq(invitations.id, invitationId), sql`${invitations.cancelled_at} is null`))
 				.returning({ id: invitations.id });
 			if (updated.length === 0) fail(404, 'not_found', 'Invitation introuvable.');
 			return { id: invitationId };
@@ -1177,7 +1162,11 @@ export async function runMemberCommand(
 			const notificationAudience = audience as 'all' | 'pupitre' | 'profiles';
 			if (notificationAudience === 'all') {
 				if (!isSecretaire(actor.role)) {
-					fail(403, 'forbidden', 'Seuls la secrétaire et l’administrateur notifient tout le bagad.');
+					fail(
+						403,
+						'forbidden',
+						'Seuls la secrétaire et l’administrateur notifient tout le bagad.'
+					);
 				}
 			} else if (notificationAudience === 'profiles') {
 				if (!isSecretaire(actor.role)) {
@@ -1222,9 +1211,11 @@ export async function runMemberCommand(
 
 			if (notificationAudience === 'pupitre') {
 				const targets = pupitreUuids(audienceIds as MemberPupitreId[], maps);
-				await tx.insert(notificationPupitres).values(
-					targets.map((target) => ({ notification_id: created.id, pupitre_id: target.id }))
-				);
+				await tx
+					.insert(notificationPupitres)
+					.values(
+						targets.map((target) => ({ notification_id: created.id, pupitre_id: target.id }))
+					);
 			} else if (notificationAudience === 'profiles') {
 				const validIds = audienceIds.filter((item) => UUID_PATTERN.test(item));
 				if (validIds.length === 0) {

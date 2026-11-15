@@ -24,7 +24,7 @@
 	} from '$lib/member/permissions';
 	import { addDocument, deleteDocument, simulateDownload } from '$lib/member/services/documents';
 	import { formatBytes } from '$lib/member/clock';
-	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/fixtures/pupitres';
+	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/pupitres';
 	import type { MemberPupitreId } from '$lib/member/types';
 
 	interface Props {
@@ -116,17 +116,20 @@
 		);
 	}
 
-	function submit(event: SubmitEvent) {
+	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		formError = null;
 		try {
-			addDocument(member.activeProfileId, {
+			await addDocument(member.activeProfileId, {
 				title: formTitle,
 				description: formDescription,
 				fileName: formFileName,
 				pupitreId: formPupitre === 'all' ? null : formPupitre
 			});
-			member.notify('success', 'Document déposé (simulation : aucun fichier n’a été envoyé).');
+			member.notify(
+				'success',
+				'Document déposé (métadonnées enregistrées : aucun fichier envoyé).'
+			);
 			formTitle = '';
 			formDescription = '';
 			formFileName = '';
@@ -138,9 +141,9 @@
 		}
 	}
 
-	function remove(documentId: string) {
+	async function remove(documentId: string) {
 		try {
-			deleteDocument(member.activeProfileId, documentId);
+			await deleteDocument(member.activeProfileId, documentId);
 			member.notify('success', 'Document supprimé.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');

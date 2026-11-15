@@ -8,6 +8,8 @@
  * - admin : global
  */
 
+import { serverEnv } from '$lib/server/env';
+
 export interface OneSignalConfig {
 	appId: string;
 	restApiKey: string;
@@ -17,8 +19,8 @@ let config: OneSignalConfig | null = null;
 
 function getConfig(): OneSignalConfig {
 	if (!config) {
-		const appId = process.env.ONESIGNAL_APP_ID;
-		const restApiKey = process.env.ONESIGNAL_REST_API_KEY;
+		const appId = serverEnv('ONESIGNAL_APP_ID');
+		const restApiKey = serverEnv('ONESIGNAL_REST_API_KEY');
 		if (!appId || !restApiKey) {
 			throw new Error("OneSignal n'est pas configuré (ONESIGNAL_APP_ID / ONESIGNAL_REST_API_KEY).");
 		}

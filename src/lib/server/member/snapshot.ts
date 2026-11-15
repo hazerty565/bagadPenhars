@@ -113,7 +113,7 @@ export async function buildMemberSnapshot(
 	tx: Transaction,
 	profileId: string
 ): Promise<MemberSnapshot> {
-	const { slugById, idBySlug } = await loadPupitreMaps(tx);
+	const { slugById } = await loadPupitreMaps(tx);
 
 	const ownRows = await tx
 		.select({
@@ -135,7 +135,7 @@ export async function buildMemberSnapshot(
 
 	const ownRow = ownRows[0];
 	if (!ownRow) {
-		throw new Error("Profil introuvable pour la session courante.");
+		throw new Error('Profil introuvable pour la session courante.');
 	}
 
 	const role = ownRow.role as AppRole;
@@ -211,8 +211,7 @@ export async function buildMemberSnapshot(
 		const directory = await tx.execute(
 			sql`select id, first_name, last_name, musician_level, avatar, avatar_url, pupitres from app.member_directory`
 		);
-		const rows = ((directory as unknown as { rows?: DirectoryRow[] }).rows ??
-			[]) as DirectoryRow[];
+		const rows = ((directory as unknown as { rows?: DirectoryRow[] }).rows ?? []) as DirectoryRow[];
 
 		visibleProfiles = rows.map((row) => {
 			if (row.id === profileId) return profile;

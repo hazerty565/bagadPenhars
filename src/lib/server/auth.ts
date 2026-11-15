@@ -5,6 +5,7 @@ import { getRequestEvent } from '$app/server';
 import type { DB } from '$lib/db';
 import * as schema from '$lib/db/schema';
 import { sendEmail } from '$lib/server/email';
+import { serverEnv } from '$lib/server/env';
 
 /**
  * Configuration centrale de Better Auth.
@@ -26,8 +27,7 @@ type Env = Record<string, unknown> | undefined;
 function readEnv(env: Env, key: string): string | undefined {
 	const fromPlatform = env?.[key];
 	if (typeof fromPlatform === 'string' && fromPlatform.length > 0) return fromPlatform;
-	const fromProcess = process.env[key];
-	return fromProcess && fromProcess.length > 0 ? fromProcess : undefined;
+	return serverEnv(key);
 }
 
 export function createAuth(db: DB, env?: Env) {

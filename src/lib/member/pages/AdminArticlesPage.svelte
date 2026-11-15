@@ -25,27 +25,27 @@
 			.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 	);
 
-	function publish(id: string) {
+	async function publish(id: string) {
 		try {
-			setArticleStatus(member.activeProfileId, id, 'published');
+			await setArticleStatus(member.activeProfileId, id, 'published');
 			member.notify('success', 'Article publié.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Publication impossible.');
 		}
 	}
 
-	function unpublish(id: string) {
+	async function unpublish(id: string) {
 		try {
-			setArticleStatus(member.activeProfileId, id, 'draft');
+			await setArticleStatus(member.activeProfileId, id, 'draft');
 			member.notify('info', 'Article repassé en brouillon.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Dépublication impossible.');
 		}
 	}
 
-	function remove(id: string) {
+	async function remove(id: string) {
 		try {
-			deleteArticle(member.activeProfileId, id);
+			await deleteArticle(member.activeProfileId, id);
 			member.notify('success', 'Article supprimé.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');

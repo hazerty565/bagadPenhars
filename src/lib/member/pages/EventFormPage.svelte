@@ -18,9 +18,8 @@
 		chefPupitreIds
 	} from '$lib/member/permissions';
 	import { createEvent, updateEvent } from '$lib/member/services/events';
-	import { addDays } from '$lib/member/services/helpers';
-	import { MEMBER_PUPITRES } from '$lib/member/fixtures/pupitres';
-	import { MEMBER_TODAY } from '$lib/member/clock';
+	import { MEMBER_PUPITRES } from '$lib/member/pupitres';
+	import { addDays, TODAY } from '$lib/member/clock';
 	import { EVENT_TYPE_LABELS } from '$lib/member/labels';
 	import type { MemberEventType, MemberEventVisibility, MemberPupitreId } from '$lib/member/types';
 
@@ -47,7 +46,7 @@
 
 	let title = $state(existing?.title ?? '');
 	let description = $state(existing?.description ?? '');
-	let date = $state(existing?.date ?? addDays(MEMBER_TODAY, 7));
+	let date = $state(existing?.date ?? addDays(TODAY, 7));
 	let type = $state<MemberEventType>(existing?.type ?? 'repetition');
 	let visibility = $state<MemberEventVisibility>(
 		existing?.visibility ?? (actor.role === 'chef_pupitre' ? 'pupitre' : 'interne')
@@ -69,7 +68,7 @@
 		syncedKey = key;
 		title = existing?.title ?? '';
 		description = existing?.description ?? '';
-		date = existing?.date ?? addDays(MEMBER_TODAY, 7);
+		date = existing?.date ?? addDays(TODAY, 7);
 		type = existing?.type ?? 'repetition';
 		visibility = existing?.visibility ?? (actor.role === 'chef_pupitre' ? 'pupitre' : 'interne');
 		location = existing?.location ?? 'Espace Chaptal, Quimper';
@@ -80,7 +79,9 @@
 	});
 
 	const availablePupitres = $derived(
-		isSecretary ? MEMBER_PUPITRES : MEMBER_PUPITRES.filter((pupitre) => chefPupils.includes(pupitre.id))
+		isSecretary
+			? MEMBER_PUPITRES
+			: MEMBER_PUPITRES.filter((pupitre) => chefPupils.includes(pupitre.id))
 	);
 
 	function togglePupitre(id: MemberPupitreId, checked: boolean) {
@@ -95,7 +96,7 @@
 		}
 	}
 
-	function submit(event: SubmitEvent) {
+	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		error = null;
 		if (!title.trim() || title.trim().length < 3) {
@@ -123,8 +124,8 @@
 				location
 			};
 			const saved = existing
-				? (updateEvent(member.activeProfileId, existing.id, input), existing)
-				: createEvent(member.activeProfileId, input);
+				? await updateEvent(member.activeProfileId, existing.id, input).then(() => existing)
+				: await createEvent(member.activeProfileId, input);
 			member.notify('success', existing ? 'Événement mis à jour.' : 'Événement créé.');
 			goto(resolve('/dashboard/agenda/[id]', { id: saved.id }));
 		} catch (reason) {

@@ -130,7 +130,7 @@ src/lib/
 ├── auth/             # Rôles, permissions, guards et helpers d'auth
 ├── components/       # Composants d'interface par domaine
 ├── data/             # Données éditoriales et de navigation
-├── demo/             # Espace membre de démonstration (développement seulement)
+├── db/               # Connexion Drizzle (`pg`) et schéma
 ├── i18n/             # Traductions fr, en, br et outils associés
 ├── notifications/    # Intégration cliente et envoi des notifications
 ├── schemas/          # Schémas Zod des formulaires et objets métier
@@ -159,30 +159,29 @@ src/lib/
 La structure des composants décrit leur emplacement, pas leur état
 d'implémentation ni leur conformité complète aux décisions en cours de revue.
 
-### Espace membre de démonstration
+### Espace adhérents (`src/lib/member/`)
 
-`src/lib/demo/` porte tout l'espace adhérent en mode démonstration. Il n'est
-jamais actif en production : le plugin `bagad-exclude-demo-from-build` de
-`vite.config.ts` remplace `pages/` et `components/` par un module vide au
-build, et les routes `/dashboard/**` n'en chargent rien statiquement.
+`src/lib/member/` est le client de l'espace adhérents connecté au backend
+réel (Neon + Better Auth + RLS) :
 
 ```text
-src/lib/demo/
-├── types.ts              # Types miroirs du modèle PostgreSQL cible
-├── clock.ts              # Date figée (2026-11-11, Europe/Paris) et formats
-├── mode.ts               # Détection dev-only du mode démonstration
-├── labels.ts             # Libellés des rôles, niveaux, types et statuts
-├── fixtures/             # Profils, événements, réponses, articles, médias…
-├── store.svelte.ts       # État réactif persisté (bagadpenhars.demo.v1)
-├── session.svelte.ts     # Session et profil actif simulés
-├── permissions.ts        # Source de vérité unique des droits
-├── services/             # Mutations contrôlées (événements, RSVP, profils…)
-├── components/           # Coquille et sélecteur de profil
-└── pages/                # Écrans de l'espace membre
+src/lib/member/
+├── types.ts          # Types miroirs du snapshot serveur
+├── clock.ts          # Date du jour (Europe/Paris) et formats
+├── labels.ts         # Libellés des rôles, niveaux, types et statuts
+├── permissions.ts    # Droits métier (miroir des guards serveur, ergonomie)
+├── pupitres.ts       # Les quatre pupitres
+├── photos.ts         # Bibliothèque de visuels partagée client/serveur
+├── store.svelte.ts   # Snapshot serveur, member.request, notifications
+├── services/         # Commandes asynchrones vers /api/member/action
+├── components/       # Coquille (MemberShell) et composants d'interface
+└── pages/            # Écrans de l'espace adhérents
 ```
 
-Les tests correspondants sont dans `tests/demo/` (fixtures, permissions,
-événements, réponses, notifications, store, mode, isolation).
+Aucune donnée adhérente n'est stockée dans le navigateur : le store vit en
+mémoire, alimenté par le snapshot serveur et mis à jour par le retour des
+commandes. La vérification d'autorisation reste serveur ; `permissions.ts`
+ne sert qu'au masquage d'interface.
 
 ### Modules serveur, données et types
 

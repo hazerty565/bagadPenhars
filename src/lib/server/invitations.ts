@@ -161,9 +161,7 @@ export async function acceptInvitation(
 			const updated = await tx
 				.update(invitations)
 				.set({ accepted_at: new Date() })
-				.where(
-					and(eq(invitations.id, details.id), eq(invitations.token_hash, hashToken(token)))
-				)
+				.where(and(eq(invitations.id, details.id), eq(invitations.token_hash, hashToken(token))))
 				.returning({ id: invitations.id });
 			if (updated.length === 0) {
 				throw new InvitationError("L'invitation a déjà été consommée.");

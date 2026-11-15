@@ -11,7 +11,7 @@
 	import { actorOf, canSeePupitreSection, scopedPupitreIds } from '$lib/member/permissions';
 	import { visibleProfiles } from '$lib/member/services/members';
 	import { LEVEL_LABELS } from '$lib/member/labels';
-	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/fixtures/pupitres';
+	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/pupitres';
 	import type { MemberLevel, MemberPupitreId } from '$lib/member/types';
 
 	interface Props {

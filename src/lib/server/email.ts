@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { serverEnv } from '$lib/server/env';
 
 /**
  * Envoi d'emails via Resend.
@@ -11,7 +12,7 @@ let resend: Resend | null = null;
 
 function getResend(): Resend {
 	if (!resend) {
-		const apiKey = process.env.RESEND_API_KEY;
+		const apiKey = serverEnv('RESEND_API_KEY');
 		if (!apiKey) {
 			throw new Error("RESEND_API_KEY n'est pas configurée.");
 		}
@@ -34,7 +35,7 @@ export interface EmailOptions {
  */
 export async function sendEmail(options: EmailOptions) {
 	const resendClient = getResend();
-	const from = process.env.CONTACT_FROM || process.env.CONTACT_EMAIL || 'noreply@bagadpenhars.fr';
+	const from = serverEnv('CONTACT_FROM') || serverEnv('CONTACT_EMAIL') || 'noreply@bagadpenhars.fr';
 
 	const result = await resendClient.emails.send({
 		from,

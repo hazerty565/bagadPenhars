@@ -21,7 +21,7 @@
 		resendInvitation
 	} from '$lib/member/services/invitations';
 	import { formatDate } from '$lib/member/clock';
-	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/fixtures/pupitres';
+	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/pupitres';
 	import type { MemberInvitationStatus, MemberPupitreId } from '$lib/member/types';
 
 	const actor = $derived(actorOf(member.activeProfile));
@@ -59,17 +59,17 @@
 		formPupitres = checked ? [...formPupitres, id] : formPupitres.filter((item) => item !== id);
 	}
 
-	function submit(event: SubmitEvent) {
+	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		formError = null;
 		try {
-			createInvitation(member.activeProfileId, {
+			await createInvitation(member.activeProfileId, {
 				email: formEmail,
 				firstName: formFirstName,
 				lastName: formLastName,
 				pupitreIds: formPupitres
 			});
-			member.notify('success', 'Invitation créée (aucun e-mail réellement envoyé).');
+			member.notify('success', 'Invitation créée : un e-mail a été envoyé au destinataire.');
 			formEmail = '';
 			formFirstName = '';
 			formLastName = '';
@@ -81,18 +81,18 @@
 		}
 	}
 
-	function resend(id: string) {
+	async function resend(id: string) {
 		try {
-			resendInvitation(member.activeProfileId, id);
-			member.notify('success', 'Invitation relancée (simulation).');
+			await resendInvitation(member.activeProfileId, id);
+			member.notify('success', 'Invitation relancée : un nouvel e-mail a été envoyé.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Relance impossible.');
 		}
 	}
 
-	function cancel(id: string) {
+	async function cancel(id: string) {
 		try {
-			cancelInvitation(member.activeProfileId, id);
+			await cancelInvitation(member.activeProfileId, id);
 			member.notify('info', 'Invitation annulée.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Annulation impossible.');
@@ -110,7 +110,7 @@
 	<PageHeader
 		eyebrow="Administration"
 		title="Invitations"
-		description="Invitations fictives. Aucun e-mail n’est envoyé : la création, la relance et l’annulation sont simulées et persistent localement."
+		description="Invitez un adhérent par e-mail (Resend) : il reçoit un lien valable sept jours pour activer son compte. La relance et l’annulation sont également disponibles."
 	>
 		{#snippet actions()}
 			<button type="button" class={primaryButtonClass} onclick={() => (composing = !composing)}>
@@ -145,8 +145,8 @@
 		<form class="mt-5 border border-or/40 bg-or/10 p-5" onsubmit={submit} novalidate>
 			<h2 class="font-serif text-xl text-marine">Nouvelle invitation</h2>
 			<p class="mt-1 text-xs text-ardoise">
-				L’invitation expire au bout de sept jours dans la démonstration. Aucun compte n’est
-				réellement créé.
+				L’invitation expire au bout de sept jours. Le destinataire reçoit un lien d’activation
+				unique : son compte reste « en attente » tant qu’il n’a pas choisi son mot de passe.
 			</p>
 			{#if formError}
 				<p class={errorClass} role="alert">{formError}</p>
@@ -285,7 +285,7 @@
 	</ul>
 
 	<p class="mt-4 text-xs leading-relaxed text-ardoise">
-		En production, l’invitation enverra un e-mail signé et créera un compte au statut « en attente
-		». En démonstration, aucune donnée ne quitte le navigateur.
+		L’invitation envoie un e-mail signé avec un lien d’activation unique et crée un compte Better
+		Auth au statut « en attente ». Si l’envoi échoue, le jeton reste utilisable via une relance.
 	</p>
 {/if}

@@ -4,7 +4,7 @@
 	import Badge from './Badge.svelte';
 	import type { MemberProfile } from '$lib/member/types';
 	import { LEVEL_LABELS } from '$lib/member/labels';
-	import { pupitreName } from '$lib/member/fixtures/pupitres';
+	import { pupitreName } from '$lib/member/pupitres';
 
 	interface Props {
 		profile: MemberProfile;

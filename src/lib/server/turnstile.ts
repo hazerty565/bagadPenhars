@@ -7,6 +7,8 @@
  * Documentation : https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
  */
 
+import { serverEnv } from '$lib/server/env';
+
 const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
 export type TurnstileResult =
@@ -30,7 +32,7 @@ export async function verifyTurnstile(
 	token: string | undefined,
 	remoteIp?: string
 ): Promise<TurnstileResult> {
-	const secret = process.env.TURNSTILE_SECRET_KEY;
+	const secret = serverEnv('TURNSTILE_SECRET_KEY');
 	if (!secret) {
 		console.error('[contact] TURNSTILE_SECRET_KEY absent : envoi refusé.');
 		return { ok: false, reason: 'unconfigured' };

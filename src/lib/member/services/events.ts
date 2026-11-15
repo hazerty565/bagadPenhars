@@ -1,5 +1,10 @@
 import { member } from '../store.svelte';
-import type { MemberEvent, MemberEventType, MemberEventVisibility, MemberPupitreId } from '../types';
+import type {
+	MemberEvent,
+	MemberEventType,
+	MemberEventVisibility,
+	MemberPupitreId
+} from '../types';
 import {
 	actorOf,
 	canCreateEvent,

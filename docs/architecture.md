@@ -119,45 +119,50 @@ Les pages publiques acceptent les langues `fr`, `en` et `br` selon le matcher
 Les textes publics sont centralisés dans `src/lib/i18n/` (dictionnaires typés
 `fr`, `en`, `br`).
 
-## Espace membre et démonstration locale
+## Espace adhérents
 
-L'espace membre est livré en deux couches strictement séparées.
+L'espace adhérents (`/dashboard/**`) est connecté au backend réel : Neon
+PostgreSQL (branche `test` en développement, `production` en production),
+Better Auth pour l'identité et les sessions, RLS PostgreSQL pour les droits
+sur les lignes.
 
-**Couche de démonstration (`src/lib/demo/`)**, active uniquement en
-développement local (`dev` de `$app/environment`) :
+**Côté serveur :**
 
-- `types.ts` reprend les noms de champs du modèle cible (`docs/database.md`) ;
-- `fixtures/` contient 24 profils, les événements, réponses, notifications,
-  documents, articles, albums et invitations fictifs ;
-- `store.svelte.ts` expose un état réactif persisté dans `localStorage`
-  (clé `bagadpenhars.demo.v1`, versionnée et validée par `fixtures/index.ts`) ;
-- `session.svelte.ts` simule la session et le profil actif ;
-- `permissions.ts` est la source de vérité unique des droits, utilisée à la
-  fois par l'interface et par les services ;
-- `services/` porte les mutations et refuse toute action non autorisée ;
-- `pages/` contient les écrans, `components/` la coquille et le sélecteur de
-  profil.
+- `src/hooks.server.ts` ouvre une connexion par requête avec le rôle
+  applicatif `bagad_app` (Hyperdrive sur Cloudflare, `DATABASE_URL_APP` en
+  local), crée l'instance Better Auth liée à cette connexion, vérifie la
+  session puis résout `profiles.id` (fonction `app.profile_id_for_auth_user`) ;
+- `src/lib/server/member/snapshot.ts` construit le `MemberSnapshot` complet
+  (profil, annuaire, événements, réponses, documents, articles, albums,
+  notifications, invitations, préférences, réglages) dans une transaction dont
+  le contexte RLS est établi par `set_config('app.profile_id', ..., true)` ;
+- `src/lib/server/member/commands.ts` porte l'unique endpoint de mutation
+  `POST /api/member/action` (`{ action, payload }`) : chaque action est
+  revalidée (rôle, propriété, validation de charge utile) sous RLS, puis le
+  snapshot à jour est renvoyé au client. `GET /api/member` renvoie le même
+  snapshot en lecture ;
+- les lectures de variables d'environnement serveur passent par
+  `$lib/server/env` (`$env/dynamic/private`, repli `process.env` pour les
+  scripts Node) : Vite 8 n'injecte plus les fichiers `.env` dans `process.env`.
 
-**Couche de production** : les routes `/dashboard/**` ne contiennent aucune
-donnée. Chaque `+page.svelte` monte `DemoRoute`
-(`src/lib/components/dashboard/DemoRoute.svelte`) qui, en développement,
-charge la page de démonstration par `import()` dynamique ; en production, il
-affiche un écran « Espace adhérents » avec un lien vers `/auth/login`.
+**Côté client (`src/lib/member/`) :**
 
-`vite.config.ts` enregistre le plugin `bagad-exclude-demo-from-build`, qui
-résout `$lib/demo/pages/*` et `$lib/demo/components/*` vers un module vide
-pendant le build. Vérifié : `MODE DÉMONSTRATION`, `DEMO_STORAGE_KEY` et les
-données fictives sont absents de `.svelte-kit/output` en production.
+- `store.svelte.ts` ne fabrique plus aucune donnée : il reçoit le snapshot
+  serveur (appliqué par `+layout.server.ts`) et expose `member.request()`
+  pour les mutations, qui applique le snapshot renvoyé ;
+- `services/` construisent les commandes (`event.create`, `response.set`,
+  `document.create`, `invitation.create`, …) ; les erreurs remontent en
+  `MemberApiError` avec `status` et `code` ;
+- `permissions.ts` reste un miroir des guards serveur, utilisé uniquement pour
+  l'ergonomie (masquage d'interface) : la vérification serveur reste seule
+  autoritaire ;
+- `/dashboard/**` est rendu en `ssr = false` ; la déconnexion est un `POST`
+  (jamais un lien `GET`) et l'e-mail de connexion Better Auth n'est pas
+  modifiable dans l'espace adhérents.
 
-Règles de la démonstration :
-
-- aucun import statique de `$lib/demo` dans `src/routes/` (test
-  `tests/demo/isolation.test.ts`) ;
-- la démonstration n'importe ni `$lib/server`, ni `$lib/db`, ni `$env/` ;
-- les rôles, statuts et noms restent fictifs ; toutes les adresses utilisent
-  `example.com` ;
-- les guards serveur de production ne sont ni contournés ni dupliqués : la
-  démonstration ne crée aucune fausse API sécurisée.
+`vite.config.ts` conserve le plugin `bagad-exclude-demo-from-build` comme
+garde-fou : la couche de démonstration `src/lib/demo/` a été retirée du dépôt
+et le plugin n'a plus de module à exclure.
 
 ## Flux applicatifs attendus
 

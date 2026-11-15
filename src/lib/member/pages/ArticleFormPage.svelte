@@ -52,12 +52,12 @@
 	const placeholderMarkdown =
 		'## Sous-titre\n\nParagraphe de texte.\n\n- élément de liste\n- autre élément\n\n> Citation';
 
-	function submit(event: SubmitEvent) {
+	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		error = null;
 		submitting = true;
 		try {
-			saveArticle(
+			await saveArticle(
 				member.activeProfileId,
 				{ title, excerpt, contentMarkdown, status },
 				existing?.id ?? null

@@ -6,7 +6,7 @@
 	import type { MemberEvent, MemberResponseStatus } from '$lib/member/types';
 	import { EVENT_TYPE_LABELS, VISIBILITY_LABELS } from '$lib/member/labels';
 	import { isPast } from '$lib/member/clock';
-	import { pupitreName } from '$lib/member/fixtures/pupitres';
+	import { pupitreName } from '$lib/member/pupitres';
 
 	interface Props {
 		event: MemberEvent;

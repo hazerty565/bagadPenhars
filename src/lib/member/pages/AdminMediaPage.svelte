@@ -22,7 +22,7 @@
 		removePhoto,
 		saveAlbum
 	} from '$lib/member/services/albums';
-	import { formatDate } from '$lib/member/clock';
+	import { formatDate, TODAY } from '$lib/member/clock';
 
 	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canManageContents(actor));
@@ -30,7 +30,7 @@
 	let showForm = $state(false);
 	let formTitle = $state('');
 	let formDescription = $state('');
-	let formDate = $state('2026-11-11');
+	let formDate = $state(TODAY);
 	let formPublished = $state(false);
 	let formError = $state<string | null>(null);
 
@@ -42,11 +42,11 @@
 
 	const albums = $derived([...member.albums].sort((a, b) => b.date.localeCompare(a.date)));
 
-	function submitAlbum(event: SubmitEvent) {
+	async function submitAlbum(event: SubmitEvent) {
 		event.preventDefault();
 		formError = null;
 		try {
-			saveAlbum(member.activeProfileId, {
+			await saveAlbum(member.activeProfileId, {
 				title: formTitle,
 				description: formDescription,
 				date: formDate,
@@ -70,11 +70,11 @@
 		photoError = null;
 	}
 
-	function submitPhoto(albumId: string, event: SubmitEvent) {
+	async function submitPhoto(albumId: string, event: SubmitEvent) {
 		event.preventDefault();
 		photoError = null;
 		try {
-			addPhoto(member.activeProfileId, albumId, {
+			await addPhoto(member.activeProfileId, albumId, {
 				src: photoSrc,
 				alt: photoAlt,
 				caption: photoCaption
@@ -86,37 +86,37 @@
 		}
 	}
 
-	function move(albumId: string, photoId: string, direction: -1 | 1) {
+	async function move(albumId: string, photoId: string, direction: -1 | 1) {
 		try {
-			movePhoto(member.activeProfileId, albumId, photoId, direction);
+			await movePhoto(member.activeProfileId, albumId, photoId, direction);
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Déplacement impossible.');
 		}
 	}
 
-	function remove(albumId: string, photoId: string) {
+	async function remove(albumId: string, photoId: string) {
 		try {
-			removePhoto(member.activeProfileId, albumId, photoId);
+			await removePhoto(member.activeProfileId, albumId, photoId);
 			member.notify('success', 'Photo retirée.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Retrait impossible.');
 		}
 	}
 
-	function removeAlbum(albumId: string) {
+	async function removeAlbum(albumId: string) {
 		try {
-			deleteAlbum(member.activeProfileId, albumId);
+			await deleteAlbum(member.activeProfileId, albumId);
 			member.notify('success', 'Album supprimé.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');
 		}
 	}
 
-	function togglePublished(albumId: string) {
+	async function togglePublished(albumId: string) {
 		const album = member.albums.find((item) => item.id === albumId);
 		if (!album) return;
 		try {
-			saveAlbum(
+			await saveAlbum(
 				member.activeProfileId,
 				{
 					title: album.title,

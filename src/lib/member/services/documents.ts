@@ -1,6 +1,11 @@
 import { member } from '../store.svelte';
 import type { MemberDocument, MemberPupitreId } from '../types';
-import { actorOf, canDeleteDocument, canDepositDocument, MemberPermissionError } from '../permissions';
+import {
+	actorOf,
+	canDeleteDocument,
+	canDepositDocument,
+	MemberPermissionError
+} from '../permissions';
 import { isNonEmpty } from './helpers';
 
 export interface MemberDocumentInput {
@@ -45,10 +50,7 @@ export async function addDocument(
 	});
 }
 
-export async function deleteDocument(
-	_actorProfileId: string,
-	documentId: string
-): Promise<void> {
+export async function deleteDocument(_actorProfileId: string, documentId: string): Promise<void> {
 	const document = member.documents.find((item) => item.id === documentId);
 	if (!document) throw new MemberPermissionError('Document introuvable.');
 	if (!canDeleteDocument(actorOf(member.profile), document.pupitreId)) {

@@ -25,9 +25,9 @@
 	import { eventAudience, manageableEvents, visibleEvents } from '$lib/member/services/members';
 	import { presenceSummary, responseOf, setResponse } from '$lib/member/services/responses';
 	import { cancelEvent, deleteEvent, reactivateEvent } from '$lib/member/services/events';
-	import { isPast, MEMBER_TODAY } from '$lib/member/clock';
+	import { isPast } from '$lib/member/clock';
 	import { EVENT_TYPE_LABELS, VISIBILITY_LABELS } from '$lib/member/labels';
-	import { MEMBER_PUPITRES } from '$lib/member/fixtures/pupitres';
+	import { MEMBER_PUPITRES } from '$lib/member/pupitres';
 	import type { MemberEventType, MemberPupitreId, MemberResponseStatus } from '$lib/member/types';
 
 	interface Props {
@@ -87,9 +87,9 @@
 		return { present: result.present, absent: result.absent };
 	}
 
-	function respond(eventId: string, status: MemberResponseStatus) {
+	async function respond(eventId: string, status: MemberResponseStatus) {
 		try {
-			setResponse(member.activeProfileId, eventId, status);
+			await setResponse(member.activeProfileId, eventId, status);
 			member.notify(
 				'success',
 				status === 'present'
@@ -104,27 +104,27 @@
 		}
 	}
 
-	function cancel(eventId: string) {
+	async function cancel(eventId: string) {
 		try {
-			cancelEvent(member.activeProfileId, eventId);
+			await cancelEvent(member.activeProfileId, eventId);
 			member.notify('info', 'L’événement a été annulé. Les réponses restent visibles.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Annulation impossible.');
 		}
 	}
 
-	function reactivate(eventId: string) {
+	async function reactivate(eventId: string) {
 		try {
-			reactivateEvent(member.activeProfileId, eventId);
+			await reactivateEvent(member.activeProfileId, eventId);
 			member.notify('success', 'L’événement est de nouveau actif.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Réactivation impossible.');
 		}
 	}
 
-	function remove(eventId: string) {
+	async function remove(eventId: string) {
 		try {
-			deleteEvent(member.activeProfileId, eventId);
+			await deleteEvent(member.activeProfileId, eventId);
 			member.notify('success', 'L’événement a été supprimé.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Suppression impossible.');
@@ -218,7 +218,7 @@
 		<p class="mt-3 text-xs text-ardoise">
 			{filtered.length} événement{filtered.length > 1 ? 's' : ''} affiché{filtered.length > 1
 				? 's'
-				: ''}. Date de démonstration : {MEMBER_TODAY}.
+				: ''}.
 		</p>
 	</section>
 

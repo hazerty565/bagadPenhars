@@ -25,10 +25,7 @@ export interface OwnProfileInput {
 	level: MemberLevel;
 }
 
-export async function updateOwnProfile(
-	profileId: string,
-	input: OwnProfileInput
-): Promise<void> {
+export async function updateOwnProfile(profileId: string, input: OwnProfileInput): Promise<void> {
 	const actor = actorOf(member.profile);
 	if (!canEditOwnProfile(actor, profileId)) {
 		throw new MemberPermissionError('Vous ne pouvez modifier que votre propre profil.');

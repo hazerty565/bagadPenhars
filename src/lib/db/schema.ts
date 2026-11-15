@@ -250,9 +250,10 @@ export const invitationPupitres = pgTable(
 	(table) => ({
 		invitationIdx: index('invitation_pupitres_invitation_id_idx').on(table.invitation_id),
 		pupitreIdx: index('invitation_pupitres_pupitre_id_idx').on(table.pupitre_id),
-		invitationPupitreUnique: uniqueIndex(
-			'invitation_pupitres_invitation_id_pupitre_id_unique'
-		).on(table.invitation_id, table.pupitre_id)
+		invitationPupitreUnique: uniqueIndex('invitation_pupitres_invitation_id_pupitre_id_unique').on(
+			table.invitation_id,
+			table.pupitre_id
+		)
 	})
 );
 
@@ -388,7 +389,9 @@ export const albums = pgTable(
 		id: uuid('id').primaryKey().defaultRandom(),
 		title: varchar('title', { length: 200 }).notNull(),
 		description: text('description'),
-		album_date: date('album_date').notNull().default(sql`current_date`),
+		album_date: date('album_date')
+			.notNull()
+			.default(sql`current_date`),
 		is_published: boolean('is_published').notNull().default(false),
 		created_by: uuid('created_by')
 			.notNull()

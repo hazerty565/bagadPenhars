@@ -177,10 +177,11 @@ try {
 	`);
 
 	for (const [slug, index] of Object.entries(PUPITRE_SLUGS)) {
-		await client.query(
-			'INSERT INTO public.pupitres (id, name, slug) VALUES ($1, $2, $3)',
-			[uuid(PUPITRE_GROUP, index), PUPITRE_NAMES[slug], slug]
-		);
+		await client.query('INSERT INTO public.pupitres (id, name, slug) VALUES ($1, $2, $3)', [
+			uuid(PUPITRE_GROUP, index),
+			PUPITRE_NAMES[slug],
+			slug
+		]);
 	}
 
 	for (const [index, title] of bureauTitles.entries()) {
@@ -427,7 +428,12 @@ try {
 			`INSERT INTO public.notification_preferences
 				(profile_id, global_enabled, events_enabled, reminders_enabled, no_response_reminder_enabled)
 			 VALUES ($1, $2, $3, $4, true)`,
-			[profileUuid(preference.profileId), preference.global, preference.events, preference.reminders]
+			[
+				profileUuid(preference.profileId),
+				preference.global,
+				preference.events,
+				preference.reminders
+			]
 		);
 	}
 

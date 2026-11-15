@@ -21,8 +21,8 @@
 	} from '$lib/member/services/members';
 	import { presenceSummary } from '$lib/member/services/responses';
 	import { unreadCount } from '$lib/member/services/notifications';
-	import { MEMBER_TODAY } from '$lib/member/clock';
-	import { pupitreName } from '$lib/member/fixtures/pupitres';
+	import { TODAY } from '$lib/member/clock';
+	import { pupitreName } from '$lib/member/pupitres';
 
 	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canSeePupitreSection(actor));
@@ -30,7 +30,7 @@
 
 	const upcomingEvents = $derived(
 		manageableEvents(actor)
-			.filter((event) => event.status === 'active' && event.date >= MEMBER_TODAY)
+			.filter((event) => event.status === 'active' && event.date >= TODAY)
 			.sort((a, b) => a.date.localeCompare(b.date))
 			.slice(0, 4)
 	);
@@ -127,7 +127,7 @@
 								(event) =>
 									event.pupitreIds.includes(pupitreId) &&
 									event.status === 'active' &&
-									event.date >= MEMBER_TODAY
+									event.date >= TODAY
 							).length}
 						</p>
 						<p class="text-[0.62rem] uppercase tracking-wider text-ardoise">À venir</p>

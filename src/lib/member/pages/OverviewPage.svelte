@@ -10,13 +10,13 @@
 	import { eventAudience, visibleEvents } from '$lib/member/services/members';
 	import { presenceSummary, responseOf } from '$lib/member/services/responses';
 	import { notificationsFor, unreadCount } from '$lib/member/services/notifications';
-	import { formatDateTime, formatDate, isPast, MEMBER_TODAY } from '$lib/member/clock';
+	import { formatDateTime, formatDate, isPast, TODAY } from '$lib/member/clock';
 	import { EVENT_TYPE_LABELS } from '$lib/member/labels';
-	import { pupitreName } from '$lib/member/fixtures/pupitres';
+	import { pupitreName } from '$lib/member/pupitres';
 
 	const actor = $derived(actorOf(member.activeProfile));
 	const profile = $derived(member.activeProfile);
-	const todayLabel = $derived(formatDate(MEMBER_TODAY));
+	const todayLabel = $derived(formatDate(TODAY));
 
 	const upcoming = $derived(
 		visibleEvents(actor)

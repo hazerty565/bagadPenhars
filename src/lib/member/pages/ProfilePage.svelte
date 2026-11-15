@@ -14,7 +14,7 @@
 	import { updateAvatar, updateOwnProfile, updatePreferences } from '$lib/member/services/profiles';
 	import { ROLE_LABELS, LEVEL_LABELS } from '$lib/member/labels';
 	import { formatDate } from '$lib/member/clock';
-	import { pupitreName } from '$lib/member/fixtures/pupitres';
+	import { pupitreName } from '$lib/member/pupitres';
 	import type { MemberLevel } from '$lib/member/types';
 
 	const profile = $derived(member.activeProfile);
@@ -45,10 +45,10 @@
 		}
 	});
 
-	function saveIdentity(event: SubmitEvent) {
+	async function saveIdentity(event: SubmitEvent) {
 		event.preventDefault();
 		try {
-			updateOwnProfile(profile.id, { firstName, lastName, email, level });
+			await updateOwnProfile(profile.id, { firstName, lastName, level });
 			feedback = 'Vos informations ont été enregistrées.';
 			member.notify('success', 'Profil mis à jour.');
 		} catch (error) {
@@ -57,18 +57,18 @@
 		}
 	}
 
-	function chooseAvatar(avatar: number) {
+	async function chooseAvatar(avatar: number) {
 		try {
-			updateAvatar(profile.id, avatar);
+			await updateAvatar(profile.id, avatar);
 			member.notify('success', 'Portrait mis à jour.');
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Portrait non modifié.');
 		}
 	}
 
-	function savePreferences() {
+	async function savePreferences() {
 		try {
-			updatePreferences(profile.id, { global, reminders, events });
+			await updatePreferences(profile.id, { global, reminders, events });
 			member.notify('success', 'Préférences de notifications enregistrées.');
 		} catch (error) {
 			member.notify(
@@ -105,10 +105,18 @@
 					<input class="{inputClass} mt-1" bind:value={lastName} required />
 				</label>
 				<label class="sm:col-span-2">
-					<span class={labelClass}>Adresse e-mail *</span>
-					<input type="email" class="{inputClass} mt-1" bind:value={email} required />
+					<span class={labelClass}>Adresse e-mail</span>
+					<input
+						type="email"
+						class="{inputClass} mt-1"
+						value={email}
+						readonly
+						disabled
+						aria-readonly="true"
+					/>
 					<span class="mt-1 block text-xs text-ardoise"
-						>Adresse fictive : le domaine example.com est réservé.</span
+						>Adresse de connexion Better Auth : elle ne peut pas être modifiée depuis l’espace
+						adhérents.</span
 					>
 				</label>
 				<label>

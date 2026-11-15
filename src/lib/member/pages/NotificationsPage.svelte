@@ -30,7 +30,7 @@
 	} from '$lib/member/services/notifications';
 	import { formatDateTime } from '$lib/member/clock';
 	import { AUDIENCE_LABELS } from '$lib/member/labels';
-	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/fixtures/pupitres';
+	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/pupitres';
 	import type { MemberNotificationAudience, MemberPupitreId } from '$lib/member/types';
 
 	interface Props {
@@ -109,18 +109,21 @@
 		formProfiles = checked ? [...formProfiles, id] : formProfiles.filter((item) => item !== id);
 	}
 
-	function submit(event: SubmitEvent) {
+	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		formError = null;
 		try {
-			sendNotification(member.activeProfileId, {
+			await sendNotification(member.activeProfileId, {
 				title: formTitle,
 				body: formBody,
 				audience: formAudience,
 				pupitreIds: formPupitres,
 				profileIds: formProfiles
 			});
-			member.notify('success', 'Notification envoyée dans la démonstration (aucun envoi réel).');
+			member.notify(
+				'success',
+				'Notification enregistrée (l’envoi push sera branché sur OneSignal).'
+			);
 			formTitle = '';
 			formBody = '';
 			formPupitres = [];
@@ -132,17 +135,17 @@
 		}
 	}
 
-	function markAsRead(id: string) {
+	async function markAsRead(id: string) {
 		try {
-			markRead(member.activeProfileId, id);
+			await markRead(member.activeProfileId, id);
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Action impossible.');
 		}
 	}
 
-	function unreadAction(id: string) {
+	async function unreadAction(id: string) {
 		try {
-			markUnread(member.activeProfileId, id);
+			await markUnread(member.activeProfileId, id);
 		} catch (error) {
 			member.notify('error', error instanceof Error ? error.message : 'Action impossible.');
 		}
@@ -171,7 +174,10 @@
 			<button
 				type="button"
 				class={secondaryButtonClass}
-				onclick={() => markAllRead(member.activeProfileId)}
+				onclick={() =>
+					markAllRead(member.activeProfileId).catch((error) =>
+						member.notify('error', error instanceof Error ? error.message : 'Action impossible.')
+					)}
 				disabled={unread === 0}
 			>
 				<Check size={16} />

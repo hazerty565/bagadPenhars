@@ -147,7 +147,8 @@
 			Hiérarchie : administrateur &gt; secrétaire &gt; chef de pupitre &gt; membre
 		</p>
 		<p class="mt-2">
-			Chaque droit ci-dessous est évalué par une fonction pure de <code>$lib/member/permissions</code
+			Chaque droit ci-dessous est évalué par une fonction pure de <code
+				>$lib/member/permissions</code
 			>. Le profil actif est <Badge tone="marine">{actor.role}</Badge> ; les colonnes servent de référence.
 		</p>
 	</div>

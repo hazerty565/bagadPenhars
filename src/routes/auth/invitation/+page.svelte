@@ -37,7 +37,9 @@
 <main class="flex min-h-screen flex-col bg-ivoire px-5 py-7 sm:px-8 lg:px-12 lg:py-10">
 	<div class="mx-auto w-full max-w-md">
 		<a href={homeHref} class="inline-flex items-center gap-3" aria-label="Bagad Penhars — accueil">
-			<span class="flex h-12 w-12 items-center justify-center rounded-full bg-white ring-1 ring-ink/10">
+			<span
+				class="flex h-12 w-12 items-center justify-center rounded-full bg-white ring-1 ring-ink/10"
+			>
 				<img src="/logo-penhars.svg" alt="" width="36" height="36" class="h-9 w-9" />
 			</span>
 			<span class="font-serif text-lg font-semibold leading-none text-marine">Bagad Penhars</span>
@@ -56,7 +58,10 @@
 						Votre adresse est confirmée. Un administrateur ou la secrétaire doit maintenant activer
 						votre accès. Vous pourrez ensuite vous connecter.
 					</p>
-					<a class="mt-3 inline-block font-semibold underline underline-offset-4" href={resolve('/auth/login')}>
+					<a
+						class="mt-3 inline-block font-semibold underline underline-offset-4"
+						href={resolve('/auth/login')}
+					>
 						Aller à la connexion
 					</a>
 				</div>
@@ -71,8 +76,9 @@
 			</p>
 		{:else}
 			<p class="mt-4 text-sm leading-relaxed text-ink/65">
-				Bonjour {data.firstName} {data.lastName}. Choisissez le mot de passe de votre compte
-				<strong>{data.email}</strong>. Vos pupitres ({data.pupitres.join(', ')}) sont déjà
+				Bonjour {data.firstName}
+				{data.lastName}. Choisissez le mot de passe de votre compte
+				<strong>{data.email}</strong>. Vos pupitres ({(data.pupitres ?? []).join(', ')}) sont déjà
 				enregistrés et ne sont pas modifiables ici.
 			</p>
 

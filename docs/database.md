@@ -186,3 +186,25 @@ doivent tous deux la faire respecter :
 | `chef_pupitre` | Aucun                       | Gérer ses pupitres             | Aucun           | Déposer pour ses pupitres      | Notifier ses pupitres |
 | `secretaire`   | Inviter, activer, suspendre | Tous les événements            | Articles/albums | Tous les documents autorisés   | Plusieurs pupitres    |
 | `admin`        | Tous                        | Tous                           | Tous            | Tous                           | Tous                  |
+
+## 7. Fonctions SECURITY DEFINER
+
+Les modifications interdites au rôle applicatif `bagad_app` (COLL, statut,
+rôle, titre du bureau) passent par des fonctions SECURITY DEFINER qui
+valident l'appelant sous RLS puis écrivent avec un privilège maîtrisé :
+
+- `app.set_profile_account_status(profile, status)` : statut du compte
+  (activation, suspension, demande de suppression) ;
+- `app.set_profile_role(profile, role)` : attribution de rôle métier
+  (administrateur uniquement, jamais sur son propre rôle) ;
+- `app.set_profile_bureau_title(profile, titre)` : fonction au bureau en
+  texte libre, avec upsert dans `bureau_positions` (migration `0005`,
+  administrateur uniquement, 100 caractères maximum). La fonction
+  `app.set_profile_bureau_position` (migration `0002`, par identifiant de
+  poste) reste disponible mais n'est plus utilisée ;
+- `app.profile_id_for_auth_user(auth_user_id)` : résolution du profil métier
+  depuis l'identifiant Better Auth, utilisée par le hook serveur.
+
+Toutes les fonctions d'écriture revêtent un contexte contrôlé
+(`SET search_path`), sont accordées à `bagad_app` (et retirées de `PUBLIC`) et
+ne confèrent jamais le droit de contourner les guards applicatifs.

@@ -1,6 +1,7 @@
 import { Client } from 'pg';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
+import { serverEnv } from '$lib/server/env';
 import * as schema from './schema';
 
 /**
@@ -36,7 +37,7 @@ export interface DatabaseConnection {
 export function resolveDatabaseUrl(platform: App.Platform | undefined): string | null {
 	const hyperdrive = platform?.env?.HYPERDRIVE;
 	if (hyperdrive?.connectionString) return hyperdrive.connectionString;
-	const local = process.env.DATABASE_URL_APP;
+	const local = serverEnv('DATABASE_URL_APP');
 	return local && local.trim().length > 0 ? local : null;
 }
 

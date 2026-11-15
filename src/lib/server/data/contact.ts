@@ -5,13 +5,15 @@
  * exclusivement dans `$lib/server/turnstile.ts`.
  */
 
+import { serverEnv } from '$lib/server/env';
+
 export function turnstileSiteKey(): string | null {
-	const key = process.env.TURNSTILE_SITE_KEY;
+	const key = serverEnv('TURNSTILE_SITE_KEY');
 	return key && key.trim().length > 0 ? key : null;
 }
 
 /** Adresse de réception des messages du formulaire de contact. */
 export function contactInbox(): string | null {
-	const address = process.env.CONTACT_EMAIL;
+	const address = serverEnv('CONTACT_EMAIL');
 	return address && address.trim().length > 0 ? address : null;
 }
