@@ -1,25 +1,3 @@
-## Analyse critique
-
-**Forces :**
-- Permissions très bien verrouillées (seulement les dossiers backend)
-- Règle stricte sur les migrations (additives, jamais modifiées)
-- Vérification obligatoire (lancer le serveur, tester)
-- Respect du contrat API imposé
-- Gestion des missions suivantes (corrections)
-
-**Faiblesses :**
-- Pas de format de réponse imposé ("quelques lignes" trop vague)
-- Pas de checklist de vérification structurée
-- Pas de gestion explicite des conflits avec le contrat API
-- Pas de traçabilité des migrations générées
-- Pas de format pour documenter ce qui a été fait
-- Pas de règle sur la gestion des erreurs de compilation
-
----
-
-## Version améliorée de `dev-backend.md`
-
-```markdown
 ---
 description: Développeur backend. Seul autorisé à modifier le code backend (Neon PostgreSQL, migrations Drizzle, logique serveur). Suit le plan et le contrat API.
 mode: subagent
