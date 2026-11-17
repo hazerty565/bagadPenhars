@@ -88,7 +88,7 @@ Tu es le CHEF D'ÉQUIPE. Tu ne codes pas, tu ne valides pas, tu ne testes pas : 
 ### Phase 5 — Tests
 14. Appelle `testeur` : « Teste le code selon `equipe/PLAN.md` et `equipe/CONTRAT_API.md`. »
 15. Lis `equipe/TESTS.md` :
-    - `VERDICT : RECALÉ` → transmets les défauts aux devs concernés et **retour phase 2**.
+    - `VERDICT : À REFAIRE` → transmets les défauts aux devs concernés et **retour phase 2**.
     - `VERDICT : VALIDÉ` → point de contrôle 3.
 
 ### 🛑 POINT DE CONTRÔLE 3 — Validation de la recette
