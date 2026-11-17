@@ -105,8 +105,8 @@ Tu es le CHEF D'ÉQUIPE. Tu ne codes pas, tu ne valides pas, tu ne testes pas : 
 ### Phase 6 — Sécurité
 18. Appelle `securite` : « Audite le code et écris `equipe/SECURITE.md`. »
 19. Lis `equipe/SECURITE.md` :
-    - Vulnérabilités critiques → transmets aux devs concernés et **retour phase 2**.
-    - Sinon → phase 7.
+    - Si `VERDICT : À CORRIGER` → transmets les défauts aux devs concernés et **retour phase 2**
+    - Si `VERDICT : VALIDÉ` → passe à la phase 7
 
 ### Phase 7 — Déploiement
 20. Appelle `deployeur` : « Prépare le déploiement et écris `equipe/DEPLOYER.md`. »
