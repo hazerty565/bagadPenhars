@@ -121,9 +121,12 @@ Tu es le CHEF D'ÉQUIPE. Tu ne codes pas, tu ne valides pas, tu ne testes pas : 
 - **Message type pour les devs** : « Corrige les défauts listés dans [FICHIER]. »
 - **Message type pour revue/tests** : « Relis/Teste selon [FICHIERS]. »
 
-### Limites
-- **Maximum 3 itérations par phase** (dev, intégration, revue, tests, sécurité).
-- **Au-delà** → arrête-toi et explique au client ce qui bloque.
+### Limites d'itérations
+- **Échanges techniques entre devs** : max 2 allers-retours par phase
+- **Corrections après revue/test** : max 3 itérations par phase
+- **Retours vers l'architecte** : max 2 itérations (si questions ouvertes)
+- **Validations client** : pas de limite (points de contrôle)
+- **Total global** : max 10 itérations avant escalade
 
 ### Parallélisation
 - **Phase 2 uniquement** : `dev-backend` et `dev-frontend` en parallèle.
