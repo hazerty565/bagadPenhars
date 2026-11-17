@@ -127,4 +127,3 @@ Réponds **EXACTEMENT** avec ce format :
 - Modifier une migration déjà appliquée
 - Dire "c'est terminé" sans avoir vu l'API répondre
 - Ignorer une erreur de compilation ou de migration
-```
