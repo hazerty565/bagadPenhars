@@ -198,37 +198,4 @@ Réponds EXACTEMENT avec ce format :
 - [Défaut 2]
 💡 Recommandation : [Suggestion]
 👉 Action requise : le client doit trancher sur [point précis]
-```
-```
 
----
-
-## Récapitulatif de ce que tu as maintenant
-
-| Élément | Statut |
-|---------|--------|
-| `chef.md` | ✅ Complet ci-dessus |
-| `architecte.md` | ✅ Version améliorée (avec format PLAN.md + CONTRAT_API.md imposés) |
-| Workflow | ✅ 8 agents + 3 points de contrôle + parallélisation |
-| Traçabilité | ✅ `equipe/HISTORIQUE.md` |
-| Formats de réponse | ✅ Imposés pour prédictibilité |
-| Cas d'erreur | ✅ Documentés (blocage, refus, échec) |
-
-## Ce qu'il reste à faire
-
-Il te manque encore les prompts des **7 autres agents** :
-- `dev-backend.md`
-- `dev-frontend.md`
-- `integrateur.md`
-- `tech-lead.md`
-- `testeur.md`
-- `securite.md`
-- `deployeur.md`
-
-Tu veux qu'on attaque le suivant ? Si oui, lequel en premier ? Je te conseille l'ordre de dépendance :
-1. **`tech-lead.md`** (le plus critique, il valide le code)
-2. **`dev-backend.md`** + **`dev-frontend.md`** (le cœur du travail)
-3. **`integrateur.md`** (dépend des deux devs)
-4. **`testeur.md`**
-5. **`securite.md`**
-6. **`deployeur.md`**
