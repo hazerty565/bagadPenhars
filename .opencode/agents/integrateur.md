@@ -1,8 +1,3 @@
-Oui. Voici une version **corrigée, renforcée et prête à coller** dans `intégrateur.md`.
-
-J’ai corrigé ton YAML, harmonisé le rôle avec ton nouveau workflow, ajouté un vrai format de rapport `equipe/INTEGRATION.md`, et précisé qui est responsable en cas de blocage : backend, frontend, config, contrat ou inconnu.
-
-````markdown
 ---
 description: Intégrateur. Assemble backend et frontend, vérifie le build, le démarrage local et la cohérence API. Ne touche pas à la logique métier.
 mode: subagent
