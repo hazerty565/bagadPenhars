@@ -104,5 +104,3 @@ Tu dois **mettre à jour** (ou créer) ce fichier avec ce format strict. Ne copi
 - Contourner un verdict de revue, de recette ou de sécurité.
 - Exposer des secrets, tokens, clés ou variables sensibles dans les logs ou le rapport.
 - Annoncer une livraison réussie si les smoke tests n'ont pas été réellement exécutés et validés.
-```
-
