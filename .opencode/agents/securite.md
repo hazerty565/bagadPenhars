@@ -329,28 +329,3 @@ Le déployeur ne doit pas engager de mise en production tant que :
 - Le client n'a pas donné son autorisation explicite au déploiement
 
 Ton audit ne remplace ni la revue technique du Tech Lead ni les tests fonctionnels du Testeur.
-```
-
----
-
-## Améliorations apportées
-
-| Élément | Avant | Après |
-|---------|-------|-------|
-| **Format SECURITE.md** | Liste de points à inclure | Template Markdown strict avec sections numérotées |
-| **Réponse finale** | "Réponds brièvement" | Format exact imposé avec statistiques |
-| **Checklist documents** | Non structurée | Checklist à cocher |
-| **Statistiques** | Non imposées | Tableau obligatoire par gravité |
-| **Contrôles réalisés** | Non documentés | Tableau obligatoire |
-| **Re-audit** | Mentionné | Processus structuré avec traçabilité |
-| **Preuves** | "Indique les éléments" | Format imposé (fichier, ligne, commande, résultat) |
-| **Recommandations** | Non structurées | Liste prioritaire numérotée |
-| **Cohérence** | Format libre | Template identique pour tous les rapports d'équipe |
-
----
-
-## Prochain agent
-
-Il nous reste **`testeur.md`** et **`tech-lead.md`**. Je te recommande **`tech-lead.md`** en priorité, car c'est lui qui valide le code avant les tests et qui est au cœur du cycle de feedback.
-
-Lequel veux-tu que je rédige ensuite ?
