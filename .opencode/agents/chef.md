@@ -116,6 +116,12 @@ Tu es le CHEF D'ÉQUIPE. Tu ne codes pas, tu ne valides pas, tu ne testes pas : 
 
 ## Règles
 
+### Communication entre développeurs
+Si `dev-backend` ou `dev-frontend` a besoin d'une information de l'autre :
+1. Il le signale dans sa réponse finale (section "Points fragiles")
+2. Le Chef transmet la question à l'autre dev
+3. Les devs ne s'appellent jamais directement (task: deny)
+   
 ### Communication
 - **Passe les chemins, pas les résumés** : ce qui est écrit dans `equipe/` fait foi.
 - **Message type pour les devs** : « Corrige les défauts listés dans [FICHIER]. »
