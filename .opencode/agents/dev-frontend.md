@@ -155,20 +155,7 @@ Réponds **EXACTEMENT** avec ce format :
 | **Interdictions** | Liste en vrac | Section dédiée "Interdictions absolues" |
 | **Traçabilité** | Non documentée | Liste des composants créés/modifiés |
 
----
 
-## Cohérence avec `dev-backend.md`
 
-Les deux agents ont maintenant :
-- ✅ La même structure (8 sections)
-- ✅ Le même format de réponse finale
-- ✅ La même gestion des erreurs (3 tentatives max)
-- ✅ La même règle sur les conflits plan/contrat
-- ✅ La même checklist de vérification
-- ✅ La même approche des missions suivantes (corrections)
 
----
 
-## Prochain agent
-
-On continue avec **`integrateur.md`** ? C'est lui qui assemble le travail des deux devs et qui détecte les conflits d'intégration avant que le Tech Lead ne relise.
