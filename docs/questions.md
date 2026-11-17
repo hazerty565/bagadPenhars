@@ -663,3 +663,86 @@ modification de code n'est engagée avant validation de ce plan.
   développement sur Neon `test`; Preview et Production utilisent leurs
   environnements Cloudflare séparés pour les secrets et Hyperdrive.
   `BETTER_AUTH_SECRET` est le nom de référence du secret Better Auth.
+
+## 2026-11-17 — Questions issues de la session d'architecture (plan 2026-11-17)
+
+### Q-2026-11-17-01 — Motion déclaré dans `AGENTS.md` mais absent du dépôt
+
+- **Date :** 2026-11-17
+- **Problème :** `AGENTS.md` §0 impose « Motion » dans la stack frontend et
+  demande de respecter `prefers-reduced-motion` pour Motion. Le paquet `motion`
+  n'est pas dans `package.json`, aucun composant ne l'importe, et les animations
+  livrées sont en CSS/Tailwind. `svelte-i18n` est dans la même situation, mais il
+  est déjà couvert par la question Q-2026-11-09-01.
+- **Pourquoi :** installer Motion et réécrire des animations existantes n'est
+  pas un correctif fonctionnel ; à l'inverse, laisser `AGENTS.md` prescrire un
+  paquet absent fait diverger la source de vérité et le dépôt, ce qui bloque la
+  revue de fin de tâche (étape 46).
+- **Options possibles :**
+  - **A.** Entériner l'état réel : aucune animation Motion, animations CSS
+    respectant `prefers-reduced-motion`, et mettre `AGENTS.md` à jour.
+  - **B.** Installer `motion` et migrer les transitions existantes vers Motion.
+  - **C.** Ne rien changer et laisser la divergence documentée.
+- **Recommandation :** **A**, aucune valeur fonctionnelle ajoutée par Motion ici
+  et le design est figé à 99 % ; B rouvre le frontend pour un gain nul.
+- **État :** ouverte — bloque l'étape 46 (finition frontend).
+
+### Q-2026-11-17-02 — Durée de vie du lien d'invitation : 1 heure ou 7 jours
+
+- **Date :** 2026-11-17
+- **Problème :** `docs/Spec.md` §4.2 impose un lien expirant **après une heure**.
+  Le code (`invitation.create`, `invitation.resend` dans
+  `src/lib/server/member/commands.ts`) calcule `Date.now() + 7 jours`, et le
+  journal du 2026-11-15 documente « expiration 7 jours » dans l'interface. Aucune
+  décision client ne modifie la Spec.
+- **Pourquoi :** la durée conditionne le test du parcours d'invitation (étape 45),
+  le message affiché aux secrétaires et la politique de renvoi. Choisir sans
+  arbitrage revient à contredire soit la Spec, soit le code livré.
+- **Options possibles :**
+  - **A.** Appliquer la Spec : 1 heure, renvoi possible ensuite.
+  - **B.** Entériner 7 jours et modifier `docs/Spec.md` §4.2 en conséquence.
+- **Recommandation :** **A** — la Spec est la référence fonctionnelle validée ;
+  si 7 jours étaient voulus, il faut une décision écrite, pas un écart de code.
+- **État :** ouverte — bloque l'étape 45 (tests du parcours d'invitation).
+
+### Q-2026-11-17-03 — Photo de profil réelle ou portrait illustré
+
+- **Date :** 2026-11-17
+- **Problème :** l'espace adhérents livré utilise une palette de portraits
+  illustrés (`profiles.avatar`, entier 1 à 12, commande `profile.avatar`). La
+  Spec (§4.3, F15/F19) et le schéma prévoient aussi une photo
+  (`profiles.avatar_url`), et `app.member_directory` l'expose déjà. Aucun écran
+  ne permet de déposer une photo.
+- **Pourquoi :** l'étape 43 doit choisir entre brancher un téléversement réel
+  (donc toucher l'interface du profil et du trombinoscope) et conserver la
+  palette. Le design privé est figé à 98 % : ajouter un bouton de dépôt n'est
+  acceptable que si c'est un correctif fonctionnel attendu.
+- **Options possibles :**
+  - **A.** Photo réelle téléversée, portrait illustré conservé comme repli
+    lorsque `avatar_url` est vide.
+  - **B.** Palette illustrée seule, `avatar_url` réservé à un usage futur.
+- **Recommandation :** **A** — le trombinoscope est censé montrer les membres ;
+  la palette était une solution de démonstration.
+- **État :** ouverte — bloque l'étape 43.
+
+### Q-2026-11-17-04 — Champs éditoriaux de l'article public absents de la table
+
+- **Date :** 2026-11-17
+- **Problème :** la vue publique d'un article attend `category`, `image` et
+  `imageAlt` (`PublicArticle` dans `src/lib/types.ts`). La table `articles`
+  contient uniquement `title`, `slug`, `excerpt`, `content`, `is_published`,
+  `published_at`, `author_id`. Les articles publics venant de
+  `src/lib/data/articles.ts`, l'écart n'apparaît pas encore.
+- **Pourquoi :** brancher les actualités sur Neon (étape 38) oblige soit à
+  inventer une catégorie et une image, soit à modifier la vue publique, soit à
+  ajouter des colonnes. Aucune de ces trois solutions n'est décidée.
+- **Options possibles :**
+  - **A.** Migration additive : `category text NULL`, `image_url text NULL`,
+    `image_alt text NULL` ; l'interface reste identique, les valeurs vides sont
+    masquées (aucune refonte).
+  - **B.** Retirer catégorie et image de la carte d'article publique.
+  - **C.** Continuer à servir les articles publics depuis les données
+    provisoires.
+- **Recommandation :** **A** — design public préservé, aucune donnée inventée,
+  migration additive conforme aux règles du projet.
+- **État :** ouverte — bloque l'étape 38.
