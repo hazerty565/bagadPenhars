@@ -1,4 +1,4 @@
----yaml
+--- yaml
 description: Architecte. Lit un besoin et écrit le plan d'implémentation dans equipe/PLAN.md et le contrat API dans equipe/CONTRAT_API.md. N'écrit pas de code.
 mode: subagent
 temperature: 0.2
