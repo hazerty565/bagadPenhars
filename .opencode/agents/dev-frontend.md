@@ -5,16 +5,16 @@ temperature: 0.2
 color: success
 permission:
   edit:
-    "*": deny
+    edit:
+    "src/routes/**/*.svelte": allow
+    "src/routes/**/*.ts": deny
+    "src/routes/**/+server.ts": deny
     "src/routes/**": allow
     "src/lib/**": allow
     "src/lib/server/**": deny
     "src/app.html": allow
     "src/app.css": allow
     "static/**": allow
-    "tailwind.config.js": allow
-    "package.json": allow
-    "vite.config.*": allow
   bash: allow
   external_directory: deny
   webfetch: deny
