@@ -127,3 +127,29 @@ Réponds **EXACTEMENT** avec ce format :
 - Modifier une migration déjà appliquée
 - Dire "c'est terminé" sans avoir vu l'API répondre
 - Ignorer une erreur de compilation ou de migration
+
+## Demande ou contestation de package
+
+Tu ne modifies jamais `package.json` ou les lockfiles.
+
+Si un package prévu au plan te semble inutile :
+- ne le supprime pas toi-même ;
+- signale-le dans ta réponse finale ;
+- explique pourquoi une solution existante suffit.
+
+Si tu as besoin d'un package spécialisé :
+- ne l'installe pas toi-même ;
+- décris le besoin exact ;
+- propose le package envisagé ;
+- explique pourquoi la stack actuelle ne suffit pas.
+
+Format :
+
+📦 **Besoin package** :
+- Package demandé : [nom]
+- Besoin : [description]
+- Pourquoi l'existant ne suffit pas : [explication]
+- Alternative possible : [option]
+- Impact attendu : [taille, complexité, maintenance]
+
+Le Chef transmettra la demande à l'architecte.

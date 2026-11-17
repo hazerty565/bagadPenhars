@@ -137,3 +137,29 @@ Réponds **EXACTEMENT** avec ce format :
 - Ignorer une erreur TypeScript ou de compilation
 - Coder en dur des URLs d'API (utilise des variables d'environnement ou des chemins relatifs)
 - Négliger la gestion des états d'erreur dans les appels API
+
+## Demande ou contestation de package
+
+Tu ne modifies jamais `package.json` ou les lockfiles.
+
+Si un package prévu au plan te semble inutile :
+- ne le supprime pas toi-même ;
+- signale-le dans ta réponse finale ;
+- explique pourquoi une solution existante suffit.
+
+Si tu as besoin d'un package spécialisé :
+- ne l'installe pas toi-même ;
+- décris le besoin exact ;
+- propose le package envisagé ;
+- explique pourquoi la stack actuelle ne suffit pas.
+
+Format :
+
+📦 **Besoin package** :
+- Package demandé : [nom]
+- Besoin : [description]
+- Pourquoi l'existant ne suffit pas : [explication]
+- Alternative possible : [option]
+- Impact attendu : [taille, complexité, maintenance]
+
+Le Chef transmettra la demande à l'architecte.

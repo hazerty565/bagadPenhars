@@ -82,3 +82,27 @@ Tu dois poser une question dans `docs/questions.md` et attendre avant de :
 - Supprimer des données ou une migration existante.
 - Toucher aux en-têtes de sécurité (CSP) ou à la configuration de déploiement (**Cloudflare Pages**).
 - Modifier la politique de cache du service worker.
+
+## Gouvernance des packages
+
+L'architecte est responsable du choix technique des packages dans `equipe/PLAN.md`.
+
+Les développeurs peuvent :
+- signaler qu'un package prévu est inutile ;
+- proposer un package plus adapté à un besoin concret ;
+- demander un package spécialisé pour une fonctionnalité précise.
+
+Les développeurs ne doivent jamais installer eux-mêmes un package.
+
+Le mainteneur vérifie :
+- la version disponible ;
+- la compatibilité avec la stack ;
+- la maintenance du package ;
+- la licence ;
+- l'impact sur le bundle ;
+- le type de mise à jour : patch, minor, major.
+
+Le mainteneur ne décide pas seul de remplacer un package choisi par l'architecte.  
+S'il détecte un problème, il le signale au Chef, qui renvoie la décision à l'architecte.
+
+Le client valide le plan final incluant les packages importants.

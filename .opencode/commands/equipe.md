@@ -1,26 +1,5 @@
-## Analyse critique
-
-**Forces :**
-- Simple et direct
-- Référence clairement `docs/` pour le contexte
-- Utilise `$ARGUMENTS` pour la flexibilité
-- Précise la langue (français)
-
-**Faiblesses :**
-- Pas de vérification des prérequis (dossier `docs/`, agents configurés)
-- Pas de format de démarrage clair pour le Chef
-- Pas de rappel du workflow (points de contrôle)
-- Pas de gestion d'erreur si un agent manque ou si `docs/` est vide
-- Pas de règle sur la durée maximale ou les timeout
-- Pas de format pour transmettre le besoin aux agents
-
 ---
-
-## Version améliorée de `equipe.md`
-
-```markdown
----
-description: Lance l'équipe complète (architecte → devs → intégrateur → tech-lead → testeur → sécurité → déploieur) sur un besoin. Orchestration de bout en bout avec 3 points de contrôle client.
+description: Lance l'équipe complète (architecte → devs → intégrateur → tech-lead → testeur → sécurité → déployeur) sur un besoin. Orchestration de bout en bout avec 3 points de contrôle client.
 agent: chef
 ---
 
@@ -32,21 +11,20 @@ Tu es le Chef d'équipe. Tu dois orchestrer l'équipe complète pour réaliser l
 
 Avant de lancer le workflow, vérifie que :
 
-1. **Le dossier `docs/` existe et contient des fichiers** :
-   - Si `docs/` est vide ou inexistant → **ARRÊT** et signale à l'utilisateur : "Le dossier `docs/` est vide ou inexistant. Veuillez décrire le besoin dans `docs/besoin.md` avant de lancer l'équipe."
+1. **Le dossier `docs/` existe et contient le brief** :
+   - Si `docs/` est vide ou inexistant, ou si `docs/brief.md` est absent → **ARRÊT** et signale à l'utilisateur : « Le dossier `docs/` est vide ou `docs/brief.md` est absent. Veuillez décrire le besoin dans `docs/brief.md` avant de lancer l'équipe. »
    - Sinon → lis tous les fichiers de `docs/` pour comprendre le contexte et le besoin.
 
-2. **Les agents sont configurés** :
-   - Vérifie que les fichiers suivants existent dans le répertoire des agents :
-     - `architecte.md`
-     - `dev-backend.md`
-     - `dev-frontend.md`
-     - `integrateur.md`
-     - `tech-lead.md`
-     - `tester.md`
-     - `securite.md`
-     - `deployeur.md`
-   - Si un agent manque → **ARRÊT** et signale à l'utilisateur : "L'agent [NOM] n'est pas configuré. Veuillez créer [NOM].md avant de lancer l'équipe."
+2. **Les agents sont configurés** dans `.opencode/agents/` :
+   - `architecte.md`
+   - `dev-backend.md`
+   - `dev-frontend.md`
+   - `integrateur.md`
+   - `tech-lead.md`
+   - `testeur.md`
+   - `securite.md`
+   - `deployer.md`
+   - Si un agent manque → **ARRÊT** et signale à l'utilisateur : « L'agent [NOM] n'est pas configuré. Veuillez créer `.opencode/agents/[NOM].md` avant de lancer l'équipe. »
 
 3. **Le besoin est clair** :
    - Si le besoin est trop vague après lecture de `docs/` → transmets les questions à l'utilisateur avant de lancer l'architecte.
@@ -55,19 +33,24 @@ Avant de lancer le workflow, vérifie que :
 
 **Lis tous les fichiers du dossier `docs/`** : ils décrivent le besoin et le contexte du projet.
 
-**Précisions complémentaires** : $ARGUMENTS
+**Précisions complémentaires** (arguments de la commande) : $ARGUMENTS
+
+Si `$ARGUMENTS` est vide, applique le cadre par défaut : le design de la partie publique est figé à 99 %, le design de la partie privée est figé à 98 %.
 
 ## Workflow à suivre
 
 Tu dois suivre **strictement** le workflow défini dans ton prompt `chef.md`, avec les 3 points de contrôle :
 
 ### 🛑 POINT DE CONTRÔLE 1 — Validation du plan
+
 Après l'architecte, tu dois **arrêter et attendre la validation du client** avant de lancer les développeurs.
 
 ### 🛑 POINT DE CONTRÔLE 2 — Validation de la revue technique
+
 Après le Tech Lead, tu dois **arrêter et attendre la validation du client** avant de lancer les tests.
 
 ### 🛑 POINT DE CONTRÔLE 3 — Validation de la recette
+
 Après le Testeur, tu dois **arrêter et attendre la validation du client** avant de lancer l'audit de sécurité.
 
 ## Règles de communication
@@ -85,22 +68,25 @@ Après le Testeur, tu dois **arrêter et attendre la validation du client** avan
 
 - **Transmission du besoin** : Quand tu appelles l'architecte, transmets-lui :
   - Le contenu complet des fichiers `docs/*.md`
-  - Les précisions complémentaires ($ARGUMENTS)
-  - La directive : "Lis tous les fichiers docs/ et réalise le plan selon ton prompt architecte.md"
+  - Les précisions complémentaires (`$ARGUMENTS`)
+  - La directive : « Lis tous les fichiers `docs/` et réalise le plan selon ton prompt `architecte.md` »
 
 ## Gestion des erreurs
 
 ### Si un agent échoue ou ne répond pas
+
 - Note l'incident dans `equipe/HISTORIQUE.md`
-- Signale-le à l'utilisateur
+- Signale-le à l'utilisateur et **ARRÊT**
 - N'essaie pas de contourner ou de remplacer l'agent
 
-### Si le workflow bloque (3 itérations max atteintes)
+### Si le workflow bloque (3 itérations max atteintes sur une phase)
+
 - Arrête-toi
 - Explique clairement à l'utilisateur ce qui bloque
 - Demande une décision humaine
 
 ### Si un point de contrôle est refusé par le client
+
 - Transmets les modifications demandées à l'agent concerné
 - Reprends le workflow à la phase correspondante
 
@@ -139,5 +125,3 @@ Puis lance l'architecte et suis le workflow.
 - Ne valide pas à la place du client.
 - Ne corrige pas le code toi-même.
 - Ne lance pas plusieurs agents en parallèle sauf pour dev-backend + dev-frontend (phase 2).
-```
-
