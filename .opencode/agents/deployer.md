@@ -1,12 +1,3 @@
-Voici l'analyse et la version améliorée de ton agent **Déployeur**. 
-
-Ton prompt initial est déjà **excellent** : très rigoureux sur les autorisations, les limites et la méthode. J'ai simplement renforcé la structure pour garantir que le rapport produit soit **parfaitement lisible par le Chef d'équipe** et que les vérifications soient sous forme de checklist inratable.
-
----
-
-## Version améliorée de `deployeur.md`
-
-```markdown
 ---
 description: Déployeur. Prépare et exécute les déploiements autorisés sur Cloudflare Pages. Ne modifie jamais le code source.
 mode: subagent
