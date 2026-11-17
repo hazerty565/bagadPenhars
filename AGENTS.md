@@ -1,131 +1,84 @@
-# AGENTS.md : Site Bagad Penhars
+# AGENTS.md : Contexte Maître du Projet Bagad Penhars
 
-Site de l'association Bagad Penhars (Quimper) : vitrine publique + espace adhérents sur invitation, installable en PWA.
-Stack : SvelteKit 5 (runes), Tailwind, Motion, Better Auth, Neon PostgreSQL, Cloudflare Pages, Cloudflare R2, OneSignal.
+Ce fichier est la **source de vérité** pour tous les agents de l'équipe. 
+Lis ce fichier en premier, puis les fichiers pertinents dans `docs/`. 
+En cas de doute ou de contradiction, n'invente jamais : écris la question dans `docs/questions.md`.
 
-**Lis ce fichier d'abord, puis `docs/`. En cas de doute, n'invente pas : écris la question dans `docs/questions.md`.**
+## 0. Stack Technique
+- **Frontend** : SvelteKit 5 (Runes uniquement), Tailwind CSS, Motion, `svelte-i18n`.
+- **Backend / Auth** : Better Auth, Neon PostgreSQL (avec politiques RLS), Drizzle ORM.
+- **Infrastructure** : Cloudflare Pages, Cloudflare R2 (stockage), Cloudflare Hyperdrive.
+- **Services tiers** : OneSignal (notifications push).
 
-## 1. Ordre de lecture
+## 1. Ordre de lecture des documents
 
-| Fichier                                 | Pourquoi                                                     |
-| --------------------------------------- | ------------------------------------------------------------ |
-| `docs/brief.md`                         | Besoin, rôles, décisions de visibilité                       |
-| `docs/Spec.md`                          | Exigences fonctionnelles et techniques pour les développeurs |
-| `docs/Spec_UI.md`                       | Spécifications des pages, composants et comportements UI     |
-| `docs/Structure.md`                     | Structure du dépôt, routes, bibliothèques et services        |
-| `docs/architecture.md`                  | Routes, flux d'auth, arborescence                            |
-| `docs/database.md`                      | Neon, Better Auth, R2, migrations                            |
-| `docs/bagad-penhars-schema.mmd`         | Diagramme du schéma de base de données                       |
-| `docs/bagad-penhars-schema-drawsql.sql` | Schéma SQL source pour DrawSQL                               |
-| `docs/drawSQL_BagadPenhars.webp`        | Illustration du schéma de base de données                    |
-| `docs/pwa.md`                           | Manifest, service worker, notifications                      |
-| `docs/agenda.md`                        | Interface et flux de l'agenda                                |
-| `docs/event.md`                         | Règles métier des événements et réponses RSVP                |
-| `docs/media.md`                         | Gestion des médias, stockage R2 et règles d'upload           |
-| `docs/partenaire.md`                    | Organisation et ajout des partenaires                        |
-| `docs/roadmap.md`                       | Jalons et « Focus actuel »                                   |
-| `docs/backlog.md`                       | Tâches classées                                              |
-| `docs/suivi.md`                         | Avancement du projet et priorités                            |
-| `docs/questions.md`                     | Questions ouvertes et décisions à clarifier                  |
-| `docs/journal.md`                       | Où la dernière session s'est arrêtée                         |
+### À lire systématiquement en début de session
+- `docs/brief.md` : Besoin global, rôles, décisions de visibilité.
+- `docs/journal.md` : Où la dernière session s'est arrêtée, état actuel.
 
-Ne lis que ce dont la tâche a besoin, mais toujours `brief.md` et `journal.md` en début de session.
+### À lire selon la tâche en cours
+| Fichier | Quand le lire |
+|---------|---------------|
+| `docs/Spec.md` | Pour les exigences fonctionnelles et techniques détaillées. |
+| `docs/Spec_UI.md` | Pour les spécifications des pages, composants et comportements UI. |
+| `docs/Structure.md` | Pour comprendre l'arborescence du dépôt, routes et services. |
+| `docs/architecture.md` | Pour les flux d'authentification et l'architecture des routes. |
+| `docs/database.md` | Pour les détails Neon, Better Auth, R2 et les règles de migration. |
+| `docs/bagad-penhars-schema.*` | (`.mmd`, `.sql`, `.webp`) Pour visualiser le schéma de base de données. |
+| `docs/pwa.md` | Pour tout ce qui concerne le manifest, le service worker et les notifications. |
+| `docs/agenda.md` / `docs/event.md` | Pour les règles métier spécifiques à l'agenda et aux RSVP. |
+| `docs/media.md` | Pour la gestion des uploads, le stockage R2 et les règles d'accès. |
+| `docs/partenaire.md` | Pour l'organisation et l'ajout des partenaires. |
+| `docs/roadmap.md` / `docs/backlog.md` | Pour choisir la prochaine tâche (Focus actuel -> Backlog). |
+| `docs/questions.md` | Pour voir les décisions en attente ou les ambiguïtés. |
 
-## 2. Règles d'or
+*Règle : Ne lis que ce dont ta tâche a besoin, mais toujours `brief.md` et `journal.md`.*
 
-### Svelte 5
+## 2. Règles d'Or (Non négociables)
 
-- Runes uniquement : `$state`, `$derived`, `$effect`, `$props`.
-- Interdits : `export let`, `$:`, `on:click` (utiliser `onclick`), stores legacy pour l'état local.
+### Svelte 5 & Frontend
+- **Runes uniquement** : utilise `$state`, `$derived`, `$effect`, `$props`.
+- **Interdits absolus** : `export let`, `$:`, `on:click` (utiliser `onclick`), et les stores legacy pour l'état local des composants.
+- **UI** : Tailwind uniquement (via les tokens du thème). Respecter `prefers-reduced-motion` pour Motion. Mobile first et accessibilité (labels, contrastes, focus visible).
+- **i18n** : Site public en `fr`, `en`, `br` via `svelte-i18n`. L'espace adhérents reste en français. Centralise les textes dans `src/lib/i18n/`, jamais de chaînes en dur dans les composants.
 
-### Neon, Better Auth et sécurité
+### Base de données, Auth & Sécurité (Critique)
+- **Autorisations** : Toujours vérifiées côté serveur (loads/actions/endpoints).
+- **Identité vs Rôle** : Better Auth gère l'identité et les sessions. Les rôles métier se lisent **uniquement** dans `profiles.role` (ENUM PostgreSQL `app_role`), **jamais** dans `user_metadata`.
+- **RLS & Contexte** : Les tables sensibles utilisent les politiques RLS natives de Neon/PostgreSQL en défense en profondeur. Après validation de la session Better Auth, chaque transaction applicative établit son contexte utilisateur avec `set_config('app.current_user_id', '...', true)` avant les requêtes métier.
+- **Hyperdrive** : Sert uniquement au pooling des connexions. **Ne jamais** activer le cache de requêtes pour des données protégées par RLS ou dépendantes de l'identité. Le cache n'est que pour les lectures explicitement publiques.
+- **Migrations** : Reproductibles via Drizzle. Une migration appliquée n'est **jamais** modifiée : on en ajoute une nouvelle additive.
+- **Secrets** : Les identifiants Neon, clés Better Auth et clés OneSignal restent strictement côté serveur (`.env` ignoré, `.env.example` à jour).
 
-- Les autorisations métier sont vérifiées côté serveur dans les loads/actions/endpoints.
-- Les données et sessions sont gérées avec Better Auth et Neon PostgreSQL.
-- Les tables sensibles utilisent les politiques RLS natives de Neon/PostgreSQL
-  en défense en profondeur, en plus des guards applicatifs; ne pas réintroduire
-  Supabase ni ses services.
-- Après validation de la session Better Auth, chaque transaction applicative
-  établit son contexte utilisateur avec `set_config(..., true)` avant les
-  requêtes métier. Le contexte est local à la transaction; ne jamais conserver
-  l'identité dans l'état d'une connexion Hyperdrive réutilisable.
-- Les données protégées par RLS ne passent pas par un cache partagé de
-  requêtes. Hyperdrive sert au pooling des connexions; n'activer le cache de
-  requêtes que pour des lectures explicitement publiques et indépendantes de
-  l'identité.
-- Utiliser des migrations reproductibles pour toute modification de schéma.
-- Les rôles se lisent dans `profiles.role`, **jamais** dans `user_metadata`.
-  La colonne `profiles.role` utilise l'ENUM PostgreSQL `app_role`.
-- Better Auth est la source de l'identité et des sessions, pas la source
-  d'autorité des rôles métier.
-- Données via `+page.server.ts` / `+layout.server.ts`, garde sur `event.locals`.
-- Les identifiants Neon, les secrets Better Auth et les clés OneSignal restent côté serveur et ne sont jamais exposés au client.
-- La branche Neon `test` est utilisée par les déploiements de preview et les validations locales; `production` est réservée au déploiement de production.
-- Une migration appliquée n'est jamais modifiée : on en ajoute une nouvelle.
-
-### OneSignal
-
-- La clé REST reste côté serveur.
-- L'envoi vérifie le rôle : secrétaire (plusieurs pupitres), chef de pupitre (son pupitre), admin.
-
-### PWA
-
-- La PWA sert à permettre l'activation des notifications push : son installation
-  est requise sur Android et iOS selon le besoin produit.
-- Aucun mode hors-ligne n'est prévu pour les membres : l'espace adhérents et
-  ses données nécessitent une connexion réseau.
-- Le service worker sert aux notifications push; ne pas ajouter de cache
-  applicatif, ni mettre en cache des pages ou données membres.
-- Tout changement du manifest ou du service worker est consigné dans `docs/pwa.md`.
-
-### UI
-
-- Tailwind uniquement, couleurs et espacements via les tokens du thème.
-- Motion : respecter `prefers-reduced-motion`.
-- Mobile first, accessibilité (labels, contrastes, focus visible).
-- Site public traduit en français (`fr`), anglais (`en`) et breton (`br`) avec
-  le paquet `svelte-i18n`; l'espace adhérents et l'authentification restent en
-  français.
-- Centraliser les textes traduits dans les dictionnaires de `src/lib/i18n/`;
-  ne pas ajouter de chaînes d'interface localisées en dur dans les pages et
-  composants.
+### PWA & OneSignal
+- **PWA** : L'installation est requise pour les notifications push. **Aucun mode hors-ligne** pour l'espace adhérents. Le service worker sert *uniquement* aux push, pas de cache applicatif pour les pages/données membres.
+- **OneSignal** : La clé REST reste côté serveur. L'envoi de notification vérifie strictement le rôle : secrétaire (plusieurs pupitres), chef de pupitre (son pupitre), ou admin.
 
 ### Général
+- Pas de nouvelle dépendance sans justification dans `docs/journal.md`.
+- Le trombinoscope est réservé aux membres actifs connectés. Les titres du bureau ne sont jamais publics.
+- **Hors périmètre absolu** : paiement en ligne, inscription libre.
 
-- Aucun secret committé (`.env` ignoré, `.env.example` à jour).
-- Pas de nouvelle dépendance sans la justifier dans `docs/journal.md`.
-- Le trombinoscope est réservé aux membres actifs connectés et n'expose que les
-  champs autorisés dans `docs/brief.md` ; les titres du bureau ne sont jamais
-  publics.
+## 3. Workflow Multi-Agents
 
-## 3. Choisir le travail
+Ce projet est développé par une équipe d'agents orchestrée par le `chef.md`. 
+- Si tu es un agent de développement, tu suis les directives de `equipe/PLAN.md` et `equipe/CONTRAT_API.md`.
+- Tu ne dois jamais modifier les fichiers dans le dossier `equipe/` (sauf si ton rôle d'agent le spécifie explicitement, comme l'Intégrateur ou le Tech Lead).
+- En cas de conflit entre le plan et ce fichier `AGENTS.md`, **ce fichier `AGENTS.md` prévaut**. Signale-le dans `docs/questions.md`.
 
-1. `docs/roadmap.md` → « Focus actuel »
-2. `docs/backlog.md`, dans l'ordre
-3. Besoin flou ou contradictoire : poser la question dans `docs/questions.md`, passer à la tâche suivante.
+## 4. Checklist de fin de tâche
 
-Ne pas entamer de refonte ni de nettoyage qui n'est pas demandé.
+Avant de considérer une tâche comme terminée, tu dois impérativement :
+1. Exécuter : `npm run check && npm run lint && npm run build`
+2. Si le schéma a changé : générer une nouvelle migration + mettre à jour `docs/database.md` (incluant la matrice des droits RLS).
+3. Si une route ou un flux a changé : mettre à jour `docs/architecture.md`.
+4. Ajouter une entrée datée dans `docs/journal.md` : ce qui est fait, ce qui reste, les pièges rencontrés.
 
-## 4. Avant de terminer une tâche
+## 5. Demander avant d'agir (Escalade requise)
 
-```
-npm run check && npm run lint && npm run build
-```
-
-- Schéma modifié : nouvelle migration Neon + mise à jour de `docs/database.md`
-  (matrice des droits et politiques RLS comprises) + tests d'autorisation
-  dans `tests/`, y compris absence de contexte et isolation entre utilisateurs.
-- Route ou flux modifié : mise à jour de `docs/architecture.md`.
-- Ajouter une entrée datée dans `docs/journal.md` : ce qui est fait, ce qui reste, les pièges rencontrés.
-
-## 5. Demander avant d'agir
-
+Tu dois poser une question dans `docs/questions.md` et attendre avant de :
 - Changer de stack ou ajouter un service tiers.
 - Modifier les rôles, les autorisations existantes ou le flux d'invitation.
-- Supprimer des données ou une migration.
-- Toucher aux en-têtes de sécurité (CSP) ou à la configuration Netlify.
+- Supprimer des données ou une migration existante.
+- Toucher aux en-têtes de sécurité (CSP) ou à la configuration de déploiement (**Cloudflare Pages**).
 - Modifier la politique de cache du service worker.
-
-## 6. Hors périmètre
-
-Annuaire des membres, paiement en ligne, inscription libre.
