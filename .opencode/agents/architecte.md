@@ -160,19 +160,3 @@ Réponds EXACTEMENT avec ce format :
 🎯 Décision clé : Backend Node.js/Express + PostgreSQL pour la cohérence JSON/SQL
 ❓ Questions ouvertes : Authentification (JWT vs sessions) — voir docs/questions.md
 ```
-```
-
----
-
-## Récapitulatif des améliorations par rapport à ta version initiale
-
-| Élément | Avant | Après |
-|---------|-------|-------|
-| Format PLAN.md | Libre | Structure imposée (tableau décisions, étapes testables) |
-| Format CONTRAT_API.md | Libre | Structure JSON avec erreurs HTTP |
-| Gestion des conflits | Non gérée | Notés dans `docs/questions.md` |
-| Cohérence plan/API | Non garantie | Règle de traçabilité imposée |
-| Granularité étapes | Vague | 1-2 sessions max |
-| Réponse finale | "Quelques lignes" | Format exact imposé |
-| Questions floues | Format libre | Structure avec contexte/ambiguïté/options/recommandation |
-| Nommage | Non imposé | camelCase + noms explicites |
