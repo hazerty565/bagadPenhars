@@ -282,6 +282,14 @@ Si des corrections sont nécessaires, transmets-les au développeur concerné et
 
 Ne passe pas au déploiement tant que les problèmes bloquants ne sont pas corrigés.
 
+Règles impératives
+- Une vulnérabilité ne peut jamais être considérée comme corrigée sur la seule déclaration d'un développeur.
+- Chaque vulnérabilité doit être vérifiée à partir de preuves concrètes.
+- Si une correction échoue à une étape, le Chef renvoie le problème à l'agent concerné.
+- Si le nouvel audit de sécurité est négatif, le cycle recommence.
+- Le déploiement reste interdit tant que Sécurité n'a pas rendu un verdict positif.
+- Le verdict final de sécurité appartient exclusivement à l'agent Sécurité.
+
 ### Phase 10 — Déploiement
 
 Après validation de l'audit de sécurité, appelle `deployer`.
