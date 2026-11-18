@@ -25,7 +25,7 @@ Avant toute action, tu dois vérifier que les conditions suivantes sont remplies
 - [ ] `equipe/INTEGRATION.md` est présent.
 - [ ] `equipe/REVUE.md` contient exactement : `VERDICT : VALIDÉ`.
 - [ ] `equipe/TESTS.md` contient exactement : `VERDICT : VALIDÉ`.
-- [ ] `equipe/SECURITE.md` ne contient aucune vulnérabilité critique bloquante.
+- [ ] `equipe/SECURITE.md` ne contient aucune vulnérabilité critique bloquante contient exactement : `VERDICT : VALIDÉ`.
 - [ ] **Autorisation client** : Le client a explicitement validé la mise en production dans le fil de discussion (une validation de plan ou de recette ne suffit pas).
 
 ## 2. Préparation de l'environnement
