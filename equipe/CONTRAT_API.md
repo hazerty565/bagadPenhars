@@ -12,6 +12,13 @@
 > marqués **À CONFIRMER** et renvoient à la question ouverte correspondante.
 >
 > Aucune question `Q-2026-11-08-01` à `Q-2026-11-08-09` n'est tranchée ici.
+>
+> **Mise à jour du 2026-11-18** : les décisions client Q-2026-11-17-01 à -04
+> (détail dans `docs/questions.md` et `equipe/PLAN.md` §0) sont intégrées. Elles
+> ne changent que : le type `TrombinoscopeEntry` et `PublicArticle` (§3), la
+> durée d'invitation (§5.5, §9.6), l'affichage des champs éditoriaux (§6.3), la
+> photo de profil et son repli sur la palette (§7.3, §7.7, §7.10, §12.3), les
+> colonnes d'article (§12.7). Aucune autre signature n'est modifiée.
 
 ---
 
@@ -183,7 +190,10 @@ export interface SessionProfile {
 	role: AppRole;
 	accountStatus: AccountStatus;
 	musicianLevel: MusicianLevel | null;
+	/** URL servie par `/api/files/private/...` ; `null` = aucune photo déposée. */
 	avatarUrl: string | null;
+	/** Identifiant de palette 1 à 12 ; affiché tant que `avatarUrl` est vide. */
+	avatar: number;
 	pupitres: Array<Pupitre & { isChef: boolean }>;
 }
 
@@ -211,7 +221,10 @@ export interface TrombinoscopeEntry {
 	id: string;
 	firstName: string;
 	lastName: string;
+	/** `null` = pas de photo déposée : le client affiche la palette `avatar`. */
 	avatarUrl: string | null;
+	/** Palette illustrée 1 à 12, toujours renseignée (repli). */
+	avatar: number;
 	pupitres: Pupitre[];
 	musicianLevel: MusicianLevel | null;
 	bureauPosition: string | null;
@@ -236,6 +249,11 @@ export interface PublicArticleSummary {
 	slug: string;
 	publishedAt: string;
 	author: { firstName: string; lastName: string };
+	/** `null` = non renseigné : la catégorie n'est pas affichée. */
+	category: string | null;
+	/** `null` = pas d'illustration : aucun bloc image n'est rendu. */
+	imageUrl: string | null;
+	imageAlt: string | null;
 }
 
 export interface PublicArticle extends PublicArticleSummary {
@@ -380,7 +398,7 @@ export interface NotificationLogEntry {
 - **Erreurs** : `400 validation_error`, `409 conflict` (e-mail déjà utilisé), `502 email_failed`.
 - **Règles** :
   - Le compte Auth est créé immédiatement ; le profil reçoit `account_status = 'pending'` et `role = 'member'`. Le rôle n'est jamais choisi par l'inviteur à cette étape.
-  - Le jeton est aléatoire, stocké **empreinté** (SHA-256), à usage unique, expire après **1 heure**.
+  - Le jeton est aléatoire, stocké **empreinté** (SHA-256), à usage unique, expire après **1 heure** (Q-2026-11-17-02, option A du 2026-11-18). La même durée est configurée côté Better Auth : elle ne doit pas exister seulement dans la table `invitations` (`docs/Spec.md` §4.2 point 6).
   - L'e-mail est envoyé par Resend ; le lien mène à l'acceptation (5.6).
   - Le pupitre attribué n'est pas modifiable par l'invité.
   - L'action est journalisée dans `activity_log` sans secret.
@@ -426,7 +444,7 @@ Les pages publiques sont localisées par `[lang=lang]` avec `lang ∈ { fr, en, 
 - **Succès (liste)** : `{ articles: PublicArticleSummary[] }` triés par `publishedAt` décroissant.
 - **Succès (détail)** : `{ article: PublicArticle }`.
 - **Erreurs** : `404 not_found` si l'article n'existe pas ou n'est pas publié.
-- **Règles** : seuls les articles `is_published = true` sont lisibles publiquement. Un brouillon n'est ni rendu ni récupérable par un appel direct. Le contenu est du Markdown.
+- **Règles** : seuls les articles `is_published = true` sont lisibles publiquement. Un brouillon n'est ni rendu ni récupérable par un appel direct. Le contenu est du Markdown. `category`, `imageUrl` et `imageAlt` proviennent des colonnes nullables `articles.category`, `articles.image_url` et `articles.image_alt` (Q-2026-11-17-04, option A du 2026-11-18) : **une valeur vide n'est jamais affichée** et aucune valeur de remplacement n'est inventée.
 
 ### 6.4 `GET /[lang=lang]/media` (load)
 
@@ -505,9 +523,10 @@ Toutes les routes de cette section exigent `requireAuth(locals)` : session valid
 - **Erreurs** : standard.
 - **Règles** :
   - Réservé aux membres actifs connectés ; jamais public.
-  - Champs exposés **uniquement** : `firstName`, `lastName`, `avatarUrl`, `pupitres[{id,name}]`, `musicianLevel`, `bureauPosition`.
+  - Champs exposés **uniquement** : `firstName`, `lastName`, `avatarUrl`, `avatar` (palette 1–12), `pupitres[{id,name}]`, `musicianLevel`, `bureauPosition`.
   - Champs **interdits** : `phone`, `email`, `address`, `role`, `accountStatus`, `authUserId`, `createdAt`, `updatedAt`, `bureauPositionId`, `isChef` (non prévu par le brief).
-  - La photo est servie par `/api/files/private/profiles/{profileId}/avatar.webp` après guard ; aucun membre, même admin, ne peut remplacer la photo d'un autre.
+  - Affichage : si `avatarUrl` est renseigné, la photo est affichée ; s'il est `null` (état livré, Q-2026-11-17-03 premier temps), le portrait illustré `avatar` est affiché.
+  - La photo est servie par `/api/files/private/profiles/{profileId}/avatar.{ext}` après guard ; aucun membre, même admin, ne peut remplacer la photo d'un autre.
   - Les titres du bureau ne sont jamais publics.
 
 ### 7.4 `GET /dashboard/documents` (load)
@@ -542,14 +561,22 @@ Toutes les routes de cette section exigent `requireAuth(locals)` : session valid
   - `bureauPositionId` est réservé à l'administration — **À CONFIRMER** (§13), car le brief le qualifie de titre honorifique sans droit.
   - Le schéma actuel `profileSchema` (`fullName`, `phone`) doit être remplacé par les champs ci-dessus.
 
-### 7.7 `POST /dashboard/profil?/avatar`
+### 7.7 `POST /api/member/upload` — `kind = "avatar"` (mise à jour du 2026-11-18)
 
-- **État** : à créer.
-- **Garde** : `requireAuth` + `requireOwnProfile`.
-- **Entrée** : `multipart/form-data` avec `avatar: File` (JPG/JPEG/PNG/WebP).
-- **Succès** : `200 { success: true, data: { avatarUrl: string } }`.
-- **Erreurs** : `413 file_too_large`, `415 unsupported_type`, `507 quota_exceeded`.
-- **Règles** : 15 Mo max, 6000 × 6000 max, conversion WebP ≤ 2000 × 2000 qualité 82, métadonnées supprimées ; stockage `bagad-private/profiles/{profileId}/avatar.webp` ; seul le propriétaire peut remplacer sa photo ; quota réservé puis confirmé.
+- **État** : à créer par l'**étape 49** (second temps de Q-2026-11-17-03, après branchement de R2). L'étape 43 ne livre aucun écran et n'ouvre pas cet endpoint : `profiles.avatar_url` reste `null` jusque-là.
+- **Garde** : `requireAuth` + `requireOwnProfile` + `canChangeAvatar` (identité issue de la session, jamais du `FormData`).
+- **Entrée** : `multipart/form-data` avec `kind = "avatar"` et `file: File` (JPG/JPEG/PNG/WebP).
+- **Succès** : `200 { success: true, data: { snapshot: MemberSnapshot, result: { avatarUrl: string, avatar: number } } }`.
+- **Erreurs** : `403 forbidden_own_profile`, `403 account_suspended`, `413 file_too_large` (> 15 Mo), `415 unsupported_type` (type MIME, magic number ou dimensions > 6000 × 6000), `507 quota_exceeded`.
+- **Règles** :
+  - 15 Mo max, 6000 × 6000 max, contrôles faits côté serveur **avant** toute écriture R2 (type MIME + magic numbers + en-tête de dimensions).
+  - **Aucune conversion serveur** : l'original est stocké tel quel (Q-2026-11-08-03, `sharp` interdit sur Workers) ; les variantes 400 × 400 et 2000 × 2000 sont produites à la diffusion par Cloudflare Image Resizing.
+  - Clé `private/profiles/{profileId}/avatar.{ext}` dans `R2_PRIVATE` ; l'ancienne clé est supprimée en cas de remplacement.
+  - `profiles.avatar_url` reçoit l'URL servie par `/api/files/private/profiles/{profileId}/avatar.{ext}` (jamais une URL publique permanente, jamais une clé R2 côté client).
+  - Quota : réservation, puis confirmation de la taille réelle ; libération en cas d'échec.
+  - La palette `profiles.avatar` (1–12) est conservée : elle reste le repli affiché tant que `avatar_url` est vide.
+  - `MemberSnapshot` (instantané de `GET /api/member` / `POST /api/member/action`) expose `avatarUrl: string | null` sur le profil courant **et** sur les entrées de l'annuaire ; la vue `app.member_directory` fournit déjà la colonne, aucune migration n'est requise.
+  - Les `kind = "document"` (étape 41) et `kind = "albumPhoto"` (étape 42) partagent cette route et la même enveloppe ; les actions `?/upload` de §8.2 et §9.4 sont remplacées par cet endpoint.
 
 ### 7.8 `GET /dashboard/securite` (load) et `POST /dashboard/securite?/changePassword`
 
@@ -567,6 +594,27 @@ Toutes les routes de cette section exigent `requireAuth(locals)` : session valid
 - **Succès** : `200 { success: true, data: { requestId: string, status: 'pending' } }`.
 - **Erreurs** : `400 validation_error`, `409 conflict` (demande déjà en cours).
 - **Règles** : la demande passe **immédiatement** `account_status` à `suspended` et crée une ligne `account_deletion_requests`. L'administrateur traite la demande : suppression des données personnelles, de l'avatar et des affectations de pupitre, anonymisation des réponses conservées (`event_responses.profile_id = NULL`), clôture et notification. Aucune purge automatique irréversible (Q-2026-11-08-08).
+
+### 7.10 `POST /api/member/action` — action `profile.avatar.remove` (mise à jour du 2026-11-18)
+
+- **État** : à créer par l'**étape 49**, en même temps que §7.7.
+- **Garde** : `requireAuth` + `requireOwnProfile` + `canChangeAvatar`.
+- **Entrée** :
+  ```json
+  {
+    "action": "profile.avatar.remove",
+    "payload": {}
+  }
+  ```
+- **Succès** :
+  ```json
+  {
+    "snapshot": "MemberSnapshot",
+    "result": { "avatarUrl": null, "avatar": "number" }
+  }
+  ```
+- **Erreurs** : `403 forbidden_own_profile`, `403 account_suspended`, `404 not_found` si aucune photo n'est déposée.
+- **Règles** : supprime l'objet `private/profiles/{profileId}/avatar.{ext}` de `R2_PRIVATE`, remet `profiles.avatar_url` à `NULL`, libère le quota et réaffiche le portrait illustré `avatar` (1–12), qui n'est **pas** modifié. L'action `profile.avatar` (palette 1–12) reste inchangée et demeure la seule commande de changement de portrait illustré.
 
 ---
 
@@ -695,7 +743,7 @@ Sauf mention contraire, les routes de cette section exigent `requireRole(locals,
 - **Succès `resend`** : `200 { success: true, data: { invitationId: string; expiresAt: string } }`.
 - **Succès `revoke`** : `200 { success: true, data: { invitationId: string; status: 'revoked' } }`.
 - **Erreurs** : `404 not_found`, `409 conflict` (invitation déjà acceptée), `502 email_failed`.
-- **Règles** : un renvoi crée un nouveau jeton et invalide l'ancien, sans créer un second compte Auth. La révocation supprime ou invalide l'invitation — **À CONFIRMER** : le schéma `invitations` n'a pas de colonne `revoked_at` (§13). **Dépendance : Q-2026-11-08-06.**
+- **Règles** : un renvoi crée un nouveau jeton expirant après **1 heure** (Q-2026-11-17-02) et invalide l'ancien, sans créer un second compte Auth. La révocation supprime ou invalide l'invitation — **À CONFIRMER** : le schéma `invitations` n'a pas de colonne `revoked_at` (§13). **Dépendance : Q-2026-11-08-06.**
 
 ### 9.7 Notifications — `GET /dashboard/admin/notifications`, `POST .../notifications?/send`
 
@@ -732,7 +780,7 @@ Sauf mention contraire, les routes de cette section exigent `requireRole(locals,
   - Aucun objet privé n'a d'URL publique permanente.
   - `Cache-Control: private, no-store` pour les objets privés ; cache public autorisé pour `public/...`.
   - **Q-2026-11-08-04** : la cible est un service par endpoint après guard, sans URL signée ; les noms de bindings cibles sont `R2_PUBLIC` / `R2_PRIVATE`.
-  - Clés canoniques : `private/profiles/{profileId}/avatar.webp`, `private/documents/{documentId}/{uuid}.pdf`, `public/albums/{albumId}/{uuid}.webp`, `private/albums/{albumId}/{uuid}.webp`.
+  - Clés canoniques : `private/profiles/{profileId}/avatar.{ext}`, `private/documents/{documentId}/{uuid}.pdf`, `public/albums/{albumId}/{uuid}.{ext}`, `private/albums/{albumId}/{uuid}.{ext}`.
   - `docs/media.md` utilise aussi `public/events/{eventId}/...` ; cette variante est une **contradiction documentaire** (E13) à harmoniser, pas une seconde convention.
 
 ### 10.2 `GET /api/storage/usage`
@@ -823,10 +871,10 @@ Règles de gestion :
 ### 12.3 Trombinoscope
 
 - Accès : membres **actifs connectés** uniquement, jamais public.
-- Champs autorisés : `firstName`, `lastName`, `avatarUrl`, `pupitres[{id,name}]`, `musicianLevel`, `bureauPosition`.
+- Champs autorisés : `firstName`, `lastName`, `avatarUrl`, `avatar` (palette 1–12), `pupitres[{id,name}]`, `musicianLevel`, `bureauPosition`.
 - Champs interdits : `phone`, `email`, `address`, `role`, `accountStatus`, `authUserId`, `createdAt`, `updatedAt`, `bureauPositionId`, `isChef`.
 - La fonction au bureau est informative et ne confère aucun droit ; les titres ne sont jamais publics.
-- Photo : `bagad-private/profiles/{profileId}/avatar.webp`, servie après guard ; seul le propriétaire peut la remplacer, admin inclus.
+- Photo : `bagad-private/profiles/{profileId}/avatar.{ext}`, servie après guard ; seul le propriétaire peut la remplacer, admin inclus. Tant que `avatar_url` est vide — état livré, Q-2026-11-17-03 premier temps, puis après `profile.avatar.remove` — le portrait illustré `avatar` est affiché.
 - Tri : `lastName`, puis `firstName`.
 
 ### 12.4 R2, fichiers et quota
@@ -835,7 +883,7 @@ Règles de gestion :
 - Quota **global** : 8 Go pour les deux buckets additionnés ; alerte à 7 Go ; blocage des nouveaux uploads à 8 Go.
 - Table `storage_usage` : `public_bytes`, `private_bytes`, `reserved_bytes`, `quota_bytes`, `alert_threshold_bytes`, `block_threshold_bytes`, `last_sync_at`, `updated_at` (colonnes `bigint`). **Q-2026-11-08-02**.
 - Réservation avant upload, confirmation après, libération en cas d'échec ; mises à jour atomiques ou reproduites côté serveur.
-- Images : JPG/JPEG/PNG/WebP ≤ 15 Mo, ≤ 6000 × 6000, sortie WebP ≤ 2000 × 2000 qualité 82, métadonnées supprimées ; variantes 400 × 400 (qualité 75, `cover`) et 2000 × 2000 (qualité 82, `contain`).
+- Images : JPG/JPEG/PNG/WebP ≤ 15 Mo, ≤ 6000 × 6000, sortie affichée WebP ≤ 2000 × 2000 qualité 82, métadonnées supprimées ; variantes 400 × 400 (qualité 75, `cover`) et 2000 × 2000 (qualité 82, `contain`). Les variantes sont produites **à la diffusion** par Cloudflare Image Resizing : l'original est stocké tel quel, aucune conversion serveur (`sharp` est interdit sur Workers, Q-2026-11-08-03).
 - OGG ≤ 30 Mo ; PDF ≤ 20 Mo ; vidéo refusée.
 - Contrôle du type MIME **et** des magic numbers (JPEG `ffd8ff`, PNG `89504e47`, WebP `52494646`).
 - Aucun objet privé accessible par URL publique permanente ; service par `/api/files/...` après guard. **Q-2026-11-08-04**.
@@ -864,8 +912,9 @@ Règles de gestion :
 
 ### 12.7 Articles et albums
 
-- Articles : `title`, `slug` unique, `content` Markdown, `is_published`, `published_at`, `author_id`.
+- Articles : `title`, `slug` unique, `content` Markdown, `is_published`, `published_at`, `author_id`, plus les colonnes nullables `category`, `image_url`, `image_alt` (Q-2026-11-17-04, option A du 2026-11-18, migration additive).
 - Un brouillon n'est jamais rendu publiquement ni récupérable par un appel direct.
+- Une catégorie ou une image vide n'est jamais affichée sur le site public ; aucune valeur par défaut n'est inventée.
 - Prévisualisation réservée aux rôles autorisés (secrétaire, admin).
 - Albums : `title`, `description`, `is_published`, `album_date` (à ajouter), photos avec `caption` et `sort_order` (à ajouter).
 - Publication et suppression réservées à la secrétaire et à l'admin.

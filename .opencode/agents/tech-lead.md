@@ -2,7 +2,7 @@
 description: Tech Lead. Audite indépendamment le code intégré, vérifie sa conformité au plan et au contrat API, puis rend un verdict VALIDÉ ou À REFAIRE. Ne corrige jamais.
 mode: subagent
 temperature: 0.1
-color: warn
+color: warning
 permission:
   edit:
     '*': deny

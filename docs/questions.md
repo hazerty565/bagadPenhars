@@ -435,6 +435,35 @@ Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur
 - **Problème :** `AGENTS.md` demande d'utiliser le paquet `svelte-i18n` pour le public (`fr`, `en`, `br`), mais le paquet n'est pas installé et la page d'accueil a été livrée avec des dictionnaires TypeScript typés maison (`src/lib/i18n/`).
 - **Pourquoi :** le choix conditionne la façon dont les prochaines pages publiques déclareront leurs textes, les tests de complétude des traductions et l'éventuelle détection automatique de la langue du navigateur.
 - **Proposition :** conserver les dictionnaires typés maison pour la V1 (aucune dépendance supplémentaire, complétude vérifiée à la compilation) et réévaluer `svelte-i18n` si un besoin de pluriels, de formats riches ou de chargement paresseux apparaît. Confirmer ce choix.
+- **État :** **Décidée le 2026-11-18 — `svelte-i18n` retenu, migration dans cette
+  session.** La proposition initiale (conserver les dictionnaires typés) est
+  **écartée par le client**.
+- **Décision client (2026-11-18), formulation exacte de la demande au point de
+  contrôle n°1 :** « installation de svelte-i18n pour les traductions en
+  français, anglais et breton et installation de lucide-svelte pour les
+  icons ». Après vérification et clarification : `svelte-i18n` est **installé et
+  la migration est faite maintenant** ; `lucide-svelte` **n'est pas installé**
+  (voir D-2026-11-18-08 ci-dessous).
+- **Portée de la décision :**
+  1. `svelte-i18n` devient la bibliothèque de messages du **site public
+     uniquement** (`fr`, `en`, `br`) ; l'espace adhérents et l'authentification
+     restent en français, hors catalogues.
+  2. Les textes existants (`src/lib/i18n/fr.ts`, `en.ts`, `br.ts`) sont repris
+     **mot pour mot** dans des catalogues de messages : contenus déjà validés
+     comme contenus provisoires en attente de validation (Q-2026-11-09-02,
+     Q-2026-11-10-01 à -06, -08, Q-2026-11-11-01) ne sont **pas** réécrits.
+  3. La locale reste portée par le segment `[lang=lang]` (`fr` par défaut) ;
+     **aucune détection de la langue du navigateur** n'est introduite, pour que
+     le rendu serveur et l'hydratation client ne puissent pas diverger.
+  4. Tous les éléments SEO déjà livrés (titre, `description`, `canonical`,
+     `hreflang` `fr`/`en`/`br`/`x-default`, Open Graph) et le `%lang%` de
+     `src/app.html` sont **préservés à l'identique**.
+  5. Le design public reste figé à 98 % : **aucun changement visuel attendu**,
+     prouvé par comparaison avant/après des trois langues (mêmes textes rendus,
+     mêmes balises SEO), jamais par une impression.
+- **Renvoi plan :** `equipe/PLAN.md` §2.2, §2.3, **étapes 52 et 53** (vague 1),
+  §4, §7.3, §8, annexe A. Aucun endpoint de `equipe/CONTRAT_API.md` n'est
+  modifié : `+layout.server.ts` renvoie déjà `{ lang }`.
 
 ### Q-2026-11-09-02 — Validation des contenus de la page d'accueil
 
@@ -684,8 +713,15 @@ modification de code n'est engagée avant validation de ce plan.
   - **B.** Installer `motion` et migrer les transitions existantes vers Motion.
   - **C.** Ne rien changer et laisser la divergence documentée.
 - **Recommandation :** **A**, aucune valeur fonctionnelle ajoutée par Motion ici
-  et le design est figé à 99 % ; B rouvre le frontend pour un gain nul.
-- **État :** ouverte — bloque l'étape 46 (finition frontend).
+  et le design est figé à 98 % ; B rouvre le frontend pour un gain nul.
+- **État :** **Décidée le 2026-11-18 — option A.**
+- **Décision client (2026-11-18) :** entériner l'absence de Motion. Aucune
+  animation Motion n'est ajoutée ; les animations CSS existantes respectent
+  `prefers-reduced-motion` ; la mise à jour de `AGENTS.md` §0 est actée.
+- **Précision d'exécution :** ni l'architecte ni aucun autre agent n'écrit dans
+  `AGENTS.md` (seul le client ou un agent explicitement autorisé le fait). La
+  correction documentaire de §0 est donc portée par le client ; l'étape 46 ne
+  dépend d'aucune action impossible et n'attend pas cette correction.
 
 ### Q-2026-11-17-02 — Durée de vie du lien d'invitation : 1 heure ou 7 jours
 
@@ -703,7 +739,14 @@ modification de code n'est engagée avant validation de ce plan.
   - **B.** Entériner 7 jours et modifier `docs/Spec.md` §4.2 en conséquence.
 - **Recommandation :** **A** — la Spec est la référence fonctionnelle validée ;
   si 7 jours étaient voulus, il faut une décision écrite, pas un écart de code.
-- **État :** ouverte — bloque l'étape 45 (tests du parcours d'invitation).
+- **État :** **Décidée le 2026-11-18 — option A.**
+- **Décision client (2026-11-18) :** 1 heure, conformément à `docs/Spec.md` §4.2.
+  Le code doit être aligné (7 jours → 1 heure) et l'étape 45 est débloquée.
+- **Conséquences :** `invitation.create` et `invitation.resend`
+  (`src/lib/server/member/commands.ts`) calculent `Date.now() + 1 h` ; la durée
+  d'expiration est aussi configurée côté Better Auth (Spec §4.2 point 6) ; les
+  libellés et le journal qui annonçaient « 7 jours » sont corrigés ; le test du
+  parcours d'invitation vérifie l'expiration à 1 heure et le renvoi.
 
 ### Q-2026-11-17-03 — Photo de profil réelle ou portrait illustré
 
@@ -723,7 +766,21 @@ modification de code n'est engagée avant validation de ce plan.
   - **B.** Palette illustrée seule, `avatar_url` réservé à un usage futur.
 - **Recommandation :** **A** — le trombinoscope est censé montrer les membres ;
   la palette était une solution de démonstration.
-- **État :** ouverte — bloque l'étape 43.
+- **État :** **Décidée le 2026-11-18 — décision intermédiaire en deux temps.**
+- **Décision client (2026-11-18), formulation exacte :** « palette dans un
+  premier temps et utilisation de photo perso quand R2 sera branché à la fin ».
+- **Traduction en deux temps :**
+  1. **Immédiat** — l'étape 43 devient « palette conservée, aucun changement
+     d'écran » : les portraits illustrés 1 à 12 restent la seule représentation,
+     `profiles.avatar_url` reste vide, aucun bouton de dépôt n'est ajouté.
+  2. **Fin de session, après branchement de R2** — nouvelle étape 49 :
+     téléversement réel de la photo de profil, avec repli automatique sur la
+     palette quand `avatar_url` est vide.
+- **Cohérence vérifiée :** la vue `app.member_directory` expose déjà `avatar`
+  et `avatar_url`, et l'instantané adhérent (`buildMemberSnapshot`) sélectionne
+  `avatar_url` sans encore le transmettre. Aucune migration n'est donc
+  nécessaire : l'étape 49 ajoute `avatarUrl` au profil exposé et l'écran choisit
+  la photo si `avatarUrl` est renseigné, sinon le portrait illustré.
 
 ### Q-2026-11-17-04 — Champs éditoriaux de l'article public absents de la table
 
@@ -745,4 +802,190 @@ modification de code n'est engagée avant validation de ce plan.
     provisoires.
 - **Recommandation :** **A** — design public préservé, aucune donnée inventée,
   migration additive conforme aux règles du projet.
-- **État :** ouverte — bloque l'étape 38.
+- **État :** **Décidée le 2026-11-18 — option A.**
+- **Décision client (2026-11-18) :** migration additive `category`,
+  `image_url`, `image_alt`, toutes nullables ; interface publique inchangée ;
+  valeurs vides masquées.
+- **Conséquences :** l'étape 38 est débloquée et porte la migration ; la carte
+  d'article publique conserve sa structure et n'affiche ni catégorie ni image
+  quand la colonne est vide ; aucune refonte graphique.
+
+## 2026-11-18 — Audit des dépendances du mainteneur : arbitrages de l'architecte
+
+**Contexte.** Le mainteneur a rendu son audit dans `docs/mises-a-jour.md` avec le
+statut `PLAN À ACTUALISER`, motif unique : le §7.1 conservait `drizzle-orm` 0.39
+et `drizzle-kit` 0.30 alors que `better-auth` 1.7 (verrouillé 1.7.18 et réellement
+utilisé avec `drizzleAdapter` dans `src/lib/server/auth.ts`) exige
+`drizzle-orm ^0.45.2` et `drizzle-kit >=0.31.4`.
+
+**Aucune décision client n'est requise ici.** Les six points ci-dessous sont des
+arbitrages techniques qui revenaient à l'architecte ; ils sont consignés pour la
+traçabilité et pour que ni le mainteneur ni les développeurs ne les rouvrent. Le
+périmètre fonctionnel est inchangé (design public et espace adhérents figés à
+98 %), aucune refonte n'est ouverte, aucun écran n'est modifié.
+
+**Aucune question nouvelle bloquante.** Le plan reste exécutable de bout en bout ;
+les seules questions encore ouvertes sont éditoriales ou documentaires
+(Q-2026-11-09-01, Q-2026-11-09-02, Q-2026-11-09-03, Q-2026-11-10-*, Q-2026-11-11-01)
+et ne bloquent aucune étape.
+
+### D-2026-11-18-01 — `drizzle-orm` / `drizzle-kit` alignés sur les peers de `better-auth`
+
+- **Décision :** `drizzle-orm` **0.45.4** (plage `^0.45.2`) et `drizzle-kit`
+  **0.31.11** (`>=0.31.4`). Porté par l'**étape 50**, préalable bloquante de la
+  vague 0 : hydratation `pnpm install --frozen-lockfile`, puis montée ciblée des
+  deux paquets, puis `check` + `build` + `test`, puis génération d'essai de
+  migration sur **copie** de `drizzle/`.
+- **Pourquoi :** les peers sont `optional`, donc l'écart était silencieux (le
+  verrou câblait quand même `better-auth@1.7.18(…drizzle-orm@0.39.3)`), et il
+  touche l'intégration la plus sensible du projet (identité, sessions,
+  invitations). Ne pas sauter à la `1.0.0-rc` : hors périmètre.
+- **Exécution :** installation par le **mainteneur** seul ; adaptation de
+  `drizzle.config.ts`, de l'adaptateur et du typage de `db.execute`
+  (`src/hooks.server.ts`) par le **développeur backend** ; diff du verrou limité
+  aux deux paquets et contrôlé avant validation.
+- **Renvoi plan :** §2.2, §3 étape 50, §7.1, §8.
+
+### D-2026-11-18-02 — `@better-auth/infra` **retiré**
+
+- **Décision :** retrait pur et simple (`pnpm remove`, étape 51). Ni montée en
+  0.4.31, ni maintien assumé.
+- **Pourquoi :** zéro import dans `src/`, `scripts/`, `tests/`, `.github/` ; c'est
+  la **seule** source du peer non satisfait `zod >=4.1.12`. Le retirer supprime un
+  peer non satisfait et allège le graphe **sans toucher une ligne de code**. La
+  montée en 0.4.31 conserverait un paquet inutilisé avec un peer toujours non
+  satisfait ; le maintien laisserait une dette invisible à chaque installation.
+- **Précision :** le `zod` 4 transitif **reste** (il vient de `better-call`, via
+  `@better-auth/core`) ; la liste `ssr.noExternal` de `vite.config.ts`
+  (`better-auth`, `@better-auth/core`, `zod`, `@lucide/svelte`) est donc
+  **inchangée** et doit être relue puis suivie d'un `npm run build`.
+  **Aucun `override` / `resolutions` n'est prescrit** (il casserait l'un des deux
+  consommateurs de `zod`).
+- **Renvoi plan :** §2.2, §3 étape 51, §7.4, §8.
+
+### D-2026-11-18-03 — `image-size@2.1.0` en version exacte, import de la racine uniquement
+
+- **Décision :** version **exacte 2.1.0** (`--save-exact`), installée à l'étape 51,
+  utilisée par les étapes **42** (photos d'album) et **49** (photo de profil).
+- **Règle d'usage opposable :** `import { imageSize } from 'image-size'` —
+  **jamais** `image-size/fromFile` (seul sous-chemin Node-spécifique, interdit
+  côté Worker). Lecture d'en-tête seule, contrôle **avant** l'écriture R2 ;
+  `TypeError` sur format non reconnu → `415 unsupported_type`. Ne pas retenir
+  `legacy` 1.2.1.
+- **Pourquoi :** validé techniquement par le mainteneur (0 dépendance runtime, 0
+  peer, MIT, entrée racine sans module Node, double distribution CJS/ESM).
+- **Renvoi plan :** §7.3, §3 étapes 42 et 49.
+
+### D-2026-11-18-04 — `resend` : majeure 6 **différée**, 4.8.0 conservé
+
+- **Décision :** rester en **4.8.0** ; la montée en 6.38.1 rejoint les sept
+  majeures différées du §2.1.1.
+- **Pourquoi :** `src/lib/server/email.ts` n'utilise que
+  `new Resend(apiKey)` et `emails.send({ from, to, subject, html, text, replyTo })`,
+  identiques en 4 et 6 ; la 6 renomme `inlineContentId` (non utilisé) et supprime
+  `@react-email/render`. Le gain de graphe est réel mais ne justifie pas une
+  majeure en session sur un design figé : la décision par défaut est de ne pas
+  déplacer une majeure sans besoin fonctionnel.
+- **Renvoi plan :** §2.1.1, §2.2, §7.1.
+
+### D-2026-11-18-05 — Défauts de verrouillage : traitement en phase d'installation, sans exécution
+
+- **Constat, tel que relevé le 2026-11-18 :** `node_modules/` **absent** (aucun
+  `check`/`build`/`test` possible avant installation) ; `pnpm-lock.yaml` **en
+  retard sur ses propres plages** (un `pnpm install` libre ferait bouger une
+  trentaine de paquets) ; `package-lock.json` **matériellement faux** (entrée
+  racine `lucide-svelte@^1.0.1`, paquet déprécié ; ignore `@better-auth/infra`,
+  `leaflet`, `@types/leaflet`) ; exception `minimumReleaseAgeExclude`
+  (`@lucide/svelte@1.71.0`) **inerte**, aucune `minimumReleaseAge` n'étant
+  configurée (`.npmrc` = `engine-strict=true` seulement).
+- **Décision :** marche à suivre imposée par les étapes 50 et 51 — hydratation
+  **`pnpm install --frozen-lockfile`** uniquement, puis montées ciblées une par
+  une, diff du verrou contrôlé, `check` + `build` + `test` de part et d'autre ;
+  `pnpm update`, `pnpm install` libre et `npm install` **interdits** ;
+  `package-lock.json` supprimé du dépôt (ou explicitement déclaré hors jeu) ;
+  `minimumReleaseAge` **non activée** en session et l'exception documentée comme
+  garde-fou inactif, jamais comme protection.
+- **Point de vigilance (non bloquant, hors rôle de l'architecte) :** la
+  suppression de `package-lock.json` est un changement de dépôt ; elle est
+  exécutée par le mainteneur. Si le chef de projet préfère ne pas supprimer le
+  fichier, l'alternative est de le laisser en place en le déclarant explicitement
+  hors jeu dans `docs/journal.md` — dans les deux cas il ne doit **jamais** servir
+  de base d'installation.
+- **Aucune commande n'a été lancée** par l'architecte : ce point décrit une marche
+  à suivre, pas une exécution.
+- **Renvoi plan :** §3 étapes 50 et 51, §4, §8.
+
+### D-2026-11-18-06 — Plage `better-auth` resserrée à `~1.7.18`
+
+- **Décision :** `package.json` passe de `^1.0.0` à **`~1.7.18`**, verrou inchangé
+  (1.7.18). Aucun paquet ne bouge : le diff du verrou reste nul sur ce point.
+- **Pourquoi `~` et non `^` :** `^1.0.0` **et** `^1.7.x` acceptent tous deux une
+  future 1.8, qui relèverait ses peers (comme `drizzle-orm` l'a fait en 1.5 puis
+  1.7) sans revue. Seul le tilde borne à la mineure 1.7, c'est-à-dire à la branche
+  dont les peers ont été vérifiés par l'audit. La recommandation du mainteneur
+  (`^1.7.25`) corrige le plancher mais laisse la porte ouverte à 1.8 ; elle est
+  donc écartée au profit de `~1.7.18`.
+- **Effet de bord assumé :** la montée 1.7.18 → 1.7.25 (patch) est **hors
+  session** : elle n'apporte rien fonctionnellement et élargirait le diff du
+  verrou que le mainteneur veut minimal et contrôlable. À reprendre dans un lot
+  ultérieur, après l'étape 47.
+- **Renvoi plan :** §7.1, §3 étape 51.
+
+## 2026-11-18 — Point de contrôle n°1 : `svelte-i18n` et icônes
+
+**Contexte.** Demande client au point de contrôle n°1 : « installation de
+svelte-i18n pour les traductions en français, anglais et breton et installation
+de lucide-svelte pour les icons ». Les deux volets ont été vérifiés dans le
+dépôt **avant** toute décision, puis clarifiés avec le client : le volet i18n
+est retenu et migré dans cette session ; le volet icônes est **déjà satisfait**
+par l'état existant et ne déclenche aucune installation, aucune migration.
+
+Les deux points ci-dessous sont consignés pour éviter qu'un audit ultérieur ne
+rouvre l'un ou l'autre : ils ne sont pas des questions ouvertes.
+
+### D-2026-11-18-07 — `svelte-i18n` installé, migration faite dans cette session
+
+- **Décision :** `svelte-i18n` est **ajouté aux dépendances d'exécution** par le
+  **mainteneur** (version choisie par lui, voir plan §7.3) et la migration est
+  **exécutée dans cette session**, en deux étapes séparées pour tenir en 1 à 2
+  sessions de développement chacune : **étape 52** (socle : installation,
+  initialisation SSR/client, catalogues, locale issue de `[lang=lang]`,
+  preuve) puis **étape 53** (bascule des composants publics vers l'API de
+  messages, preuve de non-régression avant/après).
+- **Tranche :** Q-2026-11-09-01 (voir la décision ajoutée à son entrée).
+- **Pourquoi maintenant :** la demande client est explicite et les étapes de
+  branchement public (37, 38, 39) ne sont pas encore exécutées. Migrer avant
+  elles évite de réécrire deux fois les mêmes fichiers ; migrer après les avoir
+  livrées aurait doublé le travail sur les mêmes `+page.server.ts`.
+- **Ce que la décision ne change pas :** aucun endpoint, aucun `load` ne change
+  de signature (`+layout.server.ts` renvoie déjà `{ lang }`) ; `CONTRAT_API.md`
+  reste **inchangé**. L'espace adhérents reste en français, hors catalogues.
+- **Renvoi plan :** §2.2, §2.3, §3 étapes 52 et 53, §3.1, §4, §7.2, §7.3, §8.
+
+### D-2026-11-18-08 — Icônes : `@lucide/svelte` 1.71.0 déjà installé, `lucide-svelte` **non ajouté**
+
+- **Constat de vérification (2026-11-18), à ne pas réinterpréter :**
+  - `@lucide/svelte` **1.71.0** est déjà déclaré dans `package.json`
+    (`dependencies`, épinglé sans `^`) et importé dans une vingtaine de fichiers
+    sous `src/lib/components/` et `src/routes/` ; il figure dans `ssr.noExternal`
+    de `vite.config.ts` parce qu'il publie des composants `.svelte`.
+  - `lucide-svelte` est l'**ancien nom du paquet**, déprécié et remplacé par
+    `@lucide/svelte` le **2026-11-10**.
+  - `lucide-svelte` n'apparaît **que** dans `src/autre/` (maquette de design
+    fournie par le client, exclue du build et des tests par `vite.config.ts`) et
+    dans `package-lock.json`, artefact npm **périmé et matériellement faux** que
+    l'étape 51 met hors jeu.
+- **Décision client (2026-11-18) :** **aucune installation, aucune migration
+  d'icônes.** La demande « installation de lucide-svelte » est **satisfaite par
+  l'état existant** ; le nom correct est `@lucide/svelte`.
+- **Conséquences :**
+  1. Aucun paquet ajouté, aucun import modifié, aucun fichier de `src/autre/`
+     touché : la maquette reste hors build et hors périmètre.
+  2. Toute demande ultérieure formulée comme « installer `lucide-svelte` » doit
+     être lue comme **déjà satisfaite** par `@lucide/svelte` 1.71.0 ; un audit
+     qui rouvrirait ce point contredirait cette décision.
+  3. `lucide-svelte` reste classé **écarté** dans le plan (§7.4) ; seule
+     l'hygiène du verrou de l'étape 51 traite `package-lock.json`, sans rien
+     installer.
+- **Renvoi plan :** §0, §2.1, §2.2, §7.4, §8.
+

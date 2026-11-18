@@ -2,7 +2,7 @@
 description: Intégrateur. Assemble backend et frontend, vérifie le build, le démarrage local et la cohérence API. Ne touche pas à la logique métier.
 mode: subagent
 temperature: 0.1
-color: warn
+color: warning
 permission:
   edit:
     "*": deny
