@@ -5,7 +5,6 @@ temperature: 0.2
 color: success
 permission:
   edit:
-    edit:
     "src/routes/**/*.svelte": allow
     "src/routes/**/*.ts": deny
     "src/routes/**/+server.ts": deny
