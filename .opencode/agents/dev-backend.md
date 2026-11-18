@@ -11,7 +11,7 @@ permission:
     "src/hooks.server.ts": allow
     "src/lib/server/**": allow
     "scripts/**": allow
-    "package.json": allow
+    "package.json": deny
   bash: allow
   external_directory: deny
   webfetch: deny
