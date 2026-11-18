@@ -108,6 +108,22 @@ Respecte exactement cet ordre :
 
 Chaque agent doit avoir terminé sa mission et remis son rapport avant le lancement du suivant.
 
+### Règles d'appel des sous-agents
+
+Le Chef doit respecter strictement les règles d'appel définies dans `.opencode/agents/chef.md`.
+
+Chaque appel à l'outil `subagent` doit obligatoirement comporter les trois propriétés :
+
+- `agent`
+- `description`
+- `prompt`
+
+Ne jamais omettre `description`, même si l'agent appelé possède déjà une description dans son frontmatter.
+
+Le workflow doit rester strictement séquentiel : attendre la fin complète d'un sous-agent avant de lancer le suivant.
+
+En cas d'erreur d'appel, corriger les arguments et réessayer sans contourner le workflow.
+
 ### Phase 1 — Architecture
 
 Appelle l'agent `architecte`.
