@@ -4,9 +4,15 @@ Chef
 ↓
 Architecte → [PLAN.md + CONTRAT_API.md]
 ↓
-🛑 POINT DE CONTRÔLE 1 (client valide le plan)
+Mainteneur → [Audit des packages & versions dans docs/mises-a-jour.md]
 ↓
-dev-backend + dev-frontend (en parallèle)
+🛑 POINT DE CONTRÔLE 1 (client valide le plan et les versions)
+↓
+Mainteneur → [Installation des dépendances verrouillées dans package.json]
+↓
+dev-backend
+↓
+dev-frontend
 ↓
 Intégrateur → [INTEGRATION.md]
 ↓
@@ -20,6 +26,6 @@ Testeur → [TESTS.md]
 ↓
 Sécurité → [SECURITE.md]
 ↓
-Déploiyeur → [DEPLOYER.md]
+Déployeur → [DEPLOYER.md]
 ↓
 Client (livraison finale)
