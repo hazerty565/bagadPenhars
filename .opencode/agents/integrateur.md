@@ -6,7 +6,7 @@ color: warn
 permission:
   edit:
     "*": deny
-    "package.json": allow
+    "package.json": deny
     "package-lock.json": allow
     "pnpm-lock.yaml": allow
     "yarn.lock": allow
