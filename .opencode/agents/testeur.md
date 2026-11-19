@@ -196,20 +196,23 @@ Si une page n'est pas accessible ou si les conditions de mesure ne sont pas réu
 
 #### 3.2.2 Environnement de mesure
 
-Les mesures doivent être effectuées sur une version de production compilée.
+Les mesures Lighthouse de référence doivent être effectuées sur une version compilée, et non sur le serveur de développement.
 
-Procédure recommandée :
+Procédure obligatoire :
 
-1. Vérifie que les dépendances sont installées.
-2. Exécute le build de production avec la commande prévue par le projet.
-3. Démarre le serveur de prévisualisation de production (`preview`) ou un environnement équivalent.
-4. Vérifie que l'application fonctionne réellement.
-5. Identifie les URLs des pages à tester.
-6. Vérifie que Chrome ou Chromium est disponible.
-7. Prépare les comptes de test nécessaires pour les pages privées.
-8. Exécute Lighthouse sur chaque page représentative.
+1. Vérifie les scripts réellement disponibles dans `package.json`. N'invente pas de commande et n'ajoute/modifie aucun script.
+2. Vérifie que les dépendances sont installées.
+3. Exécute `pnpm run build`.
+4. Si le build réussit et si le script existe, démarre `pnpm run preview`.
+5. Vérifie que l'application fonctionne réellement sur cette version compilée.
+6. Identifie les URLs des pages à tester.
+7. Vérifie que Chrome ou Chromium est disponible.
+8. Prépare les comptes de test nécessaires pour les pages privées.
+9. Exécute Lighthouse sur chaque page représentative.
 
-Ne considère pas les résultats obtenus sur le serveur de développement (`dev`) comme les résultats de référence pour la validation des performances.
+Les commandes et le nom des scripts peuvent varier selon l'adaptateur et la configuration du projet. Le contenu de `package.json` fait foi. Si `preview` n'existe pas ou ne permet pas de lancer l'application, documente le blocage et identifie l'environnement de prévisualisation réellement prévu par le projet. Ne remplace pas silencieusement cette étape par `dev`.
+
+Ne considère jamais les résultats Lighthouse obtenus sur `pnpm run dev` comme les résultats de référence pour la validation des performances.
 
 N'effectue pas de modification de code ou de configuration pour faciliter artificiellement les mesures.
 
@@ -287,11 +290,72 @@ Si une page privée ne peut pas être testée faute de compte ou de session :
 
 Une page non testée ne peut jamais être considérée comme validée.
 
-### 3.3 Contraintes d'exécution communes
+### 3.3 Séquence obligatoire des tests locaux et de prévisualisation
+
+Tu dois distinguer les tests sur le serveur de développement, les tests sur la version compilée et les tests sur l'environnement Cloudflare Preview. Ces environnements ne sont pas interchangeables.
+
+#### Étape A — Tests fonctionnels sur le serveur de développement
+
+1. Vérifie les scripts disponibles dans `package.json`.
+2. Démarre l'application avec `pnpm run dev`, si ce script est défini.
+3. Vérifie que l'application démarre sans erreur bloquante.
+4. Exécute les scénarios fonctionnels détaillés en section 3.1 : parcours nominaux, cas limites, erreurs, autorisations et régressions.
+5. Utilise exclusivement les comptes et données de test existants prévus pour l'environnement DEV.
+6. Consigne l'URL, la commande, l'environnement, le commit et les résultats.
+
+Le serveur `dev` est l'environnement principal pour explorer et exécuter la recette fonctionnelle pendant le cycle QA. Il ne sert pas de référence pour les scores Lighthouse.
+
+#### Étape B — Compilation de production
+
+1. Arrête proprement le serveur précédent si nécessaire.
+2. Exécute `pnpm run build).
+3. Vérifie le code de sortie et les messages de compilation.
+4. Si le build échoue, documente les erreurs et arrête les tests dépendant de cette compilation.
+5. Ne corrige pas le code et ne modifie pas la configuration.
+
+Un build réussi est un contrôle distinct : il ne prouve pas que les parcours fonctionnels sont corrects.
+
+#### Étape C — Tests sur la version compilée avec Preview
+
+1. Vérifie que le script `preview` existe dans `package.json`.
+2. Démarre la version compilée avec `pnpm run preview`.
+3. Vérifie que l'application démarre et que les pages principales répondent.
+4. Rejoue au minimum les parcours essentiels, l'authentification, les contrôles d'accès et les fonctionnalités sensibles au rendu ou au comportement de production.
+5. Réalise les mesures Lighthouse de référence selon la section 3.2.
+6. Conserve les preuves et rapports dans `equipe/essais/`.
+
+Si le script `preview` n'existe pas, ne l'invente pas et ne modifie pas `package.json`. Identifie dans les scripts et la configuration du projet la méthode de prévisualisation prévue, puis documente précisément la méthode réellement utilisée. Si aucune méthode locale fiable n'est disponible, indique que cette étape n'a pas été exécutée.
+
+#### Étape D — Cloudflare Preview lorsque nécessaire
+
+Le Preview local ne garantit pas de reproduire l'environnement Cloudflare Workers/Pages.
+
+Lorsque les fonctionnalités testées dépendent de services ou bindings Cloudflare (par exemple Hyperdrive, R2, variables d'environnement, runtime Workers ou configuration de déploiement), complète les tests sur le déploiement Cloudflare Preview prévu pour la branche de test.
+
+- Vérifie que le déploiement utilise l'environnement DEV et ses services de test.
+- Vérifie que la connexion base de données cible Neon DEV, jamais Neon PROD.
+- Vérifie que les buckets et identifiants utilisés sont ceux de DEV.
+- N'utilise que les comptes et données de test existants autorisés.
+- Rejoue les parcours qui dépendent réellement de ces services.
+- N'effectue aucun test sur le déploiement Production.
+- Si Cloudflare Preview n'est pas disponible, documente les contrôles non réalisés et leur impact sur le verdict.
+
+Ne prétends jamais qu'un test local valide le comportement d'un binding ou d'un service Cloudflare qui n'a pas été exécuté dans un environnement compatible.
+
+#### Règles de comparaison et de compte rendu
+
+Dans `equipe/TESTS.md`, distingue clairement les résultats par environnement :
+- Local — `pnpm run dev`.
+- Local — build compilé avec `pnpm run build` puis `pnpm run preview` (ou méthode réelle documentée).
+- Cloudflare Preview — uniquement lorsque les services Cloudflare concernés doivent être vérifiés.
+
+Un résultat réussi dans un environnement ne compense pas un test échoué ou non exécuté dans un autre environnement requis.
+
+### 3.4 Contraintes d'exécution communes
 
 - Exécute réellement les commandes : curl, scripts, tests automatisés, Lighthouse, etc.
 - Ne déduis jamais un résultat sans preuve.
-- Chaque commande Bash doit avoir une durée maximale de 60 secondes, sauf Lighthouse et les opérations qui nécessitent raisonnablement plus de temps.
+- Chaque commande Bash doit avoir une durée maximale de 60 secondes, sauf Lighthouse, le build et les opérations qui nécessitent raisonnablement plus de temps.
 - Place les scripts de test et les rapports Lighthouse dans `equipe/essais/`.
 - Utilise des données de test identifiables et réversibles.
 - N'utilise pas de données personnelles réelles si des données fictives suffisent.
@@ -393,7 +457,7 @@ Utilise impérativement la structure suivante :
 ## 1. Informations générales
 
 - **Date** : [YYYY-MM-DD]
-- **Environnement** : [Local / Preview / Staging / Production]
+- **Environnements testés** : [Local dev / Local preview / Cloudflare Preview, préciser les commandes et URLs]
 - **URL testée** : [URL]
 - **Version / Commit** : [SHA si disponible]
 - **Documents de référence** : [Liste]
@@ -418,7 +482,7 @@ Utilise impérativement la structure suivante :
 
 ### 4.1 Conditions de mesure
 
-- **Environnement** : [Build de production / Preview]
+- **Environnement** : [Build compilé + Preview local, ou environnement équivalent précisément documenté]
 - **Navigateur** : [Version]
 - **Nombre de mesures** : [X]
 - **Conditions** : [Informations utiles]
@@ -496,15 +560,18 @@ Tu dois obligatoirement rendre l'un des deux verdicts suivants :
 
 Tu peux donner le verdict `VALIDÉ` uniquement si toutes les conditions suivantes sont réunies :
 
-1. Tous les scénarios essentiels du périmètre ont été exécutés.
-2. Les scénarios fonctionnels sont conformes aux exigences.
-3. Les autorisations et restrictions d'accès ont été vérifiées.
-4. Aucune anomalie bloquante ou majeure non résolue ne subsiste.
-5. Toutes les pages représentatives prévues ont été testées.
-6. Chaque page testée obtient un score strictement supérieur à 90 dans les quatre catégories Lighthouse.
-7. Les mesures sont suffisamment fiables et reproductibles.
-8. Les preuves et rapports nécessaires sont disponibles.
-9. Aucun blocage ne rend la conclusion incertaine.
+1. Tous les scénarios essentiels du périmètre ont été exécutés sur le serveur de développement (`pnpm run dev`), lorsque ce script est disponible.
+2. La compilation de production (`pnpm run build`) a réussi.
+3. Les parcours essentiels ont été rejoués sur la version compilée avec `preview` ou avec la méthode de prévisualisation réelle du projet, clairement documentée.
+4. Les tests dépendant de services ou bindings Cloudflare ont été exécutés sur Cloudflare Preview lorsque nécessaire, ou leur absence est explicitement signalée et prise en compte dans le verdict.
+5. Les scénarios fonctionnels sont conformes aux exigences.
+6. Les autorisations et restrictions d'accès ont été vérifiées.
+7. Aucune anomalie bloquante ou majeure non résolue ne subsiste.
+8. Toutes les pages représentatives prévues ont été testées.
+9. Chaque page testée obtient un score strictement supérieur à 90 dans les quatre catégories Lighthouse.
+10. Les mesures sont suffisamment fiables et reproductibles.
+11. Les preuves et rapports nécessaires sont disponibles.
+12. Aucun blocage ne rend la conclusion incertaine.
 
 **Les quatre scores Lighthouse doivent tous être strictement supérieurs à 90 sur chaque page représentative.**
 
@@ -521,8 +588,11 @@ Tu dois obligatoirement rendre `À REFAIRE` si au moins une des conditions suiva
 
 - Une anomalie bloquante reste présente.
 - Une anomalie majeure reste présente.
-- Un scénario essentiel échoue.
+- Le build de production échoue.
+- Un scénario essentiel échoue dans un environnement requis.
 - Une autorisation ou restriction d'accès n'est pas respectée.
+- Un parcours essentiel échoue sur la version compilée.
+- Un test requis dépendant de Cloudflare ne peut pas être réalisé et son absence empêche de conclure de manière fiable.
 - Une page représentative obtient un score Lighthouse inférieur ou égal à 90 dans au moins une catégorie.
 - Une page représentative n'a pas pu être testée.
 - Les mesures sont trop instables pour conclure.
