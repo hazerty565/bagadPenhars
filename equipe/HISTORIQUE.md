@@ -171,3 +171,111 @@
 - **Fichiers modifiés** : `equipe/HISTORIQUE.md`
 - **Prochaine étape** : mise à jour du plan par l'`architecte`, audit de
   `svelte-i18n` par le `mainteneur`, puis nouveau point de contrôle n°1
+
+## Phase : Architecture — intégration de `svelte-i18n` (interrompue)
+
+- **Action** : Appel à `architecte` pour intégrer `svelte-i18n` (étapes 52/53) et
+  consigner la clarification `lucide-svelte`
+- **Résultat** : **Travail écrit mais non rapporté.** Les livrables sont bien sur
+  disque (`PLAN.md` révision 3ᵉ passe du 2026-11-18 : §0, §2.1, §2.2, §2.3.1,
+  étapes 52 et 53, §3.1, §4, §6, §8, annexe A ; `docs/questions.md` :
+  Q-2026-11-09-01 tranchée + D-2026-11-18-08 sur les icônes). L'agent a ensuite
+  échoué sur la limite d'usage du fournisseur (**erreur technique**, pas un refus
+  de mission) avant de rendre son rapport final.
+- **Écart constaté par le Chef** : §7.2 (ligne 459) liste encore `svelte-i18n`
+  comme « En attente de Q-2026-11-09-01 » et §7.3 ne le contient pas — le tableau
+  des packages est donc incohérent avec §0 et avec les étapes 52/53. À corriger
+  avant l'audit du mainteneur.
+- **Itérations** : 0 (mission non aboutie)
+- **Fichiers modifiés** : `equipe/PLAN.md`, `docs/questions.md` (par l'architecte)
+- **Prochaine étape** : reprise de l'`architecte` sur le seul écart §7.2/§7.3,
+  puis audit `svelte-i18n` par le `mainteneur`
+
+## Point de contrôle 1 : VALIDÉ par le client (2026-11-19)
+
+- **Action** : Le client a donné son « OK final » sur le plan, le contrat API et
+  le tableau des versions complété (incluant `svelte-i18n`)
+- **Résultat** : **VALIDÉ** — passage à la phase 3 (installation des dépendances)
+- **Itérations** : 0
+- **Fichiers modifiés** : `equipe/HISTORIQUE.md`
+- **Prochaine étape** : `mainteneur` — étapes 50, 51 et installation de l'étape 52
+  (audit puis ajout de `svelte-i18n`), aucune modification de code métier
+
+## Phase 3 : Installation des dépendances validées — TERMINÉE
+
+- **Action** : Appel à `mainteneur` (étapes 50, 51 et installation de l'étape 52)
+- **Résultat** : **Succès, aucun échec bloquant.** `drizzle-orm` **0.45.4**,
+  `drizzle-kit` **0.31.11**, `better-auth` resserré à `~1.7.18`,
+  `@better-auth/infra` retiré (−3 paquets), `image-size` **2.1.0** exact,
+  `svelte-i18n` **4.0.1** exact (peer `svelte ^5` explicite, runtime
+  `dist/runtime.js` sans `node:`/`fs`/`Buffer`, 18,3 Ko / 4,6 Ko gzip).
+  Contrôles : `check` 0 erreur / 20 avertissements, `build` OK, `test`
+  **signature préexistante inchangée** (3 suites vides + Playwright absent),
+  `pnpm install --frozen-lockfile` OK (CI sûre). Diff du verrou contrôlé par
+  contenu et attribué : 6 retraits, 58 ajouts, réécritures de peers seulement.
+- **Itérations** : 1 (3 paliers)
+- **Fichiers modifiés** : `package.json`, `pnpm-lock.yaml`,
+  `docs/mises-a-jour.md`
+- **Points reportés** : `package-lock.json` obsolète toujours présent (suppression
+  autorisée par le Chef, à exécuter) ; entrée de `docs/journal.md` non écrite
+  (permissions) ; `npm run test` inutilisable comme garde-fou jusqu'aux étapes 45
+  et à `npx playwright install`.
+- **Prochaine étape** : phase 4 — `dev-backend`, lot A (adaptation étape 50,
+  relecture étape 51, étape 36, étape 40)
+
+## Phase 4 : Développement Backend — lot A (en cours)
+
+- **Action** : Appel à `dev-backend`
+- **Résultat** : **Partiel, 2 blocages de permissions.** Livrés : étape 50 vérifiée
+  sans modification (génération d'essai sur copie → `No schema changes`,
+  SHA-256 identiques, `drizzle/` réel intact), étape 51 relue (`ssr.noExternal`
+  inchangé, 4 entrées), étape 36 appliquée côté commandes serveur
+  (`requireChefEventVisibility` sur create/update/cancel/reactivate), logique
+  complète de `src/lib/server/files.ts` + `blobs.ts` (taille remontée, aucune URL
+  signée). `check` 0 erreur / 20 avertissements, `build` OK.
+  Bloqués : `src/routes/api/files/[...key]/+server.ts` (3 lignes de délégation) et
+  `tests/guards.test.ts` — hors périmètre d'écriture de l'agent.
+- **Itérations** : 1
+- **Fichiers modifiés** : `src/lib/server/member/commands.ts`,
+  `src/lib/server/files.ts` (nouveau), `src/lib/server/blobs.ts`
+- **Prochaine étape** : reprise du lot A après correction des permissions
+
+## Incident d'orchestration : périmètre d'écriture du backend
+
+- **Cause** : la matrice `edit` de `dev-backend` autorisait `src/lib/server/**`
+  mais ni `src/routes/**/+server.ts` (alors que sa mission le cite
+  explicitement), ni `tests/**` (que le plan lui confie aux étapes 36 et 45).
+  Aucun agent ne pouvait donc écrire l'endpoint de l'étape 40 : trou de
+  configuration, pas refus de mission.
+- **Correctif** : ajout de `"src/routes/**/+server.ts": allow` et
+  `"tests/**": allow` dans `dev-backend.md`. `src/lib/member/permissions.ts`
+  reste au frontend (territoire `src/lib/**` hors `server`).
+- **Fichiers modifiés** : `.opencode/agents/dev-backend.md`
+- **Prochaine étape** : reprise du lot A (endpoint + preuve automatique de l'étape
+  36)
+
+## Phase 4 : Développement Backend — lot A TERMINÉ
+
+- **Action** : Reprise de `dev-backend` après correction des permissions
+- **Résultat** : **Lot A complet.** `GET /api/files/[...key]` branché (3 lignes de
+  délégation, logique dans `files.ts`, endpoint présent dans le bundle) ;
+  `tests/guards.test.ts` rempli — **16 cas** exécutant la vraie commande
+  `runMemberCommand` sur une transaction factice évaluant réellement les `where`
+  drizzle (create/update, chef vs secrétaire vs admin, élargissement de
+  visibilité, changement de pupitre). `check` 0 erreur / 20 avertissements,
+  `build` OK, `npx vitest run tests/guards.test.ts` → 16/16. Suite globale :
+  56 tests passants, seules les 2 suites vides restantes échouent (étapes 45,
+  52/53).
+- **Itérations** : 2
+- **Fichiers modifiés** : `src/routes/api/files/[...key]/+server.ts`,
+  `tests/guards.test.ts`
+- **Prochaine étape** : lot B (étapes 41 et 42 — téléversements réels et quota)
+
+## Phase 4 : Développement Backend — lot B (en cours)
+
+- **Action** : Appel à `dev-backend` (étapes 41 et 42)
+- **Résultat** : en attente
+- **Itérations** : 0
+- **Fichiers modifiés** : attendus
+  `src/routes/api/member/upload/+server.ts` (nouveau),
+  `src/lib/server/storage.ts`, `src/lib/server/member/commands.ts`

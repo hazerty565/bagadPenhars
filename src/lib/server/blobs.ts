@@ -22,6 +22,9 @@ export interface R2ObjectMetadata {
 
 /**
  * Interface minimale d'un bucket R2 (correspond aux bindings Cloudflare).
+ *
+ * `get` retourne la taille de l'objet quand le binding la fournit : elle sert
+ * d'en-tête `Content-Length` à la diffusion, sans lecture supplémentaire.
  */
 export interface R2BucketBinding {
 	put(
@@ -31,6 +34,7 @@ export interface R2BucketBinding {
 	): Promise<void>;
 	get(key: string): Promise<{
 		body: ReadableStream | null;
+		size?: number;
 		httpMetadata?: { contentType?: string };
 	} | null>;
 	delete(key: string): Promise<void>;
@@ -79,7 +83,7 @@ export async function getObject(
 	bindings: R2Bindings,
 	bucket: R2BucketName,
 	key: string
-): Promise<{ body: ReadableStream; mimeType: string } | null> {
+): Promise<{ body: ReadableStream; mimeType: string; size: number | null } | null> {
 	const bucketClient = resolveBucket(bindings, bucket);
 
 	const object = await bucketClient.get(key);
@@ -87,7 +91,8 @@ export async function getObject(
 
 	return {
 		body: object.body,
-		mimeType: object.httpMetadata?.contentType || 'application/octet-stream'
+		mimeType: object.httpMetadata?.contentType || 'application/octet-stream',
+		size: typeof object.size === 'number' ? object.size : null
 	};
 }
 

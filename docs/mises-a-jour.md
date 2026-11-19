@@ -537,3 +537,166 @@ Liste exacte et minimale des points restants :
 3. **l.133** — requalifier `db.execute` (aucune rupture) et y substituer l'alerte `drizzle/meta` (instantané 0005 absent).
 
 Ces trois lignes ajustées, la vague 0 peut être exécutée par le mainteneur sans autre réserve.
+
+---
+
+# Phase 3 — exécution des étapes 50, 51 et 52 (installation) — 2026-11-19
+
+**Périmètre** : hydratation à l'identique, contrôle de référence, montée ciblée `drizzle-orm`/`drizzle-kit`,
+resserrement du `specifier` `better-auth`, retrait d'`@better-auth/infra`, ajout d'`image-size` et installation
+de `svelte-i18n` (version choisie par le mainteneur). Point de contrôle n°1 validé par le client le 2026-11-19.
+**Aucun code métier touché** : seuls `package.json`, `pnpm-lock.yaml` et ce fichier changent dans mon périmètre.
+
+**Environnement** : Node `22.16.0`, pnpm `12.18.0` (conforme à `packageManager`), `node_modules/` absent au départ.
+
+## 1. Contrôle de référence (arbre hydraté, avant toute modification)
+
+`pnpm install --frozen-lockfile` réussit (verrou inchangé, SHA-256 du verrou avant travaux :
+`6202D4EE…D883B1`). Contrôles immédiatement après, sur cet arbre :
+
+| Contrôle | Résultat de référence | Détail |
+| :--- | :--- | :--- |
+| `npm run check` | **OK** — 0 erreur, **20 avertissements** (4 fichiers) | Avertissements `state_referenced_locally` préexistants (ProfilePage, dashboard/+layout) |
+| `npm run build` | **OK** | `✓ built in 21.53s`, `adapter-cloudflare ✔ done` |
+| `npm run test` | **ÉCHEC PRÉEXISTANT** (exit 1) | 3 suites vides → `Error: No test suite found in file …` (`tests/guards.test.ts`, `tests/i18n.test.ts`, `tests/invitation.test.ts`, à remplir aux étapes 45/52/53) **et** `Error: browserType.launch: Executable doesn't exist at … chromium_headless_shell-1223 …` (navigateur Playwright non téléchargé). En revanche **40 tests passent dans 18 fichiers**. |
+
+Cette signature d'échec est **identique à chaque palier** (après Drizzle, après l'étape 51, après `svelte-i18n`) :
+elle n'est imputable à aucune des installations. `npm run test` ne peut donc pas servir de garde de non-régression
+tant que l'étape 45 (suites vides) et le téléchargement du navigateur Playwright ne sont pas faits — point signalé
+au Chef, hors de mon périmètre.
+
+## 2. Étape 50 — montée ciblée Drizzle
+
+Commandes : `pnpm add -E drizzle-orm@0.45.4`, `pnpm add -E -D drizzle-kit@0.31.11` (devDependency conservée),
+`better-auth` passé de `^1.0.0` à `~1.7.18` puis `pnpm install --lockfile-only`.
+
+**Vérifications** : `pnpm why drizzle-orm` → **0.45.4** (unique) ; `pnpm why drizzle-kit` → **0.31.11** (unique) ;
+la résolution de `better-auth@1.7.18` est désormais `(drizzle-kit@0.31.11)(drizzle-orm@0.45.4)` : les peers ne sont
+plus « silencieusement » hors périmètre de support. `pnpm peers check` ne signale plus qu'**un** conflit,
+**préexistant et volontairement différé** (§2.1.1) : `wrangler@4.158.0` veut `@cloudflare/workers-types ^5`, nous
+sommes en 4 (`4.20260702.1`) — aucune version concernée n'a bougé.
+
+**Diff du verrou — conforme, trois écarts d'anticipation à connaître** :
+
+| Attendu au plan | Constaté | Lecture |
+| :--- | :--- | :--- |
+| retrait de `gel` | `gel@2.2.1` **reste** | `gel` est un **peer optionnel de `drizzle-orm` 0.45** (et l'était déjà de `drizzle-kit` 0.30). Seule sa résolution change : `gel@2.2.1` → `gel@2.2.1(supports-color@10.2.2)`. La ligne « retrait de `gel` » du plan est inexacte, sans conséquence. |
+| ajout de `esbuild ^0.25.4` | `esbuild@0.25.12` ajouté | Conforme. `drizzle-kit@0.31.11` déclare aussi `@esbuild-kit/esm-loader@2.6.5` → les entrées `@esbuild-kit/*` **restent** (elles ne disparaissent pas avec `esbuild-register`). |
+| retrait d'`esbuild-register` / `esbuild@0.19.12` | conformes | `esbuild-register@3.6.0(esbuild@0.19.12)` retiré. **Effet de bord mécanique** : toutes les chaînes de peer de `vite`, `@sveltejs/kit`, `@sveltejs/vite-plugin-svelte`, `@sveltejs/adapter-cloudflare`, `vitest`, `@vitest/browser*`, `vitefu` réécrivent `esbuild@0.19.12` → `esbuild@0.28.2` (version déjà présente au verrou, portée par `vite`). **Ce sont des réécritures de lignes de peers, pas des montées de version.** |
+| — | `supports-color@10.2.2` apparaît dans les chaînes de peers `eslint`/`typescript-eslint`/`debug` | Conséquence mécanique de `gel@2.2.1(supports-color@10.2.2)`. **Aucune version de `eslint`, `typescript-eslint` ou `debug` ne change.** |
+
+Aucun autre paquet direct (`svelte`, `@sveltejs/kit`, `vite`, `zod`, `better-auth`, `pg`, `resend`, `leaflet`…)
+ne bouge. Aucune modification sous `drizzle/`, aucun `override`/`resolution`, `vite.config.ts` intact.
+
+## 3. Étape 51 — hygiène du verrou
+
+| Action | Diff du verrou | Contrôle |
+| :--- | :--- | :--- |
+| Retrait `@better-auth/infra` (`pnpm remove`) | **−3 paquets** : `@better-auth/infra@0.4.27`, `@xmldom/xmldom@0.9.12`, `libphonenumber-js@1.13.15` (ses seules dépendances exclusives) ; la variante `better-call@1.4.5(zod@3.25.76)` disparaît, seule subsiste `better-call@1.4.5(zod@4.6.7)` | `grep better-auth/infra` sur `src/`, `scripts/`, `tests/`, `.github/` : **aucune occurrence**, comme l'annonçait le plan. `ssr.noExternal` non touché (les 4 entrées restent). |
+| `image-size` exact (`pnpm add -E image-size@2.1.0`) | **+1 entrée**, 0 dépendance, 0 peer | `pnpm why image-size` → `2.1.0` unique, en `dependencies`. |
+| `better-auth` `~1.7.18` | 1 ligne d'importateur (`specifier: ^1.0.0` → `~1.7.18`), **aucun paquet ne bouge** (1.7.18 satisfait déjà la plage) | `pnpm install --frozen-lockfile` réussit ⇒ la CI ne cassera pas en `ERR_PNPM_OUTDATED_LOCKFILE`. |
+
+**Reste à trancher par le Chef (hors de la consigne reçue)** : le point 4 de l'étape 51 (« mise hors jeu de
+`package-lock.json` ») n'a **pas** été exécuté ; `package-lock.json` est toujours présent. Je ne l'ai pas supprimé
+de ma propre initiative.
+
+## 4. Étape 52 — audit et installation de `svelte-i18n`
+
+| Package demandé | Version plan | Dernière version stable | Statut | Action retenue |
+| :--- | :--- | :--- | :--- | :--- |
+| `svelte-i18n` | **non prescrite** (choix mainteneur) | **4.0.1** (`dist-tags.latest`, publiée le **2024-10-21** ; `next` = 3.5.0-alpha.0 obsolète, `alpha` = 4.0.0-alpha.1) | **Compatible et utilisable sur Workers** | **Installé en `dependencies`, version exacte `4.0.1`** |
+
+### Preuves de compatibilité (tarball 4.0.1 inspecté)
+
+- **Peer** : `svelte: ^3 || ^4 || ^5` → Svelte 5.56.0 **satisfait** (le paquet déclare explicitement `^5`). Aucun
+  peer non satisfait après installation (seul reste le conflit `wrangler`/`workers-types` antérieur).
+- **Entrée runtime** : `exports` ne mappe que `dist/runtime.js` (+ types). Le `bin`/`dist/cli.js` (qui importe
+  `fs`, `path`, `svelte/compiler`, `cli-color`, `sade`, `tiny-glob`, `estree-walker`) n'est **jamais** chargé par
+  un import applicatif.
+- **`dist/runtime.js` (18 280 o, 4,6 Ko gzip)** : `import` uniquement `svelte/store`, `deepmerge`,
+  `intl-messageformat`. **Aucun `node:`**, aucun `fs`, aucun `Buffer`, aucun `process`, aucun `require`. Les seuls
+  globaux navigateur (`document.documentElement.setAttribute`, `window.setTimeout`, `navigator.language`) sont
+  **tous** derrière `typeof window !== "undefined"` (vérifié ligne par ligne) : le rendu SSR sur Cloudflare Workers
+  ne peut pas les atteindre.
+- **Dépendances runtime réelles** : `intl-messageformat@10.7.18` + `@formatjs/*` (API `Intl` standard, disponible
+  dans l'isolate Workers), `deepmerge` (JS pur). Poids mesuré : `runtime.js` 18,3 Ko (4,6 Ko gzip) +
+  `intl-messageformat` dist 18,2 Ko + `deepmerge` 4,0 Ko. **Le bundle applicatif ne change pas encore** : aucun
+  fichier de `src/` n'importe le paquet à ce stade (c'est l'objet de l'étape 53) ; la mesure d'écart de bundle
+  reste donc à faire à l'étape 53, comme le prévoit le plan.
+- **Transitives « CLI »** : `cli-color`, `sade`, `tiny-glob`, `estree-walker`, `esbuild ^0.19.2` sont installées
+  (51 paquets au total) mais restent hors du graphe importé. **Effet à connaître : `esbuild@0.19.12` revient dans
+  le verrou** (unique dépendance de ce type, portée par `svelte-i18n`, à ne pas confondre avec la 0.25.12 de
+  `drizzle-kit`). Les chaînes de peers de `vite` **ne** sont **pas** réécrites par ce retour (elles restent sur
+  `esbuild@0.28.2`).
+
+### Justification du choix de version
+
+**Version exacte `4.0.1`, sans plage.** Motifs : (1) c'est la `latest` publiée, aucune version 4.x ultérieure
+n'existe ; (2) le paquet est **dormant depuis le 2024-10-21** — une plage `^4` n'apporterait rien aujourd'hui mais
+laisserait entrer une 4.x publiée dans deux ans sans revue, alors que la compatibilité Workers que je viens de
+vérifier (absence de `node:` dans `runtime.js`, garde `typeof window`) est précisément ce qui pourrait dériver ;
+(3) cohérence avec la doctrine des étapes 50/51 (`image-size` exact, `@lucide/svelte` épinglé) et avec l'absence de
+`minimumReleaseAge` en session.
+
+### Risques consignés (aucun bloquant)
+
+1. **Paquet dormant** : dernière publication il y a ~2 ans, un seul mainteneur, pas de support Svelte 6 déclaré
+   (peer plafonné à `^5`). Sans effet en session (Svelte 6 est une majeure **différée**, §2.1.1) ; à réévaluer si
+   une montée de Svelte est un jour envisagée.
+2. **Stores globaux** : `svelte-i18n` expose des stores `svelte/store` (`$locale`, `$t`, `$d`, `$n`). Le risque
+   d'état partagé entre requêtes dans un même isolate Workers est **déjà cadré** par le plan (§8 et étape 52
+   point 7 : accesseur non réactif à locale explicite pour les deux accès serveur). Ce n'est pas un défaut du
+   paquet mais un point de mise en œuvre pour le frontend.
+3. **Transitives CLI inutiles au runtime** (~51 paquets, dont `es5-ext`/`memoizee`/`cli-color`) : elles alourdissent
+   `node_modules` et le verrou, pas le bundle. Aucune action possible sans `override` (interdit) ; à accepter.
+
+## 5. Contrôles de fin de phase
+
+| Contrôle | Après Drizzle (étape 50) | Après étape 51 | Après `svelte-i18n` |
+| :--- | :--- | :--- | :--- |
+| `npm run check` | 0 erreur, 20 avertissements | 0 erreur, 20 avertissements | 0 erreur, 20 avertissements |
+| `npm run build` | OK (`✓ built in 22.90s`, adapter-cloudflare ✔) | OK (`19.78s`) | OK (`19.67s`) |
+| `npm run test` | même échec préexistant (3 suites vides + Playwright absent, 40 tests passent) | idem | idem |
+| `pnpm install --frozen-lockfile` | — | — | **OK** (`Lockfile is up to date`, 66 ms) |
+
+## 6. Diff global du verrou, résumé par paquet (base `HEAD` → final)
+
+**Directs**
+
+| Paquet | Avant | Après | Nature |
+| :--- | :--- | :--- | :--- |
+| `drizzle-orm` | `^0.39.0` → 0.39.3 | `0.45.4` | montée ciblée (étape 50) |
+| `drizzle-kit` | `^0.30.0` → 0.30.6 | `0.31.11` | montée ciblée (étape 50) |
+| `better-auth` | `^1.0.0` → 1.7.18 | `~1.7.18` → **1.7.18** | resserrement, **version inchangée** |
+| `@better-auth/infra` | `^0.4.27` → 0.4.27 | **retiré** | étape 51 |
+| `image-size` | absent | **`2.1.0`** exact | étape 51 |
+| `svelte-i18n` | absent | **`4.0.1`** exact | étape 52 |
+
+**Retirés (6)** : `@better-auth/infra@0.4.27`, `@xmldom/xmldom@0.9.12`, `libphonenumber-js@1.13.15` (exclusifs
+d'infra), `drizzle-orm@0.39.3`, `drizzle-kit@0.30.6`, `esbuild-register@3.6.0`.
+
+**Ajoutés (58, tous attribuables)** : sous-arbre Drizzle (`drizzle-orm@0.45.4`, `drizzle-kit@0.31.11`,
+`esbuild@0.25.12` + ses 25 binaires de plateforme, `tsx@4.23.15`) ; `image-size@2.1.0` ; sous-arbre `svelte-i18n`
+(51 paquets : `svelte-i18n@4.0.1`, `intl-messageformat@10.7.18` + 5 `@formatjs/*`, `deepmerge`… `cli-color` +
+`es5-ext`/`memoizee`/`timers-ext`/`d`/`ext`/`type`/`esniff`/`event-emitter`/`is-promise`/`next-tick`/`lru-queue`/
+`es6-*`, `sade`, `tiny-glob` + `globalyzer`/`globrex`, `estree-walker`, `esbuild@0.19.12` + ses 20 binaires).
+
+**Réécritures de lignes de peers uniquement (aucune version de paquet ne change)** : chaînes `vite` /
+`@sveltejs/kit` / `@sveltejs/vite-plugin-svelte` / `@sveltejs/adapter-cloudflare` / `vitest` / `@vitest/browser*` /
+`vitefu` (`esbuild@0.19.12` → `esbuild@0.28.2`, ajout de `tsx@4.23.15`) ; chaînes `eslint` /
+`typescript-eslint` / `debug` / `gel` (ajout du peer `supports-color@10.2.2`) ; importateurs `better-auth`,
+`drizzle-orm`, `image-size`, `svelte-i18n`.
+
+**Aucune ligne hors de ces périmètres** : aucun `override`/`resolution`, aucune entrée `drizzle/`, `vite.config.ts`
+et tout `src/` intacts (`git status` : `package.json`, `pnpm-lock.yaml` et ce fichier uniquement).
+
+## Statut de la phase 3
+
+`STATUT : VALIDÉ` — étapes 50, 51 et installation de l'étape 52 exécutées ; verrou cohérent avec `package.json`
+(`--frozen-lockfile` passe) ; aucune régression détectable (`check`/`build` identiques, `test` inchangé dans son
+échec préexistant).
+
+Points renvoyés au Chef : (1) `package-lock.json` non supprimé (point 4 de l'étape 51) ; (2) `npm run test` échoue
+**avant et après** pour deux causes préexistantes (suites vides à remplir, navigateur Playwright non installé) ;
+(3) `gel`, `@esbuild-kit/*` et `esbuild@0.19.12` subsistent dans le verrou — attendus, mais la formulation de
+l'étape 50 du plan doit être corrigée sur ce point.

@@ -254,6 +254,31 @@ function requireAdmin(actor: MemberActor): void {
 	}
 }
 
+/* -------------------------------------------------------------------------- */
+/* Règles de portée des événements (étape 36)                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Un chef de pupitre n'écrit que des événements de visibilité `pupitre`.
+ *
+ * Étape 36 : la règle validée est « chef = un seul de ses pupitres, visibilité
+ * `pupitre` ». Elle est appliquée ici, dans la commande serveur — seule surface
+ * de mutation de l'espace adhérents — et non seulement par l'interface ou par
+ * la fonction pure utilisée par l'affichage : masquer un bouton ne protège rien.
+ * La secrétaire et l'administrateur conservent `public`, `interne` et
+ * `pupitre`, ainsi que le multi-pupitres (`canCreateEvent`).
+ */
+function requireChefEventVisibility(actor: MemberActor, visibility: MemberEventVisibility): void {
+	if (actor.role !== 'chef_pupitre') return;
+	if (visibility !== 'pupitre') {
+		fail(
+			403,
+			'forbidden',
+			'Un chef de pupitre ne gère que des événements de visibilité « pupitre ».'
+		);
+	}
+}
+
 interface EventRow {
 	id: string;
 	title: string;
@@ -393,6 +418,7 @@ export async function runMemberCommand(
 					'Vous ne pouvez créer que des événements ciblant un seul de vos pupitres.'
 				);
 			}
+			requireChefEventVisibility(actor, input.visibility);
 			const [created] = await tx
 				.insert(events)
 				.values({
@@ -422,7 +448,13 @@ export async function runMemberCommand(
 			if (!canManageEvent(actor, toMemberEvent(existing))) {
 				fail(403, 'forbidden', 'Vous ne pouvez modifier que les événements de vos pupitres.');
 			}
+			// Un chef ne sort pas du périmètre : l'événement d'origine doit déjà
+			// être un événement de pupitre.
+			requireChefEventVisibility(actor, existing.visibility);
 			const input = readEventInput(payload.input);
+			// Ni élargir la visibilité : `public` et `interne` restent réservés à
+			// la secrétaire et à l'administrateur.
+			requireChefEventVisibility(actor, input.visibility);
 			if (!canCreateEvent(actor, input.pupitreIds)) {
 				fail(
 					403,
@@ -461,6 +493,7 @@ export async function runMemberCommand(
 			if (!canManageEvent(actor, toMemberEvent(existing))) {
 				fail(403, 'forbidden', 'Vous ne pouvez annuler que les événements de vos pupitres.');
 			}
+			requireChefEventVisibility(actor, existing.visibility);
 			await tx
 				.update(events)
 				.set({ cancelled_at: new Date(), cancelled_by: actor.id, updated_at: new Date() })
@@ -474,6 +507,7 @@ export async function runMemberCommand(
 			if (!canManageEvent(actor, toMemberEvent(existing))) {
 				fail(403, 'forbidden', 'Vous ne pouvez modifier que les événements de vos pupitres.');
 			}
+			requireChefEventVisibility(actor, existing.visibility);
 			await tx
 				.update(events)
 				.set({ cancelled_at: null, cancelled_by: null, updated_at: new Date() })
