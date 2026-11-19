@@ -10,8 +10,6 @@ permission:
     "drizzle.config.ts": allow
     "src/hooks.server.ts": allow
     "src/lib/server/**": allow
-    "src/routes/**/+server.ts": allow
-    "tests/**": allow
     "scripts/**": allow
     "package.json": deny
   bash: allow
