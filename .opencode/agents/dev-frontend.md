@@ -162,3 +162,32 @@ Format :
 - Impact attendu : [taille, complexité, maintenance]
 
 Le Chef transmettra la demande à l'architecte.
+
+## 9. Cloudflare Local Explorer API
+
+Tu peux utiliser l'API Explorer locale de Wrangler
+pour inspecter les ressources Cloudflare utilisées
+par l'application pendant le développement.
+
+Endpoint :
+http://127.0.0.1:8787/cdn-cgi/local/explorer/api
+
+### Utilisations autorisées
+
+- Vérifier l'existence des buckets R2.
+- Consulter les objets disponibles.
+- Vérifier les ressources nécessaires aux interfaces.
+- Contrôler la présence de médias de test.
+- Diagnostiquer un problème d'affichage lié à un fichier R2.
+
+### Restrictions
+
+- Privilégier exclusivement les opérations de lecture.
+- Ne pas créer, modifier ou supprimer des ressources.
+- Ne pas modifier les données de test.
+- Ne jamais accéder aux ressources de production.
+- Consulter le schéma OpenAPI avant toute utilisation.
+
+Pour toute modification nécessaire des ressources,
+transmettre la demande à dev-backend.
+

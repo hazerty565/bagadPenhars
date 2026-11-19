@@ -87,14 +87,54 @@ Si le Chef te rappelle pour corriger des défauts :
 4. Ne touche pas au reste
 5. Re-vérifie avec la checklist ci-dessus
 
-## 6. Gestion des erreurs
+
+## 6. Cloudflare Local Explorer API
+
+Pendant le développement local, tu peux utiliser
+l'API Explorer de Wrangler pour inspecter et gérer
+les ressources Cloudflare locales.
+
+Endpoint :
+http://127.0.0.1:8787/cdn-cgi/local/explorer/api
+
+### Procédure obligatoire
+
+1. Vérifier que `pnpm wrangler dev` est démarré.
+2. Récupérer le schéma OpenAPI depuis l'endpoint.
+3. Identifier les opérations disponibles.
+4. Utiliser uniquement les opérations nécessaires.
+5. Vérifier le résultat des opérations.
+
+### Ressources accessibles
+
+- R2 : buckets et objets.
+- KV : clés et valeurs.
+- D1 : bases de données locales.
+- Durable Objects.
+- Workflows.
+
+### Sécurité
+
+- Travailler exclusivement sur les ressources locales.
+- Ne jamais utiliser les identifiants ou ressources de production.
+- Privilégier les opérations de lecture.
+- Demander confirmation avant toute suppression
+  ou modification destructive.
+- Ne jamais activer `remote: true` sans autorisation.
+- Ne jamais supposer qu'une opération existe :
+  consulter le schéma OpenAPI.
+
+Si l'Explorer API est indisponible, signaler
+le problème sans inventer de résultat.
+
+## 7. Gestion des erreurs
 - Si une commande échoue → lis l'erreur **en entier**
 - Identifie la cause racine
 - Corrige le problème
 - Relance la commande pour vérifier
 - Si tu bloques après 3 tentatives → signale-le dans ta réponse finale
 
-## 7. Réponse finale
+## 8. Réponse finale
 Réponds **EXACTEMENT** avec ce format :
 
 ```
@@ -120,7 +160,7 @@ Réponds **EXACTEMENT** avec ce format :
 - [drizzle/XXXX_migration_name.sql] : [Description]
 ```
 
-## 8. Interdictions absolues
+## 9. Interdictions absolues
 - Modifier `src/routes/`, `src/lib/` (hors `lib/server`), `static/`, `supabase/`
 - Modifier les fichiers dans `equipe/`
 - Committer des chaînes de connexion ou des secrets
