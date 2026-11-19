@@ -86,13 +86,161 @@ npx lighthouse <URL> --output=json --output-path=./equipe/essais/lighthouse-<pag
 - Si Lighthouse ne peut pas s'exécuter (Chrome absent, serveur non démarré) → note-le dans "Points non testés" avec la raison.
 - Ne modifie jamais le code pour améliorer les scores. Tu constates et tu transmets.
 
-### 3.3 Contraintes d'exécution communes
 
-- Exécute réellement les commandes (curl, scripts, Lighthouse, etc.). Ne déduis jamais un résultat sans preuve.
-- Chaque commande bash doit avoir une durée maximale de 60 secondes (sauf Lighthouse qui peut prendre plus).
-- Place tes scripts de test et les rapports Lighthouse dans `equipe/essais/`.
-- Utilise des données de test identifiables et **réversibles**.
-- Ne déclenche jamais d'envoi réel de courriels, notifications ou actions externes destructives.
+### 3.3 Tests utilisateurs réels avec Playwright
+
+L'agent doit utiliser Playwright pour piloter un navigateur
+et interagir réellement avec l'application.
+
+Prérequis :
+- Le serveur MCP Playwright doit être connecté.
+- Les outils navigateur doivent être accessibles.
+- Un navigateur Chromium doit être disponible.
+- L'application doit être démarrée sur un environnement DEV
+  ou de recette autorisé.
+
+Si Playwright est indisponible :
+- Ne prétends jamais avoir effectué un test navigateur.
+- Inscris le blocage dans les points non testés.
+- Continue les autres tests réalisables.
+
+Actions à réaliser :
+- Naviguer entre les pages.
+- Cliquer sur les liens et boutons.
+- Remplir et soumettre les formulaires.
+- Utiliser les menus déroulants.
+- Tester les modales et fenêtres de dialogue.
+- Se connecter et se déconnecter.
+- Actualiser une page.
+- Utiliser les boutons précédent et suivant du navigateur.
+- Tester les états de chargement et les messages d'erreur.
+- Vérifier les redirections et les pages protégées.
+
+Règles :
+- Privilégier les interactions par rôles accessibles,
+  noms et libellés plutôt que les coordonnées écran.
+- Prendre un nouveau snapshot après chaque navigation.
+- Vérifier le résultat après chaque action importante.
+- Ne jamais considérer un clic comme une réussite
+  sans vérifier son résultat.
+- Capturer les anomalies avec une capture d'écran.
+- Ne jamais contourner une erreur pour déclarer un test réussi.
+
+
+### 3.4 Tests par profil utilisateur existant
+
+L'application possède déjà un système de gestion des
+profils et des permissions.
+
+Le testeur doit récupérer les comptes et profils existants
+dans l'environnement DEV. Il ne doit pas créer de nouveaux
+comptes ou modifier les rôles pour effectuer ses tests.
+
+#### Profils à tester
+
+1. Public : utilisateur non connecté.
+2. Membre : membre connecté.
+3. Pupitre : vérifier les accès liés au pupitre concerné.
+4. Secrétaire : accès aux fonctions de secrétariat.
+5. Chef de pupitre : gestion de ses propres pupitres.
+6. Administrateur : accès aux fonctions d'administration.
+
+#### Méthode
+
+Pour chaque profil :
+
+- Identifier le compte de test correspondant.
+- Récupérer ses informations et ses permissions.
+- Se connecter avec ce compte.
+- Vérifier les menus affichés.
+- Vérifier les pages accessibles.
+- Vérifier les actions autorisées.
+- Vérifier les actions interdites.
+- Tester les accès directs aux URLs.
+- Vérifier les autorisations côté backend.
+
+#### Règles métier obligatoires
+
+- L'inscription publique est désactivée.
+- Seuls les administrateurs peuvent inviter des membres.
+- Ne jamais créer une invitation réelle pendant les tests.
+- Un chef de pupitre ne peut gérer que les pupitres
+  qui lui sont attribués.
+- Un secrétaire et un administrateur disposent
+  uniquement des droits définis par les spécifications.
+- Un membre ne peut pas accéder aux fonctions réservées
+  aux responsables.
+
+#### Comptes indisponibles
+
+Si un profil ne possède aucun compte de test :
+- Ne pas créer de compte.
+- Ne pas modifier les permissions existantes.
+- Déclarer les scénarios concernés comme non exécutés.
+- Signaler le besoin d'un compte de test au Chef.
+
+Ne jamais divulguer les identifiants ou mots de passe
+dans le rapport QA.
+
+
+
+### 3.5 Tests responsive et visuels
+
+Tester les pages principales avec les dimensions suivantes :
+
+- Mobile : 390 x 844.
+- Tablette : 768 x 1024.
+- Desktop : 1440 x 900.
+
+Vérifier :
+- Absence de débordement horizontal.
+- Menu adapté à la taille de l'écran.
+- Lisibilité des textes.
+- Visibilité des boutons.
+- Accessibilité des formulaires.
+- Positionnement des éléments.
+- Images correctement dimensionnées.
+- Modales utilisables.
+- Navigation utilisable au tactile.
+
+Prendre une capture d'écran des pages principales
+pour chaque format.
+
+Une différence visuelle n'est pas automatiquement
+une anomalie : vérifier les règles responsive attendues.
+
+
+### 3.6 Tests exploratoires par l'IA
+
+Après les scénarios déterministes, réaliser une exploration
+du site en adoptant le comportement d'un utilisateur réel.
+
+Exemples de profils :
+- Un visiteur qui découvre le Bagad.
+- Un nouvel adhérent qui découvre son espace membre.
+- Un membre qui cherche une répétition.
+- Un chef de pupitre qui souhaite gérer ses événements.
+
+Objectifs :
+- Identifier les parcours difficiles à comprendre.
+- Repérer les fonctionnalités difficiles à trouver.
+- Détecter les incohérences entre les pages.
+- Identifier les actions sans retour utilisateur.
+- Repérer les erreurs d'ergonomie.
+- Détecter les situations qui peuvent bloquer un utilisateur.
+
+Ne pas inventer de critères métier.
+Distinguer les défauts avérés des simples suggestions
+d'amélioration ergonomique.
+
+Documenter chaque découverte avec :
+- Profil simulé.
+- Objectif utilisateur.
+- Parcours réalisé.
+- Difficulté rencontrée.
+- Preuve.
+- Impact utilisateur.
+
 
 ## 4. Qualification des anomalies
 
