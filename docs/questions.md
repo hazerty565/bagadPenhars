@@ -435,35 +435,35 @@ Le `profileId` doit provenir de la session Better Auth vérifiée côté serveur
 - **Problème :** `AGENTS.md` demande d'utiliser le paquet `svelte-i18n` pour le public (`fr`, `en`, `br`), mais le paquet n'est pas installé et la page d'accueil a été livrée avec des dictionnaires TypeScript typés maison (`src/lib/i18n/`).
 - **Pourquoi :** le choix conditionne la façon dont les prochaines pages publiques déclareront leurs textes, les tests de complétude des traductions et l'éventuelle détection automatique de la langue du navigateur.
 - **Proposition :** conserver les dictionnaires typés maison pour la V1 (aucune dépendance supplémentaire, complétude vérifiée à la compilation) et réévaluer `svelte-i18n` si un besoin de pluriels, de formats riches ou de chargement paresseux apparaît. Confirmer ce choix.
-- **État :** **Décidée le 2026-11-18 — `svelte-i18n` retenu, migration dans cette
-  session.** La proposition initiale (conserver les dictionnaires typés) est
-  **écartée par le client**.
-- **Décision client (2026-11-18), formulation exacte de la demande au point de
-  contrôle n°1 :** « installation de svelte-i18n pour les traductions en
-  français, anglais et breton et installation de lucide-svelte pour les
-  icons ». Après vérification et clarification : `svelte-i18n` est **installé et
-  la migration est faite maintenant** ; `lucide-svelte` **n'est pas installé**
-  (voir D-2026-11-18-08 ci-dessous).
-- **Portée de la décision :**
-  1. `svelte-i18n` devient la bibliothèque de messages du **site public
-     uniquement** (`fr`, `en`, `br`) ; l'espace adhérents et l'authentification
-     restent en français, hors catalogues.
-  2. Les textes existants (`src/lib/i18n/fr.ts`, `en.ts`, `br.ts`) sont repris
-     **mot pour mot** dans des catalogues de messages : contenus déjà validés
-     comme contenus provisoires en attente de validation (Q-2026-11-09-02,
-     Q-2026-11-10-01 à -06, -08, Q-2026-11-11-01) ne sont **pas** réécrits.
+- **État :** **DÉFINITIVEMENT TRANCHÉE LE 2026-11-20 — dictionnaires typés conservés,
+  `svelte-i18n` NON installé.** La décision du 2026-11-18 qui retenait
+  `svelte-i18n` est **annulée par le client** (voir D-2026-11-18-07, marquée
+  « remplacée »).
+- **Décision client (2026-11-20), formulation exacte :** « `svelte-i18n` il ne
+  faut pas y toucher ».
+- **Portée de la décision, opposable :**
+  1. Les **dictionnaires typés maison** de `src/lib/i18n/` (`fr.ts`, `en.ts`,
+     `br.ts`, `types.ts`) restent **la référence** du site public. Aucune
+     installation, aucune migration, aucun diff de verrou, aucun catalogue de
+     messages.
+  2. Le type `Dictionary` continue de garantir la complétude `fr`/`en`/`br` à la
+     compilation (`npm run check`). Cette garantie n'est pas négociable.
   3. La locale reste portée par le segment `[lang=lang]` (`fr` par défaut) ;
-     **aucune détection de la langue du navigateur** n'est introduite, pour que
-     le rendu serveur et l'hydratation client ne puissent pas diverger.
+     **aucune détection de la langue du navigateur** n'est introduite.
   4. Tous les éléments SEO déjà livrés (titre, `description`, `canonical`,
      `hreflang` `fr`/`en`/`br`/`x-default`, Open Graph) et le `%lang%` de
-     `src/app.html` sont **préservés à l'identique**.
-  5. Le design public reste figé à 98 % : **aucun changement visuel attendu**,
-     prouvé par comparaison avant/après des trois langues (mêmes textes rendus,
-     mêmes balises SEO), jamais par une impression.
-- **Renvoi plan :** `equipe/PLAN.md` §2.2, §2.3, **étapes 52 et 53** (vague 1),
-  §4, §7.3, §8, annexe A. Aucun endpoint de `equipe/CONTRAT_API.md` n'est
-  modifié : `+layout.server.ts` renvoie déjà `{ lang }`.
+     `src/app.html` restent **inchangés**.
+  5. Le design public reste figé à 98 % : **aucun changement d'écran**.
+  6. **Aucun paquet i18n n'est ajouté au plan** ; `svelte-i18n` disparaît du
+     tableau des packages.
+- **Conséquence sur le plan :** les **étapes 52 et 53** de la révision du
+  2026-11-18 (socle i18n et bascule des composants publics) sont **supprimées**
+  de `equipe/PLAN.md`, ainsi que tous leurs renvois (§0, §2.1, §2.2, §2.3,
+  §2.3.1, §3.1, §4, §6, §7.2, §8, annexe A). **Les étapes 37, 38 et 39
+  reprennent leur place normale** : plus aucune étape publique n'est décalée.
+  Les numéros 52 à 57 sont réutilisés par le **durcissement RLS** du 2026-11-20.
+- **Ce que cette décision ne rouvre pas :** `src/autre/` reste hors build et
+  hors périmètre ; les icônes restent couvertes par D-2026-11-18-08.
 
 ### Q-2026-11-09-02 — Validation des contenus de la page d'accueil
 
@@ -943,7 +943,13 @@ par l'état existant et ne déclenche aucune installation, aucune migration.
 Les deux points ci-dessous sont consignés pour éviter qu'un audit ultérieur ne
 rouvre l'un ou l'autre : ils ne sont pas des questions ouvertes.
 
-### D-2026-11-18-07 — `svelte-i18n` installé, migration faite dans cette session
+### D-2026-11-18-07 — `svelte-i18n` installé, migration faite dans cette session — **REMPLACÉE le 2026-11-20**
+
+> **Cette décision n'est plus applicable.** Le client l'a annulée le 2026-11-20 :
+> « `svelte-i18n` il ne faut pas y toucher ». Les dictionnaires typés maison
+> restent la référence ; les étapes 52 et 53 décrites ci-dessous sont
+> **supprimées** du plan. L'entrée est conservée pour l'historique uniquement
+> (voir Q-2026-11-09-01, décision du 2026-11-20).
 
 - **Décision :** `svelte-i18n` est **ajouté aux dépendances d'exécution** par le
   **mainteneur** (version choisie par lui, voir plan §7.3) et la migration est
@@ -989,3 +995,118 @@ rouvre l'un ou l'autre : ils ne sont pas des questions ouvertes.
      installer.
 - **Renvoi plan :** §0, §2.1, §2.2, §7.4, §8.
 
+## 2026-11-20 — `svelte-i18n` retiré et audit RLS backend
+
+**Contexte.** Deux points sont traités dans cette section : (1) la décision
+client du 2026-11-20 sur l'i18n, qui annule celle du 2026-11-18 ; (2) l'**audit
+RLS backend**, conduit **en lecture seule** sur la branche Neon `test`
+(6 migrations appliquées, 29 tables, rôle `bagad_app` sans `SUPERUSER`, sans
+`BYPASSRLS`, sans rôle parent). **Aucun fichier n'a été modifié, aucune
+migration générée, aucune écriture en base, `production` n'a jamais été
+contactée.**
+
+### D-2026-11-20-01 — i18n : `svelte-i18n` **non installé**, dictionnaires typés conservés
+
+- **Décision client (2026-11-20) :** « `svelte-i18n` il ne faut pas y toucher ».
+- **Effet :** Q-2026-11-09-01 est définitivement tranchée dans le sens des
+  dictionnaires typés ; D-2026-11-18-07 est **remplacée** ; les étapes 52 et 53
+  du plan sont supprimées ; aucun paquet i18n n'est ajouté.
+- **Renvoi plan :** §0, §2.3.1, §4, §6, §7.2.
+
+### Décisions client du 2026-11-20 — durcissement RLS (Q-A1 à Q-A9)
+
+Ces neuf décisions sont **tranchées** et appliquées par les étapes 52 à 57 du
+plan (§9 « Audit RLS du 2026-11-20 »). Elles ne bloquent aucune étape et ne
+rouvrent aucune décision antérieure.
+
+| Réf. | Décision client |
+| --- | --- |
+| **Q-A1** | La branche `OR e.created_by = app.current_profile_id()` est **retirée** de `app.can_manage_event()`. Le droit de gestion d'un événement découle **du pupitre**, jamais du créateur : un chef ne gère que les événements **mono-pupitre** d'un pupitre qu'il dirige ; perdre le statut de chef fait perdre le droit. |
+| **Q-A2** | Création **atomique** via `app.create_event(..., p_pupitre_ids uuid[])`, `SECURITY DEFINER`, `search_path` fixé, `REVOKE ALL ... FROM PUBLIC`, `GRANT EXECUTE ... TO bagad_app`. Chef : **exactement 1** pupitre qu'il dirige et **`visibility = 'interne'` seulement**. Secrétaire/admin : `public`/`interne`/`pupitre`, **0 à N** pupitres (0 = global). `events_insert` est en outre **réservée** à la secrétaire et à l'admin ; un chef ne peut pas produire un état `pupitre` ou `public` par `UPDATE`. |
+| **Q-A3** | Présences nominatives : un chef ne les lit que pour les événements **mono-pupitre de son pupitre** ; multi-pupitres et sans pupitre : **secrétaire/admin seulement**. Correction **en base ET côté backend** (`src/lib/member/permissions.ts`), pas un masquage d'interface. |
+| **Q-A4** | Un chef **peut supprimer** les événements **mono-pupitre de son pupitre** ; multi-pupitres et global : secrétaire/admin. `events_delete` est alignée sur `can_manage_event` (aucun droit au simple créateur). |
+| **Q-A5** | `is_chef` est **retiré** de `app.member_directory` ; vérification qu'aucune API ne l'expose indirectement. |
+| **Q-A6** | Tables Better Auth (`user`, `session`, `account`, `verification`) **hors RLS** : **risque accepté et documenté**, **sans** rôle `bagad_auth`. Conditions opposables écrites au plan §9.6 (connexion `bagad_app` serveur uniquement, aucune connexion Neon depuis le navigateur, identifiants jamais exposés, sessions/comptes/jetons jamais dans une réponse d'API, tables métier toujours sous RLS). |
+| **Q-A7** | Ordre des migrations : **`0006_rls_hardening` puis `0007_storage_quota_functions`**. **Jamais** de réécriture de `0000` à `0005`. `production` n'est touchée qu'après **validation explicite**, toujours après `test`. |
+| **Q-A8** | `playing_with_neon` est **supprimée par migration** et **ne doit pas être recréée en production**. |
+| **Q-A9** | Le contexte RLS est **`app.profile_id` exclusivement**. `AGENTS.md` §2 (`app.current_user_id`) et `docs/database.md:65` (`app.user_id`) sont **à corriger par le client** : aucun agent n'a les droits d'écriture sur ces fichiers. |
+
+### Questions ouvertes du 2026-11-20 (non tranchées — ne pas décider à la place du client)
+
+Les cinq questions ci-dessous ne bloquent **aucune** étape du plan. Elles sont
+consignées telles quelles pour que les développeurs ne tranchent pas à la place
+du client.
+
+#### Question 1 : Événements `pupitre` déjà créés par des chefs sur `test`
+
+- **Contexte :** la branche `test` contient **16 événements**, dont **4 créés par
+  des chefs** en visibilité `pupitre`. La règle Q-A2 interdit désormais à un chef
+  de produire cette visibilité.
+- **Ambiguïté :** ces 4 événements restent-ils **modifiables** par leur chef
+  (renommage, date, description) **sans changer la visibilité** ? Un `WITH CHECK`
+  strict sur `visibility` refuserait toute mise à jour, même anodine.
+- **Options possibles :** **A** aucune exception (ils deviennent non modifiables
+  par le chef, seul un rôle secrétaire/admin peut les corriger) / **B** exception
+  limitée à la conservation de la visibilité existante (`OLD.visibility`), sans
+  possibilité de la changer / **C** campagne de données ponctuelle pour les
+  ramener en `interne`.
+- **Recommandation :** **B**, si le client confirme qu'il veut que les chefs
+  puissent corriger leurs événements existants ; sinon **A**, plus simple et plus
+  strict. Dans tous les cas, **la migration ne réécrit aucune donnée** : l'étape
+  54 vérifie seulement que ces 4 lignes restent inchangées.
+
+#### Question 2 : `can_view_event` conserve la branche `created_by`
+
+- **Contexte :** Q-A1 ne concerne que la **gestion**. La fonction de **lecture**
+  `app.can_view_event()` conserve sa branche `OR e.created_by =
+  app.current_profile_id()`.
+- **Ambiguïté :** un chef qui a créé un événement qu'il **ne gère plus** (perte
+  du pupitre, événement élargi) doit-il conserver la **lecture** de cet
+  événement ? Aujourd'hui : oui.
+- **Options possibles :** **A** conserver la branche (aucun changement) / **B**
+  aligner la lecture sur la visibilité seule (un événement `pupitre` reste lisible
+  par les membres des pupitres ciblés, indépendamment du créateur).
+- **Recommandation :** **A**, ne rien changer tant que le client n'a pas tranché :
+  la branche est conservée par décision explicite, et la retirer pourrait masquer
+  à un chef un événement qu'il a lui-même créé.
+
+#### Question 3 : Chef de plusieurs pupitres et événement multi-pupitres
+
+- **Contexte :** Q-A2 impose à un chef **exactement 1** pupitre, même s'il en
+  dirige plusieurs.
+- **Ambiguïté :** un chef dirigeant **deux pupitres** doit-il pouvoir créer un
+  événement ciblant **ces deux pupitres** (par exemple une répétition commune) ?
+  Aujourd'hui : **non**, il doit passer par la secrétaire.
+- **Options possibles :** **A** statu quo (exactement 1 pupitre) / **B**
+  autoriser N pupitres **tant qu'ils sont tous dirigés par lui**, toujours en
+  visibilité `interne` / **C** autoriser B sans changer la visibilité.
+- **Recommandation :** **A** pour la première livraison (règle simple, testable,
+  cohérente avec §12.1) ; **B** si le bureau juge la friction réelle en usage.
+
+#### Question 4 : Suppression par un chef — événements à venir seulement ?
+
+- **Contexte :** Q-A4 décide que le chef **peut supprimer** un événement
+  mono-pupitre de son pupitre.
+- **Ambiguïté :** la règle s'applique-t-elle aux **événements passés** (et à
+  leurs réponses) ou **uniquement aux événements à venir** ?
+- **Options possibles :** **A** aucune restriction temporelle / **B** suppression
+  limitée aux événements **dont la date n'est pas dépassée** / **C** suppression
+  possible sur les événements à venir, **annulation** (`cancelled_at`) seule sur
+  les événements passés.
+- **Recommandation :** **C** : c'est cohérent avec la conservation des réponses
+  (§12.2) et évite qu'un chef efface l'historique de présence d'une répétition
+  passée. Tant que la question est ouverte, le plan **n'ajoute aucune restriction
+  temporelle** (option A par défaut, donc l'état le plus permissif, à réviser).
+
+#### Question 5 : Écriture dans `AGENTS.md` et `docs/database.md`
+
+- **Contexte :** le plan (§4, §9.6) impose `app.profile_id` comme seul contexte
+  RLS, alors que `AGENTS.md` §2 nomme `app.current_user_id` et
+  `docs/database.md:65` nomme `app.user_id`.
+- **Ambiguïté :** qui corrige ces deux documents ?
+- **Constat, non une option :** **aucun agent n'a les droits d'écriture** sur
+  `AGENTS.md` ni sur `docs/database.md` (écriture refusée). Le plan **ne promet
+  aucune correction par un agent**.
+- **Action attendue :** correction **par le client**. Elle ne bloque aucune
+  étape : les développeurs codent avec `app.profile_id` et signalent l'écart dans
+  `docs/journal.md`.

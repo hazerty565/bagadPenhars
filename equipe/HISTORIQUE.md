@@ -190,3 +190,94 @@
 - **Fichiers modifiés** : `equipe/PLAN.md`, `docs/questions.md` (par l'architecte)
 - **Prochaine étape** : reprise de l'`architecte` sur le seul écart §7.2/§7.3,
   puis audit `svelte-i18n` par le `mainteneur`
+
+## Décision client du 2026-11-20 : `svelte-i18n` abandonné
+
+- **Action** : Le client indique « svelte-i18n il ne faut pas y toucher » et
+  demande de suivre le travail du `mainteneur` pour la prochaine étape du
+  `dev-backend`
+- **Résultat** : La migration i18n est **annulée** — les dictionnaires typés
+  maison restent la référence. Les étapes **52 et 53** doivent être retirées du
+  plan et Q-2026-11-09-01 repassée en « dictionnaires typés retenus ». L'écart
+  §7.2 (ligne 459) devient sans objet côté `svelte-i18n`, mais le retrait propre
+  des étapes et des renvois reste à faire par l'`architecte`.
+- **Itérations** : 0
+- **Fichiers modifiés** : `equipe/HISTORIQUE.md`
+- **Prochaine étape** : audit backend en lecture seule (migrations, RLS, rôle
+  `bagad_app`, parcours d'invitation, événements, trombinoscope, réponses), puis
+  plan validé, puis validation des corrections RLS par l'agent `securite`
+
+## Phase : Audit backend RLS (lecture seule)
+
+- **Action** : Appel à `dev-backend` — audit en lecture seule, aucune écriture
+- **Résultat** : Rapport rendu. Environnement confirmé : branche Neon `test`,
+  6 migrations, 29 tables, `bagad_app` sans `SUPERUSER`/`BYPASSRLS` ni rôle
+  parent ; contexte `app.profile_id` bien local à la transaction et non falsifiable.
+  **10 problèmes confirmés** (C1-C10) dont 4 impacts métier réels sur les
+  événements : branche créateur dans `app.can_manage_event`, `events_insert`
+  sans contrainte de visibilité, élargissement à un 2ᵉ pupitre via
+  `event_pupitres_insert`, `events_update` sans borne sur la nouvelle ligne ;
+  plus `can_view_presence` qui ouvre les présences nominatives d'un multi-pupitres
+  à un chef non gestionnaire, `app.member_directory` sans poste au bureau mais
+  exposant `is_chef`, tables Better Auth hors RLS, `GRANT DELETE` sans politique,
+  et 3 noms de contexte RLS divergents dans la doc. **10 problèmes potentiels**
+  (P1-P10) dont l'invitation en connexion propriétaire, la consommation non
+  atomique du jeton, et les fonctions de quota R2 annoncées mais absentes.
+  Aucune modification effectuée. 9 arbitrages client proposés (Q-A1 à Q-A9).
+- **Itérations** : 0
+- **Fichiers modifiés** : aucun
+- **Prochaine étape** : arbitrages client, puis plan RLS par l'`architecte`
+  (avec retrait des étapes `svelte-i18n`), puis développement backend
+
+## Phase : Arbitrages client sur l'audit RLS
+
+- **Action** : 6 questions regroupant les 9 arbitrages proposés (Q-A1 à Q-A9)
+- **Résultat** : Décisions obtenues —
+  **Q-A1/Q-A2** : suppression de la branche `created_by` dans
+  `app.can_manage_event` ; le droit découle du pupitre, jamais du créateur ;
+  création atomique via `app.create_event(..., p_pupitre_ids uuid[])`
+  (`SECURITY DEFINER`, `search_path` fixé, `REVOKE PUBLIC`, `GRANT EXECUTE` à
+  `bagad_app`) ; **un chef ne crée que des événements `interne`, pour un seul de
+  ses pupitres** ; la visibilité `interne` est aussi imposée à l'UPDATE ;
+  `events_delete` reste hors décision de la Q-A4 ; `can_view_event` non modifié ;
+  les 4 événements `pupitre` créés par des chefs sont conservés et leur cas est
+  consigné en question ouverte.
+  **Q-A3** : présences nominatives d'un chef limitées aux événements
+  **mono-pupitre de son pupitre** ; multi-pupitres et sans pupitre réservés à la
+  secrétaire et à l'admin ; correction en base **et** côté backend ; contrat
+  §12.2 à aligner.
+  **Q-A4** : le chef **peut supprimer** les événements mono-pupitre de son
+  pupitre ; multi-pupitres et global réservés à la secrétaire et à l'admin.
+  **Q-A6** : accès global de `bagad_app` aux tables Better Auth **accepté et
+  documenté** (conditions : connexion serveur uniquement, jamais de jeton renvoyé
+  au navigateur) ; **pas** de rôle `bagad_auth`.
+  **Q-A7** : `0006_rls_hardening` **puis** `0007_storage_quota_functions`.
+  **Q-A5** : retirer `is_chef` de `app.member_directory`.
+  **Q-A8** : supprimer `playing_with_neon` par migration.
+  **Q-A9** : `app.profile_id` partout ; corriger `AGENTS.md` et
+  `docs/database.md`.
+- **Itérations** : 0
+- **Fichiers modifiés** : `equipe/HISTORIQUE.md`
+- **Prochaine étape** : plan RLS par l'`architecte`, puis validation client
+  (aucune modification avant)
+
+## Phase : Architecture — plan RLS et retrait de `svelte-i18n`
+
+- **Action** : Appel à `architecte` (2 chantiers : retrait i18n, plan RLS)
+- **Résultat** : Livré — `svelte-i18n` retiré (étapes 52/53 supprimées, renvois
+  nettoyés, Q-2026-11-09-01 repassée en « dictionnaires typés conservés »).
+  Plan porté à **57 étapes** ; les étapes **52 à 57** couvrent le durcissement
+  RLS : 52 = `0006` lot événements (C1-C4, Q-A1/A2/A4, `app.create_event`,
+  visibilité `interne` imposée à l'INSERT et à l'UPDATE), 53 = `0006` lot
+  présences/annuaire/hygiène (C5, C6, C8, P8), 54 = application sur Neon `test`
+  + matrice SQL par rôle, 55 = alignement backend (`commands.ts`,
+  `permissions.ts`, `snapshot.ts`), 56 = `0007_storage_quota_functions`,
+  57 = matrice de tests par rôle et revue croisée. `CONTRAT_API.md` : aucun
+  endpoint modifié, §11/§12.1/§12.2/§12.3/§12.4 réalignés + §12.8. 5 questions
+  ouvertes consignées (événements `pupitre` existants, `can_view_event`,
+  chef multi-pupitres, suppression à venir, correction documentaire).
+- **Itérations** : 0
+- **Fichiers modifiés** : `equipe/PLAN.md`, `equipe/CONTRAT_API.md`,
+  `docs/questions.md`
+- **Prochaine étape** : **validation client du plan** (aucune modification de
+  code ou de base avant)

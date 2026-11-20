@@ -343,6 +343,9 @@ export interface NotificationLogEntry {
 | Lire les documents actifs                             | oui                      | oui                          | oui                | oui     |
 | Déposer un document                                   | non                      | son pupitre                  | tous               | tous    |
 | Gérer un événement                                    | non                      | un seul pupitre qu'il dirige | tous               | tous    |
+| Créer un événement                                    | non                      | `interne`, **exactement 1** pupitre dirigé | `public`/`interne`/`pupitre`, 0 à N pupitres | idem secrétaire |
+| Supprimer un événement                                | non                      | **mono-pupitre de son pupitre** | tous           | tous    |
+| Lire les présences nominatives                        | non (sa propre réponse)  | **mono-pupitre de son pupitre** | tous           | tous    |
 | Gérer articles / albums                               | non                      | non                          | oui                | oui     |
 | Envoyer une notification                              | non                      | son pupitre                  | plusieurs pupitres | global  |
 | Inviter / activer / suspendre                         | non                      | non                          | oui                | oui     |
@@ -673,7 +676,7 @@ Sauf mention contraire, les routes de cette section exigent `requireRole(locals,
 
 ### 9.2 Agenda — `GET /dashboard/admin/agenda`, `POST .../agenda/new?/create`, `POST .../agenda?/update|cancel|delete`
 
-- **Garde** : `requireRole(locals, 'secretaire')` ; pour un chef, `requireRole(locals, 'chef_pupitre')` + `requirePupitreChef` et visibilité `pupitre` imposée.
+- **Garde** : `requireRole(locals, 'secretaire')` ; pour un chef, `requireRole(locals, 'chef_pupitre')` + `requirePupitreChef` et **visibilité `interne` imposée**.
 - **Entrée `create`** : `title: string`, `description?: string`, `eventDate: string` (`YYYY-MM-DD`), `eventType: EventType`, `visibility: 'public' | 'interne' | 'pupitre'`, `isPoll: boolean`, `pupitreIds?: string[]`.
 - **Entrée `update`** : `eventId: string` + les champs modifiables ci-dessus (tous optionnels).
 - **Entrée `cancel`** : `eventId: string`, `reason?: string`.
@@ -684,8 +687,11 @@ Sauf mention contraire, les routes de cette section exigent `requireRole(locals,
 - **Succès `delete`** : `200 { success: true, data: { eventId: string } }`.
 - **Erreurs** : `400 validation_error` (date non civile, type inconnu), `403 insufficient_role`, `403 not_chef_of_pupitre`, `404 not_found`, `409 conflict` (récurrence non supportée).
 - **Règles** :
-  - Un chef crée toujours `visibility = 'pupitre'` avec **un seul** pupitre parmi ceux qu'il dirige. Il ne peut jamais créer un événement multi-pupitres ou global.
+  - Un chef crée toujours `visibility = 'interne'` avec **exactement un** pupitre parmi ceux qu'il dirige. Il ne peut jamais créer un événement `public`, `pupitre`, multi-pupitres ou global (**Q-A1/Q-A2**, 2026-11-20 — la visibilité `pupitre` imposée à un chef est **abandonnée**).
+  - Un chef **ne peut pas élargir** la visibilité par `update` (elle reste `interne`) ni modifier `createdBy` ou `isPoll` ; il ne peut pas faire sortir l'événement de son périmètre.
+  - Un chef **supprime** uniquement un événement **mono-pupitre de son pupitre** ; multi-pupitres et global : secrétaire/admin (**Q-A4**).
   - La secrétaire et l'admin peuvent créer `public`, `interne` ou `pupitre`, avec zéro, un ou plusieurs pupitres. Zéro pupitre = événement global (`public` ou `interne`).
+  - **Aucun endpoint dédié à la création** n'est ajouté : l'action `create` délègue à la fonction SQL atomique `app.create_event(...)`, qui insère l'événement et ses pupitres dans la même transaction. La forme HTTP (`Entrée`/`Succès`/`Erreurs` ci-dessus) est **inchangée**.
   - `eventType` est indépendant de `visibility`.
   - Aucune récurrence en V1.
   - L'annulation ne supprime aucune réponse ; elle les passe en lecture seule. **Dépendance : Q-2026-11-08-05** (`cancelled_at`).
@@ -808,16 +814,16 @@ Ces fonctions ne sont pas des endpoints HTTP ; elles fixent l'interface entre mo
 
 | Fonction                  | Signature cible                                                            | Règles                                                                                                                                                                              |
 | ------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `withUserContext`         | `(profileId: string, role: AppRole, cb: (tx) => Promise<T>) => Promise<T>` | Ouvre une transaction, exécute `set_config('app.user_id', ..., true)` et `set_config('app.user_role', ..., true)`, puis `cb`. Contexte local à la transaction. **Q-2026-11-08-01**. |
+| `withUserContext`         | `(db: DB, profileId: string, cb: (tx) => Promise<T>) => Promise<T>` | Ouvre une transaction, exécute **`set_config('app.profile_id', ..., true)`** — **seul** réglage de contexte admis, **jamais** `app.current_user_id` ni `app.user_id` — puis `cb`. Le rôle n'est **pas** passé en paramètre : les policies le lisent depuis `profiles.role` par `app.profile_id`. Contexte local à la transaction (aucune fuite entre requêtes, y compris après `ROLLBACK`). **Q-2026-11-08-01**, **Q-A9** (audit du 2026-11-20). |
 | `reserveStorage`          | `(bytes: number) => Promise<{ reserved: boolean; usage: StorageUsage }>`   | Vérifie `used + reserved + bytes <= blockThreshold`; sinon `quota_exceeded`.                                                                                                        |
 | `finalizeUpload`          | `(reservedBytes: number, actualBytes: number) => Promise<StorageUsage>`    | `used += actual`, `reserved -= reserved`.                                                                                                                                           |
 | `releaseReservation`      | `(reservedBytes: number) => Promise<StorageUsage>`                         | `reserved -= reserved` en cas d'échec.                                                                                                                                              |
 | `listEvents`              | `(actor, options?) => Promise<MemberEvent[]>`                              | Applique la visibilité §12.1.                                                                                                                                                       |
 | `getEventById`            | `(eventId: string) => Promise<EventWithPupitres \| null>`                  | Inclut les pupitres ciblés.                                                                                                                                                         |
-| `createEvent`             | `(actor, data) => Promise<Event>`                                          | Guard en amont ; un chef impose `pupitre` + un seul pupitre.                                                                                                                        |
-| `updateEvent`             | `(actor, eventId, data) => Promise<Event>`                                 | Guard en amont ; remplace les pupitres si `pupitreIds` fourni.                                                                                                                      |
+| `createEvent`             | `(actor, data) => Promise<Event>`                                          | Guard en amont **et** délégation à la fonction SQL **`app.create_event(..., p_pupitre_ids uuid[])`** (`SECURITY DEFINER`) : l'événement et ses pupitres sont insérés **dans la même transaction**. Chef : **exactement 1** pupitre qu'il dirige et `visibility = 'interne'` **seulement** ; secrétaire/admin : `public`/`interne`/`pupitre` et **0 à N** pupitres (0 = global). Aucune insertion directe dans `events` par un chef. **Q-A1/Q-A2** (2026-11-20). |
+| `updateEvent`             | `(actor, eventId, data) => Promise<Event>`                                 | Guard en amont ; remplace les pupitres si `pupitreIds` fourni. Un chef **ne peut pas élargir** la visibilité (il reste en `interne`) ni faire sortir l'événement de son périmètre ; `created_by` et `is_poll` ne sont pas modifiables par un chef. **Q-A1/Q-A2**. |
 | `cancelEvent`             | `(actor, eventId, reason?) => Promise<Event>`                              | Renseigne `cancelled_at` ; ne supprime aucune réponse. **Q-2026-11-08-05**.                                                                                                         |
-| `deleteEvent`             | `(actor, eventId) => Promise<void>`                                        | Suppression réservée aux rôles autorisés ; les réponses suivent la politique de conservation.                                                                                       |
+| `deleteEvent`             | `(actor, eventId) => Promise<void>`                                        | Un chef supprime **uniquement** un événement **mono-pupitre de son pupitre** ; multi-pupitres et global : secrétaire/admin. Aucun droit dérivé du seul statut de créateur. Les réponses suivent la politique de conservation. **Q-A4** (2026-11-20). |
 | `upsertResponse`          | `(actor, { eventId, profileId, status }) => Promise<EventResponse>`        | `profileId` doit égaler `actor.profileId` ; vérifie l'état `actif` et la visibilité.                                                                                                |
 | `getProfileWithPupitres`  | `(profileId) => Promise<SessionProfile \| null>`                           | Inclut `isChef`.                                                                                                                                                                    |
 | `updateOwnProfile`        | `(profileId, updates) => Promise<Profile>`                                 | Champs limités à `first_name`, `last_name`, `phone`, `address`, `musician_level`.                                                                                                   |
@@ -845,13 +851,17 @@ Ces fonctions ne sont pas des endpoints HTTP ; elles fixent l'interface entre mo
 | `visibility` | Visiteur anonyme | Membre actif                                         | Chef de pupitre                                                    | Secrétaire / admin |
 | ------------ | ---------------- | ---------------------------------------------------- | ------------------------------------------------------------------ | ------------------ |
 | `public`     | lecture          | lecture + RSVP                                       | lecture + RSVP                                                     | gestion            |
-| `interne`    | interdit         | lecture + RSVP                                       | lecture + RSVP                                                     | gestion            |
+| `interne`    | interdit         | lecture + RSVP                                       | lecture + RSVP + **gestion si c'est son pupitre, une seule cible** | gestion            |
 | `pupitre`    | interdit         | lecture + RSVP **si** l'un de ses pupitres est ciblé | lecture + RSVP + gestion **si** c'est son pupitre, une seule cible | gestion de tous    |
 
 Règles de gestion :
 
-- Un chef ne gère que les événements ciblant **un seul** pupitre qu'il dirige ; il ne gère jamais un événement multi-pupitres ou global.
-- La secrétaire et l'admin gèrent tous les événements, y compris multi-pupitres et globaux.
+- Un chef ne gère (modifie, annule, supprime) que les événements ciblant **un seul** pupitre qu'il dirige ; il ne gère jamais un événement multi-pupitres ou global. Le droit découle **exclusivement du pupitre** : perdre le statut de chef le fait perdre, même sur un événement qu'il a créé (**Q-A1**, audit du 2026-11-20 — la branche « créateur » est retirée des policies et du code).
+- Un chef **crée** uniquement des événements de visibilité **`interne`**, ciblant **exactement un** pupitre qu'il dirige. Il ne peut **jamais** créer un événement `public` ou `pupitre`, ni un événement global, ni multi-pupitres (**Q-A1/Q-A2**).
+- La création est **atomique** : l'événement et ses pupitres sont écrits par une seule fonction serveur/SQL ; un chef n'insère jamais directement dans `events`.
+- Un chef **ne peut pas élargir** la visibilité d'un événement existant (il reste en `interne`) ni le déplacer hors de son périmètre, ni changer `created_by` ou `is_poll`.
+- Un chef **supprime** uniquement les événements **mono-pupitre de son pupitre** ; un événement multi-pupitres ou global ne peut être supprimé que par la secrétaire ou l'admin (**Q-A4**).
+- La secrétaire et l'admin gèrent tous les événements, y compris multi-pupitres et globaux ; ils créent avec `public`, `interne` ou `pupitre`, avec **0 à N** pupitres — **0 = événement global** (**Q-A1**).
 - Un membre `member` ne dispose d'aucune action de création, modification, annulation ou suppression.
 - `event_type` (`sortie`, `concert`, `fest-noz`, `festival`, `concours`, `gala`, `repetition`, `reunion`, `repas`) est indépendant de `visibility`.
 - Les événements n'ont pas d'heure et ne sont pas récurrents en V1.
@@ -866,13 +876,19 @@ Règles de gestion :
 - Après annulation (`cancelled_at` renseigné) ou clôture (date dépassée), lecture seule ; aucune suppression.
 - La suspension du compte ne supprime pas les réponses ; la suppression du compte les anonymise (`profile_id = NULL`).
 - Un sondage est un événement `is_poll = true` ; mêmes réponses, pas de table `polls`.
-- **À CONFIRMER** : la visibilité nominative ou agrégée des réponses n'est pas tranchée par `docs/brief.md` ni `docs/Spec.md`. Par défaut, seuls les gestionnaires de l'événement reçoivent `responseSummary` (agrégats), jamais la liste nominative.
+- **Visibilité nominative des réponses — tranchée le 2026-11-20 (Q-A3).** La liste nominative (qui a répondu, avec quel statut) est réservée :
+  - **secrétaire et admin** : tous les événements, y compris multi-pupitres et globaux ;
+  - **chef de pupitre** : **uniquement** les événements ciblant **exactement un** pupitre qu'il dirige. Un chef dont **un** pupitre participe à un événement **multi-pupitres**, ou un événement **global sans pupitre**, **ne voit pas** la liste nominative ;
+  - **membre** : jamais celle des autres ; il lit **sa propre** réponse et les **agrégats** (`responseSummary`, `isPoll`).
+  La règle est appliquée **en base** (policies de `event_responses`) **et** côté serveur — un masquage d'interface ne vaut pas protection. Les agrégats restent lisibles selon §12.1.
 
 ### 12.3 Trombinoscope
 
 - Accès : membres **actifs connectés** uniquement, jamais public.
 - Champs autorisés : `firstName`, `lastName`, `avatarUrl`, `avatar` (palette 1–12), `pupitres[{id,name}]`, `musicianLevel`, `bureauPosition`.
 - Champs interdits : `phone`, `email`, `address`, `role`, `accountStatus`, `authUserId`, `createdAt`, `updatedAt`, `bureauPositionId`, `isChef`.
+- **`bureauPosition`** est une **chaîne d'affichage** (titre du bureau), lue par jointure sur `bureau_positions`. Elle n'expose **jamais** `bureauPositionId`, ni aucune clé technique. Un profil sans titre reçoit `null` (jamais `undefined`, jamais une valeur inventée). **L'audit du 2026-11-20 (C8)** a constaté que la jointure manquait — `bureauPosition` valait toujours `null` : la correction est portée par la migration de durcissement RLS, pas par une nouvelle règle.
+- **`isChef` est strictement interne** : il n'apparaît ni dans la vue annuaire, ni dans le trombinoscope, ni dans l'instantané adhérent, ni dans aucun champ indirect (objet `pupitres`, JSON agrégé, `/dashboard/pupitre/membres`). Il ne sert qu'aux vérifications serveur (**Q-A5**, audit du 2026-11-20).
 - La fonction au bureau est informative et ne confère aucun droit ; les titres ne sont jamais publics.
 - Photo : `bagad-private/profiles/{profileId}/avatar.{ext}`, servie après guard ; seul le propriétaire peut la remplacer, admin inclus. Tant que `avatar_url` est vide — état livré, Q-2026-11-17-03 premier temps, puis après `profile.avatar.remove` — le portrait illustré `avatar` est affiché.
 - Tri : `lastName`, puis `firstName`.
@@ -883,6 +899,7 @@ Règles de gestion :
 - Quota **global** : 8 Go pour les deux buckets additionnés ; alerte à 7 Go ; blocage des nouveaux uploads à 8 Go.
 - Table `storage_usage` : `public_bytes`, `private_bytes`, `reserved_bytes`, `quota_bytes`, `alert_threshold_bytes`, `block_threshold_bytes`, `last_sync_at`, `updated_at` (colonnes `bigint`). **Q-2026-11-08-02**.
 - Réservation avant upload, confirmation après, libération en cas d'échec ; mises à jour atomiques ou reproduites côté serveur.
+- **Préalable obligatoire (audit du 2026-11-20, P7)** : les fonctions de quota ne sont **pas** encore en base. Aucun upload ne se branche avant que `app.reserve_storage_bytes`, `app.finalize_storage_upload` et `app.release_storage_bytes` existent (migration `0007_storage_quota_functions`). Vérification du seuil **dans la transaction** de réservation, jamais par une lecture préalable séparée.
 - Images : JPG/JPEG/PNG/WebP ≤ 15 Mo, ≤ 6000 × 6000, sortie affichée WebP ≤ 2000 × 2000 qualité 82, métadonnées supprimées ; variantes 400 × 400 (qualité 75, `cover`) et 2000 × 2000 (qualité 82, `contain`). Les variantes sont produites **à la diffusion** par Cloudflare Image Resizing : l'original est stocké tel quel, aucune conversion serveur (`sharp` est interdit sur Workers, Q-2026-11-08-03).
 - OGG ≤ 30 Mo ; PDF ≤ 20 Mo ; vidéo refusée.
 - Contrôle du type MIME **et** des magic numbers (JPEG `ffd8ff`, PNG `89504e47`, WebP `52494646`).
@@ -920,6 +937,14 @@ Règles de gestion :
 - Publication et suppression réservées à la secrétaire et à l'admin.
 - Médias publics dans `bagad-public/albums/{albumId}/` ; médias non publics dans `bagad-private/`.
 
+### 12.8 Contexte RLS et source de vérité des droits
+
+- Le contexte de session PostgreSQL est **`app.profile_id`**, posé par `withUserContext` (`set_config('app.profile_id', ..., true)`) dans la transaction courante. **`app.current_user_id` et `app.user_id` ne sont pas des réglages valides** : aucune nouvelle policy, aucun nouveau code ne doit les lire (**Q-A9**, audit du 2026-11-20).
+- Le rôle métier n'est pas transmis par un réglage dédié : il se lit depuis `profiles.role` par `app.profile_id`.
+- **Aucun droit ne dérive du créateur d'une ligne.** Les droits de gestion d'un événement découlent du **pupitre** ; les présences nominatives également.
+- Les policies RLS et les gardes serveur appliquent **la même règle** ; une divergence est un défaut bloquant, pas un détail d'implémentation. Toute nouvelle table métier arrive **avec** ses policies.
+- La création d'événement passe par une **fonction SQL atomique**, sans endpoint HTTP dédié : le contrat HTTP (§9.2) reste **inchangé**.
+
 ---
 
 ## 13. Points « À CONFIRMER » et dépendances
@@ -944,7 +969,7 @@ Règles de gestion :
 | 16  | **`bureauPositionId` modifiable par le membre**                                                                            | `docs/Spec.md` §4.3 dit « hors rôle et pupitres » ; le titre du bureau est honorifique et validé par le bureau. Le contrat le réserve à l'administration.                         | À confirmer (règle absente)                        |
 | 17  | **Révocation d'invitation**                                                                                                | Le schéma `invitations` n'a pas de `revoked_at` ; faut-il supprimer la ligne ou ajouter une colonne ?                                                                             | À confirmer (migration)                            |
 | 18  | **Colonnes d'album manquantes**                                                                                            | `albums.album_date`, `media.caption`, `media.sort_order` sont requis par F6 mais absents du schéma Drizzle.                                                                       | Migration à prévoir (étape 25)                     |
-| 19  | **Visibilité nominative des réponses**                                                                                     | Ni `brief.md` ni `Spec.md` ne tranchent si un membre voit qui a répondu. Le contrat n'expose que des agrégats aux gestionnaires.                                                  | À confirmer (règle absente)                        |
+| 19  | **Visibilité nominative des réponses**                                                                                     | **Tranché le 2026-11-20 (Q-A3)** : chef = événements mono-pupitre de son pupitre uniquement ; multi-pupitres et globaux = secrétaire/admin ; membre = sa propre réponse et les agrégats. Appliqué en base **et** côté serveur (§12.2).              | **Q-A3** (audit RLS)                                |
 | 20  | **`GET /api/storage/usage` et `POST /api/sync-storage`**                                                                   | `docs/media.md` mentionne une route de synchronisation ; le load `/dashboard/admin/media` peut suffire.                                                                           | À confirmer par l'équipe                           |
 
 ---

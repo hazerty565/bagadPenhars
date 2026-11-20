@@ -6,30 +6,28 @@
 >
 > **Révision du 2026-11-18 (2ᵉ passe) — audit des dépendances du mainteneur.** Prise en compte de `docs/mises-a-jour.md` (statut `PLAN À ACTUALISER`) : §2.1 (majeures différées complétées), §2.2 (quatre décisions de packages), §3 (**nouvelles étapes 50 et 51**, préalables bloquantes), §4 (règle de verrouillage), §7 (versions réelles constatées, `drizzle-orm`/`drizzle-kit` alignés sur les peers de `better-auth` 1.7, `@better-auth/infra` retiré, `image-size` 2.1.0 épinglé, `resend` 6 différé), §8 (défauts de verrouillage et ruptures Drizzle) et annexe A. Aucune étape existante n'est supprimée ni renumérotée ; **aucun élargissement de périmètre** : le design public et l'espace adhérents restent figés à 98 %.
 >
-> **Révision du 2026-11-18 (3ᵉ passe) — point de contrôle n°1 : i18n et icônes.** Demande client : « installation de svelte-i18n pour les traductions en français, anglais et breton et installation de lucide-svelte pour les icons ». Après vérification du dépôt et clarification client : **`svelte-i18n` est installé et migré dans cette session** (Q-2026-11-09-01 **tranchée**, étapes **52** puis **53**, vague 1) ; **`lucide-svelte` n'est ni installé ni migré**, la demande étant **satisfaite par l'état existant** (`@lucide/svelte` 1.71.0 déjà installé et utilisé ; `lucide-svelte` déprécié le 2026-11-10, présent uniquement dans `src/autre/`, maquette hors build — voir `docs/questions.md` D-2026-11-18-08 et §0 ci-dessous). Sections touchées : §0, §2.1, §2.2, §2.3 (§2.3.1 nouvelle), §3 (étapes 52 et 53), §3.1 (ordre du public), §4, §6, §7.2/§7.3/§7.4, §8, annexe A. **Aucun endpoint ni signature de `equipe/CONTRAT_API.md` n'est modifié.**
-
+> **Révision du 2026-11-20 — `svelte-i18n` retiré du plan et intégration de l'audit RLS backend.** Décision client du 2026-11-20 : « `svelte-i18n` il ne faut pas y toucher ». Les **dictionnaires typés maison restent la référence** ; les **étapes 52 (socle i18n) et 53 (bascule des composants publics)** de la révision du 2026-11-18 sont **supprimées**, ainsi que tous leurs renvois (§0, §2.1, §2.2, §2.3, §2.3.1, §3.1, §4, §6, §7.2, §8, annexe A). `svelte-i18n` **n'est pas installé** et n'apparaît plus au tableau des packages. Conséquence d'ordre : **sans migration i18n, les étapes 37, 38 et 39 reprennent leur place normale**, aucune étape publique n'est décalée. La partie « icônes » de la révision du 2026-11-18 est **conservée à l'identique** (`@lucide/svelte` 1.71.0, aucune installation — voir `docs/questions.md` D-2026-11-18-08). Q-2026-11-09-01 est **rouverte puis tranchée le 2026-11-20** dans le sens « dictionnaires typés conservés, `svelte-i18n` non installé ».
 >
-> **Conflit de priorité :** en cas de contradiction entre ce plan et `AGENTS.md`, `AGENTS.md` prévaut et l'écart est signalé dans `docs/questions.md`. Aucune règle métier n'est inventée : tout point non tranché est une question ouverte (§0 et §6).
+> **Révision du 2026-11-20 (2ᵉ volet) — plan de durcissement RLS issu de l'audit backend (lecture seule).** L'audit a été conduit sur la branche Neon `test` (6 migrations appliquées, 29 tables, rôle `bagad_app` sans `SUPERUSER`/`BYPASSRLS`) ; **aucun fichier n'a été modifié, aucune migration générée, aucune écriture en base, `production` n'a jamais été contactée**. Les décisions client Q-A1 à Q-A9 (2026-11-20) sont appliquées **sans réinterprétation** et portées par les **nouvelles étapes 52 à 57** (§3) ; la section **§9 « Audit RLS du 2026-11-20 »** est le livrable que le client valide. Aucun endpoint HTTP n'est ajouté ni renommé par ce volet : la création atomique d'événement passe par une **fonction SQL** `app.create_event(...)`, décrite dans le plan. En revanche `equipe/CONTRAT_API.md` est **aligné sur les nouvelles règles** — §11 (`withUserContext` → `app.profile_id` seul, `createEvent`/`updateEvent`/`deleteEvent`), §12.1 (gestion, création `interne`, suppression), §12.2 (présences nominatives), §12.3 (`bureauPosition`, `isChef`), §12.4 (préalable des fonctions de quota) et §12.8 (nouvelle, contexte RLS), plus §4 et §13. **La forme des échanges HTTP ne change pas.**
+
+> **Conflit de priorité :** en cas de contradiction entre ce plan et `AGENTS.md`, `AGENTS.md` prévaut et l'écart est signalé dans `docs/questions.md`. Aucune règle métier n'est inventée : tout point non tranché est une question ouverte (§0, §6 et §9.7).
 
 ## 0. Questions ouvertes (tête de plan)
 
-**Aucune question bloquante au 2026-11-18.** Les quatre questions de la session du 2026-11-17 ont été tranchées par le client et **Q-2026-11-09-01 (i18n) l'a été le 2026-11-18** (point de contrôle n°1) ; leur état et leur décision figurent dans `docs/questions.md` (sections 2026-11-17 et 2026-11-18). Le plan est exécutable de bout en bout.
+**État au 2026-11-20.** Q-2026-11-09-01 (i18n) est **tranchée le 2026-11-20** : **dictionnaires typés conservés, `svelte-i18n` non installé** (décision client, détail dans `docs/questions.md`). Les questions Q-2026-11-17-01 à -04 restent tranchées (2026-11-18). Les questions du **durcissement RLS** sont tranchées par les décisions client **Q-A1 à Q-A9 du 2026-11-20**, appliquées au §3 et détaillées au **§9** ; elles ne bloquent aucune étape. **Restent ouvertes** des questions de périmètre RLS qui n'ont **pas** été tranchées par le client et qui ne doivent pas être décidées par un agent : elles sont consignées dans `docs/questions.md` (section 2026-11-20) et rappelées en §9.7. Aucune d'elles ne bloque le démarrage des étapes 52 à 57.
 
-**Audit des dépendances du 2026-11-18 (`docs/mises-a-jour.md`, statut `PLAN À ACTUALISER`) :** aucun point ne relève d'une décision client. Les trois arbitrages qui revenaient à l'architecte sont tranchés (§2.2 et §7) — retrait de `@better-auth/infra`, `image-size@2.1.0` exact avec import de la racine, `resend` 6 différé — et l'alignement `drizzle-orm`/`drizzle-kit` sur les peers de `better-auth` est porté par les **étapes 50 et 51** (vague 0, préalables bloquantes). Décisions consignées dans `docs/questions.md`, section 2026-11-18.
-
-| Question | Sujet | Décision client du 2026-11-18 | Effet sur le plan |
+| Question | Sujet | Décision client | Effet sur le plan |
 | --- | --- | --- | --- |
 | **Q-2026-11-17-01** | Motion exigé par `AGENTS.md`, absent du dépôt et inutilisé | **A** — entériner l'absence de Motion ; animations CSS existantes respectant `prefers-reduced-motion` ; mise à jour de `AGENTS.md` §0 actée | Étape 46 exécutable. Aucun paquet Motion (§7.2). Aucune étape ne dépend de la correction documentaire. |
-| **Q-2026-11-17-02** | Lien d'invitation : Spec §4.2 = 1 h, code = 7 jours | **A** — 1 heure, conformément à `docs/Spec.md` §4.2 ; code à aligner (7 jours → 1 heure) | Étape 45 débloquée ; l'alignement du code fait partie de son livrable. |
-| **Q-2026-11-17-03** | Photo de profil réelle vs palette illustrée 1–12 | Deux temps : palette conservée d'abord, photo personnelle réelle quand R2 sera branché, en fin de session (formulation client : « palette dans un premier temps et utilisation de photo perso quand R2 sera branché à la fin ») | Étape 43 = palette conservée, aucun changement d'écran ; **nouvelle étape 49** = téléversement réel après R2, repli sur la palette si `avatarUrl` est vide. |
+| **Q-2026-11-17-02** | Lien d'invitation : Spec §4.2 = 1 h, code = 7 jours | **A** — 1 heure, conformément à `docs/Spec.md` §4.2 ; code à aligner | Étape 45 débloquée ; l'alignement du code fait partie de son livrable. |
+| **Q-2026-11-17-03** | Photo de profil réelle vs palette illustrée 1–12 | Deux temps : palette conservée d'abord, photo personnelle réelle quand R2 sera branché, en fin de session | Étape 43 = palette conservée, aucun changement d'écran ; **étape 49** = téléversement réel après R2, repli sur la palette si `avatarUrl` est vide. |
 | **Q-2026-11-17-04** | `category`, `image`, `imageAlt` de l'article public absents de la table | **A** — migration additive `category`, `image_url`, `image_alt` nullables, interface publique inchangée, valeurs vides masquées | Étape 38 débloquée et porte la migration. |
-| **Q-2026-11-09-01** | Bibliothèque i18n du site public : dictionnaires typés maison ou `svelte-i18n` | **`svelte-i18n` retenu** ; migration faite **dans cette session** (demande client du point de contrôle n°1, 2026-11-18) | **Étapes 52 et 53** (vague 1), placées **avant** les branchements publics 37, 38, 39. Aucun endpoint modifié (§2.3). |
+| **Q-2026-11-09-01** | Bibliothèque i18n du site public : dictionnaires typés maison ou `svelte-i18n` | **Dictionnaires typés conservés ; `svelte-i18n` non installé** (décision du 2026-11-20 : « `svelte-i18n` il ne faut pas y toucher ») | **Aucune étape i18n.** Les étapes 37, 38 et 39 reprennent leur place normale. Aucun paquet ajouté (§7). |
 
 **Clarification du 2026-11-18 sur les icônes (à ne pas rouvrir).** La demande « installation de lucide-svelte pour les icons » est **déjà satisfaite** et ne déclenche **aucune installation, aucune migration** : `@lucide/svelte` **1.71.0** est installé (`dependencies`, épinglé) et importé dans la vingtaine de composants et routes qui en ont besoin, et il figure dans `ssr.noExternal` ; `lucide-svelte` est l'**ancien nom déprécié** (remplacé le 2026-11-10), présent **uniquement** dans `src/autre/` (maquette hors build et hors tests) et dans `package-lock.json` (artefact npm périmé mis hors jeu par l'étape 51). Décision consignée dans `docs/questions.md` (D-2026-11-18-08) pour qu'un audit ultérieur ne rouvre pas le point.
 
-**Gouvernance documentaire — `AGENTS.md` §0 :** `AGENTS.md` cite encore Motion à tort. La correction de §0 revient au **client** ou à un agent explicitement autorisé par lui (l'architecte n'écrit jamais dans `AGENTS.md`). **Après l'étape 52, la mention de `svelte-i18n` dans `AGENTS.md` §0 cesse d'être un écart** : le paquet sera installé et utilisé. Seul **Motion** reste en divergence documentaire. Aucune étape du plan n'attend cette correction : l'étape 46 constate l'absence de Motion et n'a pas à modifier `AGENTS.md`.
+**Gouvernance documentaire — écarts que l'architecte ne peut pas corriger lui-même.** Deux corrections documentaires sont **hors du périmètre d'écriture de tous les agents** (`AGENTS.md` et `docs/database.md` refusent l'écriture) ; elles sont **portées par le client** et ne bloquent aucune étape : (1) `AGENTS.md` §0 cite encore Motion à tort — seule divergence documentaire restante, aucune étape n'attend sa correction (étape 46) ; (2) `AGENTS.md` §2 nomme le contexte RLS `app.current_user_id` et `docs/database.md:65` le nomme `app.user_id`, alors que la fonction implémentée est **`app.profile_id`** (Q-A9). **Le plan ne promet aucune correction par un agent** : les développeurs codent avec `app.profile_id` (§4) et signalent l'écart au journal.
 
-**Q-2026-11-09-01 (i18n) est tranchée le 2026-11-18** : `svelte-i18n` est retenu et la migration a lieu **dans cette session**, portée par les étapes **52** et **53** et placée avant les branchements publics (voir §3.1). Les dictionnaires typés ne sont donc plus « la référence par défaut de la V1 » : ils deviennent la **source** des catalogues de messages, sans réécriture des textes.
 
 ## 1. Besoin (2 phrases max)
 
@@ -46,14 +44,14 @@ Le client demande de reprendre le projet à son état réel et de le mener jusqu
 | Agenda, actualités et galerie publics branchés sur Neon | Les trois dernières sources publiques provisoires (`src/lib/data/agenda.ts`, `articles.ts`, `site.ts → homeGallery`) ; sans elles le site public affiche encore des données de démonstration. |
 | `GET /api/files/[...key]` et téléversements réels (documents PDF, photos d'album, puis photo de profil à l'étape 49) | Le fichier de route est vide et `document.create` n'écrit qu'une ligne de métadonnées (`size: 0`, aucun objet R2) : aucune pièce jointe n'est réellement stockée ni servie. |
 | Quota 8 Go / alerte 7 Go / blocage 8 Go sur les téléversements | Le schéma est en `bigint` et les seuils existent, mais aucun upload ne les fait varier. |
-| Durcissement serveur des règles de gestion d'événements | Écart réel : un chef peut créer ou modifier un événement avec une visibilité `public`/`interne` alors que la règle validée est « chef = un seul de ses pupitres, visibilité `pupitre` ». |
+| Durcissement serveur **et RLS** des règles de gestion d'événements | Écarts mesurés par l'audit du 2026-11-20 : un chef peut créer un événement `public`/`pupitre`, la branche `created_by` de `app.can_manage_event` le maintient gestionnaire après élargissement, et un chef non gestionnaire lit les présences nominatives d'un événement multi-pupitres. Les décisions Q-A1 à Q-A4 sont appliquées en base **et** côté backend (§9). |
 | Envoi OneSignal côté serveur et journal d'envoi | `notification.send` écrit en base mais n'envoie rien ; les préférences existent et ne sont pas appliquées. |
 | Tests d'autorisation, de RLS et du parcours d'invitation | `tests/guards.test.ts`, `tests/i18n.test.ts` et `tests/invitation.test.ts` sont vides ; aucune preuve automatique des refus. |
 | Suppression des routes historiques `src/routes/public/...`, sitemap réel, correctifs d'accessibilité et de mobile | Le site public actuel vit sous `(public)` ; l'ancienne arborescence répond encore. Sitemap vide. |
 | Mise en production Cloudflare Pages (Hyperdrive `bagad-prod` → Neon `production`) | Dernière étape du roadmap, jamais exécutée. |
 | Assainissement des dépendances signalées par Dependabot | 57 alertes dont 2 critiques, listées comme reste à faire au journal du 2026-11-15. |
 | Alignement des dépendances sur leurs peers (`drizzle-orm`/`drizzle-kit` vs `better-auth` 1.7) et hygiène du verrou | Écart silencieux constaté par l'audit du 2026-11-18 : l'adaptateur d'authentification tournait hors du périmètre de support de son fournisseur. Préalable bloquant aux étapes backend (étapes 50 et 51), sans aucun effet sur l'interface. |
-| **Installation de `svelte-i18n` et migration de l'i18n public** (étapes 52 et 53) | Demande explicite du client au point de contrôle n°1 du 2026-11-18 ; `AGENTS.md` §0 prescrit `svelte-i18n` et `docs/mises-a-jour`/Q-2026-11-09-01 laissaient l'écart ouvert. Porte sur les seuls textes publics, sans réécriture de contenu et sans changement visuel (preuve avant/après exigée). |
+| **Durcissement RLS et correction backend issus de l'audit du 2026-11-20** (étapes 52 à 57) | Décisions client Q-A1 à Q-A9 appliquées en base et dans le code : gestion d'événement dérivée du pupitre, création atomique, présences nominatives, `bureauPosition`, `is_chef`, quota R2. Le contrat HTTP n'est pas modifié (§9). |
 
 **Hors périmètre de cette session** (et pourquoi) :
 
@@ -68,6 +66,7 @@ Le client demande de reprendre le projet à son état réel et de le mener jusqu
 | Contenus éditoriaux à valider (accueil, Formation, Bagad, partenaires, mentions légales) | Dépendent de Q-2026-11-09-02, Q-2026-11-10-01 à -06, -08 et Q-2026-11-11-01 : validation du bureau, pas du code. |
 | Montées de version **majeures** | Risque de régression élevé sans valeur fonctionnelle ; traitées comme dette différée (§2.1.1 et §8), jamais comme étape de cette session. |
 | Montées de version **mineures/patch** constatées par l'audit du 2026-11-18 (hors paquets des étapes 50 et 51) | Elles sont réelles mais un `pnpm install` libre en ferait bouger une trentaine d'un coup : le diff du verrou deviendrait inattribuable. Traitées par lots ultérieurs, après l'étape 47 (§8). |
+| **Migration i18n vers `svelte-i18n`** | **Hors périmètre.** Décision client du 2026-11-20 : « `svelte-i18n` il ne faut pas y toucher ». Les dictionnaires typés maison restent la référence ; aucune étape, aucun paquet. |
 | **Icônes** : installation de `lucide-svelte` ou migration du paquet d'icônes | **Sans objet — déjà satisfait.** `@lucide/svelte` 1.71.0 est installé et utilisé ; `lucide-svelte` est l'ancien nom déprécié (2026-11-10) et n'existe que dans `src/autre/`. Décision client du 2026-11-18 : aucune installation, aucune migration (`docs/questions.md` D-2026-11-18-08). |
 
 #### 2.1.1 Majeures disponibles mais **hors session** (constat du 2026-11-18)
@@ -100,7 +99,12 @@ Sept majeures sont publiées et **volontairement différées** : aucune n'apport
 | Stockage : buckets figés `R2_PUBLIC` / `R2_PRIVATE`, aucun objet privé servi par URL publique, **aucune URL signée** | Décision Q-2026-11-08-04 ; les objets privés passent par `GET /api/files/private/...` après guard. |
 | Images : original stocké dans R2, variantes produites **à la diffusion** par Cloudflare Image Resizing (400×400, 2000×2000) | Décision Q-2026-11-08-03 ; `sharp` est un binaire natif, inutilisable sur Workers. Aucune conversion WebP côté serveur. |
 | Validation de taille d'image : lecture d'en-tête (paquet pur JS, §7) plutôt qu'un décodeur natif | Les contrôles 15 Mo / 6000×6000 / PDF 20 Mo doivent être faits côté serveur, avant écriture R2. |
-| i18n public : **`svelte-i18n`** + **catalogues de messages par langue** (`fr`, `en`, `br`) dans `src/lib/i18n/` | Q-2026-11-09-01 **tranchée le 2026-11-18** sur demande client (étapes 52 et 53). Les dictionnaires typés existants restent la **source** des catalogues (textes repris mot pour mot, complétude `fr`/`en`/`br` toujours vérifiée par `npm run check` grâce au type `Dictionary`) ; l'accès passe par l'API de messages. Aucune chaîne localisée en dur dans un composant public ; espace adhérents et authentification en français, hors catalogues. |
+| i18n public : **dictionnaires typés maison** (`fr`, `en`, `br`) dans `src/lib/i18n/`, aucun paquet i18n | Décision client du 2026-11-20 : `svelte-i18n` n'est **pas installé**. Le type `Dictionary` garantit la complétude `fr`/`en`/`br` à la compilation (`npm run check`) ; locale portée par `[lang=lang]`, repli `fr`. Aucune chaîne localisée en dur dans un composant public ; espace adhérents et authentification en français. |
+| **Droit de gestion d'un événement : dérive du pupitre, jamais du créateur** | Décisions Q-A1/Q-A2/Q-A4 (2026-11-20) : la branche `OR e.created_by = app.current_profile_id()` de `app.can_manage_event` est **retirée**. Un chef ne gère (modifie, supprime) que les événements **mono-pupitre** d'un pupitre qu'il dirige ; perdre le statut de chef fait perdre le droit. |
+| **Création d'événement : fonction SQL `SECURITY DEFINER` `app.create_event(..., p_pupitre_ids uuid[])`** | `events_insert` puis `event_pupitres_insert` ne peuvent plus fonctionner séparément sans la branche créateur. La fonction insère l'événement **et** ses pupitres dans la même transaction (`search_path` fixé, `REVOKE PUBLIC`, `GRANT EXECUTE` à `bagad_app`) ; `events_insert` est réservé à la secrétaire et à l'admin. Chef : exactement 1 pupitre qu'il dirige et `visibility = 'interne'` ; secrétaire/admin : 0 à N pupitres et toutes visibilités (0 = événement global). |
+| **Présences nominatives tranchées en base et côté backend** | Q-A3 (2026-11-20) : un chef ne lit les présences nominatives que pour les événements **mono-pupitre de son pupitre** ; multi-pupitres et sans pupitre : secrétaire/admin seulement. Corrigé dans `app.can_view_presence` / `event_responses_select` **et** dans `src/lib/member/permissions.ts` (le `.some(...)` actuel accorde trop). |
+| **Tables Better Auth hors RLS : risque accepté et documenté** | Q-A6 (2026-11-20) : `user`, `session`, `account`, `verification` restent hors RLS, **sans** rôle `bagad_auth`. Conditions opposables écrites en §9.6 (connexion `bagad_app` serveur uniquement, aucune connexion Neon depuis le navigateur, identifiants jamais exposés, sessions/comptes/jetons jamais renvoyés par une API, tables métier toujours sous RLS). |
+| Migrations : **`0006_rls_hardening` puis `0007_storage_quota_functions`**, additives, jamais de réécriture de `0000`–`0005` | Q-A7 (2026-11-20). `production` n'est touchée qu'après validation explicite, toujours après `test`. |
 | Locale : **segment `[lang=lang]` uniquement**, repli `fr`, **aucune détection navigateur**, aucun cookie de langue | Décision d'architecture §2.3.1 : la même URL doit produire le même HTML au serveur et dans le navigateur. `getLocaleFromNavigator` / `Accept-Language` feraient diverger le rendu SSR (Cloudflare Workers) et l'hydratation → flash de langue, contenu indexé dans une langue et affiché dans une autre, `hreflang` faux. |
 | Icônes : **`@lucide/svelte` 1.71.0 conservé, `lucide-svelte` non installé** | État déjà conforme : le bon paquet est installé et importé, l'ancien nom est déprécié depuis le 2026-11-10 et ne subsiste que dans `src/autre/` (maquette hors build). Décision client du 2026-11-18 : aucune installation, aucune migration. |
 | Notifications : OneSignal appelé **uniquement côté serveur** via `fetch`, audience résolue en base | Aucun paquet nécessaire ; la clé REST ne quitte jamais le serveur ; un `playerId` client n'est jamais accepté. |
@@ -126,30 +130,30 @@ Le backend ne touche pas aux composants ; le frontend ne construit jamais une cl
 | **J3** | Fichiers | URLs `avatarUrl`, `downloadUrl` construites côté serveur | Affichage et téléchargement par ces URLs | Composer une clé R2 ou une URL `r2.dev` côté client |
 | **J4** | Téléversements | `POST /api/member/upload` (multipart) → `{ snapshot, result }` | Envoi du `FormData`, application du snapshot | Envoyer un chemin de stockage ou une taille déclarée |
 | **J5** | Erreurs | Codes stables (`forbidden`, `event_locked`, `quota_exceeded`, …) + statut HTTP | Traduction en messages d'interface | Afficher un message brut du serveur |
-| **J6** | i18n | Aucun texte localisé renvoyé par le serveur (sauf e-mails et quelques libellés serveur explicites) ; `+layout.server.ts` renvoie `lang` | Tous les libellés publics viennent des catalogues de messages (`src/lib/i18n/`), via l'API de `svelte-i18n` | Chaîne française en dur dans un composant public ; détection de langue côté client |
+| **J6** | i18n | Aucun texte localisé renvoyé par le serveur (sauf e-mails et quelques libellés serveur explicites) ; `+layout.server.ts` renvoie `lang` | Tous les libellés publics viennent des dictionnaires typés `src/lib/i18n/` via `getDict(lang)` | Chaîne française en dur dans un composant public ; détection de langue côté client |
 | **J7** | SEO | Loads exposent les données nécessaires (slug, date, `lang`) ; `lang` est déjà renvoyé par `+layout.server.ts` | `sitemap.xml` et métadonnées générés depuis ces données, `<svelte:head>` par page | Sitemap listant une page privée ou un brouillon ; `hreflang` calculé depuis autre chose que `lang` |
 
-### 2.3.1 Architecture i18n et point de jonction avec le SEO
+### 2.3.1 i18n : dictionnaires typés conservés, aucun paquet i18n
 
-Cette sous-section fixe la décision prise avec Q-2026-11-09-01 (tranchée le 2026-11-18) et borne la migration des étapes 52 et 53.
+Cette sous-section **remplace** l'architecture i18n de la révision du 2026-11-18, à la suite de la décision client du 2026-11-20 : « `svelte-i18n` il ne faut pas y toucher ». **Aucune étape i18n, aucun paquet ajouté.** Les points suivants restent opposables et décrivent l'état conservé.
 
 | Point | Décision | Conséquence opposable |
 | --- | --- | --- |
-| **Catalogues de messages** | Un catalogue par langue (`fr`, `en`, `br`) dans `src/lib/i18n/`, enregistré **statiquement** auprès de `svelte-i18n` | Aucun chargement dynamique de catalogue au rendu côté Worker (pas de `fetch`/`fs`) : les trois langues pèsent quelques kilo-octets et sont déjà présentes dans le bundle aujourd'hui |
-| **Type de référence** | Les catalogues **conservent** le type `Dictionary` (`src/lib/i18n/types.ts`), qui décrit la forme de `fr` | La complétude `fr`/`en`/`br` reste garantie à la compilation : une clé oubliée dans `en.ts` casse `npm run check`, exactement comme aujourd'hui. Perdre cette garantie serait une régression fonctionnelle, pas un détail |
-| **Source de la locale** | **Segment de route `[lang=lang]`** (`src/params/lang.ts`), repli **`fr`** | Une seule URL par langue, partageable, indexable ; `canonical` et `hreflang` restent calculables sans ambiguïté |
-| **Détection navigateur** | **Interdite** (`getLocaleFromNavigator`, `Accept-Language`, cookie de préférence de langue) | SSR sur Cloudflare Workers et hydratation client rendent **la même langue pour la même URL** : pas de flash, pas de mismatch d'hydratation, pas de page indexée en `fr` affichée en `en` |
-| **Hydratation** | La langue du HTML servi est déjà celle du segment (`html lang="%lang%"`, `hooks.server.ts`) | `document.documentElement.lang` est correct **avant** toute exécution JS ; l'initialisation client ne fait que confirmer la valeur reçue |
-| **`%lang%` de `src/app.html`** | **Conservé tel quel** (`transformPageChunk` dans `hooks.server.ts`) | Aucun remplacement par une balise réactive : le `lang` doit être présent dans le HTML brut, avant hydratation |
-| **Jonction SEO** | Les balises SEO restent dans le `<svelte:head>` de chaque page, alimentées par les catalogues | Titre, `description`, `canonical`, `hreflang` `fr`/`en`/`br`/`x-default` et Open Graph doivent rester **identiques au caractère près** après migration (preuve exigée, §3 étape 53) |
-| **Périmètre** | **Site public uniquement** | `src/routes/dashboard/**` et `src/routes/auth/**` restent en français, sans catalogue : aucune régression ni traduction improvisée |
-| **Contrat d'API** | **Aucun changement** | Aucun endpoint, aucun `load` ne change de signature ; `+layout.server.ts` renvoyait déjà `{ lang }`, donc `equipe/CONTRAT_API.md` reste **inchangé** (voir étape 53) |
+| **Bibliothèque** | **Dictionnaires typés maison** (`src/lib/i18n/fr.ts`, `en.ts`, `br.ts`, `types.ts`), **aucun paquet i18n** | État déjà livré ; aucune installation, aucune migration, aucun diff de verrou |
+| **Type de référence** | Le type `Dictionary` (`types.ts`) décrit la forme de `fr` et type `en`/`br` | La complétude `fr`/`en`/`br` reste garantie à la compilation : une clé oubliée dans `en.ts` casse `npm run check` |
+| **Accès** | `getDict(lang)` + prop `t: Dictionary` dans les composants publics | Aucune chaîne localisée en dur ; aucune détection navigateur |
+| **Source de la locale** | **Segment de route `[lang=lang]`** (`src/params/lang.ts`), repli **`fr`** | Une seule URL par langue, partageable, indexable ; `canonical` et `hreflang` calculables sans ambiguïté |
+| **Détection navigateur** | **Interdite** (`getLocaleFromNavigator`, `Accept-Language`, cookie de langue) | SSR sur Workers et hydratation rendent **la même langue pour la même URL** |
+| **`%lang%` de `src/app.html`** | **Conservé tel quel** (`transformPageChunk` dans `hooks.server.ts`) | Le `lang` est présent dans le HTML brut, avant hydratation |
+| **Jonction SEO** | Les balises SEO restent dans le `<svelte:head>` de chaque page, alimentées par les dictionnaires | Aucune régression attendue ; `hreflang` `fr`/`en`/`br`/`x-default` inchangés |
+| **Périmètre** | **Site public uniquement** | `src/routes/dashboard/**` et `src/routes/auth/**` restent en français |
+| **Contrat d'API** | **Aucun changement** | `+layout.server.ts` renvoie déjà `{ lang }` ; `equipe/CONTRAT_API.md` reste inchangé |
 
 ## 3. Étapes
 
-Chaque étape est livrable et testable seule, avec un maître d'œuvre unique. La numérotation continue celle de l'historique (annexe A) : les étapes **50 et 51** s'ajoutent après l'étape 49 et forment la **vague 0**, préalable bloquante (§3.1) ; les étapes **52** (socle i18n) et **53** (bascule i18n des composants publics) s'ajoutent après elles et forment la **vague 1**, placée **avant** les branchements publics 37, 38 et 39 (raison exacte au §3.1). Aucune étape ne dépend plus d'un arbitrage : les questions Q-2026-11-17-01 à -04 et **Q-2026-11-09-01** sont tranchées (voir §0).
+Chaque étape est livrable et testable seule, avec un maître d'œuvre unique. La numérotation continue celle de l'historique (annexe A) : les étapes **50 et 51** s'ajoutent après l'étape 49 et forment la **vague 0**, préalable bloquante (§3.1). **Il n'existe plus de vague 1 i18n** : les étapes 52 et 53 de la révision du 2026-11-18 sont **supprimées** (décision client du 2026-11-20), et les branchements publics **37, 38 et 39 reprennent leur place normale** dans l'ordre du §3.1, sans décalage. Les **étapes 52 à 57** sont les étapes du **durcissement RLS** issues de l'audit backend du 2026-11-20 (§9) ; elles s'ajoutent après l'étape 51 et ne rouvrent aucune étape publique. Aucune étape ne dépend d'un arbitrage : Q-2026-11-17-01 à -04, **Q-2026-11-09-01** et **Q-A1 à Q-A9** sont tranchées (voir §0 et §9).
 
-> **Règle de dépendance des étapes 50, 51 et 52 :** les étapes **50 et 51** sont les **seules** étapes autorisées à modifier `package.json`, `pnpm-lock.yaml` et l'arbre installé **hors ajout de `svelte-i18n`** ; cet ajout est porté par l'**étape 52**, par le mainteneur, avec le même protocole (diff de verrou contrôlé, `check`+`build`+`test` de part et d'autre). Aucune autre étape ne déplace ni n'ajoute un paquet. Les étapes 50 et 51 doivent être terminées **avant** toute étape backend (36, 40, 41, 44) parce que le driver et l'adaptateur d'authentification en dépendent ; l'étape 52 vient **après** elles pour que le diff du verrou reste attribuable.
+> **Règle de dépendance des étapes 50 et 51 :** les étapes **50 et 51** sont les **seules** étapes autorisées à modifier `package.json`, `pnpm-lock.yaml` et l'arbre installé. Aucune autre étape ne déplace ni n'ajoute un paquet — **y compris les étapes 52 à 57**, qui n'ajoutent aucune dépendance. Les étapes 50 et 51 doivent être terminées **avant** toute étape backend (36, 40, 41, 44, **52 à 57**) parce que le driver, l'adaptateur d'authentification et la ligne de base de tests en dépendent.
 
 ### Étape 50 (vague 0) : Hydratation à l'identique puis mise à niveau bloquante `drizzle-orm` / `drizzle-kit`
 
@@ -187,61 +191,11 @@ Chaque étape est livrable et testable seule, avec un maître d'œuvre unique. L
 - **Fichiers** : `package.json`, `pnpm-lock.yaml`, `package-lock.json` (suppression), `pnpm-workspace.yaml` (commentaire seulement, aucune valeur ajoutée), `vite.config.ts` (relecture, aucun changement attendu), `docs/journal.md`.
 - **Statut** : **PLANIFIÉE.** L'installation de `image-size` est la seule partie validée sans réserve par l'audit ; les trois autres points sont des décisions d'architecte consignées en `docs/questions.md`.
 
-### Étape 52 (vague 1) : Socle i18n — installation de `svelte-i18n`, catalogues de messages et initialisation SSR/client
-
-> **Pourquoi deux étapes (52 puis 53) et pas une seule.** L'installation + l'initialisation serveur + la bascule de ~30 composants publics dépassent la règle « 1 à 2 sessions de dev ». L'étape 52 ne touche que `src/lib/i18n/`, `hooks.server.ts`, le layout public et les tests : **elle ne peut rien casser visuellement**, puisque l'affichage continue de passer par les dictionnaires typés déjà en place (aucune réécriture de texte). L'étape 53 porte la bascule mécanique et sa preuve. Découper ainsi isole le risque de plateforme (SSR Cloudflare, stores globaux) du risque de rendu (comparaison avant/après).
-
-- **Livrable** : `svelte-i18n` installé **par le mainteneur** et le socle de messages opérationnel, sans encore changer l'aspect d'une seule page.
-  1. **Installation** : ajout de `svelte-i18n` aux **`dependencies`** (dépendance d'exécution : le client en a besoin). La **version est choisie par le mainteneur** — le plan ne prescrit **aucun numéro de version**, l'architecte ne connaissant pas la dernière stable publiée au 2026-11-18. Protocole identique aux étapes 50/51 : `pnpm add` ciblé, **diff de `pnpm-lock.yaml` limité au sous-arbre de `svelte-i18n` et de ses dépendances transitives**, `npm run check && npm run build && npm run test` de part et d'autre. Aucun autre paquet ne bouge (interdit : `pnpm update`, `pnpm install` libre).
-  2. **Catalogues de messages** : `src/lib/i18n/fr.ts`, `en.ts`, `br.ts` **restent la source unique** et **conservent le type `Dictionary`** (`types.ts`). Ils sont enregistrés auprès de `svelte-i18n` par **enregistrement statique** (`register('fr', fr)` et équivalents), sans chargement dynamique : côté Worker, aucun accès `fs`/`fetch` n'est admissible, et l'enregistrement paresseux introduirait un état asynchrone par requête.
-  3. **Textes repris mot pour mot** : la migration **ne réécrit aucun contenu**. Les textes déjà validés **et** ceux encore provisoires (accueil, Formation, Bagad, partenaires, mentions légales — Q-2026-11-09-02, Q-2026-11-10-01 à -06 et -08, Q-2026-11-11-01) sont transvasés **à l'identique**, ponctuation typographique (apostrophes `’`, espaces insécables, tirets) comprise. **Aucune correction orthographique, aucune reformulation, aucune traduction nouvelle** n'est autorisée dans cette étape : la validation du bureau reste la seule voie de modification des contenus.
-  4. **Initialisation** : `init({ fallbackLocale: 'fr', initialLocale })` avec une locale issue **exclusivement** du segment `[lang=lang]` (repli `fr`, valeur illisible → `fr`), et **attente de la locale avant rendu** côté serveur, pour que le HTML sorti des Workers soit déjà dans la bonne langue. Côté client, l'initialisation **reçoit la même locale** que celle du HTML servi : elle ne la recalcule pas.
-  5. **Interdictions explicites** : pas de `getLocaleFromNavigator`, pas de lecture d'`Accept-Language`, pas de cookie de préférence de langue (§2.3.1). Un repli sur la langue du navigateur créerait un HTML serveur en `fr` hydraté en `en`.
-  6. **`ssr.noExternal`** : les **quatre entrées existantes** (`better-auth`, `@better-auth/core`, `zod`, `@lucide/svelte`) ne sont **ni retirées ni réordonnées**. `svelte-i18n` n'est ajouté à la liste **que si** le `build` SSR échoue sans lui, et dans ce cas avec un `build` à l'appui et une relecture du commentaire du fichier. Toute autre modification de `vite.config.ts` est hors périmètre.
-  7. **Serveur hors composant** : les deux accès serveur au dictionnaire (`+page.server.ts` de l'accueil pour `gallery.captions`, `contact/+page.server.ts` pour les sujets d'e-mail) passent par un **accesseur non réactif à locale explicite**, jamais par le store global pendant un `await` (voir risque §8 « état global partagé »). Le choix exact de l'accesseur est arrêté à l'installation, avec la documentation du paquet.
-  8. **Capture de référence (obligatoire, avant toute modification de composant)** : production du HTML **rendu serveur** des pages publiques dans les trois langues — accueil, `bagad`, `formation`, `agenda`, `articles`, `articles/[slug]`, `media`, `partenaires`, `contact`, `informations-legales` — soit **30 URL**. Le corpus est conservé dans un répertoire de travail **non committé** (hors dépôt ou ignoré par git) et sert de base à la comparaison de l'étape 53.
-- **Testable** :
-  - `svelte-i18n` figure dans `dependencies` ; `pnpm why svelte-i18n` renvoie une version unique ; le diff de `pnpm-lock.yaml` ne contient que son sous-arbre ; `pnpm install --frozen-lockfile` réussit sur un clone neuf.
-  - Les 30 URL capturent un HTML **identique** à l'état d'avant l'étape (l'étape 52 ne doit rien changer au rendu) : `diff` du texte visible normalisé et des balises `<head>` **vide**.
-  - Le HTML brut (sans JS) contient `html lang="fr"`, `lang="en"`, `lang="br"` selon l'URL, et le titre/`description` de la bonne langue : `%lang%` n'est jamais laissé tel quel.
-  - **Concurrence** : 20 paires de requêtes simultanées `/fr` et `/br` renvoient chacune **leur** langue, **0** inversion. C'est la preuve qu'aucune locale ne fuit d'une requête à l'autre dans l'isolate Workers (voir §8).
-  - `tests/i18n.test.ts` (aujourd'hui vide) est rempli : résolution de `lang` depuis `[lang=lang]` et repli `fr`, parité des clés `fr`/`en`/`br`, échantillon de rendu par locale.
-  - `npm run check && npm run lint && npm run build && npm run test` passent ; poids du bundle client relevé et consigné (différence avant/après, une seule copie de `intl-messageformat` dans le graphe).
-- **Dépend de** : étapes **50 et 51** (verrou sain, un seul diff attribuable ; `node_modules` hydraté et ligne de base établie).
-- **Bloque** : étape **53**, puis **37**, **38**, **39** et **46**.
-- **Responsable** : **Mainteneur** (installation, version, diff de verrou, poids du bundle) + **Frontend** (catalogues, initialisation, accesseur serveur, capture de référence).
-- **Fichiers** : `package.json`, `pnpm-lock.yaml`, `src/lib/i18n/*` (catalogues, types, index), `src/hooks.server.ts` (initialisation si elle y est retenue), `src/routes/(public)/[lang=lang]/+layout.server.ts` et `+layout.svelte` (locale), `vite.config.ts` (**seulement** si le build l'exige), `tests/i18n.test.ts`, `docs/journal.md`. **Aucun composant public n'est réécrit dans cette étape.**
-- **Statut** : **PLANIFIÉE.** Q-2026-11-09-01 tranchée le 2026-11-18. Version de `svelte-i18n` **volontairement non prescrite** : elle relève du mainteneur.
-
-### Étape 53 (vague 1) : Bascule des pages et composants publics sur `svelte-i18n`, avec preuve avant/après
-
-- **Livrable** : les pages publiques et leurs composants lisent leurs textes par l'API de messages, **sans qu'aucun texte rendu ne change**.
-  1. **Remplacement de la prop `t: Dictionary`** : les composants publics ne reçoivent plus le dictionnaire (`getDict(data.lang)` → accès aux messages) ; ils continuent de recevoir `lang` là où il sert aux URL, au `hreflang` et aux formats. Le layout public, le `Nav`, le `Footer`, le lecteur flottant et les composants d'accueil sont traités dans la même passe, sinon le rendu est incohérent.
-  2. **Structures non scalaires** : les tableaux (`about.paragraphs`, `agenda.months`, `formation.items.*.paragraphs`/`tags`, `legal.sections`, `gallery.captions`) et les objets indexés par clé métier (`pupitres.items`, `prestations.items`, `agenda.types`, `contact.form.subjects`) doivent être lus **sans aplatir ni renuméroter** les catalogues. Si l'accesseur retenu pour ces nœuds n'est pas disponible, le catalogue est **conservé tel quel** et lu directement : l'objectif de l'étape est la migration, pas le contournement par duplication de textes.
-  3. **Serveur** : le `+page.server.ts` de l'accueil (légendes de galerie) est aligné **dans la même passe que l'étape 39** qui remplace `homeGallery` ; le `+page.server.ts` de contact (sujets d'e-mail) est aligné ici, avec l'accesseur à locale explicite de l'étape 52. **Aucune signature de load ne change** (§2.3.1).
-  4. **SEO préservé, sans exception** : chaque page conserve son `<svelte:head>` — `<title>`, `<meta name="description">`, `<link rel="canonical">`, les quatre `hreflang` (`fr`, `en`, `br`, `x-default`), `og:type`/`og:site_name`/`og:title`/`og:description`/`og:url`/`og:locale`/`og:image`. Les **valeurs** doivent être identiques à celles d'avant la migration ; seule la **source** de la chaîne change. `src/app.html` (`%lang%`) et `transformPageChunk` dans `hooks.server.ts` restent intacts.
-  5. **Espace adhérents et authentification** : **inchangés**, en français, hors catalogues. Aucune clé de traduction n'est créée « pour plus tard ».
-  6. **Preuve avant/après** : les 30 URL capturées à l'étape 52 sont régénérées et comparées automatiquement — texte visible normalisé (espaces, fins de ligne) **et** balises SEO listées au point 4. La preuve est un **rapport de comparaison** joint au journal, pas une appréciation : un seul écart de texte ou de balise invalide l'étape.
-- **Testable** :
-  - `diff` des textes visibles, page par page et langue par langue, **vide** sur les 30 URL ; `diff` des balises `<head>` (titre, description, `canonical`, `hreflang` ×4, Open Graph) **vide**.
-  - Le HTML servi **sans exécuter de JS** contient les textes de la langue de l'URL : preuve que le SSR est correct et qu'il n'y a **pas de flash** à l'hydratation.
-  - Aucune occurrence de `getDict(` sous `src/routes/(public)/` ni dans les composants publics ; la prop `t` n'apparaît plus dans les composants publics ; **aucune** occurrence de `getLocaleFromNavigator`, `navigator.language` ou `Accept-Language` sous `src/`.
-  - Aucun fichier de `src/routes/dashboard/**` ni `src/routes/auth/**` modifié (`git diff --stat` le prouve) ; aucun texte du dashboard déplacé dans un catalogue.
-  - `npm run check && npm run lint && npm run build && npm run test` passent ; `tests/i18n.test.ts` couvre la parité des clés et un rendu par langue.
-  - **Contrôle visuel de non-régression** : comparaison d'écrans (captures) des trois langues sur au moins l'accueil et une page secondaire, sans écart de mise en page — le design public reste figé à 98 %.
-- **Dépend de** : étape **52** (socle, catalogues, capture de référence) ; **exécutée avant** 37, 38 et 39 pour ne pas réécrire deux fois les mêmes fichiers (voir §3.1).
-- **Bloque** : **37**, **38**, **39** et, par transitivité, **46** et **47**.
-- **Responsable** : **Frontend** (bascule, comparaison, rapport) + **Backend** en relecture sur les deux `+page.server.ts` concernés.
-- **Fichiers** : `src/lib/i18n/*`, `src/routes/(public)/[lang=lang]/**` (pages et layout), `src/lib/components/**` (composants publics **uniquement**), `src/routes/(public)/[lang=lang]/contact/+page.server.ts`, `src/routes/(public)/[lang=lang]/agenda/+page.server.ts` (si un libellé serveur y subsiste), `tests/i18n.test.ts`, `docs/journal.md`.
-- **Contrat d'API** : **inchangé**. Aucun endpoint, aucun `load`, aucun champ n'est ajouté, retiré ou renommé : `+layout.server.ts` renvoyait déjà `{ lang }` et continue. **`equipe/CONTRAT_API.md` n'est donc pas modifié par cette étape** — c'est une décision explicite, pas un oubli.
-- **Statut** : **PLANIFIÉE.**
-
-
 ### Étape 36 : Durcir les règles de gestion d'événements
 
-- **Livrable** : dans `src/lib/server/member/commands.ts` et `src/lib/member/permissions.ts`, un chef ne peut créer ou modifier un événement qu'avec `visibility = 'pupitre'` et un seul pupitre qu'il dirige ; la secrétaire et l'admin conservent `public`/`interne`/`pupitre` et le multi-pupitres. `event.update` ne peut ni élargir la visibilité ni déplacer l'événement hors du périmètre du chef. Un test unitaire couvre les refus.
-- **Testable** : `event.create` par un chef avec `visibility: 'public'` renvoie 403 ; `event.update` d'un événement de son pupitre vers `visibility: 'public'` renvoie 403 ; même appel par la secrétaire renvoie 200 ; `npm run test` passe.
-- **Dépend de** : rien.
+- **Livrable** : dans `src/lib/server/member/commands.ts` et `src/lib/member/permissions.ts`, un chef ne peut créer un événement qu'avec `visibility = 'interne'` et **exactement un** pupitre qu'il dirige ; il ne peut pas créer d'événement `public` ni `pupitre`, ni global, ni multi-pupitres. La secrétaire et l'admin conservent `public`/`interne`/`pupitre` et le multi-pupitres. `event.update` ne peut pas élargir la visibilité (un chef reste en `interne`) ni déplacer l'événement hors du périmètre du chef ; `event.delete` est autorisé pour un chef sur un événement mono-pupitre de son pupitre, refusé sur multi-pupitres ou global. Un test unitaire couvre les refus. **Cette étape est la moitié applicative de Q-A1/Q-A2/Q-A4 ; la moitié base (policies, `app.create_event`, `events_delete`) est portée par l'étape 52.**
+- **Testable** : `event.create` par un chef avec `visibility: 'public'` ou `'pupitre'` renvoie 403 ; avec deux pupitres ou sans pupitre renvoie 403 ; avec `'interne'` et un pupitre qu'il dirige renvoie 200 ; `event.update` d'un événement de son pupitre vers `visibility: 'public'` renvoie 403 ; `event.delete` d'un événement mono-pupitre de son pupitre renvoie 200, d'un événement multi-pupitres renvoie 403 ; même appel par la secrétaire renvoie 200 ; `npm run test` passe.
+- **Dépend de** : rien côté code ; **cohérence obligatoire avec l'étape 52** (la base doit appliquer la même règle, sinon le code et la RLS divergent).
 - **Responsable** : Backend.
 - **Fichiers** : `src/lib/server/member/commands.ts`, `src/lib/member/permissions.ts`, `tests/guards.test.ts`.
 
@@ -352,16 +306,115 @@ Chaque étape est livrable et testable seule, avec un maître d'œuvre unique. L
 - **Responsable** : Backend (upload, quota, instantané) + Frontend (bouton de dépôt et repli palette, seul ajout d'écran admis dans les 2 %).
 - **Fichiers** : `src/routes/api/member/upload/+server.ts`, `src/lib/server/member/commands.ts` (`profile.avatar.remove`), `src/lib/server/member/snapshot.ts` (`avatarUrl` exposé dans les deux branches), `src/lib/member/types.ts` (`MemberProfile.avatarUrl`), `src/lib/member/pages/ProfilePage.svelte`, composant d'avatar du trombinoscope, `docs/database.md` si la matrice de lecture de l'avatar est précisée.
 
+### Étape 52 : `0006_rls_hardening` — lot « gestion des événements » (C1 à C4, Q-A1/Q-A2/Q-A4)
+
+> **Pourquoi ce lot est le premier.** C1 (`created_by` dans `app.can_manage_event`) est la faille mère : elle rend inopérants C2, C3 et C4 et permet à un chef de rester gestionnaire après avoir élargi la visibilité ou ajouté un pupitre. Tant qu'elle existe, toute autre correction RLS sur les événements est contournable.
+
+- **Livrable** : le fichier `drizzle/0006_rls_hardening.sql` (et son instantané `drizzle/meta/`) contient, pour le seul périmètre « événements », **écrit en SQL idempotent autant que possible** :
+  1. **Réécriture de `app.can_manage_event(event_id)`** : la branche `OR e.created_by = app.current_profile_id()` est **supprimée**. Renvoie vrai si l'acteur est secrétaire/admin ; sinon vrai **uniquement** si l'événement cible **exactement un pupitre** et que `app.is_chef_of(pupitre)` est vrai. Aucun droit ne dérive du créateur (Q-A1). Perdre le statut de chef fait perdre le droit.
+  2. **Fonction `app.create_event(...)` `SECURITY DEFINER`** : signature `(p_title text, p_description text, p_event_date date, p_event_type ..., p_is_poll boolean, p_visibility ..., p_pupitre_ids uuid[]) → uuid`. `SET search_path` **fixé et explicite** (jamais `public` seul), `REVOKE ALL ON FUNCTION ... FROM PUBLIC`, `GRANT EXECUTE ... TO bagad_app`. Contrôles **dans** la fonction : acteur lu depuis `app.profile_id`; un chef impose `p_visibility = 'interne'` et **exactement 1** pupitre qu'il dirige ; un secrétaire/admin accepte `public`/`interne`/`pupitre` et **0 à N** pupitres (0 = événement global). Insertion de l'événement **et** de ses lignes `event_pupitres` dans la **même transaction** — l'atomicité est la raison d'être de la fonction (Q-A2).
+  3. **`events_insert`** : policy resserrée aux **rôles secrétaire/admin**. Un chef **n'insère jamais** directement dans `events` ; il passe par `app.create_event`.
+  4. **`event_pupitres_insert`** : policy resserrée aux rôles secrétaire/admin (le chef obtient ses lignes via la fonction `SECURITY DEFINER`, pas via une policy propre). Cela ferme C3.
+  5. **`events_update`** : `USING` **et** `WITH CHECK` fondés sur `app.can_manage_event(id)`, avec **interdiction d'élargir** : la visibilité ne peut pas devenir `public` ni `pupitre` par un chef, `created_by` et `is_poll` ne sont pas modifiables par un chef, et les lignes `event_pupitres` ne peuvent pas sortir du périmètre du chef (garde en `WITH CHECK` **et** trigger si le `WITH CHECK` seul ne peut pas exprimer la contrainte de ciblage — le choix est tranché à l'implémentation, la règle ne l'est pas). Cela ferme C4.
+  6. **`events_delete`** : un chef supprime **uniquement** les événements **mono-pupitre de son pupitre** ; multi-pupitres et global : secrétaire/admin seulement (Q-A4). Aucun droit au simple créateur.
+- **Testable** (SQL sur branche `test`, exécuté dans une **transaction annulée** à cette étape ; voir étape 54 pour l'application réelle) :
+  - `app.can_manage_event` sur un événement créé par un chef mais **sans** son pupitre → faux ; sur son événement mono-pupitre → vrai ; sur un multi-pupitres → faux.
+  - Chef insérant directement dans `events` → **refusé** par policy ; chef appelant `app.create_event` avec `interne` + 1 de ses pupitres → **accepté** ; avec `public`, `pupitre`, 0 pupitre, 2 pupitres ou un pupitre non dirigé → **refusé**.
+  - Secrétaire/admin : `public`/`interne`/`pupitre`, 0 à N pupitres → accepté ; 0 pupitre = événement global correctement créé.
+  - Update d'un événement mono-pupitre de son pupitre vers `public` → **refusé** ; ajout d'un second pupitre → **refusé** ; renommage sans changement de visibilité → accepté.
+  - Delete mono-pupitre de son pupitre → accepté ; multi-pupitres → refusé ; secrétaire/admin → accepté.
+  - `git status drizzle/` ne montre **que** le nouveau `0006` et son instantané ; `0000` à `0005` inchangés à l'octet.
+- **Dépend de** : étapes **50 et 51** (environnement sain) ; cohérence avec l'**étape 36** (mêmes règles côté code).
+- **Bloque** : **53** (même fichier), **54** (application), **55** (code aligné).
+- **Responsable** : Backend (SQL + relecture croisée avec `commands.ts`).
+- **Fichiers** : `drizzle/0006_rls_hardening.sql`, `drizzle/meta/*`, `docs/journal.md`.
+- **Statut** : **PLANIFIÉE.** Aucune écriture n'a été faite par l'architecte ; la base `test` n'a reçu aucune modification.
+
+### Étape 53 : `0006_rls_hardening` — lot « présences, annuaire et hygiène » (C5, C6, C8, P8, Q-A3/Q-A5/Q-A8)
+
+- **Livrable** : le **même** fichier `0006_rls_hardening.sql` est complété (jamais appliqué avant l'étape 54) avec :
+  1. **`app.can_view_presence(event_id)`** réécrite (Q-A3) : secrétaire/admin → vrai ; chef → vrai **uniquement** si l'événement cible **exactement un pupitre** et que ce pupitre est dirigé par lui. Un chef dont **un** pupitre participe à un événement **multi-pupitres** ne voit **pas** les présences nominatives. C5 mesuré (Bleuenn et Gwendal sur « Répétition bombarde et caisse claire ») doit disparaître.
+  2. **`event_responses_select`** : la lecture nominative (`profile_id`, prénom, nom, statut) n'est autorisée qu'aux acteurs pour lesquels `app.can_view_presence(event_id)` est vrai. Un membre conserve la lecture de **sa propre** réponse et de ses agrégats, jamais celle des autres.
+  3. **`app.member_directory`** (Q-A5, C8) : la vue joint `bureau_positions` pour renvoyer réellement `bureauPosition` (aujourd'hui toujours `null`, car la jointure manque), et **n'expose plus `is_chef`** dans son JSON.
+  4. **`invitations`** (C6) : `REVOKE DELETE` sur `public.invitations` pour `bagad_app` (aucune policy `DELETE` n'existe ; l'annulation passe par `UPDATE cancelled_at`). Aucune suppression silencieuse à 0 ligne.
+  5. **`playing_with_neon`** (P8, Q-A8) : `DROP TABLE` par migration. **Interdiction de la recréer en production.**
+- **Testable** (SQL, sur `test`, transaction annulée ; application réelle à l'étape 54) :
+  - Chef lisant les présences d'un événement mono-pupitre de son pupitre → **lignes visibles** ; même chef sur un événement multi-pupitres dont un de ses pupitres fait partie → **0 ligne** ; sur un événement global → **0 ligne**.
+  - Membre : ne lit que sa propre ligne ; secrétaire et admin : toutes les lignes.
+  - `app.member_directory` renvoie `bureauPosition` renseigné pour un profil qui a un titre, et **aucune clé `isChef`** (`select to_jsonb(t) ? 'isChef'` → faux).
+  - `DELETE FROM invitations` par `bagad_app` → **refusé** (erreur de privilège), et non « 0 ligne sans erreur ».
+  - `playing_with_neon` absente de `pg_tables` et de `information_schema` ; `0006` ne la recrée pas.
+- **Dépend de** : étape **52** (même fichier, ordre des objets SQL).
+- **Bloque** : **54**.
+- **Responsable** : Backend.
+- **Fichiers** : `drizzle/0006_rls_hardening.sql`, `drizzle/meta/*`, `docs/journal.md`.
+- **Statut** : **PLANIFIÉE.**
+
+### Étape 54 : Application de `0006_rls_hardening` sur Neon `test` et matrice SQL par rôle
+
+- **Livrable** : `0006_rls_hardening` **appliquée une seule fois** sur la branche Neon `test`, dans l'ordre `0000` → `0006` ; `production` **non touchée**. Exécution de la **matrice complète de tests PostgreSQL par rôle** (§9.5) : membre, chef, secrétaire, admin ; chaque assertion nomme la règle et l'attendu autorisé/refusé. Les **16 événements existants** de `test` sont **laissés en l'état** — dont les **4 créés par des chefs en visibilité `pupitre`** : la migration ne réécrit aucune donnée (Q-A2, voir §9.7 question b).
+- **Testable** : `select * from drizzle.__drizzle_migrations` (ou équivalent) montre `0006` appliquée ; rejouer la migration sur une base vierge donne le même état ; chaque ligne de la matrice §9.5 passe ; les 4 événements `pupitre` créés par des chefs sont **inchangés** (même `id`, même `visibility`, même `created_by`) ; aucune écriture sur `production` (`select` de contrôle sur la branche de production : aucune ligne de migration `0006`).
+- **Dépend de** : étapes **52** et **53** (fichier complet).
+- **Bloque** : **55** (le code doit viser des règles réellement en base), **57**.
+- **Responsable** : Backend + testeur.
+- **Fichiers** : `drizzle/0006_rls_hardening.sql` (application), `tests/rls.test.ts` (premières assertions), `docs/journal.md`.
+- **Statut** : **PLANIFIÉE.** Application sur `test` uniquement ; `production` attend une validation explicite du client.
+
+### Étape 55 : Alignement du backend sur `0006` (gestion d'événements, présences, instantané)
+
+- **Livrable** :
+  1. **`src/lib/server/member/commands.ts`** : `event.create` appelle `app.create_event(...)` pour **tous** les rôles (aucune insertion directe dans `events`) ; `event.update` refuse toute visibilité autre que `interne` pour un chef et tout changement de pupitre hors périmètre ; `event.delete` applique Q-A4.
+  2. **`src/lib/member/permissions.ts`** : `canManageEvent` reste fondé sur le **pupitre** (aucun `createdBy`) ; `canViewPresenceDetail` passe de `event.pupitreIds.some(...)` à **`event.pupitreIds.length === 1 && isChefOf(...)`** — c'est l'écart C5 côté code, à corriger au même titre que la RLS (Q-A3 : correction **en base et côté backend**, pas un masquage d'interface).
+  3. **`src/lib/server/member/snapshot.ts`** : `bureauPosition` provient de la jointure rétablie dans `app.member_directory` ; **aucun `isChef`** transmis ni dérivé dans l'instantané ; vérification qu'aucune réponse d'API n'expose `isChef` **indirectement** (instantané, trombinoscope, `/dashboard/pupitre/membres`).
+  4. **`src/lib/server/invitations.ts`** : aucune tentative de `DELETE` sur `invitations` (« annulation » = `UPDATE cancelled_at`), conformément à C6.
+  5. **`createEvent` / `updateEvent` / `deleteEvent`** de `equipe/CONTRAT_API.md` §11 restent des fonctions serveur ; elles **délèguent** à la fonction SQL, sans changer de signature HTTP.
+- **Testable** : `event.create` par un chef en `interne` + son pupitre → 200 et **une seule** ligne `events` + **une** ligne `event_pupitres` ; appel direct qui contournerait la fonction → impossible (aucun chemin de code n'insère dans `events`) ; `canViewPresenceDetail` renvoie faux sur un multi-pupitres (test unitaire) ; l'instantané d'un membre avec titre de bureau renvoie un `bureauPosition` non nul ; `grep -R "isChef" src/lib/server/member src/lib/member` ne montre aucune exposition d'API ; `npm run check && npm run test` passent.
+- **Dépend de** : étapes **54** (règles réellement en base), **36**.
+- **Responsable** : Backend + Frontend en relecture du trombinoscope.
+- **Fichiers** : `src/lib/server/member/commands.ts`, `src/lib/member/permissions.ts`, `src/lib/server/member/snapshot.ts`, `src/lib/server/invitations.ts`, `tests/guards.test.ts`, `tests/rls.test.ts`.
+- **Statut** : **PLANIFIÉE.**
+
+### Étape 56 : `0007_storage_quota_functions` — fonctions de quota absentes de la base (P7, Q-A7)
+
+> **Pourquoi cette étape bloquait les uploads.** `src/lib/server/storage.ts:17` référence `0006_storage_quota_functions` et appelle `app.reserve_storage_bytes`, `app.finalize_storage_upload` et `app.release_storage_bytes` : **aucune de ces trois fonctions n'existe en base**. Aucun appelant aujourd'hui, mais tout branchement d'upload (étapes 41, 42, 49) casserait à la première écriture.
+
+- **Livrable** : migration `drizzle/0007_storage_quota_functions.sql` créant **les trois fonctions** attendues par `src/lib/server/storage.ts`, avec `SECURITY DEFINER`, `search_path` fixé, `REVOKE ALL ... FROM PUBLIC`, `GRANT EXECUTE ... TO bagad_app` :
+  1. `app.reserve_storage_bytes(bytes bigint)` : vérifie `public_bytes + private_bytes + reserved_bytes + bytes <= block_threshold_bytes` dans la **même transaction**, incrémente `reserved_bytes`, renvoie l'état ; échec fermé si le seuil est dépassé.
+  2. `app.finalize_storage_upload(reserved_bytes bigint, actual_bytes bigint)` : `used += actual`, `reserved -= reserved`, `last_sync_at`/`updated_at` mis à jour.
+  3. `app.release_storage_bytes(reserved_bytes bigint)` : `reserved -= reserved`, jamais négatif.
+  - Mise à jour du commentaire/renvoi de `src/lib/server/storage.ts` pour pointer le **vrai** numéro de migration (`0007`, plus `0006`) ; aucune autre modification de comportement.
+- **Testable** : `select proname from pg_proc where proname in ('reserve_storage_bytes','finalize_storage_upload','release_storage_bytes')` renvoie **3** lignes ; réservation au-delà du seuil → erreur et `reserved_bytes` inchangé ; réservation puis finalisation → `private_bytes`/`public_bytes` et `reserved_bytes` cohérents ; libération → `reserved_bytes` revient à sa valeur initiale ; deux réservations concurrentes ne dépassent pas le seuil (test de concurrence) ; `0006` toujours présente et non modifiée.
+- **Dépend de** : étape **54** (ordre `0006` puis `0007`, Q-A7).
+- **Bloque** : **41**, **42**, **49** (et, par transitivité, **47**).
+- **Responsable** : Backend.
+- **Fichiers** : `drizzle/0007_storage_quota_functions.sql`, `drizzle/meta/*`, `src/lib/server/storage.ts` (renvoi de migration uniquement), `tests/`.
+- **Statut** : **PLANIFIÉE.** Aucune fonction de quota n'existe aujourd'hui en base : cette étape est **indispensable avant tout upload réel**.
+
+### Étape 57 : Matrice de tests PostgreSQL par rôle et revue croisée code / RLS
+
+- **Livrable** :
+  1. `tests/rls.test.ts` couvre **l'intégralité de la matrice §9.5**, rôle par rôle, avec un attendu explicite autorisé/refusé par ligne ; chaque test nomme la règle (C1…C10) qu'il protège.
+  2. **Test de non-régression de la faille mère** : retirer la réécriture de `app.can_manage_event` (ou réintroduire la branche `created_by` sur une copie de la base) fait échouer **au moins** le test « chef non gestionnaire sur événement multi-pupitres ». Le constat est documenté dans la revue.
+  3. **Revue croisée** `commands.ts` / policies × `snapshot.ts` / vues : aucune règle appliquée d'un seul côté ; aucun `isChef`, aucune donnée nominative, aucun `bureauPositionId` exposé.
+  4. **Preuve documentaire** : `AGENTS.md` §2 (`app.current_user_id`) et `docs/database.md:65` (`app.user_id`) restent à corriger par le **client** — l'architecte et les développeurs **n'ont pas** les droits d'écriture sur ces fichiers. Le plan **ne promet aucune correction par un agent** ; l'écart est consigné dans `docs/journal.md` et `docs/questions.md`.
+- **Testable** : `npm run test` passe et la matrice §9.5 est intégralement couverte (une règle retirée ⇒ un test rouge) ; `npm run check && npm run lint && npm run build` passent ; aucun `isChef` exposé ; `app.profile_id` est le **seul** nom de contexte utilisé sous `src/` (`grep` sur `app.current_user_id` et `app.user_id` : 0 occurrence hors commentaire) ; `production` n'a reçu **aucune** écriture.
+- **Dépend de** : étapes **52** à **56**.
+- **Responsable** : Testeur + Backend.
+- **Fichiers** : `tests/rls.test.ts`, `tests/guards.test.ts`, `docs/journal.md`.
+- **Statut** : **PLANIFIÉE.**
+
 ### 3.1 Ordre et parallélisme
 
 | Vague | Étapes | Remarque |
 | --- | --- | --- |
 | **0** | **50, 51** | **Préalables bloquantes, dans cet ordre.** 50 : hydratation `--frozen-lockfile` puis `drizzle-orm`/`drizzle-kit`. 51 : retrait `@better-auth/infra`, `image-size` exact, resserrement `better-auth`, hygiène des verrous. Aucune étape backend ne démarre avant. |
-| 1 | 36, 37, 40, 48 | Indépendantes entre elles **après la vague 0** ; 40 débloque 41–43 et 49. 48 ne démarre qu'une fois le verrou sain (étapes 50/51). |
-| 2 | 38, 39, 44 | 38 porte désormais sa migration (Q-2026-11-17-04 tranchée) ; 39 profite de 40 |
-| 3 | 41, 42, 43 | Même route d'upload pour 41 et 42, à livrer dans cet ordre (documents → album) ; 42 exige `image-size` (étape 51) ; 43 ne modifie aucun écran |
-| 4 | 45, 46, 49 | 45 verrouille les règles et aligne l'invitation à 1 h ; 46 nettoie et finit l'interface ; 49 branche la photo de profil une fois R2 opérationnel et `image-size` installé |
-| 5 | 47 | Après tout le reste, étape 49 comprise |
+| **1** | 36, 37, 40, 48, **52** | Indépendantes entre elles **après la vague 0** ; **52** (lot « événements » de `0006`) peut démarrer en parallèle. 40 débloque 41–43 et 49. 48 ne démarre qu'une fois le verrou sain (étapes 50/51). |
+| 2 | 38, 39, 44, **53**, **54** | 38 porte sa migration (Q-2026-11-17-04 tranchée) ; 39 profite de 40 ; **53** (lot « présences/annuaire » de `0006`) complète le fichier, **54** l'applique sur `test` et exécute la matrice SQL — 54 **dépend** de 52 et 53. |
+| 3 | 41, 42, 43, **55**, **56** | Même route d'upload pour 41 et 42, à livrer dans cet ordre (documents → album) ; 42 exige `image-size` (étape 51) ; 43 ne modifie aucun écran ; **55** aligne le code sur `0006` (dépend de 54) ; **56** livre `0007` et `storage.ts` — **41, 42 et 49 dépendent de 56**. |
+| 4 | 45, 46, 49, **57** | 45 verrouille les règles et aligne l'invitation à 1 h ; 46 nettoie et finit l'interface ; 49 branche la photo de profil une fois R2 opérationnel, `image-size` installé et 56 livrée ; **57** consolide la matrice de tests par rôle et la revue croisée — après 52 à 56. |
+| 5 | 47 | Après tout le reste, étapes 49 et 57 comprises |
+
+> **Ordre imposé par l'audit du 2026-11-20 :** Q-A7 fixe **deux fichiers seulement** — `0006_rls_hardening` (rédigé par lots aux étapes **52** et **53**, **appliqué une seule fois** à l'étape **54**) puis `0007_storage_quota_functions` (étape **56**). **41, 42 et 49 ne doivent pas être livrées avant 56** : `src/lib/server/storage.ts` appelle aujourd'hui `app.reserve_storage_bytes`, `app.finalize_storage_upload` et `app.release_storage_bytes`, qui **n'existent pas en base**. Aucune étape 52 à 57 ne touche `production` : application d'abord sur Neon `test`, `production` seulement après validation explicite du client. Aucun agent ne modifie `0000` à `0005`.
 
 ## 4. Règles du projet
 
@@ -371,13 +424,14 @@ Chaque étape est livrable et testable seule, avec un maître d'œuvre unique. L
 - Chaque load, action et endpoint privé vérifie ses propres droits côté serveur ; le menu filtré et l'affichage conditionnel sont des aides d'interface.
 - Toute opération protégée passe par `withUserContext` : transaction, `set_config('app.profile_id', ..., true)`, mêmes connexion et transaction pour toutes les requêtes.
 - Aucun cache de requêtes Hyperdrive pour une lecture dépendante de l'identité ; le cache est réservé aux lectures publiques.
-- Migrations additives uniquement sous `drizzle/` avec `drizzle/meta/` ; une migration appliquée n'est jamais modifiée ; vérification sur Neon `test` avant `production`. La montée de `drizzle-kit` (étape 50) n'autorise **aucune** réécriture d'instantané : génération d'essai sur **copie** du dossier, `git status drizzle/` vide à la fin.
+- Migrations additives uniquement sous `drizzle/` avec `drizzle/meta/` ; une migration appliquée n'est jamais modifiée ; vérification sur Neon `test` avant `production`. La montée de `drizzle-kit` (étape 50) n'autorise **aucune** réécriture d'instantané : génération d'essai sur **copie** du dossier, `git status drizzle/` vide à la fin. **`0000` à `0005` sont figées** : l'audit du 2026-11-20 crée `0006_rls_hardening` puis `0007_storage_quota_functions`, jamais l'inverse (Q-A7) ; `production` n'est touchée qu'après validation explicite.
 - Dépendances : seul le **mainteneur** installe ; seul le verrou issu des **étapes 50 et 51** fait foi ; `pnpm install --frozen-lockfile` pour hydrater, jamais `pnpm install` libre ni `npm install` (`package-lock.json` est un artefact périmé qui référence `lucide-svelte`). Toute mise à niveau est ciblée, un paquet à la fois, avec contrôle du diff de verrou et `check`+`build`+`test` de part et d'autre.
 - Aucun `pnpm.overrides` / `resolutions` n'est autorisé, en particulier sur `zod` : la coexistence `zod` 3 / `zod` 4 est neutralisée par `ssr.noExternal` dans `vite.config.ts`, dont la liste ne doit être modifiée qu'avec un `build` à l'appui.
 - Aucun objet privé en bucket public, aucune URL signée, aucune clé R2 construite côté client ; tout objet privé passe par `/api/files/private/...` après guard.
 - Quota global unique de 8 Go (alerte 7 Go, blocage 8 Go) : toute écriture R2 réserve, confirme ou libère le compteur ; aucune écriture sans réservation.
 - Svelte 5 : runes uniquement ; interdits `export let`, `$:`, `on:click` (utiliser `onclick`), stores legacy pour l'état local ; Tailwind via les tokens du thème ; mobile first ; `prefers-reduced-motion` respecté. Aucune animation Motion : les transitions restent en CSS/Tailwind (Q-2026-11-17-01, option A).
-- i18n : textes publics centralisés dans `src/lib/i18n/`, jamais de chaîne localisée en dur ; espace adhérents et authentification en français.
+- i18n : **dictionnaires typés maison** dans `src/lib/i18n/` (`getDict(lang)`), `svelte-i18n` **non installé** (décision client du 2026-11-20) ; jamais de chaîne localisée en dur ; espace adhérents et authentification en français.
+- RLS : le contexte est **`app.profile_id`**, posé par `withUserContext` (`set_config('app.profile_id', ..., true)`) — **jamais** `app.current_user_id` ni `app.user_id` (Q-A9). Aucun droit ne dérive du créateur d'une ligne : la gestion d'un événement découle du **pupitre** (Q-A1). Toute création d'événement passe par `app.create_event(...)` ; `events_insert` est réservé à la secrétaire et à l'admin.
 - Aucun secret committé ; `.env` ignoré, `.env.example` à jour ; clé REST OneSignal et clé Resend strictement serveur.
 - Aucune nouvelle dépendance sans justification dans `docs/journal.md` et validation selon §7 ; aucun développeur n'installe un paquet de sa propre initiative.
 - Hors périmètre absolu : paiement/cotisation en ligne, inscription libre, annuaire public, titres du bureau publics.
@@ -407,7 +461,7 @@ Seules trois sources sont concernées. Les autres fichiers de `src/lib/data/` (`
 | Q-2026-11-06-05 (contact) | tranchée | Action `send` déjà livrée, conforme ; documentée au contrat §6.5. |
 | Q-2026-11-06-06, -07, -08 | tranchées | Schéma Drizzle, dates civiles, RLS/Hyperdrive : appliqués. |
 | Q-2026-11-08-01 à -09 | tranchées | Appliquées (driver, quota, images, bindings, annulation, invitations, rappels, conservation, archives). |
-| Q-2026-11-09-01 (i18n) | **ouverte** | Dictionnaires typés conservés ; ne bloque aucune étape ; aucune page publique nouvelle. |
+| Q-2026-11-09-01 (i18n) | **tranchée le 2026-11-20** | **Dictionnaires typés conservés ; `svelte-i18n` non installé.** Aucune étape, aucun paquet ; les étapes 37, 38 et 39 reprennent leur place normale. |
 | Q-2026-11-09-02 (contenus accueil) | **ouverte** | Validation bureau ; hors code. |
 | Q-2026-11-09-03 (pistes audio) | **ouverte** | Lecteur laissé en état vide ; hors session. |
 | Q-2026-11-10-01 à -06, -08 | **ouvertes** | Contenus éditoriaux (Formation, mascottes, photos, partenaires, coordonnées, expéditeur Resend) ; hors code, sauf l'expéditeur Resend qui doit être configuré à l'étape 47. |
@@ -418,6 +472,7 @@ Seules trois sources sont concernées. Les autres fichiers de `src/lib/data/` (`
 | Q-2026-11-11-02 (mode démonstration) | périmée | L'espace adhérents a été rebranché sur le backend réel le 2026-11-15 ; aucune donnée fictive ni `localStorage` ne subsiste. |
 | Q-2026-11-14-01 (modèle backend) | tranchée | `profiles` + `pg`/`node-postgres` ; environnements séparés (étape 47). |
 | **Q-2026-11-17-01 à -04** | **tranchées le 2026-11-18** | Voir §0 : aucune étape n'est plus bloquée ; la photo de profil suit un calendrier en deux temps (étapes 43 puis 49) et la durée d'invitation est alignée à 1 heure dans l'étape 45. |
+| **Q-A1 à Q-A9** (durcissement RLS) | **tranchées le 2026-11-20** | Voir §9 : appliquées par les étapes 52 à 57. Les sous-questions non tranchées sont listées en §9.7 et dans `docs/questions.md` ; elles ne bloquent aucune étape. |
 
 ## 7. Packages
 
@@ -456,7 +511,6 @@ Seules les étapes **50** (hydratation + `drizzle-orm`/`drizzle-kit`) et **51** 
 
 | Package | Usage prévu | Raison de l'absence | Alternative | Statut |
 | --- | --- | --- | --- | --- |
-| `svelte-i18n` | i18n public `fr`/`en`/`br` (`AGENTS.md` §0) | Non installé ; dictionnaires typés maison livrés | Dictionnaires typés (état actuel) | **En attente de Q-2026-11-09-01** |
 | `motion` | Animations (`AGENTS.md` §0) | Non installé, aucun composant ne l'importe | CSS/Tailwind + `prefers-reduced-motion` | **Écarté** par Q-2026-11-17-01 (option A, 2026-11-18) : aucune installation, aucune migration d'animation ; la correction de `AGENTS.md` §0 revient au client |
 
 ### 7.3 Package proposé pour cette session
@@ -500,6 +554,125 @@ Seules les étapes **50** (hydratation + `drizzle-orm`/`drizzle-kit`) et **51** 
 | Branchement Neon des pages publiques sans repli | Page publique en erreur 500 si la base est indisponible | Accepté explicitement (pas de données de démonstration en production) ; surveiller à l'étape 47 | Backend |
 | Écarts de contenu non validés par le bureau (Q-09-02, Q-10-*) | Informations publiques erronées | Ne pas modifier les contenus ; validation avant mise en production | Chef de projet |
 | Migrations appliquées par erreur sur `production` sans passer par `test` | Perte ou corruption de données | Ordre imposé : `test` puis `production`, journal daté, aucune migration modifiée | Backend |
+| **C1** — `app.can_manage_event` conserve une branche `OR e.created_by = app.current_profile_id()` | Un chef gestionnaire par création garde la main sur un événement `public`/`interne`/multi-pupitres, et peut élargir la visibilité puis rester gestionnaire | **Étape 52** : branche supprimée, droit dérivé du pupitre ; test de non-régression dédié (étape 57) | Backend |
+| **C5** — `app.can_view_presence` et `canViewPresenceDetail` accordent la présence à un chef dont **un** pupitre participe à un événement multi-pupitres | Lecture nominative complète des réponses par un chef non gestionnaire (mesuré sur `test`) | **Étapes 53 et 55** : règle « un seul pupitre et c'est le sien » en base **et** côté code ; tests mono/multi/sans pupitre | Backend + testeur |
+| **C7** — `user`, `session`, `account`, `verification` hors RLS avec DML complet pour `bagad_app` | Compromission d'un accès base = lecture/écriture des sessions et comptes | **Risque accepté et documenté** (Q-A6) ; conditions opposables en §9.6 ; **pas** de rôle `bagad_auth` | Client + Backend |
+| **C9** — trois noms pour un réglage (`app.profile_id` implémenté, `app.current_user_id` dans `AGENTS.md`, `app.user_id` dans `docs/database.md:65`) | Documentation inutilisable ; risque qu'un futur code lise le mauvais GUC (échec fermé aujourd'hui) | **Q-A9** : `app.profile_id` exclusivement ; correction d'`AGENTS.md` et `docs/database.md` **par le client** (aucun agent n'a les droits d'écriture) | Client |
+| **P7** — `src/lib/server/storage.ts` appelle `app.reserve_storage_bytes`, `app.finalize_storage_upload` et `app.release_storage_bytes`, ** inexistantes en base** | Tout branchement d'upload (41, 42, 49) casse à la première écriture | **Étape 56** (`0007`), préalable obligatoire à 41/42/49 | Backend |
+| **0006** est un fichier unique imposé par Q-A7 (deux migrations seulement) | Un lot volumineux appliqué d'un coup sur `test` | Rédaction par lots (52, 53), **application unique** à l'étape 54, tests SQL exécutés en transaction annulée avant application réelle ; `production` jamais touchée sans validation | Backend + testeur |
+
+## 9. Audit RLS du 2026-11-20 — problèmes, corrections et tests
+
+> **Livrable soumis à validation du client.** Audit **en lecture seule** : aucun fichier modifié, aucune migration générée, **aucune écriture en base**, `production` **jamais contactée**. Environnement audité : branche Neon **`test`**, **6 migrations** appliquées, **29 tables**, rôle **`bagad_app`** sans `SUPERUSER`, sans `BYPASSRLS`, sans rôle parent. Contexte **`app.profile_id`** correctement posé par `set_config(..., true)` dans `withUserContext` (`src/lib/db/index.ts:63-75`), **non survivant à un `ROLLBACK`**, **non falsifiable** depuis le navigateur (C10).
+
+### 9.1 Décisions client appliquées (2026-11-20)
+
+| Décision | Contenu appliqué | Étape |
+| --- | --- | --- |
+| **Q-A1/Q-A2** | Branche `created_by` retirée de `app.can_manage_event` ; le droit découle **du pupitre**. Création **atomique** par `app.create_event(..., p_pupitre_ids uuid[])` (`SECURITY DEFINER`, `search_path` fixé, `REVOKE PUBLIC`, `GRANT EXECUTE` à `bagad_app`). Chef : exactement 1 pupitre dirigé et **`visibility = 'interne'`** seulement. Secrétaire/admin : 0 à N pupitres, toutes visibilités (0 = global). `events_insert` limité à la secrétaire/admin — c'est la recommandation de l'audit (fonction seule + policy resserrée), retenue pour rester simple. | 52, 54 |
+| **Q-A3** | Présences nominatives : chef = événements **mono-pupitre de son pupitre** uniquement ; multi-pupitres et sans pupitre = secrétaire/admin. Correction **en base et côté backend**, pas un masquage d'interface. | 53, 55 |
+| **Q-A4** | Le chef **peut supprimer** les événements mono-pupitre de son pupitre ; multi-pupitres et global : secrétaire/admin. `events_delete` adaptée, cohérente avec `can_manage_event` (aucun droit au simple créateur). | 52 |
+| **Q-A5** | `is_chef` **retiré** de `app.member_directory` ; vérification d'absence d'exposition indirecte par une API. | 53, 55 |
+| **Q-A6** | Tables Better Auth hors RLS : **risque accepté et documenté**, pas de rôle `bagad_auth`. | 55, 57 |
+| **Q-A7** | `0006_rls_hardening` **puis** `0007_storage_quota_functions` ; **jamais** de réécriture de `0000`–`0005` ; `production` jamais touchée sans validation explicite. | 52–56 |
+| **Q-A8** | `playing_with_neon` supprimée par migration, **non recréée** en production. | 53 |
+| **Q-A9** | `app.profile_id` exclusivement ; `AGENTS.md` (`app.current_user_id`) et `docs/database.md:65` (`app.user_id`) à corriger **par le client** — aucun agent n'a les droits d'écriture sur ces fichiers. | 57 (constat) |
+
+### 9.2 Problèmes confirmés (avec preuves)
+
+| # | Problème | Preuve / effet | Correction |
+| --- | --- | --- | --- |
+| **C1** | `app.can_manage_event()` contient une branche `OR e.created_by = app.current_profile_id()` absente du contrat §12.1 | Un chef gestionnaire **par création** garde la main sur un événement `public`/`interne`/multi-pupitres | **52** : branche supprimée |
+| **C2** | `events_insert` n'impose aucune contrainte de visibilité ni de ciblage | Un chef peut insérer `public`, donc un événement visible des anonymes | **52** : `events_insert` réservé secrétaire/admin ; chef via `app.create_event` |
+| **C3** | `event_pupitres_insert` (`can_manage_event(event_id) AND is_chef_of(pupitre_id)`) combiné à C1 | Ajout d'un 2ᵉ pupitre possible tout en restant gestionnaire | **52** : insertion des pupitres réservée à la fonction et aux rôles secrétaire/admin |
+| **C4** | `events_update` : `USING/WITH CHECK (can_manage_event(id))` sans borne sur `visibility`, `created_by`, `is_poll` | Élargissement possible de la visibilité | **52** : `WITH CHECK` resserré + trigger si nécessaire |
+| **C5** | `app.can_view_presence()` accorde `true` à un chef dont un pupitre participe à un événement **multi-pupitres** qu'il ne gère pas (mesuré : Bleuenn et Gwendal sur « Répétition bombarde et caisse claire ») ; `event_responses_select` expose alors toute la liste nominative ; le code (`src/lib/member/permissions.ts:85-89`, `.some(...)`) fait de même | Écart **code et RLS** vis-à-vis de §12.1/§12.2 | **53** (base) + **55** (code) |
+| **C6** | `GRANT DELETE ON public.invitations` sans policy `DELETE` | Suppression à 0 ligne **sans erreur** (l'annulation passe par `UPDATE cancelled_at`) | **53** : `REVOKE DELETE` |
+| **C7** | `user`, `session`, `account`, `verification` : `relrowsecurity = false` et DML complet pour `bagad_app` ; 25 des 29 tables ont RLS | Sessions et comptes hors RLS | **Risque accepté** (Q-A6), conditions §9.6 |
+| **C8** | `app.member_directory` ne joint pas `bureau_positions` → `bureauPosition` toujours `null` (`src/lib/server/member/snapshot.ts:226`) ; la vue expose `is_chef` dans son JSON alors que §12.3 l'interdit | Trombinoscope sans titre de bureau ; fuite de `isChef` | **53** (vue) + **55** (instantané, vérification d'API) |
+| **C9** | Trois noms pour un réglage : `app.profile_id` implémenté, `app.current_user_id` dans `AGENTS.md` §2, `app.user_id` dans `docs/database.md:65` | Échec fermé, mais documentation inutilisable | **Q-A9** : `app.profile_id` seul ; doc corrigée par le client |
+| **C10** | Conformité du contexte transactionnel vérifiée | Aucune fuite entre transactions : `set_config(..., true)` + `ROLLBACK` testés | Aucun changement |
+
+### 9.3 Problèmes potentiels (consignés en risques, **aucune correction décidée**)
+
+| # | Constat | Statut |
+| --- | --- | --- |
+| **P1** | Insertion `profiles` en connexion propriétaire (`src/lib/server/invitations.ts:138-149`) ; trigger `guard_profile_sensitive_columns` court-circuité pour `neondb_owner` | Risque documenté, non corrigé |
+| **P2** | Consommation du jeton d'invitation **non atomique** (`accepted_at IS NULL` absent du `UPDATE`) | Risque de double consommation, non corrigé |
+| **P3** | `app.profile_id_for_auth_user` (`SECURITY DEFINER`) appelée hors contexte | Risque documenté |
+| **P4** | Unicité `(event_id, profile_id)` NULLS DISTINCT après anonymisation | Doublons possibles après anonymisation ; non corrigé |
+| **P5** | `app.event_response_counts` ouvre les agrégats à tout lecteur (non appelée aujourd'hui) | Risque latent |
+| **P6** | `activity_log_insert` permet à tout membre de forger une entrée (non appelée aujourd'hui) | Risque latent |
+| **P7** | Fonctions de quota R2 absentes de la base (`src/lib/server/storage.ts:17` renvoie `0006_storage_quota_functions`) | **Corrigé par l'étape 56** |
+| **P8** | `playing_with_neon` sans RLS | **Supprimée par l'étape 53** (Q-A8) |
+| **P10** | `profiles_update` repose sur privilège colonne **et** trigger | Fragilité à documenter ; non corrigé |
+
+> **P9 n'est pas listé** : l'audit ne fournit aucun constat pour ce numéro. Aucun problème n'est inventé pour le compléter.
+
+### 9.4 Fichiers audités (lecture seule)
+
+`drizzle/0002_rls_policies.sql`, `drizzle/0003_auth_profile_lookup.sql`, `drizzle/0005_bureau_title.sql`, `src/lib/db/index.ts`, `src/hooks.server.ts`, `src/lib/server/member/commands.ts`, `src/lib/server/member/snapshot.ts`, `src/lib/member/permissions.ts`, `src/lib/server/invitations.ts`, `src/lib/server/storage.ts`.
+
+### 9.5 Matrice de tests PostgreSQL par rôle (à écrire, étapes 54 et 57)
+
+Chaque ligne est une assertion **explicite** : rôle, action, attendu. Aucun test ne se contente de « ça passe ».
+
+| # | Rôle | Action | Attendu |
+| --- | --- | --- | --- |
+| T01 | chef | crée un événement `interne`, 1 pupitre qu'il dirige, via `app.create_event` | **OK** (1 ligne `events`, 1 ligne `event_pupitres`) |
+| T02 | chef | crée un événement `public` | **REFUSÉ** |
+| T03 | chef | crée un événement `pupitre` | **REFUSÉ** |
+| T04 | chef | crée avec un pupitre qu'il ne dirige pas | **REFUSÉ** |
+| T05 | chef | crée sans pupitre (global) | **REFUSÉ** |
+| T06 | chef | crée avec 2 pupitres | **REFUSÉ** |
+| T07 | chef | insère directement dans `events` (sans la fonction) | **REFUSÉ** (policy) |
+| T08 | chef | passe son événement mono-pupitre en `public` | **REFUSÉ** |
+| T09 | chef | ajoute un 2ᵉ pupitre à son événement | **REFUSÉ** |
+| T10 | chef | modifie un événement mono-pupitre de son pupitre (titre) | **OK** |
+| T11 | chef | modifie un événement multi-pupitres dont un de ses pupitres fait partie | **REFUSÉ** |
+| T12 | chef | supprime un événement mono-pupitre de son pupitre | **OK** |
+| T13 | chef | supprime un événement multi-pupitres ou global | **REFUSÉ** |
+| T14 | chef rétrogradé | même action que T10/T12 après perte du statut de chef | **REFUSÉ** |
+| T15 | chef | lit les présences nominatives d'un événement mono-pupitre de son pupitre | **OK** |
+| T16 | chef | lit les présences nominatives d'un événement multi-pupitres | **REFUSÉ** (0 ligne) |
+| T17 | chef | lit les présences nominatives d'un événement sans pupitre | **REFUSÉ** |
+| T18 | membre | lit les présences nominatives des autres | **REFUSÉ** ; sa propre réponse : **OK** |
+| T19 | secrétaire | crée `public`/`interne`/`pupitre`, 0 à N pupitres | **OK** partout |
+| T20 | secrétaire | crée un événement **global sans pupitre** | **OK** |
+| T21 | secrétaire | modifie et supprime tout événement | **OK** |
+| T22 | secrétaire | lit toutes les présences nominatives | **OK** |
+| T23 | admin | mêmes droits que la secrétaire sur tous les cas ci-dessus | **OK** partout |
+| T24 | membre | tente de créer, modifier ou supprimer un événement | **REFUSÉ** |
+| T25 | tout rôle | `is_chef` absent du JSON de `app.member_directory` | **OK** (`to_jsonb(t) ? 'isChef'` = faux) |
+| T26 | tout rôle | `bureauPosition` non nul pour un profil portant un titre | **OK** |
+| T27 | `bagad_app` | `DELETE FROM invitations` | **REFUSÉ** (privilège) |
+| T28 | `bagad_app` | `select` sur `playing_with_neon` | **Relation inexistante** |
+| T29 | `bagad_app` | `app.reserve_storage_bytes` au-delà du seuil | **REFUSÉ**, `reserved_bytes` inchangé |
+| T30 | `bagad_app` | réservation → finalisation → libération | **OK**, compteurs cohérents |
+| T31 | sans contexte | lecture d'une table protégée par RLS | **0 ligne** |
+| T32 | deux profils successifs | même connexion poolée | **Isolation** (aucune fuite) |
+
+### 9.6 Conditions opposables du risque accepté (Q-A6 / C7)
+
+Les tables Better Auth (`user`, `session`, `account`, `verification`) restent **hors RLS** ; ce risque est **accepté par le client** et n'autorise aucune dérive :
+
+1. La connexion **`bagad_app`** n'est utilisée que **côté serveur** (Workers/Hyperdrive).
+2. **Aucune connexion directe à Neon depuis le navigateur** ; aucun identifiant base dans le bundle client.
+3. Les identifiants de base ne sont **jamais exposés** ni journalisés.
+4. **Sessions, comptes et jetons ne sont jamais renvoyés** dans une réponse d'API (ni instantané, ni endpoint).
+5. **Toutes les tables métier restent protégées par RLS** ; une nouvelle table métier sans policy est un défaut bloquant.
+
+### 9.7 Questions ouvertes (non tranchées — ne pas décider à la place du client)
+
+Ces points sont consignés dans `docs/questions.md` (section 2026-11-20).
+
+| # | Question | État du plan |
+| --- | --- | --- |
+| **a** | Un chef peut-il créer un événement `interne` ? | **Déjà tranché oui** (Q-A1/Q-A2) — **ne pas rouvrir**. |
+| **b** | Un chef peut-il modifier ses **4 événements existants** en visibilité `pupitre` sur `test` **sans changer la visibilité** ? | **Non tranché.** Les 16 événements de `test` (dont ces 4) ne sont **pas** modifiés par la migration. L'étape 54 vérifie seulement qu'ils restent inchangés. Tant que la question est ouverte, le comportement retenu est celui du `WITH CHECK` de l'étape 52 : un chef ne peut pas produire un état `pupitre` par `UPDATE` ; la question détermine si une exception transitoire est nécessaire. |
+| **c** | `can_view_event` conserve la branche `created_by` : un chef garde-t-il la **lecture** d'un événement qu'il a créé mais ne gère plus ? | **Non tranché** ; la branche est **conservée** (Q-A1 demande explicitement de ne pas la modifier). Consigné, sans correction. |
+| **d** | Un chef de **plusieurs pupitres** doit-il pouvoir créer un événement **multi-pupitres** ? | **Non tranché** ; aujourd'hui **non** (exactement 1 pupitre). Règle « un seul pupitre pour un chef » laissée en l'état. |
+| **e** | La suppression par un chef sur son pupitre (Q-A4) s'applique-t-elle aux **événements à venir uniquement**, ou aussi aux événements passés ? | **Non tranché** ; aucune restriction temporelle n'est ajoutée par l'étape 52. |
 
 ## Annexe A — Historique du plan du 2026-11-08 (étapes 1 à 35) : état au 2026-11-17
 
