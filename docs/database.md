@@ -62,7 +62,10 @@ n'est pas destiné à fonctionner au-dessus d'Hyperdrive.
   privées.
 - Toute opération protégée utilise une transaction. Avant la première requête
   métier, elle établit le contexte d'identité avec un réglage local à la
-  transaction, par exemple `select set_config('app.user_id', $1, true)`.
+  transaction, par exemple `select set_config('app.profile_id', $1, true)`.
+  C'est le **seul** nom de réglage admis : `app.user_id` et
+  `app.current_user_id` n'existent pas et ne doivent être lus par aucune
+  politique ni aucun code (Q-A9, audit RLS du 2026-11-20).
   L'identifiant provient de la session Better Auth validée; il ne vient jamais
   du formulaire ou d'un en-tête client. Toutes les requêtes de l'opération
   utilisent la même transaction et la même connexion. Le paramètre `true`

@@ -43,6 +43,13 @@
 			"when": 1794737651663,
 			"tag": "0005_bureau_title",
 			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1795256051663,
+			"tag": "0006_rls_hardening",
+			"breakpoints": true
 		}
 	]
 }

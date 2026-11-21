@@ -1029,7 +1029,7 @@ rouvrent aucune décision antérieure.
 | **Q-A6** | Tables Better Auth (`user`, `session`, `account`, `verification`) **hors RLS** : **risque accepté et documenté**, **sans** rôle `bagad_auth`. Conditions opposables écrites au plan §9.6 (connexion `bagad_app` serveur uniquement, aucune connexion Neon depuis le navigateur, identifiants jamais exposés, sessions/comptes/jetons jamais dans une réponse d'API, tables métier toujours sous RLS). |
 | **Q-A7** | Ordre des migrations : **`0006_rls_hardening` puis `0007_storage_quota_functions`**. **Jamais** de réécriture de `0000` à `0005`. `production` n'est touchée qu'après **validation explicite**, toujours après `test`. |
 | **Q-A8** | `playing_with_neon` est **supprimée par migration** et **ne doit pas être recréée en production**. |
-| **Q-A9** | Le contexte RLS est **`app.profile_id` exclusivement**. `AGENTS.md` §2 (`app.current_user_id`) et `docs/database.md:65` (`app.user_id`) sont **à corriger par le client** : aucun agent n'a les droits d'écriture sur ces fichiers. |
+| **Q-A9** | Le contexte RLS est **`app.profile_id` exclusivement**. `docs/database.md` a été **corrigé le 2026-11-21** (décision client : la correction est portée par le chef de projet). `AGENTS.md` §2 (`app.current_user_id`) reste **à corriger par le client** : aucun agent n'a les droits d'écriture sur ce fichier. |
 
 ### Questions ouvertes du 2026-11-20 (non tranchées — ne pas décider à la place du client)
 
@@ -1098,15 +1098,60 @@ du client.
   passée. Tant que la question est ouverte, le plan **n'ajoute aucune restriction
   temporelle** (option A par défaut, donc l'état le plus permissif, à réviser).
 
-#### Question 5 : Écriture dans `AGENTS.md` et `docs/database.md`
+#### Question 5 : Écriture dans `AGENTS.md` et `docs/database.md` — **TRANCHÉE le 2026-11-21**
 
 - **Contexte :** le plan (§4, §9.6) impose `app.profile_id` comme seul contexte
   RLS, alors que `AGENTS.md` §2 nomme `app.current_user_id` et
-  `docs/database.md:65` nomme `app.user_id`.
-- **Ambiguïté :** qui corrige ces deux documents ?
-- **Constat, non une option :** **aucun agent n'a les droits d'écriture** sur
-  `AGENTS.md` ni sur `docs/database.md` (écriture refusée). Le plan **ne promet
-  aucune correction par un agent**.
-- **Action attendue :** correction **par le client**. Elle ne bloque aucune
-  étape : les développeurs codent avec `app.profile_id` et signalent l'écart dans
-  `docs/journal.md`.
+  `docs/database.md:65` nommait `app.user_id`.
+- **Décision client (2026-11-21) :** « Je corrige `database.md`, vous
+  `AGENTS.md` » — la correction de `docs/database.md` est portée par le chef de
+  projet, celle d'`AGENTS.md` par le client.
+- **Fait :** `docs/database.md` §2 (ligne 65) nomme désormais
+  `set_config('app.profile_id', $1, true)` et déclare `app.user_id` /
+  `app.current_user_id` invalides (référence Q-A9). La matrice RLS du §6 sera
+  mise à jour lors de l'application de `0006_rls_hardening`.
+- **Reste à faire :** `AGENTS.md` §2 (`app.current_user_id`) — action **client**.
+  Aucun agent n'a les droits d'écriture sur ce fichier.
+- **Impact :** aucun blocage ; les développeurs codent avec `app.profile_id`.
+
+## 2026-11-21 — `svelte-i18n` conservé installé (correction factuelle de D-2026-11-20-01)
+
+- **Constat de la vague 0 :** `svelte-i18n@4.0.1` est **présent** dans `package.json`
+  et dans `pnpm-lock.yaml` depuis le 2026-11-18 (décision D-2026-11-18-07), alors
+  que le plan du 2026-11-20 et D-2026-11-20-01 le décrivent comme « non installé ».
+- **Vérification :** aucun import de `svelte-i18n` sous `src/`, `tests/` ni
+  `scripts/` ; `src/lib/i18n/store.ts` fait **0 ligne**. Les traductions fr/en/br
+  sont portées par les **dictionnaires typés** `src/lib/i18n/{fr,en,br}.ts`
+  (606/587/595 lignes) et `types.ts` (352 lignes).
+- **Décision client (2026-11-21) :** « il faut le garder car on l'utilise pour la
+  traduction en français, anglais et breton ». Le paquet **reste installé** :
+  aucune désinstallation, aucune migration vers `svelte-i18n`.
+- **Conséquence technique :** le paquet est **inerte** aujourd'hui (il ne sert pas
+  les traductions, qui fonctionnent par les dictionnaires). Il reste comme
+  dépendance morte assumée (~51 paquets CLI, dont un `esbuild@0.19.12` obsolète).
+  Si le câblage réel de `svelte-i18n` est souhaité, c'est une tâche distincte à
+  planifier, pas une conséquence automatique de sa présence.
+- **À corriger par l'architecte :** la ligne du plan (§7.2 et tableau des paquets)
+  qui déclare `svelte-i18n` « absent — conforme » doit dire « installé, non
+  câblé, conservé par décision client du 2026-11-21 ».
+- **Reste à faire côté tests :** `tests/i18n.test.ts` est vide (0 ligne) ; il doit
+  couvrir les dictionnaires typés (parité des clés fr/en/br), pas `svelte-i18n`.
+
+### Décisions client du 2026-11-21 sur l'audit de `0006`
+
+- **M03 — cascade de suppression (tranchée) :** le client retient **« laisser la
+  cascade actuelle »**. Un chef qui supprime un événement mono-pupitre de son
+  pupitre supprime donc **définitivement les réponses de présence** associées
+  (`event_responses … ON DELETE CASCADE`). Aucune modification des clés
+  étrangères, `events_delete` inchangée sur ce point. Risque assumé : perte
+  d'historique irréversible, à signaler dans l'interface avant suppression.
+- **Feu vert d'application (tranché) :** `0006_rls_hardening` peut être appliquée
+  **sur la branche Neon `test` uniquement**, après correction des deux points de
+  l'audit Sécurité (E01 : contrôle de rôle dans `app.can_view_presence` ; M02 :
+  `location` dans `app.create_event`) et re-vérification par l'agent Sécurité.
+  **`production` reste exclue** et exigera un accord explicite séparé.
+- **M01 — séquencement 54/55 :** `0006` appliquée avant l'alignement du code
+  rend `event.update` inopérant pour un chef (le code supprime puis réinsère
+  `event_pupitres`, désormais réservé aux rôles secrétaire/admin). Accepté
+  **sur `test` seulement** ; en production, 54 et 55 devront être livrées dans la
+  même fenêtre.

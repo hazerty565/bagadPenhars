@@ -14,7 +14,8 @@ import type { R2BucketName } from '$lib/server/blobs';
  *    et `block_threshold_bytes`, tous en `bigint`. La réservation, la
  *    confirmation et la libération passent par les fonctions
  *    `app.reserve_storage_bytes`, `app.finalize_storage_upload` et
- *    `app.release_storage_bytes` (migration `0006_storage_quota_functions`).
+ *    `app.release_storage_bytes` (migration `0007_storage_quota_functions`,
+ *    étape 56 — la `0006` est le durcissement RLS, décision Q-A7).
  *
  *    Ces fonctions existent parce que l'écriture de `storage_usage` est
  *    réservée par RLS à la secrétaire et à l'administrateur, alors qu'un chef
@@ -171,7 +172,15 @@ async function callStorageFunction(
 	tx: Transaction,
 	query: SQL
 ): Promise<StorageFunctionRow | null> {
-	const result = await tx.execute<StorageFunctionRow>(query);
+	// `drizzle-orm` 0.45.4 déclare
+	// `execute<TRow extends Record<string, unknown>>(...)` : le paramètre de
+	// type doit satisfaire une signature d'index, ce qu'une `interface` ne fait
+	// pas (limitation connue de TypeScript, une interface sans index signature
+	// n'est pas assignable à `Record<string, unknown>`). On intersecte donc le
+	// type métier avec `Record<string, unknown>` **au point d'appel seulement**,
+	// ce qui satisfait la contrainte sans élargir le type public : la valeur
+	// retournée reste `StorageFunctionRow | null`, précis et non indexé.
+	const result = await tx.execute<StorageFunctionRow & Record<string, unknown>>(query);
 	return result.rows[0] ?? null;
 }
 

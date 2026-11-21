@@ -700,3 +700,153 @@ Points renvoyés au Chef : (1) `package-lock.json` non supprimé (point 4 de l'�
 **avant et après** pour deux causes préexistantes (suites vides à remplir, navigateur Playwright non installé) ;
 (3) `gel`, `@esbuild-kit/*` et `esbuild@0.19.12` subsistent dans le verrou — attendus, mais la formulation de
 l'étape 50 du plan doit être corrigée sur ce point.
+
+---
+
+# Contrôle d'exécution des étapes 50 et 51 — 2026-11-21
+
+**Mandat reçu** : exécuter les étapes 50 puis 51 sur la branche `dev`. **Périmètre d'écriture** : `package.json`,
+`pnpm-lock.yaml`, suppression de `package-lock.json`, ce fichier. Aucun `src/`, aucun `drizzle/`, aucun fichier
+d'équipe. Branche `main` jamais touchée, `production` jamais contactée (aucune commande base de données lancée).
+
+## 1. Constat d'entrée : les étapes 50 et 51 sont déjà appliquées et **commitées**
+
+L'arbre était **propre** (`git status --porcelain` vide) au début de l'intervention, sur `dev`, HEAD `17a015a`.
+`package.json` et `pnpm-lock.yaml` contiennent **déjà** l'état cible des phases 3 des 2026-11-18/19 :
+
+| Point | État constaté (HEAD) | Verdict |
+| :--- | :--- | :--- |
+| `drizzle-orm` | `0.45.4` exact, en `dependencies` | conforme à l'étape 50 |
+| `drizzle-kit` | `0.31.11` exact, **en `devDependencies`** | conforme (devDependency conservée) |
+| `better-auth` | `~1.7.18`, résolu **1.7.18**, `specifier` du verrou `~1.7.18` | conforme à l'étape 51.3 |
+| `@better-auth/infra` | **absent** de `package.json` **et** du verrou (0 occurrence) | conforme à l'étape 51.1 |
+| `image-size` | `2.1.0` exact, **une seule** entrée de paquet | conforme à l'étape 51.2 |
+
+Conséquence : **aucun `pnpm add` n'a été exécuté**. Les commandes prescrites (`pnpm add -E drizzle-orm@0.45.4
+drizzle-kit@0.31.11`) auraient été soit sans effet sur les versions, soit **régressives** (`drizzle-kit` serait
+passé en `dependencies`), et elles re-résoudraient le verrou sans nécessité. Le verrou est déjà cohérent :
+`pnpm install --frozen-lockfile` répond `Lockfile is up to date, resolution step is skipped` (589 ms, puis 70 ms
+en fin d'intervention).
+
+## 2. Contrôle de référence sur l'arbre hydraté (étalon)
+
+| Contrôle | Résultat | Sortie brute (extrait) |
+| :--- | :--- | :--- |
+| `pnpm install --frozen-lockfile` | **OK** | `Lockfile is up to date, resolution step is skipped` / `Done in 589ms` |
+| `npm run check` | **ÉCHEC (exit 1)** | `svelte-check found 1 error and 20 warnings in 5 files` |
+| `npm run build` | **OK** | `✓ built in 22.93s` / `adapter-cloudflare ✔ done` |
+| `npm run test` | **ÉCHEC (exit 1)** | `Test Files 2 failed \| 19 passed (22)` / `Tests 56 passed (56)` |
+
+**L'erreur de `check` est unique et nommée** :
+
+```
+src/lib/server/storage.ts:174:34
+Error: Type 'StorageFunctionRow' does not satisfy the constraint 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'StorageFunctionRow'.
+	const result = await tx.execute<StorageFunctionRow>(query);
+```
+
+Ce n'est **pas** une régression d'installation : c'est la contrainte `db.execute<TRow extends Record<string, unknown>>`
+de `drizzle-orm` 0.45, appliquée à un type de retour écrit **sans index signature**. L'analyse du 2026-11-18 avait
+écarté à juste titre la rupture de *signature* de `db.execute` ; ce qui casse ici est la **contrainte générique**
+sur le type fourni par l'appelant, dans un fichier (`storage.ts`, quotas R2) **postérieur** à cette analyse.
+**Correction attendue du développeur backend, hors de mon périmètre** : soit `type StorageFunctionRow = { … } &
+Record<string, unknown>`, soit un `execute` non générique suivi d'un cast local. **Aucun `as any` global, aucun
+`override`** — la doctrine de l'étape 50 reste applicable.
+
+Les 20 avertissements sont les `state_referenced_locally` déjà connus (formulaires membre, `ProfilePage`,
+`dashboard/+layout`) : **aucun changement**.
+
+**Échec de `test` — deux causes préexistantes, inchangées** :
+`No test suite found in file …/tests/i18n.test.ts` et `…/tests/invitation.test.ts` (suites vides) ;
+`browserType.launch: Executable doesn't exist at …\ms-playwright\chromium_headless_shell-…` (navigateur Playwright
+non téléchargé). **56 tests passent** dans 19 fichiers. `tests/guards.test.ts` n'est plus vide (il l'était le
+2026-11-19) : le périmètre des suites vides s'est réduit à deux fichiers.
+
+**Décision appliquée** : la base n'étant **pas verte** (`check` et `test` rouges), je n'ai lancé **aucune montée de
+paquet** ni touché `package.json`/`pnpm-lock.yaml` — conformément à la consigne « si quelque chose échoue déjà, tu
+t'arrêtes et tu rapportes ». Je n'ai **rien réparé**.
+
+## 3. Étape 50, point 5 — génération d'essai sur copie de `drizzle/`
+
+Procédure : copie intégrale de `drizzle/` dans un dossier de travail temporaire, configuration pointant sur cette
+copie (`out` et `metaFolder` sur la copie, `schema` sur le schéma réel), puis
+`drizzle-kit@0.31.11 generate`. **Le dossier `drizzle/` réel n'a jamais été la cible.**
+
+Sortie : `29 tables` … `No schema changes, nothing to migrate 😴` (exit 0).
+
+Comparaison SHA‑256 fichier par fichier entre `drizzle/` et la copie après génération :
+
+| Fichier | Résultat |
+| :--- | :--- |
+| `0000` → `0005` (`.sql`) | **identiques à l'octet** |
+| `meta/0000` → `meta/0004_snapshot.json` | **identiques à l'octet** |
+| `meta/_journal.json` | **identique** (entrée `idx: 5` inchangée, `0005_snapshot.json` toujours absent) |
+| fichiers créés | **aucun** |
+
+**Diff nul ⇒ OK pour la règle de lecture du plan.** La 0.31 ne réécrit **aucune** migration appliquée, ne crée pas
+l'instantané manquant de `0005` et ne retouche pas l'ordre des tags. Le piège préexistant (`6` entrées de journal
+pour `5` instantanés) est donc **confirmé préexistant et laissé tel quel**. `git status drizzle/` : **vide**.
+Dossier de travail supprimé après mesure.
+
+## 4. Étape 51 — contrôle par contenu du verrou, et seul geste restant
+
+| Critère du mandat | Constat dans `pnpm-lock.yaml` | Verdict |
+| :--- | :--- | :--- |
+| `gel` retiré / `esbuild-register` retiré | `esbuild-register` : **0** occurrence. `gel@2.2.1` : **présent** (10 lignes) | `gel` subsiste — **peer optionnel de `drizzle-orm` 0.45**, résolu `gel@2.2.1(supports-color@10.2.2)` ; écart d'anticipation déjà documenté le 2026-11-19, sans conséquence |
+| `esbuild@0.25.x` ajouté | `esbuild@0.25.` : 2 lignes (0.25.12) | conforme |
+| `tsx ^4.21.0` ajouté | `tsx@` : 41 lignes, résolu `tsx@4.23.15` | conforme |
+| `esbuild@0.19.12` retiré | **2 occurrences restantes** | **écart** : la 0.19.12 est revenue avec le sous-arbre CLI de `svelte-i18n` (déjà signalé le 2026-11-19). Les chaînes de peers de `vite` restent sur `esbuild@0.28.2` |
+| peers de `better-auth` réécrits | `better-auth@1.7.18(…)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(…))` | conforme |
+| `@xmldom/xmldom`, `libphonenumber-js` disparus | **0** occurrence | conforme |
+| `jose`, `@noble/hashes`, `@better-fetch/fetch`, `better-call`, `@better-auth/utils` restent | 22 / 2 / 22 / 22 / 22 lignes | conforme |
+| une seule entrée `image-size` | 3 lignes = importateur + paquet + instantané, **un seul paquet** | conforme |
+| `specifier` `better-auth` = `~1.7.18`, version résolue inchangée | `specifier: ~1.7.18` / `version: 1.7.18(…)` | conforme |
+| aucune autre version de paquet direct | `svelte@5.56.0`, `@sveltejs/kit@2.61.1`, `vite@8.0.14`, `zod@3.25.76`, `pg@8.23.1` — inchangés | conforme |
+
+Résolutions vérifiées : `pnpm why drizzle-orm` → **0.45.4 (1 version)** ; `pnpm why drizzle-kit` → **0.31.11
+(1 version)** ; `pnpm why image-size` → **2.1.0 (1 version)**.
+
+**Seul geste restant de l'étape 51** : le point 4, `package-lock.json`. Le fichier a été **supprimé**
+(`git status` : ` D package-lock.json`, suppression non indexée). La CI n'utilise que pnpm : **aucun impact CI**;
+`pnpm install --frozen-lockfile` a été rejoué **après** la suppression et réussit (`Lockfile is up to date`).
+`pnpm-lock.yaml` n'a **pas** été modifié par cette intervention (aucune ligne à relire : rien n'a été écrit).
+
+## 5. Signalements (je ne décide pas, je ne corrige pas)
+
+1. **`src/lib/server/storage.ts:174` — erreur bloquante de `npm run check`** (voir §2). Correctif = développeur
+   backend. Tant qu'elle est présente, la garde `check` de toutes les étapes suivantes est rouge, et la ligne de
+   base « verte » exigée par l'étape 50 **n'existe pas**.
+2. **`svelte-i18n@4.0.1` est installé, alors que le plan du 2026-11-20 l'interdit.** `package.json` (l.64) et le
+   verrou le portent en `dependencies` exacte ; **aucun fichier de `src/`, `tests/`, `scripts/` ne l'importe**
+   (`src/lib/i18n/` utilise les dictionnaires typés maison, `store.ts` est vide). Il s'agit du reliquat de
+   l'étape 52 de la révision du 2026-11-18, **supprimée** par la décision client du 2026-11-20 (« `svelte-i18n` il
+   ne faut pas y toucher »). Le §7.2 du plan le déclare « Absent — conforme ». **Je ne l'ai pas retiré de ma propre
+   initiative** : ce retrait n'est prescrit par aucune des étapes 50/51 du plan en vigueur. Il relève d'une décision
+   (**retirer le paquet**, ce qui supprimerait aussi `esbuild@0.19.12` et ~51 paquets CLI, ou **amender le plan**
+   pour l'assumer). Tant qu'il est là, il constitue une contradiction plan/verrou que la CI ne voit pas mais que
+   tout audit ultérieur verra.
+3. **`AGENTS.md` §2 nomme `app.current_user_id`** alors que le plan et `docs/database.md` imposent
+   `app.profile_id` (Q‑A9). Hors de mon périmètre d'écriture ; rappelé pour mémoire, le document est en cours de
+   correction par le Chef.
+4. **Le critère « base verte » de l'étape 50 est inatteignable en l'état** (points 1 et 2 de `test`). Le plan doit
+   dire explicitement que `npm run test` est un **échec préexistant toléré** tant que les suites vides et le
+   navigateur Playwright ne sont pas traités — sinon aucun agent ne pourra jamais déclarer l'étape 50 valide.
+
+## 6. Note d'honnêteté sur les fichiers modifiés
+
+`docs/database.md` et `docs/questions.md` apparaissent modifiés dans `git status` **sans que je les aie touchés** :
+ils ont été écrits **en parallèle** par un autre agent (correction Q‑A9 / `app.profile_id`, datée du 2026-11-21).
+Mon intervention ne porte que sur : ` D package-lock.json` et la présente section de ce fichier.
+
+## Statut du contrôle d'exécution
+
+`STATUT : ÉTAPES 50 ET 51 DÉJÀ APPLIQUÉES — CONTRÔLE FAIT, UN GESTE RESTANT EXÉCUTÉ`
+
+- packages : **conformes** (0.45.4 / 0.31.11 / `~1.7.18` / `image-size 2.1.0` / infra absent) ;
+- verrou : **cohérent et inchangé** (`--frozen-lockfile` OK) ;
+- `drizzle/` : **intact**, génération d'essai **à diff nul** ;
+- `build` : **vert** ; `check` : **rouge sur une erreur de code appelant** (dev backend) ; `test` : **rouge
+  préexistant** (2 suites vides + Playwright) ;
+- `package-lock.json` : **supprimé** ;
+- point ouvert pour le Chef/architecte : **sort de `svelte-i18n`**.

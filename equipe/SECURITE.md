@@ -1,472 +1,344 @@
-# Audit de sécurité — Site Bagad Penhars
+# Audit de sécurité
 
-> **Archive de l'audit initial.** Ce document est conservé pour la traçabilité des constats. Le rapport de référence, qui sépare le périmètre démonstration (réserves levées) du périmètre production (constats ouverts), est **`equipe/AUDIT-DEMO.md`**.
-
-**Auditeur :** auditeur de sécurité indépendant
-**Date :** 12 novembre 2026
-**Objet :** audit indépendant de sécurité avant toute préparation du déploiement en production
-**Statut du document :** premier audit (aucun `equipe/SECURITE.md` antérieur)
+> **Rapport de référence courant : audit statique du durcissement RLS `0006`.**
+> L'audit de sécurité initial (12 novembre 2026, code applicatif) reste consultable dans `equipe/AUDIT-DEMO.md`, qui en est la version de référence ; la précédente version de ce fichier est conservée dans l'historique Git. Ses constats d'origine (SEC-M01 à SEC-I04) ne sont ni réévalués ni levés ici : **le présent audit ne porte que sur `drizzle/0006_rls_hardening.sql`**.
+>
+> **⚠️ Ce rapport a été re-vérifié le 2026-11-21 après corrections.** Les sections 4 à 9 décrivent l'état **avant** correction et sont conservées pour la traçabilité ; **le §10 (addendum) fait foi** pour SEC-RLS-E01, M02, F01 et F03, et porte le **verdict final** en dernière ligne du fichier.
 
 ---
 
-## 1. Périmètre, méthode et état audité
+## 0. Périmètre, méthode et déclarations
 
-### 1.1 Ce qui a été examiné
+### 0.1 Ce qui a été audité
 
-L'audit porte sur le code réellement présent dans le dépôt au moment de la mission :
+- Objet de l'audit : `drizzle/0006_rls_hardening.sql` (**420 lignes, relues intégralement**), **avant toute application en base**.
+- État antérieur, pour ne pas le contredire à l'aveugle : `drizzle/0002_rls_policies.sql`, `drizzle/0003_auth_profile_lookup.sql`, `drizzle/0005_bureau_title.sql`, `drizzle/0000_handy_alex_wilder.sql` (schéma, clés étrangères), `drizzle/0001_backend_member_model.sql`, `drizzle/meta/_journal.json`.
+- Contrat et plan : `equipe/CONTRAT_API.md` §12.1, §12.2, §12.3, §12.4, §12.8, §13 ; `equipe/PLAN.md` étapes 36, 52, 53, 54, 55, 56, 57, §4 (règles RLS), §9 (audit du 2026-11-20, Q-A1 à Q-A9, matrice §9.5, questions ouvertes §9.7).
+- Code pour vérifier la cohérence base ↔ serveur : `src/lib/server/member/commands.ts`, `src/lib/member/permissions.ts`, `src/lib/server/member/snapshot.ts`, `src/lib/db/index.ts`.
+- Doctrine : `docs/database.md` §2 (défense en profondeur) et §6 (matrice de droits), `AGENTS.md` §2.
 
-- `src/hooks.server.ts`, `src/app.d.ts`, `src/routes/**` (layouts, pages, actions, endpoints) ;
-- `src/lib/auth/*` (rôles, permissions, guards, configuration Better Auth) ;
-- `src/lib/db/*`, `src/lib/server/data/*`, `src/lib/server/{auth,blobs,email,turnstile}.ts` ;
-- `src/lib/notifications/server.ts` ;
-- `src/lib/demo/**` et `src/lib/components/dashboard/*` (surface de démonstration) ;
-- `scripts/*.js`, `drizzle/**`, `wrangler.jsonc`, `svelte.config.js`, `vite.config.ts` ;
-- `package.json`, `pnpm-lock.yaml`, `.gitignore`, `.env.example` ;
-- `static/*` (dont `robots.txt`, `OneSignalSDKWorker.js`, manifest) ;
-- `.github/workflows/ci.yml`, `.github/dependabot.yml` ;
-- `tests/**` et les fichiers `*.test.ts` colocés sous `src/` ;
-- code de la dépendance Better Auth installée (`node_modules/better-auth/dist/**`) pour vérifier les comportements effectifs d'inscription, de connexion et de limitation de débit.
+### 0.2 Méthode
 
-### 1.2 Méthode
+**Audit statique intégral.** Aucun client PostgreSQL n'est disponible localement et la mission interdit toute connexion : **le SQL n'a pas été exécuté**, aucune policy n'a été observée en fonctionnement, aucun trigger n'a été déclenché. Les conclusions portent sur la lecture ligne à ligne du SQL et sur la comparaison avec l'état `0000`–`0005` et avec le code.
 
-Audit **statique par lecture de code et de configuration**, complété par la lecture des sources de la dépendance Better Auth installée. Aucun test dynamique, aucun scan automatisé, aucune requête vers un service réel, aucune connexion à une base de données.
+### 0.3 Déclarations explicites
 
-### 1.3 État exact du dépôt examiné
+> **Aucune modification de code n'a été faite. Aucune migration n'a été appliquée. La base Neon `test` n'a reçu aucune écriture. `production` n'a jamais été contactée. `0000` à `0005` sont intactes.** Le seul fichier écrit par cet audit est `equipe/SECURITE.md`.
 
-Le dépôt n'a **pas** été audité à un commit identifié : l'accès au shell est refusé dans cet environnement (`Permission denied: shell`), donc `git status`, `git log` et `git ls-files` n'ont pas pu être exécutés. Le contenu lu est celui de l'arbre de travail courant.
+### 0.4 Limites de l'audit
 
-Conséquence importante : **l'espace membre livré n'est pas encore branché sur les données réelles**. Les `+page.server.ts` du dashboard sont des stubs (`export const load = async () => ({})`, par exemple `src/routes/dashboard/admin/membres/+page.server.ts:3`, `src/routes/dashboard/profil/+page.server.ts`), et les pages rendent `DemoRoute`, qui n'affiche qu'un message générique hors développement (`src/lib/components/dashboard/DemoRoute.svelte:21-37`). Les constats ci-dessous sont donc majoritairement des **faiblesses de contrôle** dont l'exploitation est aujourd'hui limitée par l'absence de flux de données métier, mais qui deviendraient directement exploitables dès le branchement des écrans sur Neon.
-
-### 1.4 Documents d'entrée
-
-Consultés : `AGENTS.md`, `docs/brief.md`, `docs/Spec.md` (§5 notamment), `docs/database.md`, `docs/architecture.md`, `equipe/PLAN.md`, `equipe/CONTRAT_API.md`, `equipe/SYNTHESE.md`, `equipe/PLAN-DEMO.md`.
-
-**Manquants au moment de l'audit** (mentionnés dans la mission comme entrées attendues) :
-
-- `equipe/INTEGRATION.md` — absent ;
-- `equipe/REVUE.md` — absent ;
-- `equipe/TESTS.md` — absent ;
-- `equipe/DEPLOIEMENT.md` — absent.
-
-Je n'ai donc pas pu vérifier ce que la revue technique et les tests fonctionnels ont réellement couvert, ni les résultats de la recette client. Ces absences sont une limite de l'audit, pas un constat de vulnérabilité.
+L'absence de faille détectée ne signifie pas que l'application est invulnérable. Cet audit ne remplace ni la revue technique du Tech Lead, ni les tests fonctionnels, ni la matrice SQL par rôle de l'étape 54. Les points non prouvables sans exécution sont listés au §6.
 
 ---
 
-## 2. Synthèse
+## 1. Informations générales
 
-| Gravité     | Nombre |
-| ----------- | ------ |
-| Critique    | 0      |
-| Majeure     | 4      |
-| Modérée     | 4      |
-| Mineure     | 5      |
-| Information | 4      |
-
-**Aucune vulnérabilité critique n'a été identifiée.** Quatre constats majeurs restent ouverts et portent sur des contrôles de sécurité exigés par le projet lui-même (`docs/Spec.md` §5, `docs/database.md` §2, `equipe/PLAN.md` lignes 26, 36-38 et critère de validation de l'étape 2) :
-
-1. les guards d'autorisation existent mais ne sont **jamais appliqués** ; le statut du compte n'est contrôlé nulle part ;
-2. la RLS PostgreSQL est **absente des migrations**, et le script de secours est inopérant et permissif ;
-3. l'**inscription publique** Better Auth est ouverte, contrairement à la règle « les comptes ne se créent pas librement » ;
-4. la **vérification d'adresse e-mail** est déclarée mais inopérante, et l'acceptation d'invitation peut consommer une invitation sans créer de compte utilisable ni de profil métier.
+- **Date de l'audit** : 2026-11-21
+- **Type d'audit** : initial sur ce périmètre (durcissement RLS `0006`), **avant application**
+- **Auditeur** : agent Sécurité (audit indépendant, lecture seule)
+- **Commit audité** : non spécifié (arbre de travail courant ; aucun `git` exécutable dans cet environnement)
+- **Documents consultés** : voir §0.1
 
 ---
 
-## 3. Constats détaillés
+## 2. Résumé exécutif
 
-### 3.1 Constats majeurs
+La migration `0006` fait ce qu'elle annonce sur le cœur du sujet : la **branche `created_by` a bien disparu** de `app.can_manage_event` (ligne 47-68), l'insertion directe est fermée aux chefs (190-204), la mise à jour est bornée par `USING` + `WITH CHECK` + trigger (227-290), la suppression est bornée au mono-pupitre dirigé (296-318) et le cas C5 multi-pupitres est réellement fermé pour un **chef de pupitre** (327-350). Le durcissement `SECURITY DEFINER` de `app.create_event` est correct (search_path fixé, `REVOKE … FROM PUBLIC`, `GRANT` à `bagad_app`, aucun SQL dynamique, rôle relu depuis `profiles`).
 
----
-
-#### SEC-M01 — Les guards serveur ne sont jamais appliqués ; le statut du compte n'est pas contrôlé
-
-**Gravité :** Majeure
-**Responsable pressenti :** backend
-**Nature :** vulnérabilité de contrôle d'accès confirmée par lecture de code
-
-**Fichiers et emplacements**
-
-- `src/routes/dashboard/+layout.server.ts:10-17` — le seul contrôle est `if (!dev && !locals.user)`, puis `return { user: locals.user }`.
-- `src/routes/dashboard/pupitre/+layout.server.ts:3` — aucun contrôle : `load = async ({ locals }) => ({ user: locals.user })`.
-- `src/hooks.server.ts:36-47` — le profil est chargé puis `locals.user`, `locals.role`, `locals.accountStatus` sont peuplés **sans filtrer `account_status`**.
-- `src/lib/auth/guards.ts:88-136` — `requireAuth`, `requireRole`, `requirePupitreChef`, `requireOwnProfile` sont définis et fonctionnels.
-- Preuve d'absence d'usage : recherche de `requireAuth|requireRole|requirePupitreChef|requireOwnProfile` sur `src/` → aucune occurrence hors de `src/lib/auth/guards.ts` et des réexports de `src/lib/auth/index.ts:36-46`. Aucune route, aucun layout, aucune action, aucun endpoint ne les importe.
-
-**Constat et preuve**
-
-Le contrôle d'accès réel de l'espace membre se réduit à « une session Better Auth valide et un profil existant ». Aucun test de `account_status`, aucun test de rôle, aucun test de périmètre pupitre n'est exécuté côté serveur. Les guards, corrects sur le fond, sont du code mort.
-
-`requireAuth` prévoit précisément les cas `pending`, `suspended` et `no_role` (`src/lib/auth/guards.ts:92-100`) : ces branches ne sont jamais atteintes. `docs/architecture.md:19-26` rappelle pourtant que le filtrage de menu n'est pas une barrière et que « les routes d'administration restent protégées par des guards serveur, même lorsqu'un utilisateur connaît directement leur URL ».
-
-**Scénario de risque et impact**
-
-- Un compte `pending` (créé par invitation, non activé) ou `suspended` obtient une session valide, puis atteint `/dashboard`, `/dashboard/profil`, `/dashboard/admin/**` sans être arrêté. Contraire à `docs/brief.md:63-68`, `docs/database.md:118-120` et `equipe/CONTRAT_API.md` §5.2.
-- Un membre `member` peut atteindre les URL d'administration (`/dashboard/admin/membres`, `/dashboard/admin/permissions`, `/dashboard/admin/invitations`, etc.). Aujourd'hui ces pages ne renvoient aucune donnée, mais la protection d'URL est inexistante : dès qu'un `load` lira la base, l'accès sera effectif pour tout compte connecté.
-- La suspension d'un compte ne révoque pas la session : l'utilisateur suspendu conserve un accès tant que le cookie est valide (30 jours, cf. SEC-D01).
-
-**Correction attendue**
-
-1. Appliquer `requireAuth` dans `src/routes/dashboard/+layout.server.ts` (et non un simple test de présence), avec redirection `pending` → `/auth/pending` et `suspended` → page de refus / déconnexion.
-2. Appliquer `requireRole` dans chaque layout et chaque `+page.server.ts` d'administration, et `requirePupitreChef` dans le périmètre pupitre, avec `profile_pupitres` lu côté serveur.
-3. Ajouter un test d'autorisation par parcours (anonyme, `pending`, `suspended`, `member`, `chef_pupitre`, `secretaire`, `admin`), conformément au critère de validation de l'étape 2 de `equipe/PLAN.md`.
-4. Ne pas se contenter du filtrage de menu : `equipe/PLAN.md` ligne 50 le précise explicitement.
+Trois réserves empêchent une validation sans condition : **`app.can_view_presence` n'a pas de contrôle de rôle** — un profil `member` portant encore une ligne `is_chef` lit les présences nominatives (divergence code/base explicitement déclarée bloquante par le contrat §12.8) ; `app.create_event` **n'écrit pas `location`** alors que le schéma et les commandes l'exigent ; et l'**ordre 54 (base) → 55 (code)** laisse, en production, les chefs de pupitre sans création, modification ni annulation d'événement.
 
 ---
 
-#### SEC-M02 — RLS PostgreSQL absente des migrations ; le script de secours est inopérant et permissif
+## 3. Statistiques (périmètre `0006`)
 
-**Gravité :** Majeure
-**Responsable pressenti :** backend (avec décision d'architecture sur le rôle runtime)
-**Nature :** contrôle de sécurité essentiel absent, non vérifiable en l'état
+| Gravité | Nombre |
+|---------|--------|
+| Critique | 0 |
+| Élevé (Majeure) | 1 |
+| Moyen (Modérée) | 3 |
+| Faible (Mineure) | 7 |
+| Information | 4 |
+| **Total** | **15** |
 
-**Fichiers et emplacements**
-
-- `drizzle/0000_handy_alex_wilder.sql` — aucune occurrence de `CREATE POLICY`, `ENABLE ROW LEVEL SECURITY` (recherche sur le fichier : 0 résultat).
-- `drizzle/meta/0000_snapshot.json` — `isRLSEnabled: false` sur les tables.
-- `scripts/apply-rls-policies.js` — seule tentative de RLS du dépôt.
-- `src/lib/db/index.ts:40-51` — `withUserContext` pose uniquement `app.user_id`.
-- `src/lib/server/data/*.ts` — couche de données écrite (`profiles.ts`, `events.ts`, `documents.ts`, `attendance.ts`, `invitations.ts`), mais **jamais appelée** par une route (recherche `server/data` : seuls `contact.ts` et `invitations.ts` sont importés, et uniquement pour Turnstile et l'invitation).
-
-**Constat et preuve**
-
-`docs/Spec.md:319-330`, `docs/database.md:50-71` et `equipe/PLAN.md:26,38` exigent des politiques RLS explicites, un contexte transactionnel `set_config(..., true)`, un rôle runtime sans `BYPASSRLS` et des tests d'isolation. Aucune de ces politiques n'existe dans les migrations.
-
-Le script de secours ne peut pas corriger ce manque :
-
-1. Il utilise `require('pg')` (`scripts/apply-rls-policies.js:5`) dans un paquet `"type": "module"` (`package.json:5`) → `ReferenceError: require is not defined`, le script ne s'exécute pas.
-2. Il crée des politiques `TO admin`, `TO secretaire`, `TO member`, `TO chef_pupitre` (`:22-23`, `:48`, `:50-51`, `:60-62`, `:70-72`, `:81-83`, `:114-115`, `:132`) : ce sont des **rôles PostgreSQL qui n'existent pas**. L'énumération métier est `app_role`, pas un rôle de connexion.
-3. Il compare `auth_user_id = current_setting('app.user_id')::text` (`:21`) alors que `withUserContext` place `profiles.id` dans `app.user_id` (`src/lib/db/index.ts:49`) : même si les rôles existaient, la politique ne correspondrait jamais.
-4. Il n'est pas idempotent (`CREATE POLICY` sans `DROP POLICY IF EXISTS`) : une seconde exécution échoue et laisse un état partiel.
-5. Il contient des politiques explicitement permissives : `media_select_public ... USING (true)` (`:79`), `activity_log_select ... USING (true)` (`:105`), `notification_log_insert ... WITH CHECK (true)` (`:98`), `documents_select_member TO member USING (true)` (`:48`).
-6. Il utilise `app.user_role` (`:97`) que `withUserContext` ne pose jamais.
-
-Par ailleurs `src/hooks.server.ts:36-40` interroge `profiles` **hors de tout contexte RLS**. Si la RLS était activée sans ajustement, le hook cesserait de résoudre les profils : la mise en œuvre demande donc une décision explicite (rôle runtime, fonction `SECURITY DEFINER` ou politique adaptée).
-
-**Scénario de risque et impact**
-
-Défense en profondeur nulle : la seule barrière entre un utilisateur et les données d'un autre membre est le guard applicatif — lui-même absent (SEC-M01). Une seule requête oubliée dans un futur `load` expose l'ensemble des profils (téléphone, adresse, rôle, statut), des documents et des réponses d'événements. C'est exactement le scénario IDOR/BOLA que `docs/Spec.md:338-342` demande de prévenir.
-
-**Correction attendue**
-
-1. Nouvelle migration **additive** (ne pas modifier `0000_...`) activant RLS et définissant des politiques `SELECT/INSERT/UPDATE/DELETE` explicites, sans politique générale permissive.
-2. Aligner la clé de contexte : soit `app.user_id` contient `profiles.id` et les politiques comparent à `profiles.id`, soit on pose les deux valeurs et on documente.
-3. Poser `app.user_role` si des politiques en dépendent, ou résoudre le rôle par sous-requête sur `profiles`.
-4. Corriger `withUserContext` pour rester dans la même transaction (déjà le cas) et vérifier que **toutes** les requêtes protégées passent par lui.
-5. Supprimer ou réécrire `scripts/apply-rls-policies.js` (ESM, idempotence, rôles corrects) ou le retirer au profit des migrations.
-6. Vérifier sur la branche Neon `test` avec le rôle runtime réel : accès anonyme, absence de contexte, isolation de deux utilisateurs successifs sur une connexion réutilisée.
+Correspondance des échelles : la mission de cet audit utilise Critique / Élevé / Moyen / Faible ; l'équivalence avec le barème du rapport est indiquée entre parenthèses.
 
 ---
 
-#### SEC-M03 — Inscription publique autonome ouverte via `/api/auth/sign-up/email`
+## 4. Constats détaillés
 
-**Gravité :** Majeure
-**Responsable pressenti :** backend
-**Nature :** contournement d'une règle d'accès explicite, confirmé par le code et la dépendance
+### 4.1 Constats critiques
 
-**Fichiers et emplacements**
-
-- `src/lib/server/auth.ts:34-41` — `emailAndPassword: { enabled: true, requireEmailVerification: true, ... }`, **sans `disableSignUp`**.
-- `src/routes/api/auth/[...all]/+server.ts:15-24` — expose `GET/POST/PUT/DELETE/PATCH` vers `auth.handler(request)`.
-- `node_modules/better-auth/dist/api/routes/sign-up.mjs:145` — Better Auth n'accepte l'inscription que si `emailAndPassword.enabled` **et** `disableSignUp` faux ; l'un est vrai, l'autre non défini.
-
-**Constat et preuve**
-
-`docs/brief.md:61-69` et `equipe/PLAN.md:37` imposent que les comptes ne se créent **que** par invitation, avec création simultanée du profil `pending`. Or `POST /api/auth/sign-up/email` est joignable sans authentification et crée une ligne `user` + `account` (mot de passe) avec un e-mail arbitraire.
-
-**Scénario de risque et impact**
-
-- Création illimitée de comptes Better Auth par un tiers non authentifié (croissance de la base, pollution des tables d'identité, épuisement de ressources).
-- **Préemption d'identité** : un attaquant crée `prenom.nom@…` avant l'invitation. Lors de l'acceptation, `signUpEmail` renvoie une réponse générique de succès (`requireEmailVerification` fait basculer Better Auth en réponse anti-énumération, `sign-up.mjs:155,195-203`) : l'action ne voit aucune erreur, marque l'invitation acceptée (`src/routes/auth/invitation/+page.server.ts:71`) et le membre ne peut jamais définir son mot de passe. L'invitation est consommée sans compte utilisable.
-- Le compte créé n'obtient pas de `profiles` : `createProfile` (`src/lib/server/data/profiles.ts:93-107`) n'est appelé nulle part. L'utilisateur n'a donc ni rôle ni statut métier, et `locals.user` reste `null` à la connexion.
-
-**Correction attendue**
-
-1. `emailAndPassword.disableSignUp: true` dans `src/lib/server/auth.ts`.
-2. Créer les comptes invités exclusivement côté serveur (adaptateur interne Better Auth ou plugin d'administration), en transaction avec la ligne `profiles` (`account_status = 'pending'`, `role = 'member'`) et les `profile_pupitres`.
-3. Traiter explicitement le cas « e-mail déjà existant » dans l'action d'invitation : ne pas marquer l'invitation acceptée, renvoyer une erreur métier et alerter l'administrateur.
+**Aucun.** Aucune compromission de masse, aucune exposition de secret, aucun contournement total des protections n'a été trouvé dans `0006`.
 
 ---
 
-#### SEC-M04 — Vérification d'adresse e-mail inopérante et acceptation d'invitation non fiable
-
-**Gravité :** Majeure
-**Responsable pressenti :** backend
-**Nature :** contrôle de sécurité déclaré mais non fonctionnel
-
-**Fichiers et emplacements**
-
-- `src/lib/server/auth.ts:50-54` — `emailVerification.sendVerificationEmail` est une fonction **vide**.
-- `src/lib/server/auth.ts:34-41` — `requireEmailVerification: true`.
-- `src/routes/auth/invitation/+page.server.ts:7-12` — `load({ params })` lit `params.token` et `params.email`, qui n'existent pas : ce sont des paramètres de requête (`?token=…&email=…`), pas des segments de route.
-- `src/routes/auth/invitation/+page.server.ts:11,17` — `fail()` est utilisé dans un `load`, ce qui n'est pas une API de chargement valide.
-- `src/routes/auth/invitation/+page.server.ts:47-49` — mot de passe minimum 6 caractères, sans maximum, alors que Better Auth applique `minPasswordLength` 8 par défaut (`node_modules/better-auth/dist/context/create-context.mjs:186`).
-- `src/routes/auth/invitation/+page.server.ts:61-68` — `signUpEmail({ headers: {} })`, sans en-têtes de la requête réelle.
-- `src/routes/auth/invitation/+page.server.ts:71` — `markInvitationAccepted` appelé sans vérifier qu'un compte a réellement été créé.
-- `node_modules/better-auth/dist/api/routes/sign-up.mjs:241-249` — Better Auth appelle bien `sendVerificationEmail` à l'inscription lorsque `requireEmailVerification` est vrai ; ici cette fonction ne fait rien.
-- `node_modules/better-auth/dist/api/routes/sign-in.mjs:338-351` — la connexion refuse tout compte dont `emailVerified` est faux.
-
-**Constat et preuve**
-
-Aucun e-mail de vérification n'est jamais envoyé : le jeton est créé puis jeté. Aucun compte créé par ce code ne peut donc atteindre `emailVerified = true`, et **aucune connexion ne peut aboutir**, y compris pour un membre invité. Le contrôle « l'adresse e-mail est confirmée » exigé par `docs/brief.md:66-68` est décoratif.
-
-Le chargement de la page d'invitation ne peut pas fonctionner : `params` ne contient jamais `token`/`email`, donc la branche `fail(400)` est systématiquement prise. Le transtypage `as { token?: string; email?: string }` masque l'erreur au compilateur.
-
-**Scénario de risque et impact**
-
-- Parcours d'invitation impossible à terminer (l'invitation est consommée, mais le compte reste inutilisable) → déni de service sur la création de comptes.
-- `markInvitationAccepted` s'exécute même quand `signUpEmail` n'a rien créé (doublon, échec silencieux), ce qui détruit la garantie « invitation à usage unique liée à une création réelle » (`docs/database.md:84`, `equipe/PLAN.md:37`).
-- Aucune preuve de possession de l'adresse : la règle d'activation manuelle « uniquement si l'e-mail est confirmé » ne peut pas être appliquée puisque `profiles.email_confirmed` n'est jamais alimenté.
-- `sendResetPassword` (`src/lib/server/auth.ts:37-40`) est également vide : la réinitialisation de mot de passe annoncée par `/auth/forgot-password` et `/auth/reset-password` n'envoie rien.
-
-**Correction attendue**
-
-1. Implémenter réellement `sendVerificationEmail` et `sendResetPassword` avec Resend (`src/lib/server/email.ts` existe déjà).
-2. Créer la route canonique `/auth/invitation/accept` avec lecture de `url.searchParams` dans le `load`, et une action séparée.
-3. Rendre l'acceptation transactionnelle et idempotente : valider le jeton → créer ou mettre à jour le compte → créer `profiles` (`pending`, `member`) → copier les pupitres → **puis** marquer l'invitation acceptée. En cas d'échec, ne rien marquer.
-4. Aligner la politique de mot de passe (8 caractères minimum et maximum explicite) avec Better Auth.
-5. Vérifier `email_confirmed` avant toute activation manuelle.
+### 4.2 Constat élevé
 
 ---
 
-### 3.2 Constats modérés
+#### SEC-RLS-E01 — `app.can_view_presence` ne vérifie pas le rôle : un `member` portant encore `is_chef = true` lit les présences nominatives
+
+- **Gravité** : Élevé (Majeure)
+- **Fichier** : `drizzle/0006_rls_hardening.sql`
+- **Ligne / fonction** : 327-350 (`CREATE OR REPLACE FUNCTION app.can_view_presence`), consommée par 359-365 (`event_responses_select`)
+- **Constat** : la fonction réécrite applique bien la borne « exactement un pupitre » (338-341) mais **ne teste jamais `app.current_role()`**. La branche chef est :
+  `count(event_pupitres pour l'événement) = 1 AND EXISTS (… app.is_chef_of(ep.pupitre_id))`.
+  Or `app.is_chef_of` (0002:108-122) ne lit que `profile_pupitres.is_chef` : il ne vérifie **ni le rôle `chef_pupitre`, ni `profiles.role`**.
+  Comparer avec `app.can_manage_event` réécrite dans le **même fichier** (0006:54) qui, elle, exige `app.current_role() = 'chef_pupitre'`. La migration introduit donc une **asymétrie interne** entre deux fonctions qui appliquent la même règle métier.
+- **Preuve** :
+  - `0006:334-349` : `SELECT app.is_active() AND (app.is_role_at_least('secretaire') OR ((SELECT count(*) …) = 1 AND EXISTS (… app.is_chef_of(ep.pupitre_id))))` — aucune occurrence de `current_role()`.
+  - `0002:115-121` : `app.is_chef_of` = `EXISTS (… pp.profile_id = app.current_profile_id() AND pp.pupitre_id = p_pupitre AND pp.is_chef = true)`.
+  - `src/lib/member/permissions.ts:85-89` : le code, lui, refuse dès que `actor.role !== 'chef_pupitre'` → **divergence code / SQL**.
+  - Population atteignable : `commands.ts:1017-1031` (`member.role`) change `profiles.role` **sans toucher `profile_pupitres`** ; `commands.ts:937-997` (`member.pupitres`) permet à une secrétaire de poser `is_chef = true` sur n'importe quel profil et n'exige un pupitre dirigé que si `role === 'chef_pupitre'` (974). Un chef rétrogradé en `member`, ou un membre marqué `is_chef`, conserve donc l'ouverture.
+- **Scénario de risque** : un chef de pupitre est rétrogradé (ou un membre est marqué `is_chef` pour une raison d'organisation) ; `profile_pupitres.is_chef` reste vrai. Sur tout événement mono-pupitre de ce pupitre, `can_view_presence` renvoie vrai et `event_responses_select` (0006:362-364) lui livre **toute la liste nominative** (qui a répondu, présent/absent) des membres du pupitre. C'est exactement l'accès que Q-A3 réserve au « chef de pupitre ».
+- **Impact** : lecture de données nominatives de présence par un compte qui n'a plus le rôle ; contraire à Q-A1 (« perdre le statut de chef fait perdre le droit »), à §12.2 et à §12.8 (« les policies RLS et les gardes serveur appliquent la même règle ; une divergence est un défaut bloquant »). Ce n'est **pas** une régression introduite par `0006` (0002 n'avait pas non plus le contrôle de rôle), mais `0006` réécrit la fonction pour fermer C5 et laisse ce trou.
+- **Correction recommandée (non appliquée)** : dans la branche chef, ajouter `AND app.current_role() = 'chef_pupitre'` (une ligne, symétrique de `can_manage_event:54`), et couvrir la matrice par un test « membre avec `is_chef = true` → refusé » (voir T38, §6.3). À faire **avant** l'étape 54 : `0006` devient immuable dès sa première application (Q-A7, `docs/database.md` §2.3), sinon la correction exigera une migration `0008`.
+- **Responsable pressenti** : Backend (SQL).
 
 ---
 
-#### SEC-D01 — Pas de déconnexion et pas de révocation de session à la suspension
-
-**Gravité :** Modérée
-**Responsable pressenti :** backend + frontend
-**Fichiers :** `src/routes/auth/logout/+page.svelte` (**fichier vide, 0 octet**) ; aucun `+page.server.ts` de déconnexion ; aucune occurrence de `signOut`/`sign-out` dans `src/` hors commentaire de `src/routes/api/auth/[...all]/+server.ts:6` ; `src/lib/server/auth.ts:42-49` (`expiresIn` 30 jours).
-
-**Constat :** Il n'existe aucun moyen de mettre fin à une session depuis l'interface, et aucun code ne révoque les sessions d'un compte suspendu. La page `/auth/logout` est une route vide.
-
-**Impact :** sur un appareil partagé (salle du bagad, ordinateur familial), la session reste active jusqu'à 30 jours. Une suspension prononcée par la secrétaire n'a aucun effet sur les sessions ouvertes (`docs/database.md:120` exige l'inverse). `cookieCache` (1 h, `src/lib/server/auth.ts:45-48`) retarde en plus la prise en compte d'une révocation.
-
-**Correction :** action serveur `logout` appelant `auth.api.signOut`, lien de déconnexion dans l'interface, suppression des sessions dans le flux de suspension, et politique de révocation documentée.
+### 4.3 Constats moyens
 
 ---
 
-#### SEC-D02 — Aucun en-tête de sécurité, aucune CSP ; `robots.txt` inadapté
+#### SEC-RLS-M01 — Les commandes de `commands.ts` seront refusées par la nouvelle RLS : l'ordre 54 → 55 rend les chefs inopérants en production
 
-**Gravité :** Modérée
-**Responsable pressenti :** intégrateur (avec validation du chef/architecte, `AGENTS.md` §5)
-**Fichiers :** absence de `static/_headers` ; absence de `Content-Security-Policy` / `X-Frame-Options` / `Strict-Transport-Security` dans `src/` (recherche : 0 occurrence, y compris `setHeaders` dans `src/hooks.server.ts`) ; `static/robots.txt:9-13`.
-
-**Constat :** Aucun en-tête de durcissement n'est défini. `robots.txt` liste des chemins obsolètes (`/article/new`, `/agenda-form`, `/article-delete`, `/members`, `/article/`) et **ne bloque ni `/dashboard`, ni `/auth`, ni `/api`**, contrairement à `equipe/CONTRAT_API.md:459`.
-
-**Impact :** pas de protection anti-clickjacking, pas de réduction de surface XSS en profondeur, aucune garantie HSTS côté application ; l'espace privé et les routes d'authentification sont déclarés indexables. Risque réel mais non exploitable seul aujourd'hui (aucune donnée membre servie).
-
-**Correction :** fichier `_headers` Cloudflare avec `Content-Security-Policy`, `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Strict-Transport-Security` ; corriger `robots.txt`. La CSP est une modification sensible : validation explicite requise (`AGENTS.md` §5).
-
----
-
-#### SEC-D03 — Pas de limitation des tentatives sur l'action de connexion
-
-**Gravité :** Modérée
-**Responsable pressenti :** backend
-**Fichiers :** `src/routes/auth/login/+page.server.ts:46-84` ; `node_modules/better-auth/dist/context/create-context.mjs:170-176` ; `node_modules/better-auth/dist/api/rate-limiter/index.mjs:305-318`.
-
-**Constat :** Better Auth active une limitation par défaut en production (3 tentatives / 10 s sur `/sign-in` et `/sign-up`), mais **uniquement dans son handler HTTP**. L'action SvelteKit appelle directement `auth.api.signInEmail(...)` (`:59-65`), ce qui contourne ce mécanisme. Aucun compteur applicatif, aucun délai progressif, aucun verrouillage de compte n'est implémenté. Le formulaire `login` est donc un point d'attaque non limité.
-
-**Impact :** force brute / bourrage d'identifiants sur les comptes membres, sans frein. Le risque est réel bien que modéré (base d'utilisateurs restreinte, mots de passe choisis par les membres).
-
-**Correction :** limitation côté action (par IP et par compte, stockage KV ou D1, ou appel du endpoint HTTP Better Auth), réponse `rate_limited` 429 conforme à `equipe/CONTRAT_API.md:120`, journalisation des échecs.
+- **Gravité** : Moyen (Modérée) — **ce n'est pas une faille, c'est la conséquence fonctionnelle d'un ordre d'application**
+- **Fichier** : `drizzle/0006_rls_hardening.sql` (190-221, 227-241) confronté à `src/lib/server/member/commands.ts` (412-531)
+- **Ligne / fonction** : `commands.ts:466-486` (delete puis insert de `event_pupitres`), `commands.ts:422-441` (insertion directe dans `events`), `0006:198-221`
+- **Constat** : le backend signale que `event.update` supprime puis réinsère `event_pupitres`. C'est **confirmé** :
+  - `event_pupitres_delete` (0006:216-221) est réservée à `is_role_at_least('secretaire')` ; un chef qui exécute `DELETE FROM event_pupitres WHERE event_id = …` ne voit aucune ligne supprimable → **0 ligne, sans erreur** (RLS `USING` filtre silencieusement) ;
+  - `event_pupitres_insert` (0006:198-204) est réservée au même rôle → l'`INSERT` suivant lève **42501** et fait échouer toute la transaction.
+  - `event.create` (commands.ts:422-434) insère **directement** dans `events` alors que `events_insert` (0006:190-196) est réservée à la secrétaire/l'admin → refus pour un chef (attendu, c'est l'objet de Q-A2, corrigé par l'étape 55).
+  - De plus `event.cancel` / `event.reactivate` (commands.ts:490-516) font un `UPDATE events` : sur un événement existant en visibilité `pupitre` (les **4 événements de chefs** de la branche `test`), le `WITH CHECK` (0006:231-237) exige `visibility = 'interne'`, et le trigger (0006:277-280) **interdit** de changer la visibilité → **refus 42501** : un chef ne peut plus annuler ses propres événements `pupitre`. C'est la question ouverte §9.7 b, non tranchée.
+- **Scénario / impact** : si `0006` est appliquée en production **avant** l'étape 55, tout chef de pupitre perd : création d'événement, modification (échec au milieu d'une transaction multi-ordres), annulation et réactivation. Le site reste « debout », mais la fonction première des chefs disparaît, sans erreur explicite côté UI pour le `DELETE` à 0 ligne.
+- **Correction recommandée** : ne pas livrer 54 et 55 en production dans deux fenêtres distinctes. Sur `test`, l'ordre est sans danger (c'est même la seule façon de mesurer). Pour la production : appliquer `0006` et livrer le code aligné **dans la même fenêtre**, ou attendre que `commands.ts` appelle `app.create_event` et ne déplace plus le ciblage par delete/insert. Ne pas « corriger » la policy pour accommoder le code : §12.8 fait primer la règle, pas l'implémentation.
+- **Responsable pressenti** : Backend (étape 55) + Chef (séquencement du déploiement).
 
 ---
 
-#### SEC-D04 — Configuration Cloudflare incomplète et repli silencieux de la connexion base
+#### SEC-RLS-M02 — `app.create_event` ne prend pas `location` : l'étape 55 perdra le lieu de l'événement
 
-**Gravité :** Modérée
-**Responsable pressenti :** intégrateur + backend
-**Fichiers :** `wrangler.jsonc:1-10` (seul binding `ASSETS`) ; `src/app.d.ts:17` (`Platform` vide) ; `src/lib/db/index.ts:19-22` ; `src/lib/server/blobs.ts:42-45` ; `.env.example:25-34` ; `src/lib/server/auth.ts:57`.
-
-**Constat :**
-
-- Aucun binding `r2_buckets`, aucun `hyperdrive`, aucun `vars` n'est déclaré, alors que `blobs.ts` attend `R2_PUBLIC`/`R2_PRIVATE` et que `docs/database.md:10-21` impose Hyperdrive.
-- `src/lib/db/index.ts:19-22` retombe **silencieusement** sur `postgres://user:pass@localhost:5432/placeholder` si `DATABASE_URL` manque : une erreur de configuration produit une application qui démarre et échoue à l'exécution, au lieu d'un échec net.
-- `secure: process.env.NODE_ENV === 'production'` (`src/lib/server/auth.ts:57`) : au runtime Workers, la valeur de `NODE_ENV` n'est pas garantie. Si elle est absente, le cookie de session est émis **sans attribut `Secure`**, alors que l'application est servie en HTTPS.
-
-**Impact :** risque de déploiement non fonctionnel ou dégradé, et risque de cookie de session sans `Secure`. Ce sont des risques de configuration, pas des vulnérabilités démontrées.
-
-**Correction :** déclarer les bindings R2/Hyperdrive/vars dans `wrangler.jsonc` ; typer `Platform` ; faire échouer le démarrage si `DATABASE_URL` est absente ; forcer `secure: true` en production (ou utiliser `$app/environment`).
+- **Gravité** : Moyen (Modérée) — perte de donnée fonctionnelle, pas faille d'accès
+- **Fichier** : `drizzle/0006_rls_hardening.sql`
+- **Ligne / fonction** : signature 78-86, `INSERT` 137-155
+- **Constat** : la fonction accepte `(p_title, p_description, p_event_date, p_event_type, p_is_poll, p_visibility, p_pupitre_ids)` et n'écrit que ces colonnes. Or `events.location` est `varchar(200) NOT NULL DEFAULT ''` (0001:54) et `commands.ts:357` impose un lieu de 2 à 200 caractères, exposé par `MemberEvent.location` (types) et par `snapshot.ts:275`.
+- **Scénario / impact** : dès que l'étape 55 fait passer `event.create` par la fonction (livrable 55.1 : « `event.create` appelle `app.create_event(...)` pour tous les rôles »), le lieu saisi est **silencieusement remplacé par la valeur par défaut `''`**. Aucune erreur, aucune trace : régression invisible en recette si le contrôle ne porte pas explicitement sur ce champ.
+- **Correction recommandée** : ajouter `p_location text` à la signature (avec validation `length ≤ 200`), et adapter le `GRANT`/`REVOKE` (les signatures y sont répétées 167-184). À faire avant l'étape 54, pour la même raison d'immuabilité qu'en E01.
+- **Responsable pressenti** : Backend (SQL + étape 55).
 
 ---
 
-### 3.3 Constats mineurs
+#### SEC-RLS-M03 — La suppression par un chef détruit définitivement les réponses de présence (cascade)
+
+- **Gravité** : Moyen (Modérée) — **décision client requise**, l'auditeur ne tranche pas
+- **Fichier** : `drizzle/0006_rls_hardening.sql` (296-318) + schéma `drizzle/0000_handy_alex_wilder.sql:269`
+- **Ligne / fonction** : `events_delete` 297-318 ; FK `event_responses_event_id_events_id_fk … ON DELETE cascade`
+- **Constat** : `0006` donne à un chef le droit de **supprimer** les événements mono-pupitre de son pupitre (Q-A4). La suppression d'un événement entraîne, par la clé étrangère en `ON DELETE cascade`, la suppression de **toutes** les lignes `event_responses` de cet événement (`0000:269`), et de ses lignes `event_pupitres` (`0000:267`). Aucun `cancelled_at`, aucune archive : la perte est **irréversible**. La cascade s'exécute avec les privilèges du propriétaire de la table référencée ; la policy `event_pupitres_delete` restreinte à la secrétaire (0006:216-221) ne s'y oppose donc pas — c'est bien ce que décrit le commentaire 209-214, et c'est cohérent.
+- **Scénario / impact** : un chef supprime un événement de son pupitre : l'historique de présence (qui était présent, qui était absent) disparaît, alors que §12.2 ne prévoit la suppression des réponses **que** par anonymisation à la suppression de compte (`profile_id = NULL`), jamais par suppression d'événement. Le geste est à un clic, sans confirmation serveur au-delà de l'UI, et la secrétaire n'a aucun moyen de le constater après coup.
+- **Correction recommandée (au choix du client, pas de l'auditeur)** : soit assumer la perte (documenter dans `docs/event.md`), soit la borner (interdire la suppression d'un événement passé, ou exiger un événement sans réponse, ou remplacer la suppression par `cancelled_at`). Une correction technique minimale, sans changer le schéma : ajouter dans `events_delete` un `AND NOT EXISTS (SELECT 1 FROM public.event_responses r WHERE r.event_id = id)`. Toute autre voie (FK `ON DELETE set null`, table d'archive) est un changement de schéma, hors du périmètre de `0006`.
+- **Responsable pressenti** : Client (règle métier) puis Backend.
 
 ---
 
-#### SEC-m01 — Le profil complet est renvoyé au client
-
-**Gravité :** Mineure — **Responsable :** backend
-**Fichier :** `src/routes/dashboard/+layout.server.ts:16`.
-**Constat :** `return { user: locals.user }` sérialise la ligne `profiles` entière : `phone`, `address`, `auth_user_id`, `email`, `role`, `account_status`, `bureau_position_id`, `email_confirmed`, `created_at`, `updated_at`. `equipe/CONTRAT_API.md:509,827` interdit d'exposer `phone`, `email`, `address`, `role`, `accountStatus`, `authUserId` dans les charges destinées au trombinoscope.
-**Impact :** il s'agit des données de l'utilisateur lui-même, donc pas d'accès indu aujourd'hui ; mais toute réutilisation du `data.user` dans un composant partagé diffusera des champs internes et du PII. Principe de minimisation non respecté.
-**Correction :** projeter explicitement les seuls champs utiles au client.
+### 4.4 Constats faibles
 
 ---
 
-#### SEC-m02 — Politique de mot de passe incohérente à l'invitation
+#### SEC-RLS-F01 — `REVOKE DELETE ON public.invitations` est effectif, mais `invitation_pupitres` conserve `DELETE`
 
-**Gravité :** Mineure — **Responsable :** backend
-**Fichier :** `src/routes/auth/invitation/+page.server.ts:43-49`.
-**Constat :** contrôle local `password.length < 6`, alors que Better Auth impose 8 caractères minimum par défaut et un maximum de 128. Un mot de passe de 6 ou 7 caractères passe la validation applicative puis est rejeté par la bibliothèque, avec un message générique 500.
-**Impact :** mauvaise expérience et message d'erreur trompeur ; aucune faiblesse d'authentification supplémentaire.
-**Correction :** dériver la validation des paramètres Better Auth (`minPasswordLength`/`maxPasswordLength`), sans duplication divergente.
+- **Gravité** : Faible (Mineure)
+- **Fichier** : `drizzle/0006_rls_hardening.sql:417` ; `drizzle/0002_rls_policies.sql:481, 614-616`
+- **Constat** : le `REVOKE` ferme bien le seul chemin de suppression d'invitation (aucune policy `DELETE` sur `invitations` n'existe — vérifié : `0002` ne définit que `invitations_select`, `_insert`, `_update`). Mais `bagad_app` garde `DELETE` sur `public.invitation_pupitres`, avec la policy `invitation_pupitres_delete` (secrétaire/admin). Un futur « annuler l'invitation » écrit en supprimant les lignes de ciblage continuerait donc de **réussir silencieusement**, en laissant une invitation sans pupitre. C6 n'est fermé qu'à moitié.
+- **Correction recommandée** : `REVOKE DELETE ON public.invitation_pupitres FROM bagad_app;` et suppression de la policy correspondante (dans la mesure où aucun flux légitime ne l'utilise : `commands.ts` ne supprime jamais ces lignes).
+- **Responsable pressenti** : Backend.
 
----
+#### SEC-RLS-F02 — `app.create_event` accepte `visibility = 'pupitre'` sans aucun pupitre (secrétaire)
 
-#### SEC-m03 — Scripts de migration non conformes
+- **Gravité** : Faible
+- **Fichier** : `0006:109-115` (branche secrétaire) comparé à `commands.ts:379-381`
+- **Constat** : le code refuse `pupitre` sans ciblage ; la fonction ne le refuse pas. Résultat possible : un événement `pupitre` à 0 ligne `event_pupitres`, donc lisible par la seule secrétaire, l'admin et son créateur (`can_view_event`, 0002:194-199) — un « global déguisé » invisible pour tous.
+- **Correction recommandée** : `IF p_visibility = 'pupitre' AND coalesce(array_length(v_pupitres,1),0) = 0 THEN RAISE … END IF;`
+- **Responsable pressenti** : Backend.
 
-**Gravité :** Mineure — **Responsable :** backend
-**Fichier :** `scripts/migrate.js:4,13`.
-**Constat :** `require('child_process')` dans un paquet ESM (échec d'exécution), faute de frappe `npx drizzle-kid push`, et usage de `drizzle-kit push` qui applique un différentiel **hors historique de migrations**, contrairement à `docs/database.md:33-39` (« une migration versionnée, jamais modifiée »).
-**Impact :** risque de dérive de schéma entre branches `test` et `production`, et de perte de traçabilité. Pas d'impact direct sur la confidentialité.
-**Correction :** script ESM (`import`), `drizzle-kit migrate`, contrôle de la branche cible.
+#### SEC-RLS-F03 — Le trigger protège `created_by` mais pas `cancelled_by` : attribution d'annulation falsifiable
 
----
+- **Gravité** : Faible
+- **Fichier** : `0006:249-284`
+- **Constat** : `guard_event_update_bounds` interdit à un non-secrétaire de modifier `created_by`, `is_poll` et `visibility`, mais laisse `cancelled_by` libre. Un chef peut donc annuler un événement de son pupitre en l'attribuant à un autre profil (`commands.ts:499` le renseigne correctement, mais la base ne l'impose pas), ou réattribuer une annulation existante.
+- **Correction recommandée** : `IF NEW.cancelled_by IS DISTINCT FROM OLD.cancelled_by AND NEW.cancelled_by IS DISTINCT FROM app.current_profile_id() THEN RAISE …` (ou exiger `cancelled_by` = acteur).
+- **Responsable pressenti** : Backend.
 
-#### SEC-m04 — Tests de sécurité vides et CI sans audit de dépendances
+#### SEC-RLS-F04 — `events_insert` ne vérifie pas `created_by = app.current_profile_id()`
 
-**Gravité :** Mineure — **Responsable :** backend + testeur
-**Fichiers :** `tests/guards.test.ts` (**0 octet**), `tests/invitation.test.ts` (**0 octet**) ; `.github/workflows/ci.yml:35-46` (check, lint, build uniquement).
-**Constat :** les deux tests qui devraient démontrer les refus d'accès et la logique d'invitation sont vides. La CI ne comporte ni `pnpm audit`, ni analyse statique de sécurité, ni test d'autorisation. Les constats M01 et M04 ne sont donc couverts par aucun test.
-**Impact :** fausse assurance : la CI passe alors que les contrôles d'accès ne sont pas testés.
-**Correction :** écrire les tests d'autorisation (critère de validation de `equipe/PLAN.md`, étape 2), ajouter `pnpm audit --prod` en CI, et un test d'isolation RLS sur la branche `test`.
+- **Gravité** : Faible
+- **Fichier** : `0006:190-196`
+- **Constat** : la policy `WITH CHECK` ne teste que `is_active()` et le rôle. Une secrétaire peut donc insérer un événement en l'attribuant à un autre profil. L'effet n'est pas neutre : `can_view_event` conserve la branche `created_by` (0002:193, maintenue volontairement — Q-A7 c), donc **attribuer `created_by` revient à accorder la lecture** d'un événement `pupitre` à ce tiers.
+- **Correction recommandée** : `AND created_by = app.current_profile_id()` dans le `WITH CHECK` (la fonction `create_event` respecte déjà cette règle, 0006:153).
+- **Responsable pressenti** : Backend.
 
----
+#### SEC-RLS-F05 — Le court-circuit `session_user = 'neondb_owner'` est correct, mais rien ne garantit que le runtime n'est pas le propriétaire
 
-#### SEC-m05 — Envoi de notifications : identifiants d'appareils fournis par l'appelant
+- **Gravité** : Faible (condition d'exploitation)
+- **Fichier** : `0006:259-261` ; `src/lib/db/index.ts:37-52`
+- **Constat (partie vérifiée)** : le choix de `session_user` est **le bon**. À l'intérieur d'une fonction `SECURITY DEFINER`, `current_user` vaut toujours le propriétaire de la fonction ; seul `session_user` (le rôle réellement connecté) distingue une session applicative. `bagad_app` n'a aucun rôle parent (audit §9), et `SET ROLE` ne modifie pas `session_user` : `0006` **ne peut pas** être contourné depuis `bagad_app`. Le motif est identique à `app.guard_profile_sensitive_columns` (0002:420).
+- **Résidu** : si `DATABASE_URL_APP` / l'URL Hyperdrive pointe un jour sur `neondb_owner` (erreur de configuration, réutilisation d'une chaîne d'administration, `dev` local), alors **le trigger se tait et, plus grave, le propriétaire contourne la RLS sur toutes les tables**. Aucun contrôle ne le détecte aujourd'hui ; `src/lib/db/index.ts` ne vérifie pas le rôle effectif.
+- **Correction recommandée** : exiger dans la matrice de l'étape 54 une assertion `SELECT session_user, current_user` doit valoir `bagad_app` (T34), et envisager côté serveur un `RAISE`/refus de démarrage si ce n'est pas le cas.
+- **Responsable pressenti** : Backend + Intégrateur (configuration Hyperdrive).
 
-**Gravité :** Mineure — **Responsable :** backend
-**Fichier :** `src/lib/notifications/server.ts:38-90`.
-**Constat :** `sendPushNotification({ playerIds, … })` envoie à des identifiants fournis par l'appelant, sans résolution serveur ; `resolveAudience` retourne `userPupitreIds` en **placeholder** pour l'admin (`:79`). Le module n'est branché sur aucune route aujourd'hui.
-**Impact :** aucun impact actuel. Dès le branchement, une erreur d'appel permettrait d'envoyer des notifications à des appareils hors audience (hameçonnage interne, fuite d'information par le titre du push).
-**Correction :** ne jamais accepter de `playerIds` du client ; résoudre l'audience côté serveur depuis `profile_pupitres` et les préférences, puis sélectionner les appareils en base.
+#### SEC-RLS-F06 — `profile_pupitres_select` ouvre `is_chef` à tout membre actif : Q-A5 n'est fermé qu'en façade
 
----
+- **Gravité** : Faible
+- **Fichier** : `drizzle/0002_rls_policies.sql:567-569` (non modifié par `0006`) ; `0006:387-393`
+- **Constat** : `0006` retire bien `is_chef` du JSON de `app.member_directory` (387-393), mais la policy `profile_pupitres_select` autorise tout membre actif à lire **toutes** les lignes de `profile_pupitres`, `is_chef` compris. L'affirmation de §12.3 « `isChef` est strictement interne » n'est donc portée que par la vue et par le code, pas par la RLS. L'exploitation directe est exclue aujourd'hui (seul le serveur détient les identifiants base, risque Q-A6 accepté), mais toute nouvelle requête serveur ou tout cache mal placé réintroduirait la donnée.
+- **Correction recommandée** : exposer `is_chef` à `bagad_app` uniquement via une fonction `SECURITY DEFINER` (`app.is_chef_of`), et restreindre `profile_pupitres_select` à `(pupitre_id, profile_id)` pour les membres — ou, a minima, documenter la limite. Hors périmètre strict de `0006` : à porter comme décision d'architecture.
+- **Responsable pressenti** : Architecte puis Backend.
 
-### 3.4 Informations
+#### SEC-RLS-F07 — Aucun instantané `drizzle/meta/0006_snapshot.json`
 
----
-
-#### SEC-I01 — Périmètre réel : l'espace membre n'est pas branché sur les données
-
-**Gravité :** Information
-Tous les `+page.server.ts` du dashboard renvoient `{}` et les pages rendent `DemoRoute`, qui affiche un message générique hors développement (`src/lib/components/dashboard/DemoRoute.svelte:21-37`). Les couches `src/lib/server/data/**` existent mais ne sont appelées par aucune route. **Aucune donnée membre réelle n'est donc exposée aujourd'hui.** C'est ce qui limite l'impact des constats M01, M02 et m01 : ils sont latents mais deviendront directs au branchement. À traiter avant, pas après.
-
-#### SEC-I02 — Aucun fichier privé servi ; `src/routes/api/files/[...key]/+server.ts` est vide
-
-**Gravité :** Information
-L'endpoint de service des objets R2 est **un fichier de 0 octet** : aucun objet privé n'est accessible. `src/lib/server/blobs.ts` ne contrôle ni le type réel, ni la taille, ni le nom des objets ; ces contrôles restent à écrire (voir `docs/brief.md:50-59`). Aucun formulaire d'upload n'est branché.
-
-#### SEC-I03 — Mode démonstration limité au développement (analyse statique)
-
-**Gravité :** Information
-`src/lib/demo/mode.ts:14-16` conditionne la démo à `dev`, constante de compilation ; `src/routes/dashboard/+layout.svelte:17-30` et `DemoRoute.svelte:21` gardent les imports par `dev` ; le plugin `excludeDemoFromBuild` de `vite.config.ts:16-31` remplace les modules `$lib/demo/{pages,components}` par `export default {}` à la construction. L'isolation paraît correcte **par lecture de code**, mais aucun artefact de build n'est présent dans l'arbre audité (`.svelte-kit/` absent) : je n'ai donc pas pu vérifier le bundle produit, contrairement à un audit sur artefact. Cette vérification reste à faire au déploiement.
-
-#### SEC-I04 — `cookieCache` et Turnstile
-
-**Gravité :** Information
-`cookieCache` (1 h) réduit les lectures de session mais diffère d'autant une révocation (cf. SEC-D01). Le formulaire de contact valide Turnstile **en échec fermé** (`src/lib/server/turnstile.ts:33-41,53-66`) et échappe correctement le HTML des e-mails (`src/routes/(public)/[lang=lang]/contact/+page.server.ts:20-30,94-101`). Aucune limitation de débit propre au contact n'existe, Turnstile en tient lieu.
+- **Gravité** : Faible (risque d'outillage, pas de sécurité)
+- **Fichier** : `drizzle/meta/_journal.json:47-53` (entrée `idx: 6` présente) ; `drizzle/meta/` ne contient que `0000` à `0004`
+- **Constat** : la migration sera bien prise par `drizzle-kit migrate` (le journal la référence), mais l'instantané manque — `0005` est dans le même cas. L'étape 52 liste pourtant « et son instantané `drizzle/meta/` ». Un futur `drizzle-kit generate` pourrait produire un différentiel erroné et proposer de « recréer » des objets existants.
+- **Correction recommandée** : générer les instantanés manquants **sur une copie** du dossier (règle §4 du plan), vérifier `git status drizzle/` ensuite.
+- **Responsable pressenti** : Backend + mainteneur des dépendances.
 
 ---
 
-## 4. Contrôles vérifiés conformes
+### 4.5 Informations
 
-Ces points ont été contrôlés et n'appellent pas de correction dans le périmètre audité :
+#### SEC-RLS-I01 — Les agrégats de réponses ne sont pas fournis par la base
 
-| Contrôle                                                                | Preuve                                                                                                                         |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Aucun rendu HTML brut de donnée utilisateur                             | Recherche `@html`, `innerHTML`, `eval(`, `new Function` dans `src/` : 0 usage ; `MarkdownView.svelte` rend des éléments Svelte |
-| Échappement HTML des e-mails de contact                                 | `contact/+page.server.ts:20-30` et usage systématique `escapeHtml(...)`                                                        |
-| Turnstile validé côté serveur, échec fermé                              | `src/lib/server/turnstile.ts:33-41,53-66` ; clé secrète lue dans `process.env`, jamais renvoyée au client                      |
-| Aucune pièce jointe ni traitement de fichier côté contact               | `contact/+page.server.ts` ne lit que des champs texte                                                                          |
-| Secrets absents du code versionné                                       | Recherche de motifs de clés (`re_…`, `sk_…`, JWT, clés privées) sur les fichiers versionnés : 0 résultat                       |
-| `.env` ignoré, `.env.example` sans secret                               | `.gitignore:16-19` ; `.env.example` ne contient qu'une URL locale non secrète, toutes les clés sont vides                      |
-| Aucun secret côté client                                                | Seule la clé **publique** Turnstile est chargée (`contact/+page.server.ts:14-16`)                                              |
-| Pas de réintroduction de Supabase                                       | Aucune dépendance ni référence Supabase dans `package.json` et `src/`                                                          |
-| Échec fermé en cas d'erreur base dans le hook                           | `src/hooks.server.ts:48-52` : `locals` reste vide, donc accès refusé                                                           |
-| CSRF SvelteKit actif                                                    | `svelte.config.js` ne désactive pas `csrf.checkOrigin` ; formulaires en `POST` same-origin                                     |
-| Validation serveur des entrées publiques                                | `contact/schema.ts` (Zod, longueurs et énumération) ; `login/schema.ts` ; `reset-password/schema.ts`                           |
-| Cookie de session `httpOnly` + `sameSite: 'lax'`                        | `src/lib/server/auth.ts:55-62`                                                                                                 |
-| Aucune donnée réelle dans la démonstration                              | Fixtures fictives `src/lib/demo/fixtures/**`, adresses en `example.com`                                                        |
-| Guards eux-mêmes corrects (logique)                                     | `src/lib/auth/guards.ts:88-136`, hiérarchie `roles.ts:20-33`                                                                   |
-| Invitations : jeton empreinté, expiration 1 h, usage unique             | `src/lib/server/data/invitations.ts:34-37,66-83`                                                                               |
-| Rôles lus dans `profiles.role`, jamais dans les métadonnées Better Auth | `src/hooks.server.ts:36-47` ; `src/lib/auth/roles.ts:1-7`                                                                      |
-| Dépendances suivies                                                     | `.github/dependabot.yml` (npm + GitHub Actions, hebdomadaire)                                                                  |
-| Aucune commande destructive ni accès production durant l'audit          | Aucun shell, aucun réseau, aucune base contactée                                                                               |
+`snapshot.ts:279` lit `event_responses` (filtré par RLS) et expose ces lignes telles quelles ; `app.event_response_counts` (0002:242-254) n'est appelé nulle part. Avec `event_responses_select` (0006:359-365), un membre ne voit que **sa** ligne : tout décompte calculé côté client à partir de `responses` ne comptera que lui. §12.2 promet pourtant « sa propre réponse **et les agrégats** ». Ce n'est pas une fuite (le sens de l'erreur est sûr), mais l'étape 55 doit brancher `app.event_response_counts`. À ne pas confondre avec un défaut d'`0006`.
+
+#### SEC-RLS-I02 — `0006` est rejouable (idempotence vérifiée statiquement)
+
+`DROP POLICY IF EXISTS` avant chaque `CREATE POLICY` (190, 198, 215, 227, 296, 359), `CREATE OR REPLACE FUNCTION` (40, 78, 249, 327), `DROP TRIGGER IF EXISTS` (286), `DROP VIEW IF EXISTS` (376), `GRANT`/`REVOKE` idempotents, `DROP TABLE IF EXISTS` (420). Une seconde exécution sur `test` ne devrait pas échouer — ce qui ne dispense pas de la laisser appliquée **une fois** (étape 54).
+
+#### SEC-RLS-I03 — Aucune écriture de données : les 16 événements de `test` restent intacts
+
+Relecture des 420 lignes : la migration ne contient que du DDL (`CREATE`/`DROP`/`ALTER` implicite par `CREATE OR REPLACE`, `GRANT`/`REVOKE`). **Aucun `INSERT`, `UPDATE` ou `DELETE` de données** n'y figure. Le `DROP TABLE public.playing_with_neon` (420) est le seul retrait de données et porte sur une table résiduelle (Q-A8). L'affirmation du commentaire 28-30 est donc exacte.
+
+#### SEC-RLS-I04 — Le badge « chef » du trombinoscope disparaîtra silencieusement
+
+`0006:387-393` retire `is_chef` du JSON `pupitres` de la vue. `snapshot.ts:96` retombe alors sur `Boolean(undefined) = false`, et `MemberCard.svelte:34` / `MembersPage.svelte:200` affichent `${pupitre.isChef ? ' · chef' : ''}` : tous les badges disparaissent. C'est **conforme** à §12.3 (aucun `isChef` exposé), mais l'interface doit être alignée à l'étape 55/46 pour ne pas laisser un affichage trompeur.
 
 ---
 
-## 5. Contrôles non réalisés et limites de l'audit
+## 5. Contrôles réalisés
 
-| Contrôle                                                             | Raison                                                                                                                                                                        |
-| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm audit` / recherche de CVE sur les dépendances                  | Shell indisponible (`Permission denied: shell`) ; aucun outil d'audit exécutable ici. **Aucun scan n'a été lancé.**                                                           |
-| `pnpm run check`, `pnpm run lint`, `pnpm run build`                  | Idem : build non reproduit sur l'arbre courant.                                                                                                                               |
-| `pnpm test` / Vitest                                                 | Idem : les tests n'ont pas été exécutés ; j'ai seulement constaté que deux fichiers de test sont vides.                                                                       |
-| Vérification des artefacts de build (isolation démo)                 | `.svelte-kit/` absent de l'arbre audité ; vérification uniquement statique (cf. SEC-I03).                                                                                     |
-| `git status` / `git log` / suivi de `.env`                           | Shell indisponible. Un fichier `.env` existe dans l'arbre de travail ; je ne l'ai **pas ouvert** et je ne peux pas affirmer s'il est suivi par git. `.gitignore:16` l'exclut. |
-| Test RLS sur une base réelle (anonyme, sans contexte, isolation A/B) | Interdit par la mission (aucune base contactée) et impossible sans shell.                                                                                                     |
-| Test dynamique d'authentification, de session, d'IDOR                | Aucun test d'intrusion, aucune requête réelle.                                                                                                                                |
-| Vérification des bindings Cloudflare effectifs et du WAF             | Aucun accès au compte Cloudflare ; `wrangler.jsonc` est la seule source, et il est incomplet.                                                                                 |
-| Vérification de HSTS / TLS au niveau de la zone Cloudflare           | Hors du dépôt, non observable ici.                                                                                                                                            |
-| Vérification du contenu réel de `.env`                               | Volontairement non lu pour ne pas manipuler de secrets.                                                                                                                       |
-| Revue de la PWA (service worker applicatif)                          | Aucun `src/service-worker.ts` ; seul `static/OneSignalSDKWorker.js` (import du SDK OneSignal) existe. Aucun cache applicatif à auditer.                                       |
-| Recette fonctionnelle et revue technique                             | `equipe/REVUE.md`, `equipe/TESTS.md`, `equipe/INTEGRATION.md` absents : je ne peux pas confirmer leur contenu ni leurs résultats.                                             |
-
-**Limite générale :** l'absence de faille détectée dans un périmètre donné ne signifie pas que l'application est invulnérable. Cet audit est statique, sans exécution, et porte sur un espace membre dont les flux de données ne sont pas encore branchés.
-
----
-
-## 6. Recommandations avant déploiement
-
-### Bloquantes (à corriger avant toute mise en production)
-
-1. **SEC-M01** — Appliquer les guards dans les layouts, pages, actions et endpoints ; refuser `pending`, `suspended`, `no_role` ; tester chaque rôle.
-2. **SEC-M02** — Écrire une migration additive RLS, aligner la clé de contexte, corriger ou retirer le script de secours, vérifier sur la branche `test`.
-3. **SEC-M03** — Fermer l'inscription publique (`disableSignUp`) et créer les comptes uniquement par le flux d'invitation serveur.
-4. **SEC-M04** — Rendre la vérification d'e-mail et la réinitialisation opérationnelles ; rendre l'acceptation d'invitation transactionnelle et fiable ; créer le profil métier.
-
-### À planifier avant l'ouverture de l'espace membre
-
-5. **SEC-D01** — Déconnexion effective et révocation des sessions à la suspension.
-6. **SEC-D02** — En-têtes de sécurité, CSP et `robots.txt` (validation requise, `AGENTS.md` §5).
-7. **SEC-D03** — Limitation des tentatives de connexion côté action.
-8. **SEC-D04** — Bindings Cloudflare, `Platform` typée, échec net si `DATABASE_URL` manque, cookie `Secure` garanti.
-9. **SEC-m05** — Résolution serveur de l'audience des notifications avant tout branchement.
-
-### Durcissement
-
-10. **SEC-m01** à **SEC-m04** — minimisation des données, politique de mot de passe, scripts de migration, tests de sécurité et audit de dépendances en CI.
-11. Refaire un audit sur artefact de build (isolation démo) et exécuter `pnpm audit` dès que l'environnement le permet.
+| Contrôle | Statut | Résultat |
+|----------|--------|----------|
+| Lecture intégrale de `0006` (420 lignes) | Réalisé | 15 constats (0 critique) |
+| Branche `created_by` retirée de `can_manage_event` | Réalisé | **Conforme** (0006:47-68 ; comparer 0002:160) |
+| Durcissement `SECURITY DEFINER` de `create_event` | Réalisé | **Conforme** (search_path, REVOKE PUBLIC, GRANT ciblé, pas de SQL dynamique) |
+| Rôle non fourni par le client (relu depuis `profiles`) | Réalisé | **Conforme** (`current_profile_id` 93, `current_role` 116, `is_role_at_least` 109) |
+| Bornes de création pour un chef (interne / 1 pupitre / dirigé) | Réalisé | **Conforme** (118, 122, 126 ; doublons neutralisés 103-107) |
+| Atomicité événement + ciblage | Réalisé | **Conforme** (une seule fonction, une seule transaction implicite) |
+| Insertion directe fermée (C2/C3) | Réalisé | **Conforme** (190-204) |
+| `USING` + `WITH CHECK` + trigger sans trou entre eux (C4) | Réalisé | **Conforme** (227-290), avec la réserve M01 sur le code |
+| `session_user` = propriétaire : légitimité du court-circuit | Réalisé | **Conforme** (`current_user` serait inopérant sous `SECURITY DEFINER`) ; condition d'exploitation F05 |
+| `events_delete` bornée au mono-pupitre dirigé, aucun droit au créateur | Réalisé | **Conforme** (296-318) ; conséquence M03 |
+| Fermeture de C5 (chef sur multi-pupitres) | Réalisé | **Conforme pour un `chef_pupitre`** (338-341) ; **trou de rôle E01** |
+| `event_responses_select` : propre ligne toujours, autres seulement via présence | Réalisé | **Conforme** (359-365) |
+| `member_directory` : plus d'`isChef`, `bureau_title` en fin, `security_invoker = false` | Réalisé | **Conforme** (376-408) |
+| `member_directory` : aucune donnée personnelle supplémentaire | Réalisé | **Conforme** (colonnes de §12.3 uniquement ; ni email, ni téléphone, ni adresse, ni date de naissance, ni statut de compte, ni `bureau_position_id`) |
+| `REVOKE DELETE ON invitations` effectif (aucune policy DELETE résiduelle) | Réalisé | **Conforme** (417 ; `0002` n'a pas de policy `DELETE` sur `invitations`) ; réserve F01 sur la table enfant |
+| `DROP TABLE playing_with_neon` sans dépendance cachée | **Non réalisable** | Dépendances invisibles hors base — cf. §6 |
+| Régressions de `GRANT` sur objets recréés | Réalisé | **Conforme** : `CREATE OR REPLACE` conserve les privilèges ; la vue recréée est re-`GRANT` (408) ; la fonction nouvelle est explicitement `GRANT` (176-184) car `GRANT EXECUTE ON ALL FUNCTIONS` (0002:507) est antérieur et ne couvre pas les fonctions futures |
+| Policies oubliées / laissées ouvertes à `PUBLIC` | Réalisé | Aucune : toutes les policies de `0006` sont `TO bagad_app` ; aucune policy permissive §4.5 du script de secours n'est réintroduite |
+| Fonctions `STABLE`/`VOLATILE` | Réalisé | Correct : `can_manage_event` et `can_view_presence` en `STABLE` (lecture seule), `create_event` en `VOLATILE` par défaut (écriture) |
+| `WITH CHECK` absent là où `USING` seul ne protège pas | Réalisé | Aucun cas dans `0006` (UPDATE : les deux présents ; INSERT : `WITH CHECK` présent ; DELETE : `USING` seul, correct) |
+| Cohérence code ↔ RLS | Réalisé | 3 écarts : M01 (delete/insert du ciblage, cancel), M02 (`location`), E01 (rôle des présences) |
+| `git status` / `git log` / SHA audité | Non réalisé | Shell indisponible (`Permission denied: shell`) — arbre de travail courant |
+| Exécution du SQL / test dynamique / base contactée | Non réalisé | Interdit par la mission et impossible sans client PostgreSQL |
 
 ---
 
-## 7. Traçabilité
+## 6. Ce qui ne peut pas être prouvé sans exécuter le SQL
 
-| Constat | Gravité     | État   |
-| ------- | ----------- | ------ |
-| SEC-M01 | Majeure     | Ouvert |
-| SEC-M02 | Majeure     | Ouvert |
-| SEC-M03 | Majeure     | Ouvert |
-| SEC-M04 | Majeure     | Ouvert |
-| SEC-D01 | Modérée     | Ouvert |
-| SEC-D02 | Modérée     | Ouvert |
-| SEC-D03 | Modérée     | Ouvert |
-| SEC-D04 | Modérée     | Ouvert |
-| SEC-m01 | Mineure     | Ouvert |
-| SEC-m02 | Mineure     | Ouvert |
-| SEC-m03 | Mineure     | Ouvert |
-| SEC-m04 | Mineure     | Ouvert |
-| SEC-m05 | Mineure     | Ouvert |
-| SEC-I01 | Information | —      |
-| SEC-I02 | Information | —      |
-| SEC-I03 | Information | —      |
-| SEC-I04 | Information | —      |
+### 6.1 Comportements non observables statiquement
 
-Aucun constat corrigé lors d'un audit antérieur : ce document est le premier audit de sécurité du projet.
+1. **`42501` réellement levé** : je distingue par lecture les refus qui **lèvent** (violation de `WITH CHECK` en `UPDATE`, insert refusé) de ceux qui **filtrent silencieusement** (tout `USING` de `DELETE`/`SELECT`). Seule l'exécution le confirme, et le choix entre erreur et 0 ligne change le message que l'UI doit afficher.
+2. **La cascade contourne-t-elle la RLS de l'enfant ?** Le comportement attendu (actions référentielles exécutées avec les privilèges du propriétaire) doit être **observé** : suppression d'un événement par un chef → `event_pupitres` et `event_responses` réellement supprimées, malgré `event_pupitres_delete` réservée à la secrétaire.
+3. **Propriétaire de la vue et absence de `FORCE ROW LEVEL SECURITY`** sur la base vivante : `0006` repose sur `security_invoker = false` + propriétaire qui contourne la RLS. Aucun `FORCE ROW LEVEL SECURITY` n'apparaît dans `0000`–`0006`, mais l'état réel de la branche `test` doit être constaté (sinon `member_directory` renverrait 0 ligne et le trombinoscope serait vide).
+4. **Dépendances de `app.member_directory`** : `DROP VIEW` sans `CASCADE` échouerait si un autre objet (vue, règle) en dépend sur la base réelle.
+5. **Dépendances de `playing_with_neon`** : une FK ou une vue pointant dessus ferait échouer le `DROP TABLE`.
+6. **Privilèges réels** : `has_function_privilege('bagad_app', 'app.create_event(text,text,date,public.event_type,boolean,public.event_visibility,uuid[])'::regprocedure, 'EXECUTE')`, et vérification qu'aucun autre rôle que `bagad_app`/propriétaire n'a `EXECUTE` sur `create_event`.
+7. **`session_user` effectif du runtime** : dépend de l'URL Hyperdrive / `DATABASE_URL_APP`, invisible ici (F05).
+8. **Idempotence réelle d'une seconde exécution** et enregistrement unique dans `drizzle.__drizzle_migrations`.
+9. **Comportement du trigger face aux écritures concurrentes** (deux chefs, même événement) et verrouillage pris par `can_manage_event` (fonction `STABLE` lisant `event_pupitres` dans la même transaction).
+10. **Volumétrie / plan d'exécution des sous-requêtes** de policy (chaque ligne testée appelle `can_manage_event`, elle-même `SECURITY DEFINER`) : risque de performance, non de sécurité, non mesurable ici.
 
-**Rappel de procédure :** le déploiement est bloqué tant que ce verdict n'est pas `VALIDÉ`. Le chef de projet organise les corrections avec les développeurs concernés. Après correction, cet audit doit être repris : vérification de chaque constat, contrôle de non-régression, mise à jour de ce document et nouveau verdict.
+### 6.2 Constats à lever **par la preuve**, pas par la déclaration
 
-VERDICT : À CORRIGER
+- **E01** n'est corrigé que si la nouvelle définition de `can_view_presence` (ou une migration ultérieure) est relue **et** si le test « member avec `is_chef = true` → 0 ligne » passe en base.
+- **M02** n'est corrigé que si une création d'événement via la fonction renvoie un `location` non vide.
+- **M01** n'est résolu que si un parcours complet chef (créer / modifier / annuler / supprimer) passe après `0006` **avec** le code de l'étape 55.
+
+### 6.3 Assertions à ajouter à la matrice de l'étape 54 (en plus de T01–T33)
+
+| # | Rôle / cas | Action | Attendu |
+|---|-----------|--------|---------|
+| T34 | `bagad_app` | `select session_user, current_user` | `bagad_app` — sinon le runtime est propriétaire et **toute** la RLS est contournée |
+| T35 | chef | `UPDATE events SET title=…` sur son événement `interne` mono-pupitre (via le code actuel, delete+insert du ciblage) | **refus** explicite (42501) tant que l'étape 55 n'est pas livrée — documenter, ne pas « réparer » la policy |
+| T36 | chef | annule un événement `pupitre` existant de son pupitre | comportement à **trancher** (Q-A7 b) ; mesurer aujourd'hui : refus 42501 |
+| T37 | chef | supprime son événement mono-pupitre portant des réponses | mesurer le nombre de `event_responses` avant/après → confirme la cascade (M03) |
+| T38 | `member` avec `profile_pupitres.is_chef = true` | lit `event_responses` d'un événement mono-pupitre de ce pupitre | **refus** (0 ligne) — actuellement **faux** : c'est E01 |
+| T39 | chef | crée un événement avec un lieu via `app.create_event` | `location` conservé (aujourd'hui impossible : M02) |
+| T40 | secrétaire | `DELETE FROM invitation_pupitres WHERE …` | comportement attendu après F01 : refus de privilège |
+| T41 | `bagad_app` | `DELETE FROM invitations` | erreur de **privilège** (42501), pas 0 ligne (T27 le prévoit déjà : le conserver tel quel) |
+| T42 | propriétaire (migration) | `DELETE`/`UPDATE` via `session_user = neondb_owner` | passe sans trigger — confirme le court-circuit et **fige** la condition F05 |
+
+---
+
+## 7. Recommandation explicite sur le feu vert
+
+- **Neon `test`** : la migration **peut être appliquée en l'état sans risque de sécurité majeur** — elle ne dégrade aucune protection existante, n'écrit aucune donnée et ferme C1 à C5 pour le cas nominal. Elle est même **nécessaire** pour mesurer (§6.3).
+- **Mais** : `0006` devient **immuable** dès sa première application sur `test` (Q-A7, `docs/database.md` §2.3). Appliquer maintenant fige le trou **E01** et l'absence de `location` (**M02**) : la correction exigera alors une migration `0008`. Comme `0006` n'a encore été appliquée nulle part, **il est moins coûteux de corriger E01 et M02 dans `0006` avant l'étape 54** (deux modifications locales, rejouables, sans données à migrer). C'est ma recommandation principale.
+- **`production`** : **feu vert refusé** en l'état, pour trois raisons cumulatives : E01 ouvert ; M01 (les chefs perdraient toute action sur les événements si l'étape 55 n'est pas livrée dans la même fenêtre) ; M02 (perte silencieuse du lieu à l'étape 55). L'autorisation de déploiement reste par ailleurs subordonnée à l'accord explicite du client (Q-A7).
+
+**Ce que je ne dis pas** : je n'affirme à aucun moment que l'application est « sécurisée ». Cet audit est statique ; les comportements de policy, de trigger et de cascade doivent être **démontrés en base** (§6).
+
+---
+
+## 8. Ce qui relève du client (je ne tranche pas)
+
+1. **Q-A7 b — événements `pupitre` créés par des chefs** : avec `WITH CHECK` (0006:231-237) et le trigger (0006:277-280), un chef **ne peut plus modifier ni annuler** ses 4 événements `pupitre` existants. Faut-il une exception transitoire, une reprise de données (les passer en `interne`), ou l'acceptation du gel ? La migration n'écrit rien (I03) : l'état actuel est « non modifiable », pas « cassé ».
+2. **M03 — suppression d'événement et historique de présence** : accepter la perte irréversible (cascade) ou la borner (interdire la suppression d'un événement porteur de réponses / d'un événement passé). Le plan laisse la question e ouverte.
+3. **Q-A7 d — chef de plusieurs pupitres** : la règle « exactement un pupitre » (0006:122) interdit à un chef bi-pupitre de créer un événement couvrant ses deux pupitres. Comportement conforme au plan, mais c'est une règle métier à confirmer.
+4. **Q-A7 e — suppression d'un événement passé** : aucune restriction temporelle n'est posée par `0006`. À confirmer avant que des événements anciens existent en production.
+5. **F06 — `isChef` et RLS** : accepter que `isChef` reste lisible par tout membre actif au niveau SQL (Q-A5 fermé en façade seulement), ou engager un durcissement de `profile_pupitres` hors `0006`.
+6. **M01 — séquencement du déploiement** : la décision d'appliquer `0006` et l'étape 55 dans la même fenêtre (avec indisponibilité courte des fonctions « événement » pour les chefs) relève du Chef et du client.
+
+---
+
+## 9. Traçabilité
+
+| Constat | Gravité | État |
+|---------|---------|------|
+| SEC-RLS-E01 — `can_view_presence` sans contrôle de rôle | Élevé | **Ouvert** — corrigeable dans `0006` avant l'étape 54 |
+| SEC-RLS-M01 — code incompatible (delete/insert du ciblage, cancel) | Moyen | Ouvert — étape 55 + séquencement |
+| SEC-RLS-M02 — `create_event` sans `location` | Moyen | **Ouvert** — corrigeable dans `0006` avant l'étape 54 |
+| SEC-RLS-M03 — suppression par chef = perte des réponses (cascade) | Moyen | Ouvert — décision client |
+| SEC-RLS-F01 — `invitation_pupitres` garde `DELETE` | Faible | Ouvert |
+| SEC-RLS-F02 — `pupitre` sans ciblage accepté par la fonction | Faible | Ouvert |
+| SEC-RLS-F03 — `cancelled_by` non protégé par le trigger | Faible | Ouvert |
+| SEC-RLS-F04 — `events_insert` ne vérifie pas `created_by` | Faible | Ouvert |
+| SEC-RLS-F05 — court-circuit propriétaire : condition d'exploitation | Faible | Ouvert — assertion T34 |
+| SEC-RLS-F06 — `profile_pupitres_select` expose `is_chef` | Faible | Ouvert — hors `0006` |
+| SEC-RLS-F07 — instantané `drizzle/meta/0006` absent | Faible | Ouvert — outillage |
+| SEC-RLS-I01 — agrégats non servis par la base | Information | À traiter à l'étape 55 |
+| SEC-RLS-I02 — `0006` rejouable | Information | Constaté |
+| SEC-RLS-I03 — aucune écriture de données | Information | Constaté |
+| SEC-RLS-I04 — badge « chef » retiré de l'UI par effet de bord | Information | À aligner (55/46) |
+
+**Audit antérieur non rouvert ici** : l'audit du 12 novembre 2026 (code applicatif, `equipe/AUDIT-DEMO.md`) conserve ses constats SEC-M01 à SEC-I04, dont SEC-M02 (RLS absente) que `0002` puis `0006` traitent. Leur levée devra être prononcée sur preuves, pas sur la seule existence de ces migrations.
+
+**Conditions opposables pour un feu vert** (toutes vérifiables) :
+1. E01 corrigé dans `app.can_view_presence` (contrôle de rôle) et prouvé par T38 ;
+2. M02 corrigé (`p_location`) et prouvé par T39 ;
+3. T34 (session_user = `bagad_app`), T37 (cascade), T27/T41 (privilège `DELETE invitations`) exécutés sur `test` avec le résultat attendu ;
+4. plan de livraison 54 + 55 dans la même fenêtre, validé par le Chef et le client ;
+5. décision client écrite sur M03 et Q-A7 b/e.
+
+VERDICT : VALIDÉ SOUS CONDITIONS
