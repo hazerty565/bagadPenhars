@@ -11,6 +11,7 @@ permission:
     "src/hooks.server.ts": allow
     "src/lib/server/**": allow
     "scripts/**": allow
+    "tests/**": allow
     "package.json": deny
   bash: allow
   external_directory: deny

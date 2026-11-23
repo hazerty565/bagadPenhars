@@ -195,10 +195,9 @@
 								Pupitres
 							</dt>
 							<dd class="mt-1 flex flex-wrap gap-1.5">
+								<!-- Contrat §12.3 : `isChef` n'apparaît jamais dans le trombinoscope. -->
 								{#each selected.pupitres as pupitre (pupitre.pupitreId)}
-									<Badge tone="marine"
-										>{pupitreName(pupitre.pupitreId)}{pupitre.isChef ? ' · chef' : ''}</Badge
-									>
+									<Badge tone="marine">{pupitreName(pupitre.pupitreId)}</Badge>
 								{:else}
 									<span class="text-ardoise">Aucun pupitre</span>
 								{/each}

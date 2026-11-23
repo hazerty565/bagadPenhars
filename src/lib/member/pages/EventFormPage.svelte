@@ -49,7 +49,7 @@
 	let date = $state(existing?.date ?? addDays(TODAY, 7));
 	let type = $state<MemberEventType>(existing?.type ?? 'repetition');
 	let visibility = $state<MemberEventVisibility>(
-		existing?.visibility ?? (actor.role === 'chef_pupitre' ? 'pupitre' : 'interne')
+		existing?.visibility ?? 'interne'
 	);
 	let location = $state(existing?.location ?? 'Espace Chaptal, Quimper');
 	let isPoll = $state(existing?.isPoll ?? false);
@@ -70,7 +70,7 @@
 		description = existing?.description ?? '';
 		date = existing?.date ?? addDays(TODAY, 7);
 		type = existing?.type ?? 'repetition';
-		visibility = existing?.visibility ?? (actor.role === 'chef_pupitre' ? 'pupitre' : 'interne');
+		visibility = existing?.visibility ?? 'interne';
 		location = existing?.location ?? 'Espace Chaptal, Quimper';
 		isPoll = existing?.isPoll ?? false;
 		pupitreIds =

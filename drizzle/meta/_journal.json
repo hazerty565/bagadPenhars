@@ -57,6 +57,13 @@
 			"when": 1795430400000,
 			"tag": "0007_events_delete_policy_fix",
 			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "7",
+			"when": 1795516800000,
+			"tag": "0008_storage_quota_functions",
+			"breakpoints": true
 		}
 	]
 }

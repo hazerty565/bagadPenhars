@@ -8,6 +8,7 @@ permission:
     '*': deny
     'equipe/TESTS.md': allow
     'equipe/essais/**': allow
+    'tests/**': allow
   bash: allow
   external_directory: deny
   webfetch: deny

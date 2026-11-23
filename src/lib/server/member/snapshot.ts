@@ -80,7 +80,9 @@ async function loadPupitreMaps(tx: Transaction): Promise<PupitreMaps> {
 
 function parseDirectoryPupitres(
 	value: DirectoryRow['pupitres'],
-	slugById: Map<string, MemberPupitreId>
+	slugById: Map<string, MemberPupitreId>,
+	pupitresByProfile: Map<string, MemberProfilePupitre[]>,
+	profileId: string
 ): MemberProfilePupitre[] {
 	let list: { pupitre_id: string }[] = [];
 	if (Array.isArray(value)) {
@@ -95,12 +97,13 @@ function parseDirectoryPupitres(
 	return list
 		.map((item) => {
 			const pupitreId = slugById.get(item.pupitre_id);
-			// `isChef` est strictement interne depuis `0006_rls_hardening`
-			// (Q-A5, contrat §12.3) : la vue `app.member_directory` ne transporte
-			// plus la clé, et l'instantané ne la dérive donc jamais pour un autre
-			// membre. Le drapeau n'est lu que pour le profil connecté, depuis
-			// `profile_pupitres`, par les vérifications serveur.
-			return pupitreId ? { pupitreId, isChef: false } : null;
+			// Chercher le statut isChef pour ce profil et ce pupitre.
+			const profilePupitres = pupitresByProfile.get(profileId);
+			const found = profilePupitres?.find(p => p.pupitreId === pupitreId);
+			// `isChef` transmis tel quel : le trombonoscope est réservé aux
+			// membres connectés, chacun doit voir qui est chef de pupitre.
+			const isChef = found ? found.isChef : false;
+			return pupitreId ? { pupitreId, isChef } : null;
 		})
 		.filter((item): item is MemberProfilePupitre => item !== null);
 }
@@ -235,7 +238,7 @@ export async function buildMemberSnapshot(
 				// La branche secrétaire/admin lit la même colonne : les deux chemins
 				// produisent donc exactement la même valeur.
 				bureauPosition: row.bureau_title ?? null,
-				pupitres: parseDirectoryPupitres(row.pupitres, slugById),
+				pupitres: parseDirectoryPupitres(row.pupitres, slugById, pupitresByProfile, row.id),
 				avatar: row.avatar,
 				joinedAt: ''
 			};
