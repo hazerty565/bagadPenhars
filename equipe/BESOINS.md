@@ -66,7 +66,7 @@
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
 | F25 | Rôles `member`, `chef_pupitre`, `secretaire`, `admin` lus dans `profiles.role` (ENUM `app_role`) ; statuts `pending`, `active`, `suspended`      | AGENTS.md, database.md |
 | F26 | Secrétaire/admin : inviter, activer, suspendre, gérer tous les événements, articles, albums, notifications multi-pupitres                        | brief §2               |
-| F27 | Chef de pupitre : gérer les événements/partitions/notifications de **ses** pupitres, une seule cible à la création, jamais multi-pupitres/global | brief §2               |
+| F27 | Chef de pupitre : gérer les événements mono-pupitre de ses pupitres (quel que soit leur créateur), déposer les partitions et notifier ses pupitres ; à la création : exactement un pupitre dirigé et visibilité `interne` ; jamais de gestion multi-pupitres/global | Spec §4.4, Contrat API §12.1, Q-A1/Q-A2 |
 | F28 | Membre : lire, répondre, trombinoscope, profil                                                                                                   | brief §2               |
 | F29 | Événements : `event_type` (9 valeurs) indépendant de `visibility` (`public`/`interne`/`pupitre`)                                                 | Spec §4.4              |
 | F30 | Notifications : OneSignal côté serveur, audiences par rôle/pupitre, clé REST jamais côté client                                                  | Spec §4.6              |
