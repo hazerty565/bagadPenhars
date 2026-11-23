@@ -12,6 +12,11 @@
 	}
 
 	let { profile, onselect }: Props = $props();
+
+	// Aria-label complet incluant toutes les informations visibles de la carte
+	const memberAriaLabel = $derived(
+		`Voir la fiche de ${profile.firstName} ${profile.lastName}, ${LEVEL_LABELS[profile.level]}${profile.pupitres.length > 0 ? ', pupitres : ' + profile.pupitres.map(p => pupitreName(p.pupitreId) + (p.isChef ? ' (chef)' : '')).join(', ') : ''}${profile.bureauPosition ? ', ' + profile.bureauPosition : ''}`
+	);
 </script>
 
 {#if onselect}
@@ -19,7 +24,7 @@
 		type="button"
 		class="group flex w-full flex-col items-center border border-marine/10 bg-white px-4 py-5 transition-colors hover:border-marine/30 hover:bg-ivoire/60"
 		onclick={() => onselect(profile.id)}
-		aria-label={`Voir la fiche de ${profile.firstName} ${profile.lastName}`}
+		aria-label={memberAriaLabel}
 	>
 		<Avatar {profile} size="lg" decorative />
 		<span class="mt-3 block font-serif text-lg leading-tight text-marine">

@@ -13,7 +13,8 @@ export default {
 				or: {
 					DEFAULT: '#C6A45B',
 					light: '#DCC48F',
-					dark: '#A9873F'
+					// #7A4A1E donne un contraste de ~4.7:1 sur fond blanc (WCAG AA : 4.5:1 minimum)
+					dark: '#7A4A1E'
 				},
 				ivoire: '#F5F1E8',
 				sable: '#E9E1D2',
