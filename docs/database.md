@@ -183,12 +183,39 @@ périodique réconcilie les compteurs Neon avec le contenu réel des deux bucket
 La matrice de base reste celle du brief. Les guards et les politiques RLS
 doivent tous deux la faire respecter :
 
-| Rôle           | Comptes                     | Événements                     | Contenus        | Documents                      | Notifications         |
-| -------------- | --------------------------- | ------------------------------ | --------------- | ------------------------------ | --------------------- |
-| `member`       | Profil propre               | Lire/répondre selon visibilité | Lire le public  | Lire tous les documents actifs | Préférences propres   |
-| `chef_pupitre` | Aucun                       | Gérer ses pupitres             | Aucun           | Déposer pour ses pupitres      | Notifier ses pupitres |
-| `secretaire`   | Inviter, activer, suspendre | Tous les événements            | Articles/albums | Tous les documents autorisés   | Plusieurs pupitres    |
-| `admin`        | Tous                        | Tous                           | Tous            | Tous                           | Tous                  |
+| Rôle           | Comptes                     | Événements                                         | Contenus        | Documents                      | Notifications         |
+| -------------- | --------------------------- | -------------------------------------------------- | --------------- | ------------------------------ | --------------------- |
+| `member`       | Profil propre               | Lire/répondre selon visibilité                     | Lire le public  | Lire tous les documents actifs | Préférences propres   |
+| `chef_pupitre` | Aucun                       | Gérer les événements mono-pupitre de ses pupitres | Aucun           | Déposer pour ses pupitres      | Notifier ses pupitres |
+| `secretaire`   | Inviter, activer, suspendre | Tous les événements                                | Articles/albums | Tous les documents autorisés   | Plusieurs pupitres    |
+| `admin`        | Tous                        | Tous                                               | Tous            | Tous                           | Tous                  |
+
+### Règles détaillées pour les événements
+
+- Un membre peut être affecté à plusieurs pupitres. Un même profil peut être
+  chef de plusieurs pupitres ; en revanche, **chaque pupitre ne peut avoir
+  qu'un seul chef** (`profile_pupitres.is_chef = true`).
+- Le droit de gestion d'un chef porte sur les événements rattachés à
+  **exactement un** pupitre dont il est chef, indépendamment de
+  `events.created_by`. Il ne porte jamais sur un événement multi-pupitres
+  ni sur un événement global (aucune ligne dans `event_pupitres`).
+- Un chef crée un événement avec exactement un pupitre qu'il dirige et
+  `visibility = 'interne'`. Il ne crée jamais d'événement `public`,
+  `pupitre`, multi-pupitres ou global. La création est effectuée par
+  `app.create_event(..., p_pupitre_ids uuid[])`, de manière atomique.
+- Un chef ne peut modifier ni la visibilité, ni le ciblage, ni
+  `created_by`, ni `is_poll`. Les événements historiques `pupitre`
+  créés par des chefs sont soumis à la question ouverte 1 de
+  `docs/questions.md` ; aucune exception n'est implicite.
+- Un chef peut supprimer un événement mono-pupitre de son périmètre. La
+  suppression cascade actuellement vers les réponses associées (décision
+  M03 du 2026-11-21). Les événements multi-pupitres et globaux sont réservés
+  à la secrétaire et à l'admin.
+- La secrétaire et l'admin peuvent créer, modifier et supprimer tous les
+  événements. À la création, elles peuvent choisir `public`, `interne` ou
+  `pupitre` et cibler zéro à N pupitres (zéro = global).
+- Les guards SvelteKit et les policies RLS doivent appliquer les mêmes règles.
+  Le droit ne doit jamais être accordé sur le seul critère de l'auteur.
 
 ## 7. Fonctions SECURITY DEFINER
 
