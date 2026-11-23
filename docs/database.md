@@ -226,10 +226,12 @@ appliquée) :**
   partiel garantissant un seul chef par pupitre. La règle métier ci-dessus
   nécessite une migration additive créant un index unique sur `pupitre_id`
   avec le prédicat `WHERE is_chef = true`, après vérification des données.
-- `src/lib/auth/permissions.ts` doit vérifier qu'un événement comporte
-  exactement un pupitre (`pupitreIds.length === 1`) et que ce pupitre fait
-  partie des pupitres dirigés par l'acteur. Une simple recherche d'au moins un
-  pupitre commun (`some`) autoriserait à tort un événement multi-pupitres.
+- `src/lib/auth/permissions.ts` refuse actuellement les événements lorsque
+  `isMultiPupitreOrGlobal` vaut `true`, puis vérifie avec `some` qu'un
+  pupitre ciblé appartient au périmètre du chef. La règle documentaire exige
+  exactement un pupitre : il faut donc garantir que ce booléen est calculé côté
+  serveur à partir du nombre réel de pupitres, ou contrôler explicitement
+  `pupitreIds.length === 1` avant d'accorder le droit.
 - Ces deux écarts sont des constats, pas des changements de code ou de base
   effectués par cette mise à jour documentaire.
 
