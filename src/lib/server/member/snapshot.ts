@@ -61,7 +61,9 @@ interface DirectoryRow {
 	musician_level: string | null;
 	avatar: number;
 	avatar_url: string | null;
-	pupitres: { pupitre_id: string; is_chef: boolean }[] | string | null;
+	pupitres: { pupitre_id: string }[] | string | null;
+	/** Titre du bureau joint par `app.member_directory` (0006 §8, Q-A5). */
+	bureau_title: string | null;
 }
 
 async function loadPupitreMaps(tx: Transaction): Promise<PupitreMaps> {
@@ -80,7 +82,7 @@ function parseDirectoryPupitres(
 	value: DirectoryRow['pupitres'],
 	slugById: Map<string, MemberPupitreId>
 ): MemberProfilePupitre[] {
-	let list: { pupitre_id: string; is_chef: boolean }[] = [];
+	let list: { pupitre_id: string }[] = [];
 	if (Array.isArray(value)) {
 		list = value;
 	} else if (typeof value === 'string') {
@@ -93,7 +95,12 @@ function parseDirectoryPupitres(
 	return list
 		.map((item) => {
 			const pupitreId = slugById.get(item.pupitre_id);
-			return pupitreId ? { pupitreId, isChef: Boolean(item.is_chef) } : null;
+			// `isChef` est strictement interne depuis `0006_rls_hardening`
+			// (Q-A5, contrat §12.3) : la vue `app.member_directory` ne transporte
+			// plus la clé, et l'instantané ne la dérive donc jamais pour un autre
+			// membre. Le drapeau n'est lu que pour le profil connecté, depuis
+			// `profile_pupitres`, par les vérifications serveur.
+			return pupitreId ? { pupitreId, isChef: false } : null;
 		})
 		.filter((item): item is MemberProfilePupitre => item !== null);
 }
@@ -209,7 +216,7 @@ export async function buildMemberSnapshot(
 		// autres membres. La vue `app.member_directory` n'expose que les
 		// colonnes du trombinoscope, pour les comptes actifs.
 		const directory = await tx.execute(
-			sql`select id, first_name, last_name, musician_level, avatar, avatar_url, pupitres from app.member_directory`
+			sql`select id, first_name, last_name, musician_level, avatar, avatar_url, pupitres, bureau_title from app.member_directory`
 		);
 		const rows = ((directory as unknown as { rows?: DirectoryRow[] }).rows ?? []) as DirectoryRow[];
 
@@ -223,7 +230,11 @@ export async function buildMemberSnapshot(
 				role: 'member' as AppRole,
 				accountStatus: 'active',
 				level: (row.musician_level ?? 'bagad') as MemberProfile['level'],
-				bureauPosition: null,
+				// Étape 55 (Q-A5, contrat §12.3) : `bureauPosition` provient de la
+				// jointure `bureau_positions` rétablie dans `app.member_directory`.
+				// La branche secrétaire/admin lit la même colonne : les deux chemins
+				// produisent donc exactement la même valeur.
+				bureauPosition: row.bureau_title ?? null,
 				pupitres: parseDirectoryPupitres(row.pupitres, slugById),
 				avatar: row.avatar,
 				joinedAt: ''

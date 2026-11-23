@@ -14,8 +14,9 @@ import type { R2BucketName } from '$lib/server/blobs';
  *    et `block_threshold_bytes`, tous en `bigint`. La réservation, la
  *    confirmation et la libération passent par les fonctions
  *    `app.reserve_storage_bytes`, `app.finalize_storage_upload` et
- *    `app.release_storage_bytes` (migration `0007_storage_quota_functions`,
- *    étape 56 — la `0006` est le durcissement RLS, décision Q-A7).
+ *    `app.release_storage_bytes` (migration `0008_storage_quota_functions`,
+ *    étape 56 — la `0006` est le durcissement RLS (décision Q-A7) et la `0007`
+ *    corrige la politique `events_delete`).
  *
  *    Ces fonctions existent parce que l'écriture de `storage_usage` est
  *    réservée par RLS à la secrétaire et à l'administrateur, alors qu'un chef

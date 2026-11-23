@@ -281,3 +281,29 @@
   `docs/questions.md`
 - **Prochaine étape** : **validation client du plan** (aucune modification de
   code ou de base avant)
+
+## Phase : Vague 0, audit Sécurité et application de `0006`/`0007` sur `test`
+
+- **Action** : `mainteneur` (vague 0), `dev-backend` (0006), `securite` (audit
+  puis re-vérification), application en base, matrice par rôle
+- **Résultat** : Vague 0 **déjà faite** (50/51 appliquées le 2026-11-19) ;
+  `package-lock.json` supprimé, génération d'essai nulle, `0000`-`0005` intactes.
+  `check` rouge sur `storage.ts:174` corrigé par le backend.
+  `0006_rls_hardening` écrit puis corrigé sur deux constats de la Sécurité
+  (E01 : rôle dans `can_view_presence` ; M02 : `location` dans
+  `create_event`) — verdict **VALIDÉ SOUS CONDITIONS**, puis **48/48** à la
+  matrice. **Défaut réel trouvé par la matrice** : `events_delete` utilisait un
+  `id` non qualifié qui se résolvait sur `event_pupitres.id` → un chef obtenait
+  `0 ligne` en supprimant son événement ; corrigé par
+  **`0007_events_delete_policy_fix`** (réutilise `app.can_manage_event`).
+  Appliqué sur Neon **`test`** uniquement : **8 migrations**. `production`
+  jamais contactée. Décisions client : cascade `event_responses` conservée ;
+  `svelte-i18n` conservé installé (non câblé) ; feu vert `test` donné.
+- **Itérations** : 1 (reprise Sécurité) + 1 (correction du défaut de politique)
+- **Fichiers modifiés** : `drizzle/0006_rls_hardening.sql`,
+  `drizzle/0007_events_delete_policy_fix.sql`, `drizzle/meta/_journal.json`,
+  `src/lib/server/storage.ts`, `docs/database.md`, `docs/questions.md`,
+  `docs/mises-a-jour.md`, `docs/journal.md`, `equipe/SECURITE.md`,
+  `package-lock.json` (supprimé)
+- **Prochaine étape** : étape 55 (alignement du code) puis 56
+  (`0008_storage_quota_functions`) et 57 (matrice automatisée)

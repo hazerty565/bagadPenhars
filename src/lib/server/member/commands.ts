@@ -255,28 +255,45 @@ function requireAdmin(actor: MemberActor): void {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Règles de portée des événements (étape 36)                                 */
+/* Règles de portée des événements (étapes 36 et 55)                          */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Un chef de pupitre n'écrit que des événements de visibilité `pupitre`.
+ * Un chef de pupitre n'écrit que des événements de visibilité `interne`.
  *
- * Étape 36 : la règle validée est « chef = un seul de ses pupitres, visibilité
- * `pupitre` ». Elle est appliquée ici, dans la commande serveur — seule surface
- * de mutation de l'espace adhérents — et non seulement par l'interface ou par
- * la fonction pure utilisée par l'affichage : masquer un bouton ne protège rien.
+ * Étape 36 (la règle) et étape 55 (l'alignement sur la base) : depuis
+ * `0006_rls_hardening`, `app.create_event` refuse toute autre visibilité à un
+ * chef (`42501`), et le `WITH CHECK` de `events_update` exige
+ * `visibility = 'interne'` pour tout acteur qui n'est ni secrétaire ni
+ * administrateur. Le code dit donc exactement la même chose, avec un message
+ * explicite au lieu d'une erreur PostgreSQL brute remontée en 500.
+ *
+ * La règle est appliquée ici, dans la commande serveur — seule surface de
+ * mutation de l'espace adhérents — et non seulement par l'interface ou par la
+ * fonction pure utilisée par l'affichage : masquer un bouton ne protège rien.
  * La secrétaire et l'administrateur conservent `public`, `interne` et
  * `pupitre`, ainsi que le multi-pupitres (`canCreateEvent`).
  */
 function requireChefEventVisibility(actor: MemberActor, visibility: MemberEventVisibility): void {
 	if (actor.role !== 'chef_pupitre') return;
-	if (visibility !== 'pupitre') {
+	if (visibility !== 'interne') {
 		fail(
 			403,
 			'forbidden',
-			'Un chef de pupitre ne gère que des événements de visibilité « pupitre ».'
+			'Un chef de pupitre ne gère que des événements de visibilité « interne ».'
 		);
 	}
+}
+
+/** Deux ciblages désignent-ils le même ensemble de pupitres ? */
+function samePupitreTargets(left: MemberPupitreId[], right: MemberPupitreId[]): boolean {
+	const a = new Set(left);
+	const b = new Set(right);
+	if (a.size !== b.size) return false;
+	for (const slug of a) {
+		if (!b.has(slug)) return false;
+	}
+	return true;
 }
 
 interface EventRow {
@@ -387,7 +404,13 @@ function readEventInput(value: unknown): EventInput {
 		type: rawType as MemberEventType,
 		visibility,
 		isPoll: readBoolean(record, 'isPoll'),
-		pupitreIds: visibility === 'pupitre' ? [...new Set(pupitreIds)] : [],
+		// Étape 55 : le ciblage n'est plus effacé hors visibilité `pupitre`.
+		// Un chef crée désormais des événements `interne` ciblant exactement un
+		// pupitre (Q-A1/Q-A2) : remettre `[]` ici le rendrait incapable de créer
+		// quoi que ce soit et empêcherait de conserver le ciblage lors d'une mise
+		// à jour. La base normalise de son côté (doublons neutralisés,
+		// `NULL`/`{}` = aucun pupitre, donc événement global).
+		pupitreIds: [...new Set(pupitreIds)],
 		location
 	};
 }
@@ -411,35 +434,47 @@ export async function runMemberCommand(
 		/* --- Agenda -------------------------------------------------------- */
 		case 'event.create': {
 			const input = readEventInput(payload.input);
-			if (!canCreateEvent(actor, input.pupitreIds)) {
+			// La visibilité d'abord : le message qui dit la règle est plus utile
+			// que le message de ciblage quand les deux sont en cause.
+			requireChefEventVisibility(actor, input.visibility);
+			if (!canCreateEvent(actor, input.pupitreIds, input.visibility)) {
 				fail(
 					403,
 					'forbidden',
 					'Vous ne pouvez créer que des événements ciblant un seul de vos pupitres.'
 				);
 			}
-			requireChefEventVisibility(actor, input.visibility);
-			const [created] = await tx
-				.insert(events)
-				.values({
-					title: input.title,
-					description: input.description,
-					event_date: input.date,
-					event_type: input.type,
-					visibility: input.visibility,
-					location: input.location,
-					is_poll: input.isPoll,
-					created_by: actor.id
-				})
-				.returning({ id: events.id });
 
-			const targets = pupitreUuids(input.pupitreIds, maps);
-			if (targets.length > 0) {
-				await tx
-					.insert(eventPupitres)
-					.values(targets.map((target) => ({ event_id: created.id, pupitre_id: target.id })));
+			// Étape 55 : création atomique (Q-A2). `app.create_event` écrit
+			// l'événement **et** ses lignes `event_pupitres` dans la même
+			// transaction. Aucun `INSERT` direct dans `events` ne subsiste :
+			// `events_insert` et `event_pupitres_insert` sont réservées à la
+			// secrétaire et à l'administrateur depuis `0006_rls_hardening`, et
+			// un chef n'a aucun chemin d'écriture propre.
+			//
+			// Ordre des arguments imposé par la signature SQL (0006 §2) :
+			//   p_title, p_description, p_event_date, p_event_type, p_is_poll,
+			//   p_visibility, p_location, p_pupitre_ids
+			// `p_is_poll` précède `p_visibility`, et `p_location` est
+			// obligatoire (un `NULL` est refusé par la base en `22004`).
+			const targets = pupitreUuids(input.pupitreIds, maps).map((target) => target.id);
+			const created = await tx.execute<{ id: string } & Record<string, unknown>>(
+				sql`select app.create_event(
+					${input.title}::text,
+					${input.description}::text,
+					${input.date}::date,
+					${input.type}::public.event_type,
+					${input.isPoll}::boolean,
+					${input.visibility}::public.event_visibility,
+					${input.location}::text,
+					${sql.param(targets)}::uuid[]
+				) as id`
+			);
+			const createdId = created.rows[0]?.id;
+			if (!createdId) {
+				fail(500, 'internal_error', 'La création de l’événement a échoué.');
 			}
-			return { id: created.id };
+			return { id: createdId };
 		}
 
 		case 'event.update': {
@@ -449,18 +484,38 @@ export async function runMemberCommand(
 				fail(403, 'forbidden', 'Vous ne pouvez modifier que les événements de vos pupitres.');
 			}
 			// Un chef ne sort pas du périmètre : l'événement d'origine doit déjà
-			// être un événement de pupitre.
+			// être un événement `interne` (le seul état qu'il puisse produire).
 			requireChefEventVisibility(actor, existing.visibility);
 			const input = readEventInput(payload.input);
-			// Ni élargir la visibilité : `public` et `interne` restent réservés à
+			// Ni élargir la visibilité : `public` et `pupitre` restent réservés à
 			// la secrétaire et à l'administrateur.
 			requireChefEventVisibility(actor, input.visibility);
-			if (!canCreateEvent(actor, input.pupitreIds)) {
-				fail(
-					403,
-					'forbidden',
-					'Un chef ne peut pas déplacer un événement vers un autre pupitre ou le rendre multi-pupitres.'
-				);
+
+			const isChef = actor.role === 'chef_pupitre';
+			if (isChef) {
+				// Étape 55 (Q-A1/Q-A4) : pour un chef, le ciblage est **immuable**.
+				// Les politiques `event_pupitres_insert` / `event_pupitres_delete`
+				// sont réservées à la secrétaire et à l'administrateur depuis
+				// `0006_rls_hardening` : l'ancien « supprimer puis réinsérer »
+				// échouait en `42501`. Le refus est donc prononcé ici, avant toute
+				// écriture, avec un message qui dit la règle.
+				if (!samePupitreTargets(existing.pupitreIds, input.pupitreIds)) {
+					fail(
+						403,
+						'forbidden',
+						'Le ciblage d’un événement géré par un chef de pupitre est immuable : seul un changement de visibilité ou de pupitre par la secrétaire ou l’administrateur peut le modifier.'
+					);
+				}
+				// `created_by` et `is_poll` ne sont pas modifiables hors secrétaire
+				// (trigger `events_guard_update_bounds`, 0006 §4) : refus explicite
+				// plutôt qu'un `42501` en cours de transaction.
+				if (input.isPoll !== existing.is_poll) {
+					fail(
+						403,
+						'forbidden',
+						'Le caractère sondage d’un événement n’est pas modifiable par un chef de pupitre.'
+					);
+				}
 			}
 
 			await tx
@@ -477,12 +532,15 @@ export async function runMemberCommand(
 				})
 				.where(eq(events.id, eventId));
 
-			await tx.delete(eventPupitres).where(eq(eventPupitres.event_id, eventId));
-			const targets = pupitreUuids(input.pupitreIds, maps);
-			if (targets.length > 0) {
-				await tx
-					.insert(eventPupitres)
-					.values(targets.map((target) => ({ event_id: eventId, pupitre_id: target.id })));
+			// Le ciblage n'est réécrit que par la secrétaire et l'administrateur.
+			if (!isChef) {
+				await tx.delete(eventPupitres).where(eq(eventPupitres.event_id, eventId));
+				const targets = pupitreUuids(input.pupitreIds, maps);
+				if (targets.length > 0) {
+					await tx
+						.insert(eventPupitres)
+						.values(targets.map((target) => ({ event_id: eventId, pupitre_id: target.id })));
+				}
 			}
 			return { id: eventId };
 		}
@@ -494,6 +552,10 @@ export async function runMemberCommand(
 				fail(403, 'forbidden', 'Vous ne pouvez annuler que les événements de vos pupitres.');
 			}
 			requireChefEventVisibility(actor, existing.visibility);
+			// L'annulation ne touche ni `visibility`, ni `created_by`, ni
+			// `is_poll` : le trigger `events_guard_update_bounds` (0006 §4) ne
+			// refuse que ces trois colonnes, et une attribution d'annulation à un
+			// tiers. Les deux flux du code (acteur / `NULL`) passent.
 			await tx
 				.update(events)
 				.set({ cancelled_at: new Date(), cancelled_by: actor.id, updated_at: new Date() })
@@ -508,6 +570,8 @@ export async function runMemberCommand(
 				fail(403, 'forbidden', 'Vous ne pouvez modifier que les événements de vos pupitres.');
 			}
 			requireChefEventVisibility(actor, existing.visibility);
+			// Réactivation : `cancelled_by` repasse à `NULL`, aucune autre colonne
+			// sensible n'est écrite (mêmes garanties que `event.cancel`).
 			await tx
 				.update(events)
 				.set({ cancelled_at: null, cancelled_by: null, updated_at: new Date() })
@@ -517,15 +581,22 @@ export async function runMemberCommand(
 
 		case 'event.delete': {
 			const eventId = readUuid(payload, 'eventId');
-			if (!canDeleteEvents(actor)) {
+			// Le chargement garantit un 404 explicite si l'événement n'existe pas.
+			const existing = await loadEvent(tx, eventId, maps);
+			// Étape 55 (Q-A4) : `events_delete` — corrigée par
+			// `0007_events_delete_policy_fix` — applique `app.can_manage_event` :
+			// secrétaire/admin sur tout événement, chef sur un événement
+			// **mono-pupitre d'un pupitre qu'il dirige** uniquement, jamais sur un
+			// multi-pupitres ni sur un événement global, et jamais au titre de
+			// créateur. Le code dit la même chose : `canDeleteEvents` porte le
+			// droit global, `canManageEvent` le périmètre mono-pupitre du chef.
+			if (!canDeleteEvents(actor) && !canManageEvent(actor, toMemberEvent(existing))) {
 				fail(
 					403,
 					'forbidden',
-					'Seuls la secrétaire et l’administrateur peuvent supprimer un événement.'
+					'Seuls la secrétaire, l’administrateur et le chef du pupitre ciblé peuvent supprimer un événement.'
 				);
 			}
-			// Le chargement garantit un 404 explicite si l'événement n'existe pas.
-			await loadEvent(tx, eventId, maps);
 			await tx.delete(events).where(eq(events.id, eventId));
 			return { id: eventId };
 		}

@@ -942,3 +942,49 @@ db-admin}.ts`, `src/lib/server/data/contact.ts` et
   tentative par un simple membre (`mael.kerdraon`) → 403 « Action réservée à
   la secrétaire et à l'administrateur ». `npm run check`, `npm run lint` et
   `npm run build` conformes.
+
+## 2026-11-22
+
+### Durcissement RLS appliqué sur Neon `test` (`0006` + `0007`)
+
+- **Contexte** : audit backend du 2026-11-20 (10 constats confirmés), arbitrages
+  client Q-A1 à Q-A9, verdict Sécurité « VALIDÉ SOUS CONDITIONS », puis
+  re-vérification des correctifs E01 (contrôle de rôle dans
+  `app.can_view_presence`) et M02 (`location` dans `app.create_event`).
+- **Appliqué** : `drizzle/0006_rls_hardening.sql` sur la branche Neon **`test`**
+  uniquement — 8 migrations enregistrées, `production` jamais contactée.
+  Contenu : `can_manage_event` sans branche créateur, `app.create_event(...)`
+  atomique (8 paramètres, `SECURITY DEFINER`, `search_path` fixé), insertion
+  directe réservée à la secrétaire, `events_update` borné + trigger
+  `events_guard_update_bounds`, `can_view_presence` limitée au mono-pupitre
+  dirigé et au rôle `chef_pupitre`, `member_directory` avec `bureau_title` et
+  sans `isChef`, `REVOKE DELETE` sur `invitations` et `invitation_pupitres`,
+  suppression de `playing_with_neon`.
+- **Défaut trouvé par la matrice, corrigé par
+  `0007_events_delete_policy_fix`** : dans `0006`, la politique `events_delete`
+  écrivait `ep.event_id = id` dans une sous-requête sur `event_pupitres`, qui
+  possède sa **propre** colonne `id` — le `id` se résolvait donc sur la table
+  interne et la condition était toujours fausse. Un chef obtenait `0 ligne` en
+  supprimant son propre événement. `0007` réutilise `app.can_manage_event(id)` :
+  une seule source de vérité, aucune corrélation ambiguë possible. `0006` n'a
+  pas été réécrite (une migration appliquée ne se modifie pas).
+- **Matrice par rôle exécutée sur `test`**, toujours dans des transactions
+  annulées : **48 assertions sur 48 conformes** — création par un chef
+  (`interne` + son pupitre) acceptée, `public`/`pupitre`/0 pupitre/2
+  pupitres/pupitre non dirigé refusés, `INSERT` direct refusé, renommage et
+  suppression du mono-pupitre acceptés, multi-pupitres et global refusés,
+  présences nominatives mono visibles et multi masquées (C5 fermé, y compris
+  pour Bleuenn), membre rétrogradé mais encore `is_chef` sans aucun accès (E01),
+  secrétaire et admin à 16/16, `bureau_title` servi, `isChef` absent,
+  suppressions d'invitations refusées par privilège, contexte vide sans fuite.
+- **Données intactes** : 16 événements, dont 5 en visibilité `pupitre` (4 créés
+  par des chefs). Aucun `UPDATE`/`DELETE` de données dans les migrations.
+- **Décision client** : `event_responses` reste en `ON DELETE CASCADE` — la
+  suppression d'un événement par un chef efface définitivement ses réponses,
+  risque assumé.
+- **Décision client** : `svelte-i18n` reste installé (inusité ; les traductions
+  fr/en/br passent par les dictionnaires typés `src/lib/i18n/*.ts`). Voir
+  `docs/questions.md`, section du 2026-11-21.
+- **Reste** : étape 55 (alignement du code serveur), étape 56
+  (`0008_storage_quota_functions`), étape 57 (matrice automatisée), puis
+  validation finale par la Sécurité et décision explicite pour `production`.

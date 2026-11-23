@@ -1,6 +1,12 @@
 import type { AppRole } from '$lib/auth/roles';
 import { isAdmin, isSecretaire } from '$lib/auth/roles';
-import type { MemberEvent, MemberProfile, MemberPupitreId, MemberResponseStatus } from './types';
+import type {
+	MemberEvent,
+	MemberEventVisibility,
+	MemberProfile,
+	MemberPupitreId,
+	MemberResponseStatus
+} from './types';
 import { isLocked } from './clock';
 
 /**
@@ -52,21 +58,58 @@ export function canManageAllEvents(actor: MemberActor): boolean {
 	return isSecretaire(actor.role);
 }
 
-export function canDeleteEvents(actor: MemberActor): boolean {
-	return isSecretaire(actor.role);
+/**
+ * Suppression d'un événement (Q-A4, étape 55).
+ *
+ * Le droit global — tous les événements, y compris multi-pupitres et globaux —
+ * appartient à la secrétaire et à l'administrateur. Un chef de pupitre peut
+ * supprimer un événement **mono-pupitre d'un pupitre qu'il dirige** : c'est
+ * exactement ce que la politique `events_delete` autorise depuis
+ * `0007_events_delete_policy_fix`, qui applique `app.can_manage_event`.
+ * Aucun droit ne dérive du créateur, et un rôle rétrogradé ne supprime rien
+ * même si `isChef` est encore vrai sur `profile_pupitres`.
+ *
+ * `event` est facultatif pour les appelants qui n'affichent qu'un droit global
+ * (matrice de permissions) : sans l'événement, aucune suppression n'est
+ * accordée hors secrétaire/administrateur.
+ */
+export function canDeleteEvents(actor: MemberActor, event?: MemberEvent | null): boolean {
+	if (isSecretaire(actor.role)) return true;
+	if (!event) return false;
+	return canManageEvent(actor, event);
 }
 
 /**
- * Un chef ne crée que des événements ciblant un seul de ses pupitres.
- * Un événement global (aucun pupitre) ou multi-pupitres est refusé.
+ * Un chef ne crée que des événements `interne` ciblant exactement un de ses
+ * pupitres (Q-A1/Q-A2, étapes 36 et 55).
+ *
+ * Un événement global (aucun pupitre) ou multi-pupitres est refusé, comme
+ * `public` et `pupitre`. `visibility` reste facultatif pour les appelants qui
+ * ne la connaissent pas encore (matrice de permissions) ; la commande serveur
+ * la transmet toujours, et `app.create_event` l'impose de toute façon.
+ * Un rôle rétrogradé ne crée rien, même si `isChef` est encore vrai.
  */
-export function canCreateEvent(actor: MemberActor, pupitreIds: MemberPupitreId[]): boolean {
+export function canCreateEvent(
+	actor: MemberActor,
+	pupitreIds: MemberPupitreId[],
+	visibility?: MemberEventVisibility
+): boolean {
 	if (isSecretaire(actor.role)) return true;
 	if (actor.role !== 'chef_pupitre') return false;
+	if (visibility !== undefined && visibility !== 'interne') return false;
 	if (pupitreIds.length !== 1) return false;
 	return isChefOf(actor, pupitreIds[0]);
 }
 
+/**
+ * Gestion d'un événement : le droit dérive **exclusivement du pupitre**.
+ *
+ * Aligné sur `app.can_manage_event` (`0006_rls_hardening` §1) : la branche
+ * « créateur » n'existe plus, ni ici ni en base. Un chef ne gère que si
+ * l'événement cible **exactement un** pupitre **et** qu'il le dirige ; perdre
+ * le statut de chef (rôle ramené à `member`) fait perdre le droit, même sur un
+ * événement qu'il a créé.
+ */
 export function canManageEvent(actor: MemberActor, event: MemberEvent): boolean {
 	if (isSecretaire(actor.role)) return true;
 	if (actor.role !== 'chef_pupitre') return false;
@@ -81,11 +124,21 @@ export function canViewEvent(actor: MemberActor, event: MemberEvent): boolean {
 	return event.pupitreIds.some((pupitreId) => pupitreIdsOf(actor).includes(pupitreId));
 }
 
-/** Un chef ne consulte les présences que pour ses propres pupitres. */
+/**
+ * Présences nominatives : un chef ne les lit que pour un événement ciblant
+ * **exactement un** pupitre qu'il dirige (Q-A3, contrat §12.2, étape 55).
+ *
+ * L'ancien `.some(...)` accordait la liste nominative à un chef dont un seul
+ * pupitre participait à un événement multi-pupitres : c'était l'écart C5 de
+ * l'audit. La base applique déjà la bonne règle (`app.can_view_presence`,
+ * donc `event_responses_select`) ; le code dit désormais la même chose, ce qui
+ * n'est pas un masquage d'interface mais la même règle des deux côtés.
+ * Un événement global (aucun pupitre) n'est jamais lisible par un chef.
+ */
 export function canViewPresenceDetail(actor: MemberActor, event: MemberEvent): boolean {
 	if (isSecretaire(actor.role)) return true;
 	if (actor.role !== 'chef_pupitre') return false;
-	return event.pupitreIds.some((pupitreId) => isChefOf(actor, pupitreId));
+	return event.pupitreIds.length === 1 && isChefOf(actor, event.pupitreIds[0]);
 }
 
 export function canRespondToEvent(actor: MemberActor, event: MemberEvent): boolean {
