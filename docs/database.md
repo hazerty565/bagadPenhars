@@ -183,12 +183,57 @@ périodique réconcilie les compteurs Neon avec le contenu réel des deux bucket
 La matrice de base reste celle du brief. Les guards et les politiques RLS
 doivent tous deux la faire respecter :
 
-| Rôle           | Comptes                     | Événements                     | Contenus        | Documents                      | Notifications         |
-| -------------- | --------------------------- | ------------------------------ | --------------- | ------------------------------ | --------------------- |
-| `member`       | Profil propre               | Lire/répondre selon visibilité | Lire le public  | Lire tous les documents actifs | Préférences propres   |
-| `chef_pupitre` | Aucun                       | Gérer ses pupitres             | Aucun           | Déposer pour ses pupitres      | Notifier ses pupitres |
-| `secretaire`   | Inviter, activer, suspendre | Tous les événements            | Articles/albums | Tous les documents autorisés   | Plusieurs pupitres    |
-| `admin`        | Tous                        | Tous                           | Tous            | Tous                           | Tous                  |
+| Rôle           | Comptes                     | Événements                                         | Contenus        | Documents                      | Notifications         |
+| -------------- | --------------------------- | -------------------------------------------------- | --------------- | ------------------------------ | --------------------- |
+| `member`       | Profil propre               | Lire/répondre selon visibilité                     | Lire le public  | Lire tous les documents actifs | Préférences propres   |
+| `chef_pupitre` | Aucun                       | Gérer les événements mono-pupitre de ses pupitres | Aucun           | Déposer pour ses pupitres      | Notifier ses pupitres |
+| `secretaire`   | Inviter, activer, suspendre | Tous les événements                                | Articles/albums | Tous les documents autorisés   | Plusieurs pupitres    |
+| `admin`        | Tous                        | Tous                                               | Tous            | Tous                           | Tous                  |
+
+### Règles détaillées pour les événements
+
+- Un membre peut être affecté à plusieurs pupitres. Un même profil peut être
+  chef de plusieurs pupitres ; en revanche, **chaque pupitre ne peut avoir
+  qu'un seul chef** (`profile_pupitres.is_chef = true`).
+- Le droit de gestion d'un chef porte sur les événements rattachés à
+  **exactement un** pupitre dont il est chef, indépendamment de
+  `events.created_by`. Il ne porte jamais sur un événement multi-pupitres
+  ni sur un événement global (aucune ligne dans `event_pupitres`).
+- Un chef crée un événement avec exactement un pupitre qu'il dirige et
+  `visibility = 'interne'`. Il ne crée jamais d'événement `public`,
+  `pupitre`, multi-pupitres ou global. La création est effectuée par
+  `app.create_event(..., p_pupitre_ids uuid[])`, de manière atomique.
+- Un chef ne peut modifier ni la visibilité, ni le ciblage, ni
+  `created_by`, ni `is_poll`. Les événements historiques `pupitre`
+  créés par des chefs sont soumis à la question ouverte 1 de
+  `docs/questions.md` ; aucune exception n'est implicite.
+- Un chef peut supprimer un événement mono-pupitre de son périmètre. La
+  suppression cascade actuellement vers les réponses associées (décision
+  M03 du 2026-11-21). Les événements multi-pupitres et globaux sont réservés
+  à la secrétaire et à l'admin.
+- La secrétaire et l'admin peuvent créer, modifier et supprimer tous les
+  événements. À la création, elles peuvent choisir `public`, `interne` ou
+  `pupitre` et cibler zéro à N pupitres (zéro = global).
+- Les guards SvelteKit et les policies RLS doivent appliquer les mêmes règles.
+  Le droit ne doit jamais être accordé sur le seul critère de l'auteur.
+
+**Écarts d'implémentation constatés sur la branche `dev` (à corriger dans une
+migration et dans le code, sans modifier rétroactivement une migration déjà
+appliquée) :**
+
+- `src/lib/db/schema.ts` et `drizzle/0000_handy_alex_wilder.sql` définissent
+  des index ordinaires sur `profile_pupitres`, mais pas encore l'index unique
+  partiel garantissant un seul chef par pupitre. La règle métier ci-dessus
+  nécessite une migration additive créant un index unique sur `pupitre_id`
+  avec le prédicat `WHERE is_chef = true`, après vérification des données.
+- `src/lib/auth/permissions.ts` refuse actuellement les événements lorsque
+  `isMultiPupitreOrGlobal` vaut `true`, puis vérifie avec `some` qu'un
+  pupitre ciblé appartient au périmètre du chef. La règle documentaire exige
+  exactement un pupitre : il faut donc garantir que ce booléen est calculé côté
+  serveur à partir du nombre réel de pupitres, ou contrôler explicitement
+  `pupitreIds.length === 1` avant d'accorder le droit.
+- Ces deux écarts sont des constats, pas des changements de code ou de base
+  effectués par cette mise à jour documentaire.
 
 ## 7. Fonctions SECURITY DEFINER
 

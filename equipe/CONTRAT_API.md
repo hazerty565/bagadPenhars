@@ -334,15 +334,15 @@ export interface NotificationLogEntry {
 
 ## 4. Matrice des gardes et des droits
 
-| Opération                                             | `member`                 | `chef_pupitre`               | `secretaire`       | `admin` |
-| ----------------------------------------------------- | ------------------------ | ---------------------------- | ------------------ | ------- |
-| Lire l'agenda public                                  | oui (anonyme aussi)      | oui                          | oui                | oui     |
-| Lire l'agenda privé (`interne` + `pupitre` autorisés) | oui                      | oui                          | oui                | oui     |
-| Répondre à un événement visible                       | oui                      | oui                          | oui                | oui     |
-| Consulter le trombinoscope                            | oui                      | oui                          | oui                | oui     |
-| Lire les documents actifs                             | oui                      | oui                          | oui                | oui     |
-| Déposer un document                                   | non                      | son pupitre                  | tous               | tous    |
-| Gérer un événement                                    | non                      | un seul pupitre qu'il dirige | tous               | tous    |
+| Opération                                             | `member`                 | `chef_pupitre`                                      | `secretaire`       | `admin` |
+| ----------------------------------------------------- | ------------------------ | ---------------------------------------------------- | ------------------ | ------- |
+| Lire l'agenda public                                  | oui (anonyme aussi)      | oui                                                  | oui                | oui     |
+| Lire l'agenda privé (`interne` + `pupitre` autorisés) | oui                      | oui                                                  | oui                | oui     |
+| Répondre à un événement visible                       | oui                      | oui                                                  | oui                | oui     |
+| Consulter le trombinoscope                            | oui                      | oui                                                  | oui                | oui     |
+| Lire les documents actifs                             | oui                      | oui                                                  | oui                | oui     |
+| Déposer un document                                   | non                      | ses pupitres dirigés                                 | tous               | tous    |
+| Gérer un événement                                    | non                      | événement mono-pupitre de l'un de ses pupitres       | tous               | tous    |
 | Créer un événement                                    | non                      | `interne`, **exactement 1** pupitre dirigé | `public`/`interne`/`pupitre`, 0 à N pupitres | idem secrétaire |
 | Supprimer un événement                                | non                      | **mono-pupitre de son pupitre** | tous           | tous    |
 | Lire les présences nominatives                        | non (sa propre réponse)  | **mono-pupitre de son pupitre** | tous           | tous    |
@@ -846,24 +846,48 @@ Ces fonctions ne sont pas des endpoints HTTP ; elles fixent l'interface entre mo
 
 ## 12. Règles métier transverses
 
-### 12.1 Visibilité des événements
+### 12.1 Visibilité et gestion des événements
 
-| `visibility` | Visiteur anonyme | Membre actif                                         | Chef de pupitre                                                    | Secrétaire / admin |
-| ------------ | ---------------- | ---------------------------------------------------- | ------------------------------------------------------------------ | ------------------ |
-| `public`     | lecture          | lecture + RSVP                                       | lecture + RSVP                                                     | gestion            |
-| `interne`    | interdit         | lecture + RSVP                                       | lecture + RSVP + **gestion si c'est son pupitre, une seule cible** | gestion            |
-| `pupitre`    | interdit         | lecture + RSVP **si** l'un de ses pupitres est ciblé | lecture + RSVP + gestion **si** c'est son pupitre, une seule cible | gestion de tous    |
+La **visibilité** détermine qui peut consulter et à qui répondre. Elle ne donne
+pas, à elle seule, un droit de modification ou de suppression.
 
-Règles de gestion :
+| `visibility` | Visiteur anonyme | Membre actif |
+| ------------ | ---------------- | ------------ |
+| `public`     | lecture          | lecture + RSVP |
+| `interne`    | interdit         | lecture + RSVP |
+| `pupitre`    | interdit         | lecture + RSVP si l'un de ses pupitres est ciblé |
 
-- Un chef ne gère (modifie, annule, supprime) que les événements ciblant **un seul** pupitre qu'il dirige ; il ne gère jamais un événement multi-pupitres ou global. Le droit découle **exclusivement du pupitre** : perdre le statut de chef le fait perdre, même sur un événement qu'il a créé (**Q-A1**, audit du 2026-11-20 — la branche « créateur » est retirée des policies et du code).
-- Un chef **crée** uniquement des événements de visibilité **`interne`**, ciblant **exactement un** pupitre qu'il dirige. Il ne peut **jamais** créer un événement `public` ou `pupitre`, ni un événement global, ni multi-pupitres (**Q-A1/Q-A2**).
-- La création est **atomique** : l'événement et ses pupitres sont écrits par une seule fonction serveur/SQL ; un chef n'insère jamais directement dans `events`.
-- Un chef **ne peut pas élargir** la visibilité d'un événement existant (il reste en `interne`) ni le déplacer hors de son périmètre, ni changer `created_by` ou `is_poll`.
-- Un chef **supprime** uniquement les événements **mono-pupitre de son pupitre** ; un événement multi-pupitres ou global ne peut être supprimé que par la secrétaire ou l'admin (**Q-A4**).
-- La secrétaire et l'admin gèrent tous les événements, y compris multi-pupitres et globaux ; ils créent avec `public`, `interne` ou `pupitre`, avec **0 à N** pupitres — **0 = événement global** (**Q-A1**).
-- Un membre `member` ne dispose d'aucune action de création, modification, annulation ou suppression.
-- `event_type` (`sortie`, `concert`, `fest-noz`, `festival`, `concours`, `gala`, `repetition`, `reunion`, `repas`) est indépendant de `visibility`.
+Les droits de gestion sont indépendants de cette matrice de lecture :
+
+- **Chef de pupitre :** peut gérer un événement ciblant exactement un seul
+  pupitre dont il est chef, quel que soit le créateur. Il ne peut gérer ni un
+  événement multi-pupitres ni un événement global (aucun pupitre). Le droit
+  découle exclusivement de `profile_pupitres.is_chef` ; il n'existe aucun
+  droit lié à `created_by`. La perte du statut de chef retire ce droit
+  (**Q-A1**, 2026-11-20).
+- **Création par un chef :** exactement un pupitre qu'il dirige et
+  `visibility = 'interne'`. Il ne peut créer ni événement `public`, ni
+  événement `pupitre`, ni événement multi-pupitres ou global (**Q-A2**).
+- **Modification par un chef :** il ne peut changer ni la visibilité, ni le
+  pupitre ciblé, ni `created_by`, ni `is_poll`. Il ne peut pas élargir la
+  portée d'un événement ou le déplacer hors de son périmètre. Les événements
+  historiques `pupitre` créés par des chefs restent soumis à la question
+  ouverte 1 de `docs/questions.md` ; ne pas créer d'exception non validée.
+- **Suppression par un chef :** autorisée pour un événement mono-pupitre de
+  l'un de ses pupitres ; multi-pupitres et global sont réservés à la secrétaire
+  et à l'admin (**Q-A4**). La suppression entraîne la suppression en cascade
+  des réponses associées, conformément à la décision M03 du 2026-11-21.
+- **Secrétaire et admin :** gestion de tous les événements, y compris
+  multi-pupitres et globaux. Ils peuvent créer avec `public`, `interne` ou
+  `pupitre`, et cibler zéro à N pupitres ; zéro pupitre signifie global.
+- **Membre :** aucune action de création, modification, annulation ou
+  suppression.
+- La création passe par la fonction SQL atomique
+  `app.create_event(..., p_pupitre_ids uuid[])` ; aucun rôle applicatif ne
+  contourne cette fonction par une insertion directe dans `events`.
+- `event_type` (`sortie`, `concert`, `fest-noz`, `festival`,
+  `concours`, `gala`, `repetition`, `reunion`, `repas`) est indépendant
+  de `visibility`.
 - Les événements n'ont pas d'heure et ne sont pas récurrents en V1.
 
 ### 12.2 RSVP

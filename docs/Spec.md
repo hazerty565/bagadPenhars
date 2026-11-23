@@ -234,16 +234,30 @@ de données le permet.
 - Les membres actifs peuvent répondre aux événements publics et internes ;
   seuls les membres actifs des pupitres ciblés peuvent voir et répondre aux
   événements `pupitre`. Une répétition peut être publique, interne ou ciblée.
-- Un chef crée toujours un événement avec la visibilité `pupitre`, en sélectionnant
-  un seul pupitre parmi ceux qu'il dirige ; les membres des autres pupitres ne le voient pas et ne
-  peuvent pas y répondre. Il peut gérer un événement de son pupitre même s'il
-  n'en est pas l'auteur. L'admin
-  et la secrétaire peuvent créer les événements internes communs, notamment
-  les repas et répétitions générales privées, ainsi que les événements destinés
-  à l'agenda public.
-- La création et la modification d'événements respectent le rôle et le
-  périmètre du pupitre; leur visibilité publique est explicite, jamais
-  implicite.
+- **Périmètre de gestion :** un chef peut gérer (modifier et supprimer)
+  les événements ciblant exactement un seul pupitre qu'il dirige, quel que soit
+  leur créateur. Le droit découle exclusivement de l'affectation de chef en
+  base, jamais de `created_by`. Un chef ne peut gérer ni un événement
+  multi-pupitres ni un événement global (sans pupitre). La perte de son statut
+  de chef retire immédiatement ce droit.
+- **Création par un chef :** le chef sélectionne exactement un pupitre parmi
+  ceux qu'il dirige et crée l'événement avec `visibility = 'interne'`.
+  Il ne peut créer ni événement `public`, ni événement `pupitre`, ni
+  événement multi-pupitres ou global. La création de l'événement et de son
+  rattachement au pupitre est atomique côté serveur/SQL.
+- **Modification par un chef :** il ne peut pas modifier le créateur, le
+  caractère sondage (`is_poll`), la visibilité ni le périmètre de pupitre.
+  Il ne peut donc pas élargir un événement ni le déplacer vers un autre pupitre.
+  Les cas historiques d'événements `pupitre` créés par des chefs sont soumis
+  aux questions non tranchées de `docs/questions.md` ; aucune exception ne
+  doit être inventée.
+- **Secrétaire et admin :** ils peuvent créer, modifier et supprimer tous les
+  événements, y compris multi-pupitres et globaux. À la création, ils peuvent
+  choisir `public`, `interne` ou `pupitre`, et cibler zéro à N pupitres
+  (zéro pupitre signifie global).
+- La visibilité détermine qui peut consulter et répondre à un événement ; elle
+  ne remplace pas le contrôle de gestion fondé sur le rôle et le périmètre.
+  Toute visibilité publique doit être choisie explicitement.
 - Les événements n'ont pas d'heure; ils sont stockés comme dates civiles.
   La clôture utilise le jour courant de `Europe/Paris`. Aucune gestion des
   événements récurrents n'est incluse en V1.
