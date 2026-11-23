@@ -217,6 +217,22 @@ doivent tous deux la faire respecter :
 - Les guards SvelteKit et les policies RLS doivent appliquer les mêmes règles.
   Le droit ne doit jamais être accordé sur le seul critère de l'auteur.
 
+**Écarts d'implémentation constatés sur la branche `dev` (à corriger dans une
+migration et dans le code, sans modifier rétroactivement une migration déjà
+appliquée) :**
+
+- `src/lib/db/schema.ts` et `drizzle/0000_handy_alex_wilder.sql` définissent
+  des index ordinaires sur `profile_pupitres`, mais pas encore l'index unique
+  partiel garantissant un seul chef par pupitre. La règle métier ci-dessus
+  nécessite une migration additive créant un index unique sur `pupitre_id`
+  avec le prédicat `WHERE is_chef = true`, après vérification des données.
+- `src/lib/auth/permissions.ts` doit vérifier qu'un événement comporte
+  exactement un pupitre (`pupitreIds.length === 1`) et que ce pupitre fait
+  partie des pupitres dirigés par l'acteur. Une simple recherche d'au moins un
+  pupitre commun (`some`) autoriserait à tort un événement multi-pupitres.
+- Ces deux écarts sont des constats, pas des changements de code ou de base
+  effectués par cette mise à jour documentaire.
+
 ## 7. Fonctions SECURITY DEFINER
 
 Les modifications interdites au rôle applicatif `bagad_app` (COLL, statut,
