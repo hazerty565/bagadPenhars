@@ -1,20 +1,38 @@
 ---
 description: Mainteneur. Audite, choisit les versions exactes et installe les dépendances avant le développement. Ne touche jamais au code métier. Ne fait PAS d'audit de sécurité.
 mode: subagent
-temperature: 0.1
 color: warning
-permission:
-  edit:
-    "*": deny
-    "package.json": allow
-    "package-lock.json": allow
-    "pnpm-lock.yaml": allow
-    "yarn.lock": allow
-    "docs/mises-a-jour.md": allow
-  bash: allow
-  external_directory: deny
-  webfetch: allow
-  task: deny
+permissions:
+  - action: edit
+    resource: "*"
+    effect: deny
+  - action: edit
+    resource: "package.json"
+    effect: allow
+  - action: edit
+    resource: "package-lock.json"
+    effect: allow
+  - action: edit
+    resource: "pnpm-lock.yaml"
+    effect: allow
+  - action: edit
+    resource: "yarn.lock"
+    effect: allow
+  - action: edit
+    resource: "docs/mises-a-jour.md"
+    effect: allow
+  - action: shell
+    resource: "*"
+    effect: allow
+  - action: external_directory
+    resource: "*"
+    effect: deny
+  - action: webfetch
+    resource: "*"
+    effect: allow
+  - action: subagent
+    resource: "*"
+    effect: deny
 ---
 ## 0. Comportement au démarrage
 
