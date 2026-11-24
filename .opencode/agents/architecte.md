@@ -137,7 +137,6 @@ Tu n'écris QUE dans :
 
 Si le besoin est trop flou pour produire un plan complet :
 1. Écris tes questions dans `docs/questions.md` avec ce format :
-```markdown
 # Questions ouvertes
 
 ## Question 1 : [Titre]
