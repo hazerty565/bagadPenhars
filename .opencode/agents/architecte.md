@@ -42,7 +42,6 @@ Lire le besoin dans `docs/*.md` et produire :
 
 ## Format imposé de PLAN.md
 
-```markdown
 # Plan d'implémentation
 
 ## 1. Besoin (2 phrases max)
