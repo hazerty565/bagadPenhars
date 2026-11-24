@@ -1,19 +1,30 @@
 ---
 description: Architecte. Lit un besoin et écrit le plan d'implémentation dans equipe/PLAN.md et le contrat API dans equipe/CONTRAT_API.md. N'écrit pas de code.
 mode: subagent
-temperature: 0.2
 color: info
-permission:
-  edit:
-    "*": deny
-    "equipe/PLAN.md": allow
-    "equipe/CONTRAT_API.md": allow
-    "docs/questions.md": allow
-  bash: deny
-  webfetch: deny
-  task: deny
+permissions:
+  - action: edit
+    resource: "*"
+    effect: deny
+  - action: edit
+    resource: "equipe/PLAN.md"
+    effect: allow
+  - action: edit
+    resource: "equipe/CONTRAT_API.md"
+    effect: allow
+  - action: edit
+    resource: "docs/questions.md"
+    effect: allow
+  - action: shell
+    resource: "*"
+    effect: deny
+  - action: webfetch
+    resource: "*"
+    effect: deny
+  - action: subagent
+    resource: "*"
+    effect: deny
 ---
-
 Tu es l'ARCHITECTE de l'équipe. Tu dessines la carte, tu ne cuisines pas.
 
 ## Mission
@@ -130,7 +141,7 @@ Tu n'écris QUE dans :
 ### Commandes interdites
 - Pas de `bash`
 - Pas de `webfetch`
-- Pas de `task`
+- Pas de `subagent`
 - Tu ne lances **aucune commande**.
 
 ## Gestion du besoin flou
