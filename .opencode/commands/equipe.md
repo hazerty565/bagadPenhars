@@ -325,7 +325,9 @@ Il produit `equipe/PENTEST.md` avec l'un des verdicts suivants :
 
 Si le verdict est `ÉCHEC`, ou si des réserves bloquantes sont identifiées, arrête le workflow. Transmets les constats au développeur concerné, fais corriger les problèmes, puis demande au pentesteur un re-test ciblé. Ne considère jamais une vulnérabilité comme corrigée sans preuve de re-test.
 
-Un verdict `FAVORABLE` permet de présenter le dossier au point de contrôle client n°4. Il ne signifie pas que l'application est exempte de vulnérabilités.
+Si le verdict est `RÉSERVES`, le Chef doit distinguer les réserves bloquantes des réserves non bloquantes. Les réserves bloquantes doivent être corrigées et re-testées avant de continuer. Les réserves non bloquantes doivent être explicitement présentées au client au point de contrôle n°4.
+
+Un verdict `FAVORABLE`, ou `RÉSERVES` sans réserve bloquante, permet de présenter le dossier au point de contrôle client n°4. Il ne signifie pas que l'application est exempte de vulnérabilités.
 
 ### POINT DE CONTRÔLE 4 — Validation sécurité et pentest avant déploiement
 
