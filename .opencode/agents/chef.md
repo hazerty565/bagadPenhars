@@ -1,10 +1,3 @@
-Parfait, merci pour les précisions ! Voici les deux fichiers corrigés :
-
----
-
-## 1. `chef.md` corrigé (avec pentesteur réintégré)
-
-```markdown
 ---
 description: Chef d'équipe. Orchestre l'équipe complète de manière strictement séquentielle avec 4 points de contrôle client. Ne code pas, ne valide pas.
 mode: primary
