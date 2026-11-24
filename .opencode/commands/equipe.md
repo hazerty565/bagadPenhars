@@ -1,6 +1,6 @@
 
 ---
-description: Lance l'équipe complète de manière strictement séquentielle (architecte → mainteneur → développeurs → intégrateur → tech-lead → testeur → sécurité → déployeur), avec 3 points de contrôle client.
+description: Lance l'équipe complète de manière strictement séquentielle, avec 4 points de contrôle client et un pentest avant déploiement.
 agent: chef
 ---
 
@@ -43,6 +43,7 @@ Vérifie la présence des fichiers suivants dans `.opencode/agents/` :
 - `tech-lead.md`
 - `testeur.md`
 - `securite.md`
+- `pentesteur.md`
 - `deployer.md`
 
 Si un agent manque :
@@ -101,8 +102,10 @@ Respecte exactement cet ordre :
 11. Testeur
 12. Point de contrôle client n°3
 13. Sécurité
-14. Déployeur
-15. Livraison finale au client
+14. Pentesteur
+15. Point de contrôle client n°4
+16. Déployeur
+17. Livraison finale au client
 
 **INTERDICTION ABSOLUE de lancer plusieurs agents simultanément.**
 
@@ -112,7 +115,9 @@ Chaque agent doit avoir terminé sa mission et remis son rapport avant le lancem
 
 Le Chef doit respecter strictement les règles d'appel définies dans `.opencode/agents/chef.md`.
 
-Chaque appel à l'outil `subagent` doit obligatoirement comporter les trois propriétés :
+Seul le Chef est autorisé à appeler les sous-agents. Aucun sous-agent ne peut appeler, déléguer à, ou lancer un autre agent. Le Chef utilise l'outil `task`, conformément à `.opencode/agents/chef.md`.
+
+Chaque appel à l'outil `task` doit obligatoirement comporter les trois propriétés :
 
 - `agent`
 - `description`
@@ -306,9 +311,39 @@ Règles impératives
 - Le déploiement reste interdit tant que Sécurité n'a pas rendu un verdict positif.
 - Le verdict final de sécurité appartient exclusivement à l'agent Sécurité.
 
-### Phase 10 — Déploiement
+### Phase 10 — Pentest dynamique
 
-Après validation de l'audit de sécurité, appelle `deployer`.
+Après un verdict de sécurité positif et la résolution des problèmes bloquants, appelle `pentesteur`.
+
+Le pentesteur réalise exclusivement des tests dynamiques dans un environnement et un périmètre explicitement autorisés. La production est interdite par défaut. Le Chef doit confirmer la cible, l'environnement et les comptes de test avant tout test réseau.
+
+Il produit `equipe/PENTEST.md` avec l'un des verdicts suivants :
+
+- `FAVORABLE`
+- `RÉSERVES`
+- `ÉCHEC`
+
+Si le verdict est `ÉCHEC`, ou si des réserves bloquantes sont identifiées, arrête le workflow. Transmets les constats au développeur concerné, fais corriger les problèmes, puis demande au pentesteur un re-test ciblé. Ne considère jamais une vulnérabilité comme corrigée sans preuve de re-test.
+
+Un verdict `FAVORABLE` permet de présenter le dossier au point de contrôle client n°4. Il ne signifie pas que l'application est exempte de vulnérabilités.
+
+### POINT DE CONTRÔLE 4 — Validation sécurité et pentest avant déploiement
+
+Présente au client :
+
+- Le rapport `equipe/SECURITE.md` et son verdict.
+- Le rapport `equipe/PENTEST.md` et son verdict.
+- Les vulnérabilités confirmées, les réserves et les scénarios non testés.
+- L'environnement et le périmètre réellement testés.
+- Les éventuelles limites et risques résiduels.
+
+**ARRÊT obligatoire.**
+
+Attends la validation explicite du client avant de passer à la préparation du déploiement.
+
+### Phase 11 — Déploiement
+
+Après validation explicite du client au point de contrôle n°4, appelle `deployer`.
 
 Il prépare le déploiement et produit `equipe/DEPLOIEMENT.md`.
 
@@ -322,7 +357,7 @@ Il doit préciser :
 
 Ne déclenche pas une mise en production sans autorisation explicite du client.
 
-### Phase 11 — Livraison finale
+### Phase 12 — Livraison finale
 
 Présente un bilan complet au client avec les livrables et les éventuels points restant à traiter.
 
@@ -332,7 +367,8 @@ Présente un bilan complet au client avec les livrables et les éventuels points
 
 - Toute l'équipe communique uniquement en français.
 - Le Chef est l'unique interlocuteur entre les agents.
-- Les agents ne s'appellent jamais directement.
+- Les agents ne s'appellent jamais directement et ne délèguent jamais leur travail à un autre agent.
+- Seul le Chef utilise l'outil `task` pour lancer un agent autorisé dans `.opencode/agents/`.
 - Les agents ne modifient pas les missions des autres.
 - Les développeurs ne modifient pas `package.json` pour ajouter des dépendances.
 - Les documents présents dans `equipe/` font foi pour les décisions techniques.
@@ -432,11 +468,12 @@ Avant de lancer l'architecte, présente au client :
 6. Tech Lead
 7. Testeur
 8. Sécurité
-9. Déployeur
+9. Pentesteur
+10. Déployeur
 
 **Organisation :** travail strictement séquentiel, un seul agent à la fois.
 
-**Points de contrôle :** 3 validations client obligatoires.
+**Points de contrôle :** 4 validations client obligatoires.
 
 **Documents consultés :** liste des fichiers utiles de `docs/`.
 
@@ -449,6 +486,8 @@ Puis lance l'architecte et applique strictement le workflow défini dans `chef.m
 ## 8. Interdictions absolues
 
 - Ne lance jamais deux agents en parallèle.
+- Ne laisse jamais un sous-agent appeler ou lancer un autre agent.
+- Seul le Chef peut utiliser `task` pour appeler les sous-agents.
 - Ne saute jamais une phase.
 - Ne saute jamais un point de contrôle client.
 - Ne valide jamais à la place du client.
