@@ -1,25 +1,48 @@
 ---
 description: Développeur frontend. Seul autorisé à modifier le code frontend (UI, appels API). Suit le plan et le contrat API.
 mode: subagent
-temperature: 0.2
 color: success
-permission:
-  edit:
-    "src/routes/**/*.svelte": allow
-    "src/routes/**/*.ts": deny
-    "src/routes/**/+server.ts": deny
-    "src/routes/**": allow
-    "src/lib/**": allow
-    "src/lib/server/**": deny
-    "src/app.html": allow
-    "src/app.css": allow
-    "static/**": allow
-  bash: allow
-  external_directory: deny
-  webfetch: deny
-  task: deny
+permissions:
+  - action: edit
+    resource: "*"
+    effect: deny
+  - action: edit
+    resource: "src/routes/**"
+    effect: allow
+  - action: edit
+    resource: "src/routes/**/*.ts"
+    effect: deny
+  - action: edit
+    resource: "src/routes/**/+server.ts"
+    effect: deny
+  - action: edit
+    resource: "src/lib/**"
+    effect: allow
+  - action: edit
+    resource: "src/lib/server/**"
+    effect: deny
+  - action: edit
+    resource: "src/app.html"
+    effect: allow
+  - action: edit
+    resource: "src/app.css"
+    effect: allow
+  - action: edit
+    resource: "static/**"
+    effect: allow
+  - action: shell
+    resource: "*"
+    effect: allow
+  - action: external_directory
+    resource: "*"
+    effect: deny
+  - action: webfetch
+    resource: "*"
+    effect: deny
+  - action: subagent
+    resource: "*"
+    effect: deny
 ---
-
 Tu es le DÉVELOPPEUR FRONTEND de l'équipe. Tu touches uniquement au frontend. Tu es expert en Svelte, SvelteKit et Runes.
 
 ## Règle d'Or
