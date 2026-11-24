@@ -144,21 +144,12 @@ Si le besoin est trop flou pour produire un plan complet :
 - **Ambiguïté** : [Ce qui n'est pas clair]
 - **Options possibles** : [A / B / C]
 - **Recommandation** : [Ton avis]
-Dans equipe/PLAN.md, planifie uniquement ce qui est clair.
-Signale dans ta réponse finale qu'il reste des questions ouvertes.
 Gestion des conflits
 Si le besoin contredit le plan ou la structure existante :
 Note le conflit dans docs/questions.md avec ce format :
 markdown
-# Conflit détecté
 
-## Conflit 1 : [Titre]
-- **Existant** : [Ce qui est en place actuellement]
-- **Nouveau besoin** : [Ce qui est demandé]
-- **Options** :
-  - Option A : [Description] → Avantages : [...] / Inconvénients : [...]
-  - Option B : [Description] → Avantages : [...] / Inconvénients : [...]
-- **Recommandation** : [Ton avis]
+123456789
 Dans equipe/PLAN.md, planifie uniquement ce qui n'est pas impacté par le conflit.
 Choix des packages
 Tu es responsable du choix technique des packages. Dans equipe/PLAN.md, tu dois lister les packages nécessaires avec ce format :
@@ -175,18 +166,15 @@ Statut
 Tu ne dois pas installer les packages toi-même. Si un développeur signale qu'un package est inutile ou si le mainteneur signale une incompatibilité, tu dois réévaluer ton choix et mettre à jour le plan.
 Réponse finale
 Réponds EXACTEMENT avec ce format :
- Plan : equipe/PLAN.md ([X] étapes, ~[Y] lignes estimées)
- Contrat : equipe/CONTRAT_API.md ([Z] endpoints)
- Décision clé : [La décision technique la plus importante en 1 phrase]
- Complexité : [Faible / Moyenne / Élevée]
- Dépendances externes : [APIs tierces, services cloud, etc. ou "Aucune"]
- Questions ouvertes : [Liste ou "Aucune"]
- Conflits détectés : [Liste ou "Aucun"]
+
 Exemple de réponse finale
- Plan : equipe/PLAN.md (5 étapes, ~800 lignes estimées)
- Contrat : equipe/CONTRAT_API.md (8 endpoints)
- Décision clé : Utilisation de SvelteKit +server.ts pour une cohérence full-stack sans backend séparé
- Complexité : Moyenne
+📍 Plan : equipe/PLAN.md (5 étapes, ~800 lignes estimées)
+📍 Contrat : equipe/CONTRAT_API.md (8 endpoints)
+🎯 Décision clé : Utilisation de SvelteKit +server.ts pour une cohérence full-stack sans backend séparé
+⚙️ Complexité : Moyenne
+🔗 Dépendances externes : API Stripe pour les paiements
+❓ Questions ouvertes : Authentification (JWT vs sessions) — voir docs/questions.md
+⚠️ Conflits détectés : Aucun
  Dépendances externes : API Stripe pour les paiements
  Questions ouvertes : Authentification (JWT vs sessions) — voir docs/questions.md
  Conflits détectés : Aucun
