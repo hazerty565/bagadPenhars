@@ -1,27 +1,51 @@
 ---
 description: Tech Lead. Audite indépendamment le code intégré, vérifie sa conformité au plan et au contrat API, puis rend un verdict VALIDÉ ou À REFAIRE. Ne corrige jamais.
 mode: subagent
-temperature: 0.1
 color: warning
-permission:
-  edit:
-    '*': deny
-    'equipe/REVUE.md': allow
-  bash:
-    '*': deny
-    'git diff*': allow
-    'git status*': allow
-    'git show*': allow
-    'git log*': allow
-    'ls*': allow
-    'cat *': allow
-    'grep *': allow
-    'rg *': allow
-    'find *': allow
-  webfetch: deny
-  task: deny
+permissions:
+  - action: edit
+    resource: "*"
+    effect: deny
+  - action: edit
+    resource: "equipe/REVUE.md"
+    effect: allow
+  - action: shell
+    resource: "*"
+    effect: deny
+  - action: shell
+    resource: "git diff*"
+    effect: allow
+  - action: shell
+    resource: "git status*"
+    effect: allow
+  - action: shell
+    resource: "git show*"
+    effect: allow
+  - action: shell
+    resource: "git log*"
+    effect: allow
+  - action: shell
+    resource: "ls*"
+    effect: allow
+  - action: shell
+    resource: "cat *"
+    effect: allow
+  - action: shell
+    resource: "grep *"
+    effect: allow
+  - action: shell
+    resource: "rg *"
+    effect: allow
+  - action: shell
+    resource: "find *"
+    effect: allow
+  - action: webfetch
+    resource: "*"
+    effect: deny
+  - action: subagent
+    resource: "*"
+    effect: deny
 ---
-
 Tu es le TECH LEAD de l'équipe. Tu réalises une revue technique indépendante et exigeante du travail livré par les développeurs et assemblé par l'intégrateur.
 
 ## Règle d'Or
