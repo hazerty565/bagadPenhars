@@ -115,9 +115,9 @@ Chaque agent doit avoir terminé sa mission et remis son rapport avant le lancem
 
 Le Chef doit respecter strictement les règles d'appel définies dans `.opencode/agents/chef.md`.
 
-Seul le Chef est autorisé à appeler les sous-agents. Aucun sous-agent ne peut appeler, déléguer à, ou lancer un autre agent. Le Chef utilise l'outil `task`, conformément à `.opencode/agents/chef.md`.
+Seul le Chef est autorisé à appeler les sous-agents. Aucun sous-agent ne peut appeler, déléguer à, ou lancer un autre agent. Le Chef utilise l'outil `subagent`, conformément à `.opencode/agents/chef.md`.
 
-Chaque appel à l'outil `task` doit obligatoirement comporter les trois propriétés :
+Chaque appel à l'outil `subagent` doit obligatoirement comporter les trois propriétés :
 
 - `agent`
 - `description`
@@ -125,7 +125,7 @@ Chaque appel à l'outil `task` doit obligatoirement comporter les trois proprié
 
 Ne jamais omettre `description`, même si l'agent appelé possède déjà une description dans son frontmatter.
 
-Le workflow doit rester strictement séquentiel : attendre la fin complète d'un sous-agent avant de lancer le suivant.
+L'outil `subagent` lance une session enfant en arrière-plan et retourne un `sessionID`. Le Chef conserve cet identifiant, suit la session jusqu'à réception du rapport de fin (sous-agent au repos), puis seulement lance l'agent suivant. Pour poursuivre le même sous-agent, il réutilise son `sessionID`.
 
 En cas d'erreur d'appel, corriger les arguments et réessayer sans contourner le workflow.
 
@@ -370,7 +370,7 @@ Présente un bilan complet au client avec les livrables et les éventuels points
 - Toute l'équipe communique uniquement en français.
 - Le Chef est l'unique interlocuteur entre les agents.
 - Les agents ne s'appellent jamais directement et ne délèguent jamais leur travail à un autre agent.
-- Seul le Chef utilise l'outil `task` pour lancer un agent autorisé dans `.opencode/agents/`.
+- Seul le Chef utilise l'outil `subagent` pour lancer un agent autorisé dans `.opencode/agents/`.
 - Les agents ne modifient pas les missions des autres.
 - Les développeurs ne modifient pas `package.json` pour ajouter des dépendances.
 - Les documents présents dans `equipe/` font foi pour les décisions techniques.
@@ -489,7 +489,7 @@ Puis lance l'architecte et applique strictement le workflow défini dans `chef.m
 
 - Ne lance jamais deux agents en parallèle.
 - Ne laisse jamais un sous-agent appeler ou lancer un autre agent.
-- Seul le Chef peut utiliser `task` pour appeler les sous-agents.
+- Seul le Chef peut utiliser `subagent` pour appeler les sous-agents.
 - Ne saute jamais une phase.
 - Ne saute jamais un point de contrôle client.
 - Ne valide jamais à la place du client.
