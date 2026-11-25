@@ -2,7 +2,7 @@
 
 Ce fichier est la **source de vérité** pour tous les agents de l'équipe. 
 Lis ce fichier en premier, puis les fichiers pertinents dans `docs/`. 
-En cas de doute ou de contradiction, n'invente jamais : écris la question dans `docs/questions.md`.
+En cas de doute ou de contradiction, n'invente jamais : signale le point au Chef. Celui-ci fait consigner la question dans `docs/questions.md` par l'Architecte lorsque nécessaire, puis arbitre ou sollicite le client.
 
 ## 0. Stack Technique
 - **Frontend** : SvelteKit 5 (Runes uniquement), Tailwind CSS, Motion, `svelte-i18n`.
@@ -45,7 +45,7 @@ En cas de doute ou de contradiction, n'invente jamais : écris la question dans 
 
 ### Base de données, Auth & Sécurité (Critique)
 - **Autorisations** : Toujours vérifiées côté serveur (loads/actions/endpoints).
-- **Identité vs Rôle** : Better Auth gère l'identité et les sessions. Les rôles métier se lisent **uniquement** dans `profiles.role` (ENUM PostgreSQL `app_role`), **jamais** dans `user_metadata`.
+- **Identité vs Rôle** : Better Auth gère l'identité et les sessions. Le rôle métier est lu côté serveur depuis `profiles.role` (ENUM PostgreSQL `app_role`), selon le schéma validé. Aucune valeur de rôle fournie par le client ne fait autorité.
 - **RLS & Contexte** : Les tables sensibles utilisent les politiques RLS natives de Neon/PostgreSQL en défense en profondeur. Après validation de la session Better Auth, chaque transaction applicative établit son contexte utilisateur avec `set_config('app.current_user_id', '...', true)` avant les requêtes métier.
 - **Hyperdrive** : Sert uniquement au pooling des connexions. **Ne jamais** activer le cache de requêtes pour des données protégées par RLS ou dépendantes de l'identité. Le cache n'est que pour les lectures explicitement publiques.
 - **Migrations** : Reproductibles via Drizzle. Une migration appliquée n'est **jamais** modifiée : on en ajoute une nouvelle additive.
@@ -56,7 +56,7 @@ En cas de doute ou de contradiction, n'invente jamais : écris la question dans 
 - **OneSignal** : La clé REST reste côté serveur. L'envoi de notification vérifie strictement le rôle : secrétaire (plusieurs pupitres), chef de pupitre (son pupitre), ou admin.
 
 ### Général
-- Pas de nouvelle dépendance sans justification dans `docs/journal.md`.
+- Aucune nouvelle dépendance sans justification dans `equipe/PLAN.md`, audit du Mainteneur consigné dans `docs/mises-a-jour.md` et validation du client avant installation. Le résultat de l'installation est ensuite consigné dans `docs/journal.md`.
 - Le trombinoscope est réservé aux membres actifs connectés. Les titres du bureau ne sont jamais publics.
 - **Hors périmètre absolu** : paiement en ligne, inscription libre.
 
@@ -64,20 +64,26 @@ En cas de doute ou de contradiction, n'invente jamais : écris la question dans 
 
 Ce projet est développé par une équipe d'agents orchestrée par le `chef.md`. 
 - Si tu es un agent de développement, tu suis les directives de `equipe/PLAN.md` et `equipe/CONTRAT_API.md`.
-- Tu ne dois jamais modifier les fichiers dans le dossier `equipe/` (sauf si ton rôle d'agent le spécifie explicitement, comme l'Intégrateur ou le Tech Lead).
-- En cas de conflit entre le plan et ce fichier `AGENTS.md`, **ce fichier `AGENTS.md` prévaut**. Signale-le dans `docs/questions.md`.
+- Tu ne dois jamais modifier les fichiers dans `equipe/`, sauf autorisation explicite prévue par ta fiche : Architecte (`PLAN.md`, `CONTRAT_API.md`), Chef (`HISTORIQUE.md`), Intégrateur (`INTEGRATION.md`), Tech Lead (`REVUE.md`), Testeur (`TESTS.md` et `essais/`), Sécurité (`SECURITE.md`), Pentesteur (`PENTEST.md` et `essais/pentest/`) ou Déployeur (`DEPLOIEMENT.md`). Les autres agents restent en lecture seule sur ce dossier.
+- En cas de conflit entre le plan et ce fichier `AGENTS.md`, **ce fichier `AGENTS.md` prévaut**. Signale-le au Chef ; l'Architecte consigne la question dans `docs/questions.md` avant toute décision qui modifie le périmètre ou l'architecture.
 
 ## 4. Checklist de fin de tâche
 
-Avant de considérer une tâche comme terminée, tu dois impérativement :
-1. Exécuter : `pnpm run check && pnpm run lint && pnpm run build`
-2. Si le schéma a changé : générer une nouvelle migration + mettre à jour `docs/database.md` (incluant la matrice des droits RLS).
-3. Si une route ou un flux a changé : mettre à jour `docs/architecture.md`.
-4. Ajouter une entrée datée dans `docs/journal.md` : ce qui est fait, ce qui reste, les pièges rencontrés.
+Pour toute tâche de développement qui modifie le code, et lorsque les scripts correspondants existent dans `package.json`, exécute avant de la déclarer terminée :
+1. `pnpm run check`
+2. `pnpm run lint`
+3. `pnpm run build`
+
+Puis, selon les changements :
+- Si le schéma a changé : générer une nouvelle migration + mettre à jour `docs/database.md` (incluant la matrice des droits RLS).
+- Si une route ou un flux a changé : mettre à jour `docs/architecture.md`.
+- Ajouter une entrée datée dans `docs/journal.md` : ce qui est fait, ce qui reste, les pièges rencontrés.
+
+Les agents de contrôle (Intégrateur, Tech Lead, Testeur, Sécurité, Pentesteur et Déployeur) appliquent leurs propres procédures et rapports. Ils ne sont pas tenus de modifier le code ni de lancer des commandes auxquelles leurs permissions ne leur donnent pas accès.
 
 ## 5.  Règle absolue de communication et d'escalade
 
-Tu dois poser une question dans `docs/questions.md` et attendre avant de :
+Tu dois signaler le point au Chef et attendre son arbitrage, ainsi que l'accord explicite du client lorsqu'il est requis, avant de :
 - Changer de stack ou ajouter un service tiers.
 - Modifier les rôles, les autorisations existantes ou le flux d'invitation.
 - Supprimer des données ou une migration existante.
@@ -86,7 +92,7 @@ Tu dois poser une question dans `docs/questions.md` et attendre avant de :
 
 Le Chef est l'unique canal de communication, de coordination et d'arbitrage entre tous les agents.
 
-Aucun agent ne contacte directement un autre agent, ne lui délègue une tâche et ne lui transmet une demande.
+Aucun agent ne contacte directement un autre agent, ne lui délègue une tâche et ne lui transmet une demande. Toute question technique, tout blocage et toute demande de coordination remontent au Chef. L'Architecte est le seul agent autorisé à mettre à jour `docs/questions.md` ; le Chef lui transmet les éléments à consigner lorsque nécessaire.
 
 En cas de doute, question, information manquante, contradiction, problème technique, blocage ou besoin dépassant son périmètre de responsabilité :
 
@@ -95,11 +101,11 @@ En cas de doute, question, information manquante, contradiction, problème techn
 3. Il présente, si possible, une ou plusieurs solutions proposées.
 4. Il attend les instructions ou l'arbitrage du Chef avant de poursuivre la partie concernée.
 
-Le Chef analyse la demande, consulte si nécessaire l'agent compétent et transmet les réponses et décisions.
+Le Chef analyse la demande, consulte si nécessaire l'agent compétent dans le respect du fonctionnement séquentiel, transmet les réponses et décisions, et veille à la mise à jour de `docs/questions.md` par l'Architecte lorsque le point doit être tracé.
 
 Aucun agent ne doit inventer une décision, modifier un contrat ou dépasser ses responsabilités pour contourner un blocage.
 
-Cette règle s'applique à tous les agents, sans exception.
+Cette règle s'applique à tous les agents, sans exception. Les échanges entre Backend et Frontend sont donc médiés par le Chef ; ils ne se contactent pas directement.
 
 ## Gouvernance des packages
 
