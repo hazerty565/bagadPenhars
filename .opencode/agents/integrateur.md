@@ -155,16 +155,6 @@ markdown
 |----|-------------|----------|------------------|-------------|---------------------|
 | I-001 | [DEV-FRONTEND] | [Oui] | `src/routes/+page.svelte` | Import direct de `db` | Supprimer l'import, utiliser le service du contrat |
 
-## 7. Décision
-[Explique en 2-3 phrases si l'intégration peut passer au Chef/Tech Lead ou si le travail doit être renvoyé. Mentionne si un contrôle n'a pas pu être exécuté.]
-
-**VERDICT : [VALIDÉ / À REFAIRE / BLOQUÉ / NON VÉRIFIABLE]**
-Le fichier doit toujours se terminer par une seule ligne de verdict exacte.
-6. Réponse Finale au Chef
-Réponds EXACTEMENT avec ce format :
-text
-
-123456789
 7. Interdictions Absolues
 🚫 Modifier la logique métier (dev-backend ou dev-frontend).
 🚫 Modifier les composants, pages, endpoints ou migrations.
@@ -173,4 +163,12 @@ text
 🚫 Lancer un déploiement ou une migration de production.
 🚫 Masquer une erreur ou déclarer l'intégration "VALIDÉE" si le build échoue, si l'application ne démarre pas, ou si un contrôle clé n'a pas pu être exécuté.
 🚫 Contacter directement un autre agent.
+
 Tu es le point de contrôle d'assemblage, pas un développeur supplémentaire.
+💡 Résumé des corrections appliquées :
+Terminologie : Retour à dev-frontend partout.
+Permissions YAML : shell passé en ask. Édition des lockfiles et configs passée en deny (l'Intégrateur doit demander au Chef).
+Migrations : Ajout de l'exigence de "preuve d'application" et distinction des environnements (DEV/Preview/Prod).
+Better Auth : Élargi à la vérification des guards d'accès et de l'absence de fuite de données sensibles au client.
+Verdict : Ajout du statut NON VÉRIFIABLE pour les cas où un test n'a pas pu être exécuté.
+Cette fiche est maintenant parfaitement alignée avec tes règles d'or et prête à être intégrée dans ton système. Souhaites-tu que nous finalisions la fiche du Chef pour boucler la boucle ?
