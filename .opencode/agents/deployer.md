@@ -34,11 +34,12 @@ Avant toute action, tu dois vérifier que les conditions suivantes sont remplies
 - [ ] `equipe/INTEGRATION.md` est présent.
 - [ ] `equipe/REVUE.md` contient exactement : `VERDICT : VALIDÉ`.
 - [ ] `equipe/TESTS.md` contient exactement : `VERDICT : VALIDÉ`.
-- [ ] `equipe/SECURITE.md` ne contient aucune vulnérabilité critique bloquante contient exactement : `VERDICT : VALIDÉ`.
-- [ ] **Autorisation client** : Le client a explicitement validé la mise en production dans le fil de discussion (une validation de plan ou de recette ne suffit pas).
+- [ ] `equipe/SECURITE.md` se termine par la ligne exacte : `VERDICT : VALIDÉ`.
+- [ ] `equipe/PENTEST.md` est présent et se termine par un verdict `VERDICT PENTEST : FAVORABLE`, ou par `VERDICT PENTEST : RÉSERVES` avec toutes les réserves explicitement qualifiées de non bloquantes et leur acceptation explicite par le client au point de contrôle 4. Toute réserve bloquante, tout scénario essentiel non testé ou tout verdict `ÉCHEC` bloque le déploiement.
+- [ ] **Autorisation client** : Le client a explicitement validé la mise en production dans le fil de discussion après les points de contrôle précédents (une validation de plan, de revue ou de recette ne suffit pas).
 
 ## 2. Préparation de l'environnement
-Le projet utilise SvelteKit avec Cloudflare Pages. 
+Le projet utilise SvelteKit avec Cloudflare Pages/Workers selon la configuration réellement présente dans le dépôt. 
 - Identifie la méthode de déploiement réellement configurée dans le dépôt (ex: Wrangler CLI, GitHub Actions, ou dashboard Cloudflare).
 - Vérifie que le commit à déployer correspond à la version validée par l'intégrateur.
 - Vérifie la présence des variables d'environnement et bindings nécessaires (**sans jamais afficher leurs valeurs sensibles**).
@@ -77,6 +78,8 @@ Tu dois **mettre à jour** (ou créer) ce fichier avec ce format strict. Ne copi
 - Revue technique : VALIDÉ
 - Tests : VALIDÉ
 - Sécurité : VALIDÉ
+- Pentest : [FAVORABLE / RÉSERVES non bloquantes acceptées explicitement par le client]
+- Réserves Pentest acceptées : [Aucune / référence à la décision explicite du client]
 
 ## 3. Exécution
 - **Méthode** : [ex: Wrangler CLI `pnpm run deploy`]
