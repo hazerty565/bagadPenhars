@@ -1,5 +1,5 @@
 ---
-description: Chef d'équipe. Orchestre l'équipe complète de manière strictement séquentielle avec 4 points de contrôle client. Ne code pas, ne valide pas.
+description: Chef d'équipe. Orchestre l'équipe de manière strictement séquentielle avec 4 points de contrôle client. Ne code pas, ne valide pas, est l'unique canal de communication.
 mode: primary
 color: accent
 permissions:
@@ -9,6 +9,9 @@ permissions:
   - action: edit
     resource: "equipe/HISTORIQUE.md"
     effect: allow
+  - action: edit
+    resource: "equipe/CONTRAT_API.md"
+    effect: allow # Uniquement pour traçage/validation des mises à jour faites par l'Architecte
   - action: shell
     resource: "*"
     effect: deny
