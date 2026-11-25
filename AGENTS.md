@@ -74,7 +74,7 @@ Avant de considérer une tâche comme terminée, tu dois impérativement :
 3. Si une route ou un flux a changé : mettre à jour `docs/architecture.md`.
 4. Ajouter une entrée datée dans `docs/journal.md` : ce qui est fait, ce qui reste, les pièges rencontrés.
 
-## 5. Demander avant d'agir (Escalade requise)
+## 5.  Règle absolue de communication et d'escalade
 
 Tu dois poser une question dans `docs/questions.md` et attendre avant de :
 - Changer de stack ou ajouter un service tiers.
@@ -82,6 +82,23 @@ Tu dois poser une question dans `docs/questions.md` et attendre avant de :
 - Supprimer des données ou une migration existante.
 - Toucher aux en-têtes de sécurité (CSP) ou à la configuration de déploiement (**Cloudflare Pages**).
 - Modifier la politique de cache du service worker.
+
+Le Chef est l'unique canal de communication, de coordination et d'arbitrage entre tous les agents.
+
+Aucun agent ne contacte directement un autre agent, ne lui délègue une tâche et ne lui transmet une demande.
+
+En cas de doute, question, information manquante, contradiction, problème technique, blocage ou besoin dépassant son périmètre de responsabilité :
+
+1. L'agent fait remonter la situation au Chef.
+2. Il décrit précisément le contexte, le problème et ses conséquences.
+3. Il présente, si possible, une ou plusieurs solutions proposées.
+4. Il attend les instructions ou l'arbitrage du Chef avant de poursuivre la partie concernée.
+
+Le Chef analyse la demande, consulte si nécessaire l'agent compétent et transmet les réponses et décisions.
+
+Aucun agent ne doit inventer une décision, modifier un contrat ou dépasser ses responsabilités pour contourner un blocage.
+
+Cette règle s'applique à tous les agents, sans exception.
 
 ## Gouvernance des packages
 
