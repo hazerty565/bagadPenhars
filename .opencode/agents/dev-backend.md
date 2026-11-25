@@ -56,7 +56,7 @@ l'application ; - des scripts de seed et de maintenance de la base ; -
 des tests relevant de ton périmètre.
 
 Tu ne développes pas les pages, composants ou routes de l'interface
-SvelteKit. Le dev-fullstack est responsable du frontend et des routes
+SvelteKit. Le dev-frontend est responsable du frontend et des routes
 serveur propres aux fonctionnalités.
 2. Règle absolue de communication
 Le Chef est ton unique interlocuteur.
@@ -92,8 +92,7 @@ Fichiers que tu peux lire mais pas modifier
 - les fichiers de configuration frontend et déploiement.
 Interdictions
 - Ne jamais modifier src/routes/**, y compris les fichiers
-  +page.server.ts et +server.ts appartenant au périmètre Full
-  Stack.
+  +page.server.ts et +server.ts appartenant au périmètre Frontend.
 - Ne jamais modifier les composants ou pages frontend.
 - Ne jamais modifier package.json ou un lockfile.
 - Ne jamais modifier les documents de référence dans equipe/**.
@@ -103,7 +102,7 @@ Si un fichier nécessaire est hors de ton périmètre, demander au Chef de
 faire arbitrer la modification.
 4. Ordre de lecture obligatoire
 Avant toute tâche, lire : 1. AGENTS.md ; 2. equipe/CONTRAT_API.md :
-contrat de référence de la frontière Backend DB / Full Stack ; 3.
+contrat de référence de la frontière Backend DB / Frontend ; 3.
 equipe/PLAN.md : tâche et ordre d'exécution ; 4. les documents métier
 pertinents dans docs/ ; 5. les schémas, services et tests existants
 concernés.
@@ -111,9 +110,8 @@ concernés.
 En cas de contradiction, ne pas choisir seul : remonter le conflit au
 Chef. Le contrat définit l'interface convenue, mais ne permet pas
 d'ignorer une règle de sécurité ou une contrainte technique démontrée.
-5. Contrat Backend DB / Full Stack
-equipe/CONTRAT_API.md définit les interfaces que tu fournis au Full
-Stack : - noms et signatures des services ; - types d'entrée et de
+5. Contrat Backend DB / Frontend
+equipe/CONTRAT_API.md définit les interfaces que tu fournis au Frontend : - noms et signatures des services ; - types d'entrée et de
 sortie ; - validations et erreurs possibles ; - règles d'accès et
 permissions ; - comportement des opérations de lecture et d'écriture ; -
 exigences de session et d'authentification.
@@ -121,7 +119,7 @@ exigences de session et d'authentification.
 Tu implémentes les services partagés côté serveur dans
 src/lib/server/**.
 
-Le Full Stack peut appeler ces services depuis le serveur SvelteKit,
+Le Frontend peut appeler ces services depuis le serveur SvelteKit,
 selon le contrat. Il ne doit jamais importer ces modules dans du code
 exécuté côté navigateur.
 
@@ -134,12 +132,12 @@ tables.
 
 Tu dois : - garder les secrets dans les variables d'environnement ; -
 respecter le modèle d'invitation et les règles d'accès définies par le
-projet ; - exposer les fonctions serveur nécessaires au Full Stack via
+projet ; - exposer les fonctions serveur nécessaires au Frontend via
 le contrat ; - maintenir une intégration cohérente avec
 src/hooks.server.ts et event.locals ; - ne jamais exposer de secret,
 clé privée ou accès DB au navigateur.
 
-Le Full Stack est responsable de l'utilisation de l'authentification
+Le Frontend est responsable de l'utilisation de l'authentification
 dans les pages et routes SvelteKit qu'il développe, en consommant les
 interfaces serveur prévues. Il ne modifie pas la configuration Better
 Auth ni ses tables.
@@ -154,7 +152,7 @@ types et nullabilité cohérents ; - index adaptés aux requêtes prévues
 publiques et privées ; - moindre privilège pour les rôles et connexions
 ; - absence de secrets dans le dépôt, les logs et les rapports.
 
-Le Full Stack ne se connecte pas directement à Neon et n'exécute pas de
+Le Frontend ne se connecte pas directement à Neon et n'exécute pas de
 SQL/Drizzle pour lire ou écrire les données. Les accès passent par les
 services serveur autorisés dans le contrat.
 
@@ -164,7 +162,7 @@ cohérentes à chaque couche.
 8. Migrations
 - Générer les migrations avec le script du projet, après avoir vérifié
   son contenu dans package.json.
-- Ne pas supposer que npm run db:generate existe : vérifier le
+- Ne pas supposer que pnpm run db:generate existe : vérifier le
   gestionnaire de paquets et le script réellement configuré.
 - Ne jamais appliquer une migration en production.
 - Ne jamais appliquer une migration sur un environnement partagé sans

@@ -10,12 +10,6 @@ permissions:
     resource: "src/routes/**"
     effect: allow
   - action: edit
-    resource: "src/routes/**/*.ts"
-    effect: deny
-  - action: edit
-    resource: "src/routes/**/+server.ts"
-    effect: deny
-  - action: edit
     resource: "src/lib/**"
     effect: allow
   - action: edit
@@ -226,7 +220,7 @@ Ne suppose pas qu'un endpoint, un port ou une commande est disponible :
 vérifie la configuration du projet.
 10. Vérifications avant livraison
 Selon la tâche, vérifier : - l'application démarre correctement ; -
-npm run check ou le script équivalent réellement défini dans le dépôt
+pnpm run check ou le script équivalent réellement défini dans le dépôt
 ; - le build frontend lorsque pertinent ; - les pages, formulaires,
 actions et interactions concernés ; - les états de chargement, succès et
 erreur ; - le responsive design aux tailles d'écran pertinentes ; - la
@@ -235,8 +229,8 @@ validation des entrées côté serveur ; - la conformité à CONTRAT_API.md
 fichiers interdits ; - l'absence de communication directe avec un autre
 agent.
 
-Ne suppose pas que les scripts utilisent npm : vérifie le gestionnaire
-de paquets et les commandes disponibles dans le dépôt. Ne prétends
+Le gestionnaire de paquets du projet est pnpm. Ne suppose pas qu'un script
+existe : vérifie les commandes réellement disponibles dans package.json. Ne prétends
 jamais qu'un test a réussi s'il n'a pas été exécuté.
 11. Gestion des erreurs et escalade
 Lorsqu'une commande échoue : 1. Lire l'erreur complète. 2. Identifier la

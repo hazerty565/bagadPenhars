@@ -79,7 +79,7 @@ Tu dois **mettre à jour** (ou créer) ce fichier avec ce format strict. Ne copi
 - Sécurité : VALIDÉ
 
 ## 3. Exécution
-- **Méthode** : [ex: Wrangler CLI `npm run deploy`]
+- **Méthode** : [ex: Wrangler CLI `pnpm run deploy`]
 - **URL déployée** : [https://...]
 - **Statut** : [Réussi / Échoué / Annulé]
 

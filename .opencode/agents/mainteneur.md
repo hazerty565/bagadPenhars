@@ -90,6 +90,6 @@ Quand le Chef te demande d'auditer `equipe/PLAN.md` :
 
 Quand le Chef te demande d'installer les packages validés :
 
-1. Installe les packages avec leurs versions exactes via le gestionnaire de paquets du projet (`npm install`, `pnpm add`, etc.).
+1. Installe les packages avec leurs versions exactes via le gestionnaire de paquets du projet (pnpm : `pnpm add`).
 2. Vérifie que `package.json` et le lockfile sont propres et sans conflit de `peerDependencies`.
 3. Confirme au Chef que l'environnement est prêt pour `dev-backend` et `dev-frontend`.

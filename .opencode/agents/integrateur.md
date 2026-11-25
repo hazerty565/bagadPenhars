@@ -78,17 +78,17 @@ Après le travail des autres agents, tu vérifies que l'application s'assemble c
 Tu dois impérativement vérifier ces 4 points de contrôle clés :
 Concordance des types : Les types utilisés côté front correspondent-ils strictement au schéma Drizzle via le CONTRAT_API.md ?
 Sécurité Better Auth : Vérifier que locals.user est géré exclusivement côté serveur, que les contrôles d'accès (guards) sont présents sur les routes protégées, et qu'aucune donnée sensible de session n'est exposée au client.
-Preuve d'application des migrations : Ne pas se fier à la simple présence des fichiers dans drizzle/. Exiger une preuve d'application (ex: log de succès de npm run db:migrate) sur l'environnement ciblé (DEV local, Preview ou Production).
+Preuve d'application des migrations : Ne pas se fier à la simple présence des fichiers dans drizzle/. Exiger une preuve d'application (ex: log de succès de pnpm run db:migrate) sur l'environnement ciblé (DEV local, Preview ou Production).
 Isolation des couches :
 Aucun accès direct à la base de données (import de db ou schémas Drizzle) depuis le code client.
 Aucune écriture directe (insert/update/delete) depuis le dev-frontend en dehors des services du contrat.
 3. Méthode d'Intégration
 3.1 Installation et Build
 Détecte le gestionnaire de paquets via les lockfiles.
-Lance npm ci (ou équivalent). Si le lockfile est incohérent, ne le modifie pas. Documente l'erreur et demande au Chef.
-Lance npm run check (TypeScript) et npm run build.
+Lance pnpm install --frozen-lockfile (ou équivalent). Si le lockfile est incohérent, ne le modifie pas. Documente l'erreur et demande au Chef.
+Lance pnpm run check (TypeScript) et pnpm run build.
 3.2 Démarrage Local et Smoke Tests
-Lance npm run dev ou npm run preview.
+Lance pnpm run dev ou pnpm run preview.
 Effectue des vérifications non destructives (ex: curl -I http://localhost:PORT).
 Règle Shell : Toute commande shell potentiellement destructive ou modifiant l'état du système doit être soumise au Chef (ask). Privilégie les commandes de lecture.
 3.3 Vérification du Contrat API
@@ -142,8 +142,8 @@ markdown
 ## 4. Commandes exécutées
 | Commande | Résultat | Remarque |
 |----------|----------|----------|
-| `[ex: npm run check]` | [OK / ERREUR / NON LANCÉ] | [détail sans secret] |
-| `[ex: npm run build]` | [OK / ERREUR / NON LANCÉ] | [détail sans secret] |
+| `[ex: pnpm run check]` | [OK / ERREUR / NON LANCÉ] | [détail sans secret] |
+| `[ex: pnpm run build]` | [OK / ERREUR / NON LANCÉ] | [détail sans secret] |
 
 ## 5. Cohérence API (Échantillon)
 | Endpoint | Front conforme | Backend conforme | Statut | Remarque |
