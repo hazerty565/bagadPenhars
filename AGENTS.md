@@ -9,6 +9,7 @@ En cas de doute ou de contradiction, n'invente jamais : écris la question dans 
 - **Backend / Auth** : Better Auth, Neon PostgreSQL (avec politiques RLS), Drizzle ORM.
 - **Infrastructure** : Cloudflare Pages, Cloudflare R2 (stockage), Cloudflare Hyperdrive.
 - **Services tiers** : OneSignal (notifications push).
+- **Gestionnaire de paquets** : pnpm uniquement (jamais `npm` ni `yarn`, pas de `package-lock.json`).
 
 ## 1. Ordre de lecture des documents
 
@@ -69,7 +70,7 @@ Ce projet est développé par une équipe d'agents orchestrée par le `chef.md`.
 ## 4. Checklist de fin de tâche
 
 Avant de considérer une tâche comme terminée, tu dois impérativement :
-1. Exécuter : `npm run check && npm run lint && npm run build`
+1. Exécuter : `pnpm run check && pnpm run lint && pnpm run build`
 2. Si le schéma a changé : générer une nouvelle migration + mettre à jour `docs/database.md` (incluant la matrice des droits RLS).
 3. Si une route ou un flux a changé : mettre à jour `docs/architecture.md`.
 4. Ajouter une entrée datée dans `docs/journal.md` : ce qui est fait, ce qui reste, les pièges rencontrés.
