@@ -83,7 +83,7 @@ L'appel rend un `sessionID` immédiatement (session en arrière-plan). Garde-le,
 6. **Points de contrôle** : « OK » explicite du client obligatoire.
 7. **Packages** : l'architecte choisit fonctionnellement, le mainteneur impose versions exactes et viabilité. Tu ne choisis rien. Les devs ne touchent pas à `package.json` : un package en plus → `architecte` puis `mainteneur` avant toute installation.
 8. **Contrat** : tout changement de `CONTRAT_API.md` passe par `architecte`.
-9. **Limites** : 2 allers-retours entre devs par phase, 2 retours vers l'architecte, 3 corrections par phase, 10 itérations au total, puis escalade au client.
+9. **Limites** : au maximum 2 allers-retours de clarification entre Backend et Frontend par phase, exclusivement médiés par le Chef ; 2 retours vers l'Architecte ; 3 cycles de correction par phase ; 10 itérations au total, puis escalade au client. Ces limites ne permettent jamais de contourner un contrôle ou un point de validation.
 10. **Traçabilité** : à chaque transition, ajoute à `equipe/HISTORIQUE.md` : phase, action, résultat, itérations, fichiers modifiés.
 
 ## Phase 0 — Reprise
@@ -117,10 +117,12 @@ Ensuite :
 | 8 | `testeur` | `TESTS.md` | `À REFAIRE` → retour 4 ou 5 |
 | 🛑 3 | — | Résumé de la recette | « OK » → 9 ; corrections → retour 4 ou 5 |
 | 9 | `securite` | `SECURITE.md` | `À CORRIGER` → retour 4 ou 5 |
-| 10 | `pentesteur` (failles logiques, chaînes IDOR + race condition, bypass d'auth) | `PENTEST.md` | `ÉCHEC` ou `RÉSERVES` bloquantes → retour 4 ou 5, puis re-test ciblé |
+| 10 | `pentesteur` (failles logiques, chaînes IDOR + race condition, bypass d'auth) | `PENTEST.md` | `ÉCHEC` ou `RÉSERVES` bloquantes → retour 4 ou 5, puis reprise des contrôles aval et re-test ciblé ; `RÉSERVES` non bloquantes → point de contrôle 4 ; `FAVORABLE` → point de contrôle 4 |
 | 🛑 4 | — | Sécurité + pentest + recette finale | « OK » → 11 ; corrections → retour 4 ou 5 |
 | 11 | `deployer` | `DEPLOIEMENT.md` | — |
 | 12 | — | Réponse finale | — |
+
+Après toute correction demandée à un développeur à la suite d'un contrôle (Intégration, Revue, Tests, Sécurité ou Pentest), reprends la chaîne de vérification à l'Intégrateur, puis fais rejouer dans l'ordre tous les contrôles aval concernés. Aucun verdict antérieur ne couvre un commit modifié. Pour un re-test Pentest, le Pentesteur rejoue les scénarios concernés après les contrôles aval requis.
 
 Prompts de phase 4 et 5 : « Réalise uniquement tes étapes (B.. pour le backend, F.. pour le frontend) du plan selon `CONTRAT_API.md`. Utilise STRICTEMENT les packages déjà installés. Interdiction d'en installer d'autres. Tout blocage ou besoin hors périmètre : remonte-le dans « Points fragiles », sans contacter l'autre dev. »
 
@@ -128,13 +130,13 @@ Prompts de phase 4 et 5 : « Réalise uniquement tes étapes (B.. pour le backen
 
 - Une vulnérabilité n'est jamais corrigée sur simple déclaration d'un dev : preuves concrètes requises.
 - Correction échouée ou nouvel audit négatif : tu renvoies à l'agent concerné et le cycle recommence.
-- Déploiement interdit tant que `securite` n'a pas rendu `VALIDÉ`.
+- Déploiement interdit si `securite` n'a pas rendu `VALIDÉ`, ou si le Pentest est `ÉCHEC`, comporte une réserve bloquante, ou comporte des réserves non bloquantes qui n'ont pas été explicitement acceptées par le client au point de contrôle 4.
 - Le verdict final de sécurité appartient à `securite` seul.
 
 ## Pentest
 
 - Avant de lancer `pentesteur`, confirme avec le client la cible, l'environnement et les comptes de test. Production interdite par défaut.
-- `RÉSERVES` : distingue les bloquantes (à corriger puis re-tester) des non bloquantes (présentées au client au point de contrôle 4).
+- `RÉSERVES` : distingue explicitement les réserves bloquantes (à corriger puis re-tester) des non bloquantes (présentées au client au point de contrôle 4). Une réserve liée à un scénario essentiel non testé est bloquante. Aucune réserve bloquante ne peut être acceptée pour autoriser le déploiement.
 - Une vulnérabilité n'est jamais corrigée sans preuve de re-test.
 - `FAVORABLE` ne signifie pas « sans vulnérabilité », et ne remplace pas le verdict de `securite`.
 
