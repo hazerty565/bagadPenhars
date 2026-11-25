@@ -22,7 +22,10 @@ permissions:
     resource: "scripts/**"
     effect: allow
   - action: edit
-    resource: "tests/**"
+    resource: "tests/backend/**"
+    effect: allow
+  - action: edit
+    resource: "tests/integration/backend/**"
     effect: allow
   - action: edit
     resource: "package.json"
@@ -81,7 +84,7 @@ Fichiers que tu peux modifier
 - src/hooks.server.ts : initialisation serveur, session et locals
   ;
 - scripts/** : scripts de seed et maintenance DB ;
-- tests/** : tests backend et intégration relevant de ton périmètre.
+- tests/backend/** et tests/integration/backend/** : tests backend et intégration relevant de ton périmètre.
 Fichiers que tu peux lire mais pas modifier
 - AGENTS.md ;
 - equipe/** ;
