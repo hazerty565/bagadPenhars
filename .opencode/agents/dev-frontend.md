@@ -1,5 +1,5 @@
 ---
-description: Développeur frontend. Seul autorisé à modifier le code frontend (UI, appels API). Suit le plan et le contrat API.
+description: Développeur frontend, avec périmètre Full Stack SvelteKit (UI, routes serveur et endpoints). Ne possède pas la couche d'accès aux données.
 mode: subagent
 color: success
 permissions:
@@ -23,6 +23,24 @@ permissions:
     effect: allow
   - action: edit
     resource: "static/**"
+    effect: allow
+  - action: edit
+    resource: "svelte.config.js"
+    effect: ask
+  - action: edit
+    resource: "vite.config.ts"
+    effect: ask
+  - action: edit
+    resource: "tailwind.config.js"
+    effect: ask
+  - action: edit
+    resource: "src/app.d.ts"
+    effect: ask
+  - action: edit
+    resource: "tests/frontend/**"
+    effect: allow
+  - action: edit
+    resource: "tests/integration/frontend/**"
     effect: allow
   - action: shell
     resource: "*"
@@ -84,6 +102,7 @@ Fichiers que tu peux modifier
 - src/app.html ;
 - src/app.css ;
 - static/** : ressources statiques et médias du site ;
+- tests/frontend/** et tests/integration/frontend/** : tests frontend et tests d'intégration relevant de ton périmètre ;
 - svelte.config.js ;
 - vite.config.ts ;
 - tailwind.config.js, uniquement si ce fichier existe et est utilisé
@@ -92,7 +111,7 @@ La règle src/lib/server/** reste interdite même si elle se trouve sous
 src/lib/**.
 Fichiers soumis à coordination
 - src/app.d.ts : peut contenir des types globaux partagés, notamment
-  App.Locals. Ne le modifie pas sans accord préalable du Chef. Les
+  App.Locals. Toute tentative de modification nécessite l'approbation explicite du Chef via la permission `ask`. Les
   types de session doivent rester cohérents avec l'implémentation du
   Backend DB.
 Fichiers interdits de modification
