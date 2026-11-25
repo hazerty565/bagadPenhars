@@ -10,13 +10,13 @@ permissions:
   - action: edit
     resource: "equipe/INTEGRATION.md"
     effect: allow
-  # Scripts de vérification uniquement, pas de modification générale
-  - action: edit
-    resource: "scripts/verify-*"
-    effect: allow
+  # Refus de toute modification de script, sauf scripts/verify-* explicitement autorisés
   - action: edit
     resource: "scripts/**"
     effect: deny
+  - action: edit
+    resource: "scripts/verify-*"
+    effect: allow
   # Lecture seule des configs, modification soumise à l'accord du Chef
   - action: edit
     resource: "vite.config.*"
