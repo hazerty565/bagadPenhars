@@ -12,9 +12,6 @@ permissions:
   - action: edit
     resource: "equipe/essais/**"
     effect: allow
-  - action: edit
-    resource: "tests/**"
-    effect: allow
   - action: shell
     resource: "*"
     effect: allow
