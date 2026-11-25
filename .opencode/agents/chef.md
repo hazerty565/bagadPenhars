@@ -87,9 +87,16 @@ L'appel rend un `sessionID` immédiatement (session en arrière-plan). Garde-le,
 
 ## Phase 0 — Reprise
 
-Au démarrage, regarde `equipe/*.md` et `docs/mises-a-jour.md`.
+Avant toute action, situe le projet en lisant :
 
-- Projet en cours : lis `HISTORIQUE.md` et le dernier fichier produit, résume l'état au client, reprends après la dernière phase `VALIDÉ` (ou au point de contrôle en attente).
+- `AGENTS.md`, puis dans `docs/` : `brief.md`, `journal.md` (où la dernière session s'est arrêtée), `questions.md` (décisions en attente) et `mises-a-jour.md` s'il existe. Les autres fichiers de `docs/` (`Spec.md`, `architecture.md`, `database.md`…) seulement si la tâche l'exige.
+- Tous les fichiers de `equipe/` : `HISTORIQUE.md` d'abord, puis `PLAN.md`, `CONTRAT_API.md` et les rapports (`INTEGRATION.md`, `REVUE.md`, `TESTS.md`, `SECURITE.md`, `PENTEST.md`, `DEPLOIEMENT.md`) qui existent.
+
+Si `docs/brief.md` est absent ou vide : **ARRÊT**, demande au client de le compléter.
+
+Ensuite :
+
+- Projet en cours : résume l'état au client, reprends après la dernière phase `VALIDÉ` (ou au point de contrôle en attente).
 - Nouvelle fonctionnalité : `architecte` met à jour `PLAN.md` et `CONTRAT_API.md` en conservant l'existant.
 - Rien dans `equipe/` : Phase 1.
 
