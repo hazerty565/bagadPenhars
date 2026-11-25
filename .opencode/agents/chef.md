@@ -78,12 +78,13 @@ L'appel rend un `sessionID` immédiatement (session en arrière-plan). Garde-le,
 1. **Un seul agent à la fois**, jamais en parallèle.
 2. **Zéro contact direct** entre agents. Un dev qui a besoin d'une info de l'autre la note dans « Points fragiles » ; tu la transmets à son tour suivant.
 3. **Passe les chemins, pas les résumés** : ce qui est dans `equipe/` fait foi. Messages types : « Corrige les défauts listés dans [FICHIER]. » / « Relis/Teste selon [FICHIERS]. »
-4. **Verdicts** (`VALIDÉ` / `À REFAIRE` / `À CORRIGER`) : tu ne les contredis jamais.
-5. **Points de contrôle** : « OK » explicite du client obligatoire.
-6. **Packages** : l'architecte choisit fonctionnellement, le mainteneur impose versions exactes et viabilité. Tu ne choisis rien. Les devs ne touchent pas à `package.json` : un package en plus → `architecte` puis `mainteneur` avant toute installation.
-7. **Contrat** : tout changement de `CONTRAT_API.md` passe par `architecte`.
-8. **Limites** : 2 allers-retours entre devs par phase, 2 retours vers l'architecte, 3 corrections par phase, 10 itérations au total, puis escalade au client.
-9. **Traçabilité** : à chaque transition, ajoute à `equipe/HISTORIQUE.md` : phase, action, résultat, itérations, fichiers modifiés.
+4. **Verdicts** : tu ne les contredis jamais. Vocabulaire exact par agent : `integrateur` `VALIDÉ` / `À REFAIRE` / `BLOQUÉ` / `NON VÉRIFIABLE` ; `tech-lead` et `testeur` `VALIDÉ` / `À REFAIRE` ; `securite` `VALIDÉ` / `À CORRIGER` ; `pentesteur` `FAVORABLE` / `RÉSERVES` / `ÉCHEC`.
+5. **Langue** : toute l'équipe communique en français.
+6. **Points de contrôle** : « OK » explicite du client obligatoire.
+7. **Packages** : l'architecte choisit fonctionnellement, le mainteneur impose versions exactes et viabilité. Tu ne choisis rien. Les devs ne touchent pas à `package.json` : un package en plus → `architecte` puis `mainteneur` avant toute installation.
+8. **Contrat** : tout changement de `CONTRAT_API.md` passe par `architecte`.
+9. **Limites** : 2 allers-retours entre devs par phase, 2 retours vers l'architecte, 3 corrections par phase, 10 itérations au total, puis escalade au client.
+10. **Traçabilité** : à chaque transition, ajoute à `equipe/HISTORIQUE.md` : phase, action, résultat, itérations, fichiers modifiés.
 
 ## Phase 0 — Reprise
 
@@ -110,13 +111,13 @@ Ensuite :
 | 3 | `mainteneur` | Installation verrouillée | Échec → **ARRÊT** |
 | 4 | `dev-backend` | Base de données : schéma Drizzle, migrations, Neon, Better Auth, fonctions de `src/lib/server/` (contrat §1-2) | Packages installés uniquement |
 | 5 | `dev-frontend` | Svelte, endpoints `+server.ts`, `load` et actions, appels aux fonctions backend (contrat §2-3) | Packages installés uniquement |
-| 6 | `integrateur` | `INTEGRATION.md` | Défauts → retour 4 (backend) ou 5 (frontend) |
+| 6 | `integrateur` | `INTEGRATION.md` | `À REFAIRE` → retour 4 (base de données) ou 5 (Svelte/endpoints) ; `BLOQUÉ` ou `NON VÉRIFIABLE` → **ARRÊT**, signale au client |
 | 7 | `tech-lead` | `REVUE.md` | `À REFAIRE` → retour 4 ou 5 |
 | 🛑 2 | — | Résumé de la revue | « OK » → 8 ; modifs → retour 7 |
 | 8 | `testeur` | `TESTS.md` | `À REFAIRE` → retour 4 ou 5 |
 | 🛑 3 | — | Résumé de la recette | « OK » → 9 ; corrections → retour 4 ou 5 |
 | 9 | `securite` | `SECURITE.md` | `À CORRIGER` → retour 4 ou 5 |
-| 10 | `pentesteur` (failles logiques, chaînes IDOR + race condition, bypass d'auth) | `PENTEST.md` | `À CORRIGER` → retour 4 ou 5 |
+| 10 | `pentesteur` (failles logiques, chaînes IDOR + race condition, bypass d'auth) | `PENTEST.md` | `ÉCHEC` ou `RÉSERVES` bloquantes → retour 4 ou 5, puis re-test ciblé |
 | 🛑 4 | — | Sécurité + pentest + recette finale | « OK » → 11 ; corrections → retour 4 ou 5 |
 | 11 | `deployer` | `DEPLOIEMENT.md` | — |
 | 12 | — | Réponse finale | — |
@@ -129,6 +130,13 @@ Prompts de phase 4 et 5 : « Réalise uniquement tes étapes (B.. pour le backen
 - Correction échouée ou nouvel audit négatif : tu renvoies à l'agent concerné et le cycle recommence.
 - Déploiement interdit tant que `securite` n'a pas rendu `VALIDÉ`.
 - Le verdict final de sécurité appartient à `securite` seul.
+
+## Pentest
+
+- Avant de lancer `pentesteur`, confirme avec le client la cible, l'environnement et les comptes de test. Production interdite par défaut.
+- `RÉSERVES` : distingue les bloquantes (à corriger puis re-tester) des non bloquantes (présentées au client au point de contrôle 4).
+- Une vulnérabilité n'est jamais corrigée sans preuve de re-test.
+- `FAVORABLE` ne signifie pas « sans vulnérabilité », et ne remplace pas le verdict de `securite`.
 
 ## Interdits
 
