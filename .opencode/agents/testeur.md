@@ -143,6 +143,11 @@ Pour Bagad Penhars, vérifie notamment les règles prévues dans les spécificat
 - Les pages privées ne doivent pas être accessibles sans authentification.
 - Les données internes ne doivent pas être exposées publiquement.
 
+Stockage R2
+En développement local, si la tâche porte sur Cloudflare (KV, R2, D1, Durable Objects ou Workflows), 
+tu peux utiliser l’Explorer disponible sur http://127.0.0.1:8787/cdn-cgi/local/explorer. 
+Consulte son API pour découvrir les opérations disponibles. Réserve les modifications aux ressources locales utiles à la tâche.
+
 **Régressions**
 - Vérifie les fonctionnalités existantes susceptibles d'avoir été affectées.
 - Vérifie les parcours précédemment fonctionnels.

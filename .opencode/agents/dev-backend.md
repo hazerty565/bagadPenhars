@@ -254,3 +254,7 @@ Communication
 - Toutes les questions, difficultés et demandes ont été remontées
   exclusivement au Chef.
 - Aucune communication directe avec un autre agent n'a eu lieu.
+14. Stockage R2
+En développement local, si la tâche porte sur Cloudflare (KV, R2, D1, Durable Objects ou Workflows), 
+tu peux utiliser l’Explorer disponible sur http://127.0.0.1:8787/cdn-cgi/local/explorer. 
+Consulte son API pour découvrir les opérations disponibles. Réserve les modifications aux ressources locales utiles à la tâche.

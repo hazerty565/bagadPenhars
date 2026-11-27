@@ -1,9 +1,0 @@
-{
-	"BASE": "http://localhost:5173",
-	"out": {
-		"ok": true,
-		"keys": ["addDocument", "deleteDocument", "simulateDownload"],
-		"docs": 6,
-		"active": "p06"
-	}
-}

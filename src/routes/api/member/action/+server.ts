@@ -1,16 +1,17 @@
 import { json } from '@sveltejs/kit';
 import { withUserContext } from '$lib/db';
 import { MemberCommandError, runMemberCommand } from '$lib/server/member/commands';
-import { buildMemberSnapshot } from '$lib/server/member/snapshot';
 import { sendInvitationEmail } from '$lib/server/email';
 import type { RequestHandler } from './$types';
 
 /**
  * Exécution d'une commande de l'espace adhérents.
  *
- * Corps attendu : `{ action: string, payload?: unknown }`. La commande et la
- * reconstruction de l'instantané partagent la même transaction : une erreur
- * annule tout, et le client ne reçoit jamais un état intermédiaire.
+ * Corps attendu : `{ action: string, payload?: unknown }`. La commande
+ * s'exécute dans une transaction RLS (`app.profile_id`) : une erreur annule
+ * tout, et le client ne reçoit jamais un état intermédiaire. La réponse
+ * contient uniquement le résultat de la commande (`data`), aucun instantané
+ * complet n'est plus renvoyé.
  */
 
 interface InvitationOutcome {
@@ -78,24 +79,22 @@ export const POST: RequestHandler = async ({ locals, request, url }) => {
 	const profileId = locals.profile.id;
 
 	try {
-		const outcome = await withUserContext(locals.db, profileId, async (tx) => {
-			const result = await runMemberCommand(
+		const result = await withUserContext(locals.db, profileId, async (tx) => {
+			return runMemberCommand(
 				tx,
 				{ profileId, origin: url.origin },
 				action,
 				record.payload ?? {}
 			);
-			const snapshot = await buildMemberSnapshot(tx, profileId);
-			return { result, snapshot };
 		});
 
 		if (
 			(action === 'invitation.create' || action === 'invitation.resend') &&
-			isInvitationOutcome(outcome.result) &&
-			outcome.result.email &&
-			outcome.result.inviteUrl
+			isInvitationOutcome(result) &&
+			result.email &&
+			result.inviteUrl
 		) {
-			const { email, inviteUrl } = outcome.result;
+			const { email, inviteUrl } = result;
 			try {
 				await sendInvitationEmail(email, inviteUrl);
 			} catch (error) {
@@ -104,7 +103,7 @@ export const POST: RequestHandler = async ({ locals, request, url }) => {
 			}
 		}
 
-		return json({ snapshot: outcome.snapshot, result: outcome.result ?? null });
+		return json({ success: true, data: result ?? null });
 	} catch (error) {
 		const { status, code, message } = statusOf(error);
 		if (status >= 500) console.error(`Commande membre « ${action} » en échec :`, error);

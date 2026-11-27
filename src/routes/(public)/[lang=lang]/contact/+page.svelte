@@ -8,6 +8,8 @@
 	import { getDict } from '$lib/i18n';
 	import type { PageProps, SubmitFunction } from './$types';
 
+	export const prerender = true;
+
 	let { data, form }: PageProps = $props();
 
 	const t = $derived(getDict(data.lang));

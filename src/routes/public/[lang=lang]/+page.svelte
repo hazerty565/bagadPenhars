@@ -1,39 +1,26 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import Hero from '$lib/components/home/Hero.svelte';
+	import About from '$lib/components/home/About.svelte';
+	import GalleryPreview from '$lib/components/home/GalleryPreview.svelte';
+	import AgendaPreview from '$lib/components/home/AgendaPreview.svelte';
+	import Prestations from '$lib/components/home/Prestations.svelte';
+	import Join from '$lib/components/home/Join.svelte';
+	import NewsPreview from '$lib/components/home/NewsPreview.svelte';
+	import { getDict } from '$lib/i18n';
+	import type { Dictionary, Lang } from '$lib/i18n';
+	import type { PublicPhoto, PublicEvent, PublicArticle } from '$lib/types';
 
-	// Chargement des données au mount
-	onMount(async () => {
-		// TODO: Récupérer les données publiques via fetch
-		// - 2 prochains événements public
-		// - 3 photos publiques
-		// - 4 pupitres
-	});
+	let { data }: { data: { lang: Lang; galleryPhotos: PublicPhoto[]; upcomingEvents: PublicEvent[]; latestArticles: PublicArticle[] } } = $props();
+
+	const t = $derived(getDict(data.lang));
 </script>
 
-<main class="max-w-4xl mx-auto py-12">
-	<h1 class="text-3xl font-bold mb-6">Bienvenue sur le site de Bagad Penhars</h1>
-
-	<p class="text-lg mb-8">
-		L'association Bagad Penhars vous souhaite la bienvenue. Découvrez notre histoire, nos pupitres
-		et nos prochains événements.
-	</p>
-
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-		<div class="border rounded p-4">
-			<h3>Pupitres</h3>
-			<p>Bombarde, Cornemuse, Caisse claire, Percussion</p>
-		</div>
-		<div class="border rounded p-4">
-			<h3>Dates prochaines</h3>
-			<p>À venir</p>
-		</div>
-		<div class="border rounded p-4">
-			<h3>Photos</h3>
-			<p>Galerie</p>
-		</div>
-		<div class="border rounded p-4">
-			<h3>Bagad</h3>
-			<p>Histoire</p>
-		</div>
-	</div>
+<main>
+	<Hero {t} lang={data.lang} />
+	<About {t} lang={data.lang} />
+	<GalleryPreview {t} lang={data.lang} photos={data.galleryPhotos} />
+	<AgendaPreview {t} lang={data.lang} events={data.upcomingEvents} />
+	<Prestations {t} lang={data.lang} />
+	<NewsPreview {t} lang={data.lang} articles={data.latestArticles} />
+	<Join {t} lang={data.lang} />
 </main>

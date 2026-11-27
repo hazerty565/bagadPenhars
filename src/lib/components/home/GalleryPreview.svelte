@@ -43,7 +43,11 @@
 			<div class="mt-10 grid gap-5 sm:grid-cols-3 sm:items-start">
 				{#each visible as photo, index (photo.id)}
 					<figure class={index === 1 ? 'sm:mt-10' : index === 2 ? 'sm:mt-20' : ''}>
-						<div class="overflow-hidden bg-sable">
+						<div class="relative overflow-hidden bg-sable">
+							<div
+								class="absolute inset-0 animate-pulse bg-gradient-to-r from-sable via-ivoire to-sable"
+								aria-hidden="true"
+							></div>
 							<img
 								src={photo.thumbnailUrl}
 								alt={photo.caption ?? ''}
@@ -51,7 +55,10 @@
 								height="1280"
 								fetchpriority="high"
 								decoding="async"
-								class="aspect-[3/4] w-full object-cover transition-transform duration-500 hover:scale-[1.02]"
+								loading="lazy"
+								class="relative aspect-[3/4] w-full object-cover transition-opacity duration-300 hover:scale-[1.02]"
+								style="aspect-ratio: 3/4;"
+								onload={() => {}}
 							/>
 						</div>
 						{#if photo.caption}

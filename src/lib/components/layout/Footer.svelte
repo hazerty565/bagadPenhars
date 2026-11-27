@@ -93,7 +93,7 @@
 					href={`mailto:${site.email}`}
 					class="mt-3 inline-block break-all transition-colors hover:text-white"
 				>
-					{site.email}
+					{site.email.replace('@', '(@)')}
 				</a>
 			</address>
 		</div>

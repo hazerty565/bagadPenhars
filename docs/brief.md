@@ -50,11 +50,11 @@ Règles :
 - Cloudflare R2 sépare les fichiers publics des photos de profil et documents
   privés. Les objets privés sont servis après vérification du compte et du
   rôle. Chaque membre ne modifie que sa propre photo.
-- Les photos sources JPG/JPEG, PNG et WebP (15 Mo maximum et 6000 × 6000
-  pixels maximum) sont converties en WebP, avec une dimension de sortie
-  maximale de 2000 × 2000 pixels, un ratio conservé, une qualité cible de 82
-  et suppression des métadonnées inutiles. Cloudflare Images est retenu pour
-  les transformations et les variantes d'affichage.
+- Les photos sources JPG/JPEG, PNG et WebP (15 Mo maximum, 6000 × 6000 pixels
+  maximum) sont converties en WebP avant stockage dans R2. La sortie est
+  limitée à 2000 × 2000 pixels, ratio conservé, qualité cible 82 et
+  métadonnées inutiles supprimées. Cloudflare Image Resizing sert les variantes
+  d'affichage; le produit Cloudflare Images n'est pas utilisé.
 - Le stockage global des deux buckets R2 est limité à 8 Go. Une alerte
   administrateur apparaît à 7 Go et aucun nouvel upload n'est accepté à 8 Go.
 
@@ -105,7 +105,7 @@ Les comptes ne se créent pas librement :
 
 ## 5. Contraintes
 
-- **Stack** : SvelteKit 5 (runes), Tailwind, Motion, Better Auth pour
+- **Stack** : SvelteKit 5 (runes), Tailwind, Better Auth pour
   l'identité et les sessions, Neon PostgreSQL avec RLS, Drizzle,
   `pg`/`drizzle-orm/node-postgres`, Cloudflare Hyperdrive pour le pooling des
   connexions, Cloudflare Pages, Cloudflare R2, Resend, Cloudflare Turnstile et
@@ -113,8 +113,8 @@ Les comptes ne se créent pas librement :
   Les rôles métier restent dans `profiles.role`. Le contexte utilisateur RLS
   est établi au début de chaque transaction; le cache partagé de requêtes est
   interdit pour les lectures privées.
-- **Images** : Cloudflare Images transforme les images en WebP et fournit
-  les variantes d'affichage documentées dans [`media.md`](./media.md).
+- **Images** : conversion en WebP avant stockage dans R2; Cloudflare Image
+  Resizing sert les variantes d'affichage documentées dans [`media.md`](./media.md).
 - **Sécurité** : association privée, données personnelles de membres.
   Guards côté serveur et RLS Neon/PostgreSQL sur chaque opération et table
   sensible; les lectures privées sont isolées du cache partagé.

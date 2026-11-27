@@ -1,5 +1,10 @@
 # Journal des mises à jour — dépendances
 
+> Ce fichier conserve les audits datés et n'est pas la source de l'état
+> courant des dépendances. Pour les versions présentes, consulter
+> `package.json` et `pnpm-lock.yaml`; pour le choix technique actif, consulter
+> `equipe/PLAN.md` et les décisions non résolues de `docs/questions.md`.
+
 > Rôle : **MAINTENEUR**. Ce fichier consigne les audits de versions, la compatibilité des paquets
 > et l'état des verrouillages. Je ne modifie jamais le code métier, `equipe/PLAN.md` ni
 > `equipe/CONTRAT_API.md` : je signale, le Chef renvoie l'arbitrage à l'architecte.
@@ -78,7 +83,7 @@ valeurs à chaque fois.
 | Package demandé | Version plan | Dernière version stable | Statut | Action requise |
 | :--- | :--- | :--- | :--- | :--- |
 | `svelte-i18n` | `absent` | — (non interrogé : paquet non retenu) | Absent — conforme | Rien. Q-2026-11-09-01 reste ouverte ; `AGENTS.md` §0 le cite à tort. Aucun import sous `src/` (vérifié) |
-| `motion` | `Écarté` (Q-2026-11-17-01 A) | — | **Écarté — conforme** | Rien. Vérifié : aucun `motion` dans `package.json`, aucun `import … from 'motion'` sous `src/`. La correction d'`AGENTS.md` §0 reste au client |
+| Bibliothèque d'animation tierce | `Écartée` (Q-2026-11-17-01 A) | — | **Écartée — conforme** | Aucune bibliothèque tierce n'est installée ou importée; les animations restent en CSS/Svelte. La référence d'`AGENTS.md` a été retirée. |
 
 ### §7.3 — Proposé pour cette session
 
@@ -315,7 +320,7 @@ en cours de session :
 3. §7.1 : resserrer la plage `better-auth` de `^1.0.0` à `^1.7.25`.
 4. §7.1 : statuer sur `@better-auth/infra` (retirer / monter en 0.4.31 / assumer) — paquet non
    importé, seul responsable du peer `zod` non satisfait.
-5. §7.2 : `motion` « Écarté » — **confirmé conforme** (aucun import, non installé). `svelte-i18n`
+5. §7.2 : bibliothèque d'animation tierce « écartée » — **confirmé conforme** (aucun import, non installée). `svelte-i18n`
    « en attente de Q-09-01 » — confirmé absent.
 6. §7.3 : préciser `image-size` **2.1.0** (version exacte) et la règle « importer la racine, jamais
    `image-size/fromFile` ».

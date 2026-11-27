@@ -209,7 +209,9 @@ migrés; ne pas supposer que ces contrôles sont déjà effectifs.
   données.
 - `src/lib/schemas/` : schémas de validation.
 - `src/lib/types/` : types métier et types de données.
-- `src/lib/i18n/` : traductions françaises, anglaises et bretonnes.
+- `src/lib/i18n/` : dictionnaires typés français, anglais et bretons utilisés
+  par le site public. `svelte-i18n` est conservé dans les dépendances, mais
+  n'est pas le mécanisme actuellement utilisé par ces dictionnaires.
 - `drizzle/` : migrations SQL versionnées et métadonnées générées par Drizzle.
 - `scripts/` : scripts de maintenance et d'administration.
 

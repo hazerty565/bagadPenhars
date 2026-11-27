@@ -5,6 +5,8 @@
 	import { getDict } from '$lib/i18n';
 	import type { PageData } from './$types';
 
+	export const prerender = true;
+
 	let { data }: { data: PageData } = $props();
 
 	const t = $derived(getDict(data.lang));

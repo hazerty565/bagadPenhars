@@ -43,6 +43,40 @@ export default defineConfig({
 		// « Unknown file extension ".svelte" ».
 		noExternal: ['better-auth', '@better-auth/core', 'zod', '@lucide/svelte']
 	},
+	build: {
+		// Code splitting optimization for better TTI/TBT
+		rollupOptions: {
+			output: {
+				manualChunks(id) {
+					if (id.includes('node_modules')) {
+						if (
+							id.includes('zod') ||
+							id.includes('better-auth') ||
+							id.includes('@better-auth/core')
+						) {
+							return 'vendor';
+						}
+						if (
+							id.includes('@lucide/svelte') ||
+							id.includes('clsx') ||
+							id.includes('tailwind-merge')
+						) {
+							return 'ui';
+						}
+						if (id.includes('zod-validation-error') || id.includes('superforms')) {
+							return 'forms';
+						}
+						return 'vendor';
+					}
+				},
+				chunkFileNames: 'assets/[name]-[hash].js',
+				entryFileNames: 'assets/[name]-[hash].js',
+				assetFileNames: 'assets/[name]-[hash].[ext]'
+			}
+		},
+		cssCodeSplit: true,
+		minify: 'esbuild'
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [

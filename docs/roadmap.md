@@ -2,11 +2,10 @@
 
 ## Focus actuel
 
-**Fiabiliser le socle Neon/Better Auth/Cloudflare avant d'étendre les fonctions métier** : implémenter
-le driver Neon, Drizzle et Hyperdrive, les guards SvelteKit, le contexte RLS
-transactionnel et les policies sur les tables sensibles. La CI
-`check` / `lint` / `build` est ajoutée; son premier passage et la complétion
-des fonctions serveur restent à valider.
+**Terminer le point restant des étapes 55-56** : transmettre `isChef` aux
+profils secrétaire/admin pour l'écran d'administration des pupitres. Le
+journal du 2026-11-23 indique que ce point est non critique; les migrations
+RLS et fonctions de quota sont terminées sur l'environnement `test`.
 
 ## Jalons
 

@@ -12,7 +12,7 @@
 ## Phase : Reprise d'état (Phase 0)
 
 - **Action** : Lecture de `equipe/HISTORIQUE.md`, `equipe/PLAN.md`,
-  `equipe/CONTRAT_API.md`, `docs/journal.md`, `docs/questions.md`, `docs/suivi.md`
+  `equipe/CONTRAT_API.md`, `docs/journal.md`, `docs/questions.md`, `docs/roadmap.md`
 - **Résultat** : Projet en cours. Aucune phase n'est encore validée :
   l'architecture a produit ses livrables le 2026-11-17 mais s'est arrêtée sur
   **quatre questions ouvertes** (`Q-2026-11-17-01` à `-04`). `docs/mises-a-jour.md`
@@ -400,3 +400,92 @@
 - **Fichiers modifiés** : aucun.
 - **Prochaine étape** : attendre la disponibilité du fournisseur ou une
   décision du client avant de reprendre l'appel à l'`architecte`.
+
+## Phase : Reprise d'état (Phase 0) — session 2026-11-25
+
+- **Action** : Lecture de `AGENTS.md`, `docs/brief.md`, `docs/journal.md`,
+  `docs/questions.md`, `equipe/HISTORIQUE.md`, `equipe/REVUE.md`,
+  `equipe/INTEGRATION.md`, `equipe/SECURITE.md`, `equipe/TESTS.md` et
+  inspection de `src/lib/server/member/`, `src/routes/dashboard/`
+- **Résultat** : Projet en cours. Dernier état validé : Intégration
+  **SATISFAISANTE** et Revue technique **VALIDÉ** (2026-11-23). Point de
+  contrôle 2 **non franchi** : la phase Tests (testeur) n'est pas lancée.
+  Migrations `0000`–`0008` appliquées sur Neon `test` uniquement ;
+  `production` jamais contactée.
+- **Nouveau besoin client** : refonte de l'espace membre privé pour la
+  performance — lectures serveur ciblées par page (agenda, documents, profils),
+  réponses limitées aux champs requis, en conservant les guards serveur, la
+  transaction avec `app.profile_id` et le RLS.
+- **Clarifications client obtenues** (2026-11-25) : (1) périmètre = **tout l'espace privé**
+  (membre, chef de pupitre, admin) ; (2) **UI inchangée** — seul le chargement
+  des données évolue ; (3) **suppression complète** de `buildMemberSnapshot` et
+  des réponses renvoyant l'instantané complet (`/api/member`, retours de
+  mutation) au profit de lectures ciblées.
+- **Décisions Chef (2026-11-25)** :
+  - Q-2026-11-25-01 : `isChef` conservé projection actuelle, exposé uniquement
+    dans `getPupitrePage` et `listAdminMembersPage`, jamais dans l'annuaire,
+    l'agenda, le détail d'événement ou les notifications.
+  - Q-2026-11-25-02 : droits d'écriture `tests/**` attribués au Testeur
+    conformément `equipe/TESTS.md`, relecture Backend.
+  - Q-2026-11-25-03 : tests `i18n` et `invitation` intégrés aux étapes 45/57
+    après l'étape 73, hors chantier « chargement ciblé » 58-73.
+- **Itérations** : 0
+- **Fichiers modifiés** : `equipe/HISTORIQUE.md`, `docs/questions.md`,
+  `equipe/PLAN.md`, `equipe/CONTRAT_API.md`
+- **Prochaine étape** : point de contrôle 2 — présentation au client avec
+  état actuel (plan + contrat mis à jour §10/§7.11/§7.12, questions résolues),
+  puis lancement selon arbitrage client.
+
+## Phase : Développement — chargement ciblé de l'espace privé (étapes 58 à 72)
+
+- **Action** : Exécution des étapes 58 à 72 du chantier « chargement ciblé »
+  (plan §10, contrat §3.1/§7.11/§7.12/§11.1) — remplacement de
+  `buildMemberSnapshot` par des lectures serveur ciblées par page.
+- **Résultat** : Toutes les étapes 58 à 72 impliquées et compilent (0 erreur
+  `pnpm run check`, 19 warnings préexistants uniquement).
+  - **Étape 58 (B1)** : `queries/common.ts` (requireAuth, requireRole, runQuery),
+    `queries/shell.ts` (getMemberShell → MemberProfile), types DTO dans
+    `types.ts` (SessionProfile, MemberShell, MemberPageEnvelope, PageSection,
+    MemberEventPageItem, AgendaPageData, EventDetailPageData, EventFormPageData,
+    EventPageContext, DirectoryProfile).
+  - **Étape 59 (B2)** : `queries/agenda.ts` (listAgendaEvents), `queries/events.ts`
+    (getEventDetail, getEventForEdit, getPageContext).
+  - **Étape 60 (B3)** : `queries/errors.ts` (MemberQueryError),
+    `queries/directory.ts` (listDirectoryProfiles), `queries/pupitre.ts`
+    (getPupitrePage).
+  - **Étape 61 (B4)** : `queries/documents.ts` (listDocumentsPage),
+    `queries/notifications.ts` (listNotificationsPage).
+  - **Étape 62 (B5)** : `queries/articles.ts`, `queries/media.ts`,
+    `queries/invitations.ts`, `queries/settings.ts`, `queries/adminMembers.ts`,
+    `queries/adminOverview.ts` — alignés sur le contrat §3.1.
+  - **Étape 63 (B6)** : `queries/profile.ts` (getProfilePage),
+    `queries/context.ts` (getPageContext avec minRole).
+  - **Étape 64 (F2)** : `store.svelte.ts` (MemberStore par sections,
+    applyShell/applyPage/clearPage, invalidateAll après mutation), réduction du
+    `+layout.server.ts` au socle (`getMemberShell` uniquement).
+  - **Étape 64b (F2b)** : `+layout.svelte` migré sur `memberShell`
+    (applyShell, clearPage sur navigation).
+  - **Étape 65 (F3)** : 6 routes dashboard/agenda adaptées (`+page.server.ts`),
+    `queries/overview.ts` créé.
+  - **Étape 66 (F4)** : 6 routes pupitre/documents/membres adaptées.
+  - **Étape 67 (F5)** : 3 routes notifications/profil/securite adaptées.
+  - **Étape 68 (F6)** : 7 routes administration adaptées.
+  - **Étape 69 (F7)** : `GET /api/member` supprimé, `POST /api/member/action`
+    retourne `{ success, data }` sans snapshot, `runMemberCommand` sans
+    snapshot, `grep` → 0 occurrence.
+  - **Étape 72 (B7)** : `snapshot.ts` supprimé, interface `MemberSnapshot`
+    retirée de `types.ts`, `README.md` nettoyé, `grep` → 0 occurrence.
+- **Écarts corrigés** : `applyPage()` connecté dans 19 pages `+page.svelte`,
+  `invalidateAll()` ajouté dans `store.svelte.ts`, conflits de nommage
+  résolus dans `queries/{directory,documents,invitations,media}.ts`,
+  alignement `articles.ts`/`media.ts`/`profile.ts`/`context.ts` sur le contrat.
+- **Itérations** : 0
+- **Fichiers modifiés** : `src/lib/member/types.ts`, `src/lib/member/store.svelte.ts`,
+  `src/lib/member/README.md`, `src/routes/dashboard/+layout.server.ts`,
+  `src/routes/dashboard/+layout.svelte`, `src/routes/api/member/+server.ts` (supprimé),
+  `src/routes/api/member/action/+server.ts`, 19 fichiers `+page.svelte` sous
+  `src/routes/dashboard/`, 10 fichiers de requêtes créés dans
+  `src/lib/server/member/queries/`.
+- **Prochaine étape** : `testeur` — étape 73 (`tests/member-queries.test.ts`),
+  puis intégrateur (build final), tech-lead (revue), sécurité, pentest,
+  déployeur.

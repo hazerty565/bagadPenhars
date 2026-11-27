@@ -13,12 +13,12 @@
 
 Ce document transforme le besoin produit en exigences vérifiables pour la
 conception, l'implémentation et la revue du code. Il complète
-[`docs/brief.md`](./docs/brief.md), qui reste la référence fonctionnelle.
+[`brief.md`](./brief.md), qui reste la référence fonctionnelle.
 
 La spécification décrit le comportement attendu, pas l'état actuel du code. Les
 routes et migrations présentes dans le dépôt ne prouvent pas à elles seules
 qu'une exigence est implémentée. Les points techniques non tranchés sont
-signalés dans [`docs/questions.md`](./docs/questions.md).
+signalés dans [`questions.md`](./questions.md).
 
 ## 2. Objectifs et périmètre
 
@@ -281,9 +281,11 @@ de données le permet.
   format JPG/JPEG, PNG ou WebP, jusqu'à 15 Mo par fichier source, sont
   converties au format WebP avant stockage. Les dimensions source sont limitées
   à 6000 × 6000 pixels, la qualité cible est 82 et les métadonnées inutiles
-  sont supprimées. Cloudflare Images effectue la transformation; la dimension
-  de sortie est limitée à 2000 × 2000 pixels en conservant le ratio. Les
-  variantes d'affichage utilisent 400 × 400 pixels (qualité 75, `cover`) pour
+  sont supprimées. La conversion et le redimensionnement à 2000 × 2000 pixels
+  (ratio conservé) ont lieu avant stockage dans R2. Cloudflare Image Resizing
+  sert ensuite les variantes d'affichage à la volée; le produit Cloudflare
+  Images n'est pas utilisé. Les variantes d'affichage utilisent 400 × 400
+  pixels (qualité 75, `cover`) pour
   les vignettes et 2000 × 2000 pixels (qualité 82, `contain`) pour la vue
   détaillée. Les vidéos ne sont pas acceptées. Les fichiers audio OGG sont
   limités à 30 Mo; les PDF à 20 Mo.
@@ -365,7 +367,7 @@ de données le permet.
 ## 6. Contraintes techniques et conventions
 
 La cible déclarée dans `AGENTS.md` et `docs/brief.md` est SvelteKit 5 avec
-runes, Tailwind, Motion, Better Auth, Neon PostgreSQL, Cloudflare R2,
+runes, Tailwind, Better Auth, Neon PostgreSQL, Cloudflare R2,
 OneSignal et hébergement Cloudflare Pages. Avant une
 nouvelle intégration, vérifier cette cible face aux dépendances et à
 l'implémentation présentes : le dépôt peut contenir des choix antérieurs ou
@@ -431,7 +433,7 @@ Une fonctionnalité est livrable lorsque :
    invalides pertinents;
 7. les documents concernés (`docs/architecture.md`, `docs/database.md`,
    `docs/pwa.md`) sont mis à jour;
-8. les vérifications `npm run check`, `npm run lint` et `npm run build`
+8. les vérifications `pnpm run check`, `pnpm run lint` et `pnpm run build`
    passent, ou les échecs préexistants et non liés sont signalés clairement.
 
 ## 8. Décisions et éléments restant à compléter
@@ -670,7 +672,7 @@ Une livraison développeur doit fournir :
    Svelte 5 et Tailwind de `AGENTS.md`;
 5. les documents de conception mis à jour en cas de changement de route,
    schéma, visibilité, stockage ou notification;
-6. les vérifications `npm run check`, `npm run lint` et `npm run build`
+6. les vérifications `pnpm run check`, `pnpm run lint` et `pnpm run build`
    exécutées. Les erreurs préexistantes doivent être distinguées des erreurs
    introduites par le changement.
 7. les tests RLS couvrant l'absence de contexte, les accès autorisés/refusés

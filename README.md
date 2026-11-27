@@ -165,22 +165,19 @@ Cloudflare Pages est la cible d'hébergement. Avant toute mise en production,
 il faut configurer Better Auth, Neon et R2, séparément les branchements `test`
 et `production`, vérifier les secrets et valider la compatibilité du service
 worker avec OneSignal.
-Consultez [la feuille de route](./docs/roadmap.md) et
-[le backlog](./docs/backlog.md) pour l'ordre de réalisation.
+Consultez [la feuille de route](./docs/roadmap.md) et le
+[journal](./docs/journal.md) pour l'état d'avancement récent.
 
 ## Documents de référence
 
 - [Brief produit](./docs/brief.md) — besoin et périmètre.
 - [Spécification développeur](./docs/Spec.md) — rôles, règles fonctionnelles et
   critères d'acceptation.
-- [Spécification UI](./docs/Spec_UI.md) — structure des pages et composants de
-  l'interface.
-- [Structure du dépôt](./docs/Structure.md) — arborescence réelle, prototype
-  visuel et repères des modules.
-- [Architecture](./docs/architecture.md) — routes et flux.
+- [Direction UI](./docs/maquette_UI.md) — principes visuels et pages publiques.
+- [Architecture](./docs/architecture.md) — organisation, routes et flux.
 - [Base de données](./docs/database.md) — Neon, Better Auth, R2 et droits.
 - [PWA](./docs/pwa.md) — cache et notifications.
 - [Questions produit](./docs/questions.md) — décisions prises et questions
   ouvertes.
-- [Feuille de route](./docs/roadmap.md) et [backlog](./docs/backlog.md) —
-  priorités et travail restant.
+- [Feuille de route](./docs/roadmap.md) — jalons du projet.
+- [Journal](./docs/journal.md) — dernier état d'avancement.

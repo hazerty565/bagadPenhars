@@ -1,3 +1,27 @@
+# 2026-11-25
+
+### Clarification des documents de référence
+
+- `Spec_UI.md` et `event.md` sont maintenant des index courts vers les sources
+  canoniques (`maquette_UI.md`, `Spec.md`, `brief.md` et `database.md`) plutôt
+  que des spécifications parallèles. Les agents ne lisent que les sections
+  utiles de `equipe/PLAN.md` et `equipe/CONTRAT_API.md`.
+- La bibliothèque d'animation tierce a été retirée des consignes et
+  spécifications actives. Les exigences d'accessibilité pour le mouvement
+  réduit sont conservées.
+- Les images sources sont converties en WebP avant stockage dans R2; Cloudflare
+  Image Resizing ne sert que les variantes d'affichage. Cloudflare Images n'est
+  pas utilisé.
+- Les traductions publiques `fr`, `en` et `br` sont présentes dans les
+  dictionnaires typés de `src/lib/i18n/`. `svelte-i18n` reste dans les
+  dépendances, mais le code actuel n'importe pas cette bibliothèque.
+- Écart de réalisation : `inspectImageUpload()` valide les images, mais ne les
+  convertit pas en WebP. La conversion avant stockage R2 reste à implémenter.
+- Les commandes documentées utilisent pnpm; le verrou npm `package-lock.json`
+  a été supprimé. `pnpm-lock.yaml` reste le verrou de référence.
+- Le README ne pointe plus vers `docs/Structure.md` ni `docs/backlog.md`, qui
+  ont été supprimés.
+
 ## 2026-11-23
 
 ### Finalisation étapes 55-56 (RLS + quota)

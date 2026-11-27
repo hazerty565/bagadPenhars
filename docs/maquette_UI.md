@@ -532,8 +532,9 @@ validés dans le navigateur.
 
 ## 12. Animations et interactions
 
-La maquette Bolt utilise GSAP et Motion. Le projet principal prévoit
-Motion et des transitions Svelte.
+La maquette Bolt utilise des bibliothèques d'animation propres au prototype.
+Le projet principal s'appuie sur des transitions CSS/Svelte; aucune
+bibliothèque d'animation tierce n'est retenue.
 
 Principes :
 

@@ -5,7 +5,7 @@ Lis ce fichier en premier, puis les fichiers pertinents dans `docs/`.
 En cas de doute ou de contradiction, n'invente jamais : signale le point au Chef. Celui-ci fait consigner la question dans `docs/questions.md` par l'Architecte lorsque nécessaire, puis arbitre ou sollicite le client.
 
 ## 0. Stack Technique
-- **Frontend** : SvelteKit 5 (Runes uniquement), Tailwind CSS, Motion, `svelte-i18n`.
+- **Frontend** : SvelteKit 5 (Runes uniquement), Tailwind CSS.
 - **Backend / Auth** : Better Auth, Neon PostgreSQL (avec politiques RLS), Drizzle ORM.
 - **Infrastructure** : Cloudflare Pages, Cloudflare R2 (stockage), Cloudflare Hyperdrive.
 - **Services tiers** : OneSignal (notifications push).
@@ -13,40 +13,59 @@ En cas de doute ou de contradiction, n'invente jamais : signale le point au Chef
 
 ## 1. Ordre de lecture des documents
 
-### À lire systématiquement en début de session
-- `docs/brief.md` : Besoin global, rôles, décisions de visibilité.
-- `docs/journal.md` : Où la dernière session s'est arrêtée, état actuel.
+### Parcours de lecture minimal
+- Toujours lire `docs/brief.md` pour les règles produit stables.
+- Lire `docs/roadmap.md` uniquement pour choisir ou reprendre la prochaine tâche.
+- Lire `docs/journal.md` uniquement si la tâche reprend un travail en cours ou si la roadmap renvoie à une entrée précise. C'est un historique daté, pas une source de vérité.
+- Pour toute autre question, lire seulement la source indiquée dans « Sources de référence » et les sections directement concernées. Ne pas lire intégralement les longs documents d'équipe : le Chef fournit les sections de `equipe/PLAN.md` et `equipe/CONTRAT_API.md` utiles à la tâche.
 
 ### À lire selon la tâche en cours
 | Fichier | Quand le lire |
 |---------|---------------|
 | `docs/Spec.md` | Pour les exigences fonctionnelles et techniques détaillées. |
-| `docs/Spec_UI.md` | Pour les spécifications des pages, composants et comportements UI. |
-| `docs/Structure.md` | Pour comprendre l'arborescence du dépôt, routes et services. |
+| `docs/Spec_UI.md` | Index des sources UI; lire `maquette_UI.md` pour le visuel. |
 | `docs/architecture.md` | Pour les flux d'authentification et l'architecture des routes. |
 | `docs/database.md` | Pour les détails Neon, Better Auth, R2 et les règles de migration. |
-| `docs/bagad-penhars-schema.*` | (`.mmd`, `.sql`, `.webp`) Pour visualiser le schéma de base de données. |
 | `docs/pwa.md` | Pour tout ce qui concerne le manifest, le service worker et les notifications. |
-| `docs/agenda.md` / `docs/event.md` | Pour les règles métier spécifiques à l'agenda et aux RSVP. |
+| `docs/event.md` | Index vers les règles RSVP de `Spec.md` et `database.md`. |
 | `docs/media.md` | Pour la gestion des uploads, le stockage R2 et les règles d'accès. |
 | `docs/partenaire.md` | Pour l'organisation et l'ajout des partenaires. |
-| `docs/roadmap.md` / `docs/backlog.md` | Pour choisir la prochaine tâche (Focus actuel -> Backlog). |
+| `docs/roadmap.md` / `docs/journal.md` | Pour le focus actuel et l'état de la dernière session. |
 | `docs/questions.md` | Pour voir les décisions en attente ou les ambiguïtés. |
 
-*Règle : Ne lis que ce dont ta tâche a besoin, mais toujours `brief.md` et `journal.md`.*
+*Règle : commence par `AGENTS.md` et `brief.md`, puis ouvre uniquement les sources nécessaires à la tâche. Ne parcours pas les journaux et rapports historiques par défaut.*
+
+### Sources de référence
+
+| Sujet | Source qui fait foi |
+|-------|----------------------|
+| Besoin produit et règles métier | `docs/brief.md`, détaillé par `docs/Spec.md` |
+| État réel du code et prochaine tâche | code et migrations pour l'état technique; `docs/journal.md` et `docs/roadmap.md` pour le suivi |
+| Schéma, migrations et RLS | `docs/database.md` et `drizzle/` |
+| Routes et flux | `docs/architecture.md` |
+| Direction visuelle | `docs/maquette_UI.md` |
+| API serveur | sections concernées de `equipe/CONTRAT_API.md` |
+| Étape de développement | section active de `equipe/PLAN.md` |
+| Dépendances | `package.json` et `pnpm-lock.yaml`; `docs/mises-a-jour.md` ne sert que pour l'historique des audits |
+| Ambiguïtés encore à décider | questions non résolues de `docs/questions.md` |
+
+Les rapports datés, journaux et documents d'équipe non désignés pour la tâche
+décrivent l'état à leur date; ne les ouvre pas pour établir l'état courant. Ils
+ne remplacent pas les sources courantes ci-dessus. Si deux sources courantes se
+contredisent, arrête la partie concernée et demande un arbitrage au Chef.
 
 ## 2. Règles d'Or (Non négociables)
 
 ### Svelte 5 & Frontend
 - **Runes uniquement** : utilise `$state`, `$derived`, `$effect`, `$props`.
 - **Interdits absolus** : `export let`, `$:`, `on:click` (utiliser `onclick`), et les stores legacy pour l'état local des composants.
-- **UI** : Tailwind uniquement (via les tokens du thème). Respecter `prefers-reduced-motion` pour Motion. Mobile first et accessibilité (labels, contrastes, focus visible).
-- **i18n** : Site public en `fr`, `en`, `br` via `svelte-i18n`. L'espace adhérents reste en français. Centralise les textes dans `src/lib/i18n/`, jamais de chaînes en dur dans les composants.
+- **UI** : Tailwind uniquement (via les tokens du thème). Respecter `prefers-reduced-motion` pour les animations. Mobile first et accessibilité (labels, contrastes, focus visible).
+- **i18n** : Site public en `fr`, `en`, `br` via les dictionnaires typés de `src/lib/i18n/`. `svelte-i18n` reste installé, mais n'est pas utilisé par le code actuel. L'espace adhérents reste en français. Centralise les textes dans `src/lib/i18n/`, jamais de chaînes en dur dans les composants.
 
 ### Base de données, Auth & Sécurité (Critique)
 - **Autorisations** : Toujours vérifiées côté serveur (loads/actions/endpoints).
 - **Identité vs Rôle** : Better Auth gère l'identité et les sessions. Le rôle métier est lu côté serveur depuis `profiles.role` (ENUM PostgreSQL `app_role`), selon le schéma validé. Aucune valeur de rôle fournie par le client ne fait autorité.
-- **RLS & Contexte** : Les tables sensibles utilisent les politiques RLS natives de Neon/PostgreSQL en défense en profondeur. Après validation de la session Better Auth, chaque transaction applicative établit son contexte utilisateur avec `set_config('app.current_user_id', '...', true)` avant les requêtes métier.
+- **RLS & Contexte** : Les tables sensibles utilisent les politiques RLS natives de Neon/PostgreSQL en défense en profondeur. Après validation de la session Better Auth, chaque transaction applicative établit son contexte utilisateur avec `set_config('app.profile_id', '...', true)` avant les requêtes métier.
 - **Hyperdrive** : Sert uniquement au pooling des connexions. **Ne jamais** activer le cache de requêtes pour des données protégées par RLS ou dépendantes de l'identité. Le cache n'est que pour les lectures explicitement publiques.
 - **Migrations** : Reproductibles via Drizzle. Une migration appliquée n'est **jamais** modifiée : on en ajoute une nouvelle additive.
 - **Secrets** : Les identifiants Neon, clés Better Auth et clés OneSignal restent strictement côté serveur (`.env` ignoré, `.env.example` à jour).
@@ -63,7 +82,7 @@ En cas de doute ou de contradiction, n'invente jamais : signale le point au Chef
 ## 3. Workflow Multi-Agents
 
 Ce projet est développé par une équipe d'agents orchestrée par le `chef.md`. 
-- Si tu es un agent de développement, tu suis les directives de `equipe/PLAN.md` et `equipe/CONTRAT_API.md`.
+- Si tu es un agent de développement, tu suis l'étape active et les seules sections pertinentes de `equipe/PLAN.md` et `equipe/CONTRAT_API.md`. Ne lis pas ces deux documents en entier par défaut; le Chef indique les sections utiles au démarrage de la tâche.
 - Tu ne dois jamais modifier les fichiers dans `equipe/`, sauf autorisation explicite prévue par ta fiche : Architecte (`PLAN.md`, `CONTRAT_API.md`), Chef (`HISTORIQUE.md`), Intégrateur (`INTEGRATION.md`), Tech Lead (`REVUE.md`), Testeur (`TESTS.md` et `essais/`), Sécurité (`SECURITE.md`), Pentesteur (`PENTEST.md` et `essais/pentest/`) ou Déployeur (`DEPLOIEMENT.md`). Les autres agents restent en lecture seule sur ce dossier.
 - En cas de conflit entre le plan et ce fichier `AGENTS.md`, **ce fichier `AGENTS.md` prévaut**. Signale-le au Chef ; l'Architecte consigne la question dans `docs/questions.md` avant toute décision qui modifie le périmètre ou l'architecture.
 

@@ -1,9 +1,0 @@
-
- RUN  v4.1.7 C:/Users/hazer/Desktop/bagadPenhars/bagadPenhars/bagadPenhars
-
-
- Test Files  8 passed (8)
-      Tests  72 passed (72)
-   Start at  21:20:04
-   Duration  4.35s (transform 3.69s, setup 0ms, import 5.81s, tests 871ms, environment 4ms)
-

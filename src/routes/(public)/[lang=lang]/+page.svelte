@@ -11,6 +11,8 @@
 	import { getDict } from '$lib/i18n';
 	import type { PageData } from './$types';
 
+	export const prerender = true;
+
 	let { data }: { data: PageData } = $props();
 
 	const t = $derived(getDict(data.lang));
@@ -35,6 +37,8 @@
 	<meta property="og:url" content={canonical} />
 	<meta property="og:locale" content={ogLocale} />
 	<meta property="og:image" content={`${origin}/hero.webp`} />
+
+	<link rel="preload" as="image" href="/hero.webp" fetchpriority="high" />
 </svelte:head>
 
 <Hero {t} lang={data.lang} />

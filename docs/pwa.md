@@ -92,6 +92,7 @@ Sans `no-cache` sur le service worker, les mises à jour n'arrivent pas chez les
 - L'installation sur l'écran d'accueil est requise sur Android et iOS pour recevoir les notifications push.
 - Sur iOS, les notifications push des web apps installées nécessitent iOS 16.4 minimum.
 - Prévoir dans l'espace adhérents une page d'aide « Installer l'application » (Safari → Partager → Sur l'écran d'accueil), et inviter à activer les notifications une fois installée.
+- Proposer l'installation après la connexion, dans l'espace adhérents (décision client du 2026-11-07).
 - La demande de permission de notification se déclenche sur une action de l'utilisateur, jamais au chargement de la page.
 
 ## 8. Mises à jour
@@ -109,5 +110,4 @@ du service worker et du manifest au prochain chargement.
 
 ## 10. Points restant à définir
 
-- Faut-il proposer l'installation de l'application avant ou après la connexion ?
 - Couleurs et icônes définitives du thème.

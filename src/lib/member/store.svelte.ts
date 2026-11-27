@@ -1,3 +1,4 @@
+import { invalidateAll } from '$app/navigation';
 import type {
 	MemberAlbum,
 	MemberArticle,
@@ -9,20 +10,20 @@ import type {
 	MemberProfile,
 	MemberResponse,
 	MemberSettings,
-	MemberSnapshot
+	MemberShell,
+	MemberPageEnvelope,
+	PageSection
 } from './types';
 
 /**
- * Instantané serveur de l'espace adhérents.
+ * Store de l'espace adhérents — chargement ciblé par section (étapes 58 à 73).
  *
- * Le client ne construit plus aucun état métier : chaque `load` serveur et
- * chaque mutation renvoient une photographie filtrée par PostgreSQL (RLS) et
- * par le rôle du profil connecté. Le store ne fait que la conserver pour
- * l'affichage.
+ * Le layout charge le socle (`memberShell`) et chaque page charge ses données
+ * (`memberPage`). Le store ne fait que conserver ces deux états et les exposer
+ * via des getters dont les noms sont inchangés par rapport à l'ancien snapshot,
+ * afin que les composants n'aient pas à être modifiés à cette étape.
  *
- * Aucune donnée n'est persistée dans le navigateur : le rechargement d'une
- * page recharge l'instantané depuis `/api/member` ou depuis le `load` du
- * layout, et la déconnexion vide l'état.
+ * Aucune donnée n'est persistée dans le navigateur. La déconnexion vide l'état.
  */
 
 export type MemberNoticeKind = 'success' | 'error' | 'info';
@@ -72,8 +73,11 @@ const EMPTY_SETTINGS: MemberSettings = {
 };
 
 class MemberStore {
-	/** Dernier instantané reçu du serveur, ou `null` avant le premier chargement. */
-	snapshot = $state<MemberSnapshot | null>(null);
+	/** Socle (profil de la session + unreadCount), chargé par le layout. */
+	shell = $state<MemberShell | null>(null);
+
+	/** Données de la page courante, chargées par le load de la page. */
+	page = $state<MemberPageEnvelope | null>(null);
 
 	/** Message de retour éphémère affiché par la coquille. */
 	notice = $state<MemberNotice | null>(null);
@@ -82,11 +86,11 @@ class MemberStore {
 	pending = $state(false);
 
 	get ready(): boolean {
-		return this.snapshot !== null;
+		return this.shell !== null;
 	}
 
 	get profile(): MemberProfile {
-		return this.snapshot?.profile ?? EMPTY_PROFILE;
+		return this.shell?.profile ?? EMPTY_PROFILE;
 	}
 
 	/** Alias historique utilisé par les pages. */
@@ -99,52 +103,82 @@ class MemberStore {
 	}
 
 	get profiles(): MemberProfile[] {
-		return this.snapshot?.profiles ?? [];
+		const data = this.page?.memberPage.data as { profiles?: unknown } | undefined;
+		if (data?.profiles) return data.profiles as MemberProfile[];
+		return [];
 	}
 
 	get events(): MemberEvent[] {
-		return this.snapshot?.events ?? [];
+		const data = this.page?.memberPage.data as { events?: unknown } | undefined;
+		if (data?.events) return data.events as MemberEvent[];
+		return [];
 	}
 
 	get responses(): MemberResponse[] {
-		return this.snapshot?.responses ?? [];
+		const data = this.page?.memberPage.data as { responses?: unknown } | undefined;
+		if (data?.responses) return data.responses as MemberResponse[];
+		return [];
 	}
 
 	get notifications(): MemberNotification[] {
-		return this.snapshot?.notifications ?? [];
+		const data = this.page?.memberPage.data as { notifications?: unknown } | undefined;
+		if (data?.notifications) return data.notifications as MemberNotification[];
+		return [];
 	}
 
 	get documents(): MemberDocument[] {
-		return this.snapshot?.documents ?? [];
+		const data = this.page?.memberPage.data as { documents?: unknown } | undefined;
+		if (data?.documents) return data.documents as MemberDocument[];
+		return [];
 	}
 
 	get articles(): MemberArticle[] {
-		return this.snapshot?.articles ?? [];
+		const data = this.page?.memberPage.data as { articles?: unknown } | undefined;
+		if (data?.articles) return data.articles as MemberArticle[];
+		return [];
 	}
 
 	get albums(): MemberAlbum[] {
-		return this.snapshot?.albums ?? [];
+		const data = this.page?.memberPage.data as { albums?: unknown } | undefined;
+		if (data?.albums) return data.albums as MemberAlbum[];
+		return [];
 	}
 
 	get invitations(): MemberInvitation[] {
-		return this.snapshot?.invitations ?? [];
+		const data = this.page?.memberPage.data as { invitations?: unknown } | undefined;
+		if (data?.invitations) return data.invitations as MemberInvitation[];
+		return [];
 	}
 
+	/** Préférences de notification de la page profil (objet unique → tableau pour compatibilité). */
 	get preferences(): MemberPreferences[] {
-		return this.snapshot?.preferences ?? [];
+		const data = this.page?.memberPage.data as {
+			preferences?: MemberPreferences | null;
+		} | undefined;
+		if (data?.preferences) return [data.preferences];
+		return [];
 	}
 
 	get settings(): MemberSettings {
-		return this.snapshot?.settings ?? EMPTY_SETTINGS;
+		const data = this.page?.memberPage.data as {
+			settings?: MemberSettings;
+		} | undefined;
+		return data?.settings ?? EMPTY_SETTINGS;
 	}
 
-	applySnapshot(snapshot: MemberSnapshot): void {
-		this.snapshot = snapshot;
+	/** Définit le socle (appelé par le layout après son load). */
+	applyShell(shell: MemberShell): void {
+		this.shell = shell;
 	}
 
-	/** Vide l'état après déconnexion. */
-	clear(): void {
-		this.snapshot = null;
+	/** Définit les données de la page courante, remplace les précédentes. */
+	applyPage<S extends PageSection, D>(envelope: MemberPageEnvelope<S, D>): void {
+		this.page = envelope;
+	}
+
+	/** Vide les données de page (changement de route). Le socle est conservé. */
+	clearPage(): void {
+		this.page = null;
 	}
 
 	notify(kind: MemberNoticeKind, text: string): void {
@@ -155,7 +189,11 @@ class MemberStore {
 		this.notice = null;
 	}
 
-	/** Exécute une commande serveur et applique l'instantané renvoyé. */
+	/**
+	 * Exécute une commande serveur via POST /api/member/action.
+	 * Le retour n'est plus un instantané : le client revalide la page courante
+	 * après la mutation et le load ciblé renvoie l'état à jour.
+	 */
 	async request<T = unknown>(action: string, payload: unknown = {}): Promise<T> {
 		this.pending = true;
 		try {
@@ -167,8 +205,7 @@ class MemberStore {
 			const body = (await response.json().catch(() => null)) as {
 				message?: string;
 				code?: string;
-				snapshot?: MemberSnapshot;
-				result?: T;
+				data?: T;
 			} | null;
 
 			if (!response.ok) {
@@ -179,27 +216,11 @@ class MemberStore {
 				);
 			}
 
-			if (body?.snapshot) this.applySnapshot(body.snapshot);
-			return (body?.result ?? null) as T;
+			invalidateAll();
+			return (body?.data ?? null) as T;
 		} finally {
 			this.pending = false;
 		}
-	}
-
-	/** Recharge l'instantané depuis le serveur. */
-	async refresh(): Promise<void> {
-		const response = await fetch('/api/member', { headers: { accept: 'application/json' } });
-		if (!response.ok) {
-			throw new MemberApiError('Impossible de recharger l’espace adhérents.', response.status);
-		}
-		const body = (await response.json()) as { snapshot?: MemberSnapshot };
-		if (body.snapshot) this.applySnapshot(body.snapshot);
-	}
-
-	/** Réinitialise l'affichage à partir du serveur. */
-	async reset(): Promise<void> {
-		await this.refresh();
-		this.notify('info', 'Les données ont été rechargées depuis le serveur.');
 	}
 }
 

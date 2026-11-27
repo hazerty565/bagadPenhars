@@ -52,7 +52,7 @@
 		<a
 			href={resolve('/(public)/[lang=lang]', { lang })}
 			class="flex shrink-0 items-center gap-3"
-			aria-label={`${site.name} â€” ${t.nav.home}`}
+			aria-label={`${site.name} — ${t.nav.home}`}
 		>
 			<img
 				src="/logo-penhars.svg"
@@ -62,7 +62,7 @@
 				fetchpriority="high"
 				class="h-11 w-11 object-contain"
 			/>
-			<span class="hidden leading-none sm:block">
+			<span class="leading-none">
 				<span class="block font-serif text-xl font-semibold tracking-tight text-marine">
 					Bagad Penhars
 				</span>
@@ -90,7 +90,7 @@
 		</nav>
 
 		<div class="flex items-center gap-1.5">
-			<div class="mr-1 hidden items-center gap-1.5 xl:flex">
+			<div class="mr-1 hidden items-center gap-1.5 md:flex">
 				<a
 					href={site.social.facebook}
 					target="_blank"
@@ -116,16 +116,6 @@
 			<div class="hidden border-l border-ink/10 pl-2 md:block">
 				<LanguageSwitcher {lang} label={t.nav.language} />
 			</div>
-
-			<button
-				type="button"
-				onclick={openPlayer}
-				class="ml-1 inline-flex h-10 items-center gap-2 border border-or/70 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-marine transition-colors hover:bg-or/10"
-			>
-				<Music2 class="h-4 w-4" />
-				<span class="hidden 2xl:inline">{t.nav.listen}</span>
-				<span class="sr-only 2xl:hidden">{t.nav.listen}</span>
-			</button>
 
 			<a
 				href={resolve('/auth/login')}
@@ -182,6 +172,48 @@
 						<LogIn class="h-4 w-4" />
 						{t.nav.login}
 					</a>
+				</div>
+
+				<div class="border-t border-ink/10 pt-5">
+					<div class="mb-4 w-auto inline-flex">
+						<LanguageSwitcher {lang} label={t.nav.language} />
+					</div>
+				</div>
+
+				<div class="border-t border-ink/10 pt-5">
+					<button
+						type="button"
+						onclick={openPlayer}
+						class="w-full inline-flex items-center justify-center gap-2 border border-or/70 px-4 py-3 text-base font-semibold uppercase tracking-[0.14em] text-marine transition-colors hover:bg-or/10"
+					>
+						<Music2 class="h-5 w-5" />
+						{t.nav.listen}
+					</button>
+				</div>
+
+				<div class="border-t border-ink/10 pt-5">
+					<div class="flex items-center justify-center gap-4">
+						<a
+							href={site.social.facebook}
+							target="_blank"
+							rel="external noopener noreferrer"
+							aria-label="Facebook"
+							title="Facebook"
+							class="flex h-10 w-10 items-center justify-center transition-opacity hover:opacity-75"
+						>
+							<SocialIcon name="facebook" className="h-[1.25rem] w-[1.25rem]" />
+						</a>
+						<a
+							href={site.social.instagram}
+							target="_blank"
+							rel="external noopener noreferrer"
+							aria-label="Instagram"
+							title="Instagram"
+							class="flex h-10 w-10 items-center justify-center transition-opacity hover:opacity-75"
+						>
+							<SocialIcon name="instagram" className="h-[1.25rem} w-[1.25rem]" />
+						</a>
+					</div>
 				</div>
 			</nav>
 		</div>

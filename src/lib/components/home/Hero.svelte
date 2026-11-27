@@ -69,6 +69,7 @@
 				fetchpriority="high"
 				decoding="async"
 				class="relative aspect-[4/3] w-full object-cover"
+				style="aspect-ratio: 4/3;"
 			/>
 		</figure>
 	</div>

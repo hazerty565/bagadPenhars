@@ -170,29 +170,102 @@ export interface MemberSettings {
 	notifyReminderDays: number;
 }
 
-/**
- * Photographie complète de l'état visible par un profil.
- *
- * Elle est produite côté serveur dans une transaction dont le contexte RLS est
- * celui du profil : le client ne reçoit que ce que PostgreSQL l'autorise à
- * lire. Chaque mutation renvoie un nouveau snapshot.
- */
-export interface MemberSnapshot {
-	profile: MemberProfile;
-	profiles: MemberProfile[];
-	events: MemberEvent[];
-	responses: MemberResponse[];
-	notifications: MemberNotification[];
-	documents: MemberDocument[];
-	articles: MemberArticle[];
-	albums: MemberAlbum[];
-	invitations: MemberInvitation[];
-	preferences: MemberPreferences[];
-	settings: MemberSettings;
-}
-
 export interface MemberPupitre {
 	id: MemberPupitreId;
 	name: string;
 	description: string;
+}
+
+/**
+ * Types de chargement ciblé par page (étapes 58 à 73).
+ *
+ * Chaque page de l'espace adhérents charge son propre DTO, contenant uniquement
+ * les champs qu'elle affiche. Aucun instantané complet n'est plus renvoyé.
+ */
+
+/** Profil de la session — sous-ensemble lisible sur toutes les pages privées. */
+export interface SessionProfile {
+	id: string;
+	firstName: string;
+	lastName: string;
+	avatarUrl: string | null;
+	level: MemberLevel | null;
+	bureauPosition: string | null;
+	pupitres: Array<{ pupitreId: MemberPupitreId }>;
+}
+
+/** Socle chargé par le layout : profil de session + compteur de notifications non lues. */
+export interface MemberShell {
+	profile: MemberProfile;
+	unreadCount: number;
+}
+
+/** Sections de page possibles pour le chargement ciblé (§7.11 du contrat). */
+export type PageSection =
+	| 'overview'
+	| 'agenda'
+	| 'event'
+	| 'eventForm'
+	| 'directory'
+	| 'pupitre'
+	| 'documents'
+	| 'notifications'
+	| 'profile'
+	| 'adminOverview'
+	| 'adminMembers'
+	| 'adminInvitations'
+	| 'adminArticles'
+	| 'adminMedia'
+	| 'adminNotifications'
+	| 'adminSettings';
+
+/** Enveloppe de réponse d'une page : section identifiée + données ciblées. */
+export interface MemberPageEnvelope<S extends PageSection = PageSection, D = unknown> {
+	memberPage: { section: S; data: D };
+}
+
+/** Événement avec réponse de l'acteur courant et agrégats de réponses. */
+export interface MemberEventPageItem extends MemberEvent {
+	myResponse: MemberResponseStatus | null;
+	responseSummary: { present: number; absent: number; total: number };
+}
+
+export interface AgendaPageData {
+	events: MemberEventPageItem[];
+}
+
+export interface OverviewPageData {
+	events: MemberEventPageItem[];
+	notifications: MemberNotification[];
+	documentsCount: number;
+}
+
+export interface EventDetailPageData {
+	event: MemberEventPageItem;
+	profiles: DirectoryProfile[];
+	responses: MemberResponse[];
+}
+
+export interface EventFormPageData {
+	event: MemberEvent | null;
+	canManage: boolean;
+	canEditVisibility: boolean;
+	canEditPupitres: boolean;
+	canDelete: boolean;
+}
+
+export interface EventPageContext {
+	role: AppRole;
+	pupitres: Array<{ id: string; name: string; slug: string }>;
+}
+
+export interface DirectoryProfile {
+	id: string;
+	firstName: string;
+	lastName: string;
+	avatar: number;
+	avatarUrl: string | null;
+	pupitres: Array<{ pupitreId: MemberPupitreId }>;
+	level: MemberLevel;
+	bureauPosition: string | null;
 }

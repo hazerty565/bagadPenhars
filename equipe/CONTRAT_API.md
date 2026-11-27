@@ -19,6 +19,17 @@
 > durée d'invitation (§5.5, §9.6), l'affichage des champs éditoriaux (§6.3), la
 > photo de profil et son repli sur la palette (§7.3, §7.7, §7.10, §12.3), les
 > colonnes d'article (§12.7). Aucune autre signature n'est modifiée.
+>
+> **Mise à jour du 2026-11-25 — chargement ciblé de l'espace privé.** Le client
+> demande de supprimer `buildMemberSnapshot` et les réponses « instantané
+> complet » au profit de **lectures serveur ciblées par page**. Le présent
+> contrat ajoute : §3.1 (DTO de page), §7.11 (un load par page, remplaçant les
+> réponses de §7.1 à §7.6 et des `load` de §8 et §9), §7.12 (forme des retours
+> de mutation, suppression de `GET /api/member`) et §11.1 (fonctions de lecture
+> exposées par le backend). **Aucune évolution de schéma ; aucun endpoint
+> public ; aucune action de formulaire renommée ; aucune modification d'écran.**
+> Les guards de §2.7 et le contexte RLS `app.profile_id` (§11, §12.8) restent
+> inchangés et s'appliquent à **chaque** lecture ciblée.
 
 ---
 
@@ -330,6 +341,187 @@ export interface NotificationLogEntry {
 }
 ```
 
+### 3.1 DTO de page — chargement ciblé (2026-11-25)
+
+**Deux enveloppes seulement**, et un DTO par page. Le nom des champs est celui
+**réellement lu par les composants** (`src/lib/member/types.ts` : `date`, `type`,
+`status`, `pupitreIds`, `location`…), et non les noms idéalisés `eventDate` /
+`state` du §3 : l'interface est inchangée, aucun composant n'est réécrit. Voir
+§13 point 23.
+
+```ts
+export type PageSection =
+	| 'overview'
+	| 'agenda'
+	| 'event'
+	| 'eventForm'
+	| 'directory'
+	| 'pupitre'
+	| 'documents'
+	| 'notifications'
+	| 'profile'
+	| 'articles'
+	| 'media'
+	| 'invitations'
+	| 'adminMembers'
+	| 'settings'
+	| 'adminOverview';
+
+/** `+layout.server.ts` — socle chargé à chaque navigation. */
+export interface MemberShell {
+	/** Profil de la session uniquement : jamais celui d'un autre membre. */
+	profile: MemberProfile;
+	unreadCount: number;
+}
+
+/** `+page.server.ts` — une seule section par page. */
+export interface MemberPageEnvelope<S extends PageSection = PageSection, D = unknown> {
+	memberPage: { section: S; data: D };
+}
+```
+
+**Types de page.** Ils réutilisent les types de `src/lib/member/types.ts`
+(`MemberProfile`, `MemberEvent`, `MemberDocument`, `MemberNotification`,
+`MemberArticle`, `MemberAlbum`, `MemberInvitation`, `MemberPreferences`,
+`MemberSettings`) et n'ajoutent que ce que la page doit calculer côté serveur.
+
+```ts
+/** Projection d'annuaire : §12.3 uniquement, aucune valeur fabriquée. */
+export interface DirectoryProfile {
+	id: string;
+	firstName: string;
+	lastName: string;
+	avatar: number;
+	avatarUrl: string | null;
+	pupitres: Array<{ pupitreId: MemberPupitreId }>;
+	level: MemberLevel;
+	bureauPosition: string | null;
+}
+
+/** Membre de l'espace pupitre : seule projection qui porte `isChef` (affichage des chefs). */
+export interface PupitreMember extends Omit<DirectoryProfile, 'pupitres'> {
+	pupitres: Array<{ pupitreId: MemberPupitreId; isChef: boolean }>;
+}
+
+/** Événement enrichi pour une page (agenda, vue d'ensemble, détail). */
+export interface MemberEventPageItem extends MemberEvent {
+	myResponse: MemberResponseStatus | null;
+	responseSummary: { present: number; absent: number; total: number };
+}
+
+export interface OverviewPageData {
+	events: MemberEventPageItem[]; // 10 prochains visibles
+	notifications: MemberNotification[]; // 3 dernières, readBy = soi
+	documentsCount: number;
+}
+
+export interface AgendaPageData {
+	events: MemberEventPageItem[];
+}
+
+export interface EventDetailPageData {
+	event: MemberEventPageItem;
+	/** Alimente la section `profiles` du store (nécessaire à `eventAudience`). */
+	profiles: DirectoryProfile[];
+	responses: MemberResponse[];
+}
+
+export interface EventFormPageData {
+	event: MemberEvent | null;
+}
+
+export interface PupitrePageData {
+	pupitre: { id: MemberPupitreId; name: string };
+	members?: PupitreMember[];
+	events?: MemberEventPageItem[];
+	documentsCount?: number;
+	unreadCount?: number;
+}
+
+export interface DocumentsPageData {
+	documents: MemberDocument[];
+	documentsCountByPupitre: Record<MemberPupitreId, number>;
+}
+
+export interface NotificationsPageData {
+	notifications: MemberNotification[];
+	/** Uniquement pour les rôles qui envoient (§8.5, §9.7). */
+	recipients?: DirectoryProfile[];
+	pupitres?: Array<{ id: MemberPupitreId; name: string }>;
+}
+
+export interface ProfilePageData {
+	profile: MemberProfile;
+	preferences: MemberPreferences | null;
+}
+
+export interface ArticlesPageData {
+	articles: MemberArticle[];
+	authors: DirectoryProfile[];
+}
+
+export interface MediaPageData {
+	albums: MemberAlbum[];
+	storage: StorageUsage;
+}
+
+export interface InvitationsPageData {
+	invitations: MemberInvitation[];
+}
+
+export interface AdminMembersPageData {
+	members: MemberAdminSummary[];
+}
+
+export interface SettingsPageData {
+	settings: MemberSettings;
+}
+
+export interface AdminOverviewPageData {
+	membersCount: number;
+	pendingInvitationsCount: number;
+	publishedArticlesCount: number;
+	draftArticlesCount: number;
+	unreadCount: number;
+	storageUsedBytes: number;
+}
+
+/** Retour d'une commande : jamais d'instantané, jamais de lecture globale. */
+export type CommandResult =
+	| { kind: 'event'; event: MemberEvent }
+	| { kind: 'response'; response: MemberResponse }
+	| { kind: 'document'; document: MemberDocument }
+	| { kind: 'article'; article: MemberArticle }
+	| { kind: 'album'; album: MemberAlbum }
+	| { kind: 'invitation'; invitation: MemberInvitation }
+	| { kind: 'profile'; profile: MemberProfile }
+	| { kind: 'notification'; notificationIds: string[] }
+	| { kind: 'settings'; settings: MemberSettings }
+	| {
+			kind: 'deleted';
+			entity: 'event' | 'document' | 'article' | 'album' | 'photo' | 'invitation';
+			id: string;
+	  };
+```
+
+> `MemberProfile` conserve `pupitres: MemberProfilePupitre[]` **pour le profil
+> courant** (nécessaire aux aides d'interface `chefPupitreIds` / `isChefOf`) ;
+> `DirectoryProfile` n'expose **jamais** `email`, `role`, `accountStatus`,
+> `joinedAt` ni `isChef` (§12.3, Q-A5). L'affichage des chefs par
+> `/dashboard/pupitre*` et l'édition par `/dashboard/admin/membres` restent
+> servis par leurs projections dédiées (voir §13 point 21).
+>
+> **Conséquence sur le store** (`src/lib/member/store.svelte.ts`) : le getter
+> `member.profiles` devient `DirectoryProfile[]`, et la page d'administration des
+> membres lit une **section distincte** `member.adminMembers`
+> (`MemberAdminSummary[]`). Aucun balisage ne change ; seules les lignes de
+> `<script>` qui choisissent la source de données peuvent être ajustées.
+> `MemberAdminSummary` (§3) est étendu, pour l'écran existant, de
+> `musicianLevel`, `bureauPosition` et `bureauPositionId` (ce dernier n'est
+> jamais exposé hors de `listAdminMembersPage`, il sert à l'édition du titre).
+> `DirectoryProfile` ne porte que des champs affichables : une valeur absente est
+> `null`, jamais `''` ni une valeur inventée.
+
 ---
 
 ## 4. Matrice des gardes et des droits
@@ -492,6 +684,12 @@ Les pages publiques sont localisées par `[lang=lang]` avec `lang ∈ { fr, en, 
 
 Toutes les routes de cette section exigent `requireAuth(locals)` : session valide, `account_status = 'active'`, rôle non nul.
 
+> **Chargement ciblé (2026-11-25).** Les `load` décrits en §7.1 à §7.6 sont
+> **remplacés** par §7.11 : un load par page, un DTO par page, plus d'instantané.
+> Les **actions** et **endpoints** de mutation conservent leur entrée ; leur
+> retour suit §7.12. Les gardes, la transaction `withUserContext` et le RLS de
+> §2.7 et §12.8 restent inchangés.
+
 ### 7.1 `GET /dashboard` (load)
 
 - **Garde** : `requireAuth`.
@@ -612,12 +810,103 @@ Toutes les routes de cette section exigent `requireAuth(locals)` : session valid
 - **Succès** :
   ```json
   {
-    "snapshot": "MemberSnapshot",
-    "result": { "avatarUrl": null, "avatar": "number" }
+    "success": true,
+    "data": { "kind": "profile", "profile": "MemberProfile" }
   }
   ```
 - **Erreurs** : `403 forbidden_own_profile`, `403 account_suspended`, `404 not_found` si aucune photo n'est déposée.
 - **Règles** : supprime l'objet `private/profiles/{profileId}/avatar.{ext}` de `R2_PRIVATE`, remet `profiles.avatar_url` à `NULL`, libère le quota et réaffiche le portrait illustré `avatar` (1–12), qui n'est **pas** modifié. L'action `profile.avatar` (palette 1–12) reste inchangée et demeure la seule commande de changement de portrait illustré.
+
+### 7.11 Chargement ciblé par page — remplace l'instantané (2026-11-25)
+
+**Principe.** `buildMemberSnapshot` est supprimé. Le layout ne charge que le
+**socle** ; chaque page charge **sa** lecture, dans sa propre transaction RLS.
+
+- **Enveloppes** : layout → `{ memberShell: MemberShell }` ; page →
+  `{ memberPage: { section, data } }` (§3.1).
+- **Garde commune à toutes les lignes** : `requireAuth(locals)` — session,
+  `account_status = 'active'`, rôle non nul ; `pending` → `/auth/pending`,
+  `suspended` → `/auth/login?error=suspended` ; base absente → `503`.
+  La fonction de lecture **relit** rôle et statut dans la transaction.
+- **Transaction** : `withUserContext(locals.db, profileId, (tx) => fn(tx, profileId, …))`,
+  `app.profile_id` seul contexte (Q-A9). **Aucun cache Hyperdrive.**
+- **Erreurs standard** (non répétées ci-dessous) : `303` redirection (session,
+  statut), `503 database_unavailable`, `403 insufficient_role`,
+  `404 not_found` (ressource invisible ou inexistante — ne pas révéler son
+  existence).
+- **Aucune de ces réponses ne contient** : `email`/`phone`/`address`/`role`/
+  `accountStatus` d'un autre profil, `authUserId`, un identifiant de session.
+  **Deux exceptions, explicites** : `AdminMembersPageData` (gestion des membres,
+  rôles `secretaire`/`admin`, e-mail et statut nécessaires à l'activation) et
+  `isChef` d'un autre profil, uniquement dans `getPupitrePage` et
+  `listAdminMembersPage` (§10.5 du plan, §13 point 21).
+
+| Load (`+*.server.ts`) | Fonction (§11.1) | `memberPage.section` et `data` | Rôle minimum | Erreurs spécifiques |
+| --- | --- | --- | --- | --- |
+| `GET /dashboard` — **layout** | `getMemberShell` | enveloppe `memberShell` : `{ profile, unreadCount }` | `member` | — |
+| `GET /dashboard` | `getOverviewPage` | `overview` : `OverviewPageData` | `member` | — |
+| `GET /dashboard/agenda` | `listAgendaEvents` | `agenda` : `AgendaPageData` | `member` | — |
+| `GET /dashboard/agenda/[id]` | `getEventDetail` | `event` : `EventDetailPageData` | `member` | `404` événement invisible |
+| `GET /dashboard/agenda/nouveau` | `getPageContext` | aucune section (le socle suffit) | `chef_pupitre` | `403` |
+| `GET /dashboard/agenda/[id]/modifier` | `getEventForEdit` | `eventForm` : `EventFormPageData` | `chef_pupitre` (périmètre) / `secretaire` | `404`, `403 not_chef_of_pupitre` |
+| `GET /dashboard/admin/agenda/new` | `getPageContext` | aucune section | `secretaire` | `403` |
+| `GET /dashboard/membres` | `listDirectoryProfiles` | `directory` : `{ profiles: DirectoryProfile[] }` | `member` | — |
+| `GET /dashboard/pupitre` | `getPupitrePage` (`section: 'overview'`) | `pupitre` : `PupitrePageData` | `chef_pupitre` | `403 not_chef_of_pupitre` |
+| `GET /dashboard/pupitre/membres` | `getPupitrePage` (`section: 'members'`) | `pupitre` : `{ pupitre, members }` | `chef_pupitre` | `403` |
+| `GET /dashboard/pupitre/documents` | `getPupitrePage` (`section: 'documents'`) | `pupitre` : `{ pupitre, documentsCount }` | `chef_pupitre` | `403` |
+| `GET /dashboard/pupitre/notifications` | `getPupitrePage` (`section: 'notifications'`) | `pupitre` : `{ pupitre, unreadCount }` | `chef_pupitre` | `403` |
+| `GET /dashboard/documents` | `listDocumentsPage` | `documents` : `DocumentsPageData` | `member` | — |
+| `GET /dashboard/notifications` | `listNotificationsPage` | `notifications` : `NotificationsPageData` | `member` | — |
+| `GET /dashboard/profil` | `getProfilePage` | `profile` : `ProfilePageData` | `member` | — |
+| `GET /dashboard/securite` | *(aucune)* | aucune section (le socle suffit) | `member` | — |
+| `GET /dashboard/admin` | `getAdminOverviewPage` | `adminOverview` : `AdminOverviewPageData` | `secretaire` | `403` |
+| `GET /dashboard/admin/membres` | `listAdminMembersPage` | `adminMembers` : `AdminMembersPageData` | `secretaire` | `403` |
+| `GET /dashboard/admin/invitations` | `listInvitationsPage` | `invitations` : `InvitationsPageData` | `secretaire` | `403` |
+| `GET /dashboard/admin/articles` et `.../new`, `.../[id]/edit` | `listArticlesPage` | `articles` : `ArticlesPageData` | `secretaire` | `403` ; `404` édition d'un article absent |
+| `GET /dashboard/admin/notifications` | `listNotificationsPage` | `notifications` : `NotificationsPageData` (avec `recipients`) | `secretaire` | `403` |
+| `GET /dashboard/admin/media` | `listMediaPage` | `media` : `MediaPageData` | `secretaire` | `403` |
+| `GET /dashboard/admin/settings` | `getSettingsPage` | `settings` : `SettingsPageData` | `admin` | `403` |
+| `GET /dashboard/admin/permissions` | *(aucune)* | aucune section (le socle suffit) | `admin` | `403` |
+
+**Règles de page :**
+
+- **Agenda / détail** : `event` et `profiles` respectent §12.1 et §12.2. La
+  liste nominative (`responses` avec `profileId` d'autrui) n'est incluse que
+  pour la secrétaire/admin, ou pour un chef sur un événement **mono-pupitre de
+  son pupitre** (Q-A3).
+- **Annuaire** : `DirectoryProfile` uniquement (§12.3) ; tri `lastName` puis
+  `firstName`. Aucune valeur fabriquée (`null` explicite, jamais `''`).
+- **Pupitre** : `getPupitrePage` vérifie que `pupitreId` appartient aux pupitres
+  dirigés (ou que l'acteur est secrétaire/admin) avant toute lecture.
+- **Notifications** : `readBy` = `[profileId]` si lue, `[]` sinon. `recipients`
+  n'est présent que pour `secretaire`/`admin` (et pour un chef, limité à ses
+  pupitres).
+- **Articles** : `contentMarkdown` n'est renvoyé que par cette page.
+- **Sécurité / permissions** : aucun chargement supplémentaire ; le socle
+  contient le profil et le rôle nécessaires.
+
+### 7.12 `POST /api/member/action` — retours de mutation sans instantané (2026-11-25)
+
+- **État** : remplace la forme « `snapshot` + `result` » de toutes les actions
+  de l'espace adhérents. Les **noms** d'action et leurs entrées (`payload`) sont
+  inchangés ; seul le retour change.
+- **Garde** : `requireAuth` + vérification de rôle **par commande**
+  (`runMemberCommand`), transaction `withUserContext`.
+- **Entrée** : `{ action: string, payload?: unknown }` (inchangée).
+- **Succès** : `200 { success: true, data: CommandResult }` — voir §3.1.
+  Le client ne fait **aucune** hypothèse sur `data` : il revalide la page
+  courante (`invalidateAll()`) et le load ciblé renvoie l'état à jour.
+  `data` sert au message et à la navigation (ex. `kind: 'deleted'`).
+- **Erreurs** : `400 invalid_payload`, `401 unauthenticated`, `403 insufficient_role`
+  / `not_chef_of_pupitre` / `account_suspended`, `404 not_found`,
+  `409 conflict` / `rsvp_locked` / `event_cancelled`, `413 file_too_large`,
+  `415 unsupported_type`, `507 quota_exceeded`, `502 email_failed`.
+- **Rôle minimum** : dépend de la commande (inchangé, §4).
+- **Suppression** : `GET /api/member` (instantané complet) est **supprimé**.
+  Aucune route ne renvoie plus `MemberSnapshot`.
+- **Interdit** : reconstruire l'instantané après une mutation ; une commande ne
+  déclenche **aucune** lecture globale (`profiles`, `event_responses`,
+  `profile_pupitres` sans filtre).
 
 ---
 
@@ -842,6 +1131,145 @@ Ces fonctions ne sont pas des endpoints HTTP ; elles fixent l'interface entre mo
 | `sendPasswordResetEmail`  | `(to, resetLink) => Promise<ResendResult>`                                 | Lien Better Auth.                                                                                                                                                                   |
 | `sendContactConfirmation` | `(to) => Promise<ResendResult>`                                            | Après succès de l'envoi principal.                                                                                                                                                  |
 
+### 11.1 Fonctions de lecture ciblée (2026-11-25)
+
+Toutes ces fonctions reçoivent `tx` (transaction ouverte par `withUserContext`),
+`profileId` (issu de `locals.profile`, jamais du client) et n'importent jamais
+`db`. Chacune **relit** `profiles.role` et `profiles.account_status` dans `tx`
+avant de répondre. Elles remplacent `buildMemberSnapshot`, **supprimé**.
+
+Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
+(ressource invisible) ou lèvent `MemberQueryError(code)` avec
+`PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`, `INSUFFICIENT_ROLE`,
+`NOT_CHEF_OF_PUPITRE`. Le `+*.server.ts` traduit en `403`/`404`.
+
+#### getMemberShell
+- **Fichier** : `src/lib/server/member/queries/shell.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `MemberShell` — `{ profile: MemberProfile; unreadCount: number }` ; `profile.pupitres[].isChef` **uniquement** pour ce profil.
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`
+- **Rôle minimum** : `member` (compte actif)
+
+#### getPageContext
+- **Fichier** : `src/lib/server/member/queries/context.ts`
+- **Paramètres** : `(tx, profileId: string, minRole: AppRole)`
+- **Retour** : `{ role: AppRole; accountStatus: AccountStatus }`
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`, `INSUFFICIENT_ROLE`
+- **Rôle minimum** : `minRole`
+
+#### getOverviewPage
+- **Fichier** : `src/lib/server/member/queries/overview.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `OverviewPageData` — 10 prochains événements visibles (`MemberEventPageItem`), 3 dernières notifications (`readBy` = soi), nombre de documents
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`
+- **Rôle minimum** : `member`
+
+#### listAgendaEvents
+- **Fichier** : `src/lib/server/member/queries/agenda.ts`
+- **Paramètres** : `(tx, profileId: string, filters?: { from?: string; to?: string })`
+- **Retour** : `AgendaPageData` — événements visibles (RLS), `myResponse`, `responseSummary`
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`
+- **Rôle minimum** : `member`
+
+#### getEventDetail
+- **Fichier** : `src/lib/server/member/queries/events.ts`
+- **Paramètres** : `(tx, profileId: string, eventId: string)`
+- **Retour** : `EventDetailPageData | null` — `event`, `profiles` (audience minimale, `DirectoryProfile`), `responses` (ma réponse ; nominatif seulement si §12.2 l'autorise)
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE` ; `null` = invisible/inexistant
+- **Rôle minimum** : `member`
+
+#### getEventForEdit
+- **Fichier** : `src/lib/server/member/queries/events.ts`
+- **Paramètres** : `(tx, profileId: string, eventId: string)`
+- **Retour** : `EventFormPageData | null`
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`, `INSUFFICIENT_ROLE`, `NOT_CHEF_OF_PUPITRE`
+- **Rôle minimum** : `chef_pupitre` (événement mono-pupitre de son périmètre) ou `secretaire`/`admin`
+
+#### listDirectoryProfiles
+- **Fichier** : `src/lib/server/member/queries/directory.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `{ profiles: DirectoryProfile[] }` — §12.3 uniquement, aucune `isChef`, aucune valeur fabriquée
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`
+- **Rôle minimum** : `member`
+
+#### getPupitrePage
+- **Fichier** : `src/lib/server/member/queries/pupitre.ts`
+- **Paramètres** : `(tx, profileId: string, input: { pupitreId: string; section: 'overview' | 'members' | 'documents' | 'notifications' })`
+- **Retour** : `PupitrePageData` — une seule section renseignée ; `members` typés `PupitreMember` (seule projection portant `isChef`, pour l'affichage des chefs)
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`, `NOT_CHEF_OF_PUPITRE`
+- **Rôle minimum** : `chef_pupitre` (pupitre dirigé) ; `secretaire`/`admin` pour tout pupitre
+- **Note** : seule fonction, avec `listAdminMembersPage`, qui expose `isChef` d'un autre profil (affichage des chefs, édition) — §13 point 21.
+
+#### listDocumentsPage
+- **Fichier** : `src/lib/server/member/queries/documents.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `DocumentsPageData` — documents actifs + compteurs par pupitre
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`
+- **Rôle minimum** : `member`
+
+#### listNotificationsPage
+- **Fichier** : `src/lib/server/member/queries/notifications.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `NotificationsPageData` — `readBy` réduit à `[profileId]`/`[]` ; `recipients`/`pupitres` seulement pour les rôles qui envoient
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`
+- **Rôle minimum** : `member`
+
+#### getProfilePage
+- **Fichier** : `src/lib/server/member/queries/profile.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `ProfilePageData` — `profile` (soi-même), `preferences` (`null` si aucune ligne)
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`
+- **Rôle minimum** : `member`
+
+#### listArticlesPage
+- **Fichier** : `src/lib/server/member/queries/articles.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `ArticlesPageData` — articles + `authors` minimaux (`DirectoryProfile`)
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`, `INSUFFICIENT_ROLE`
+- **Rôle minimum** : `secretaire`
+
+#### listMediaPage
+- **Fichier** : `src/lib/server/member/queries/media.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `MediaPageData` — albums + photos + `storage`
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`, `INSUFFICIENT_ROLE`
+- **Rôle minimum** : `secretaire`
+
+#### listInvitationsPage
+- **Fichier** : `src/lib/server/member/queries/invitations.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `InvitationsPageData`
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`, `INSUFFICIENT_ROLE`
+- **Rôle minimum** : `secretaire`
+
+#### listAdminMembersPage
+- **Fichier** : `src/lib/server/member/queries/adminMembers.ts`
+- **Paramètres** : `(tx, profileId: string, filters?: { query?: string; role?: AppRole; accountStatus?: AccountStatus })`
+- **Retour** : `AdminMembersPageData` — `MemberAdminSummary[]` (rôle, statut, niveau, pupitres + `isChef`, titre et `bureauPositionId` pour l'édition)
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`, `INSUFFICIENT_ROLE`
+- **Rôle minimum** : `secretaire`
+
+#### getSettingsPage
+- **Fichier** : `src/lib/server/member/queries/settings.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `SettingsPageData` — réglages + `storage`
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`, `INSUFFICIENT_ROLE`
+- **Rôle minimum** : `admin`
+
+#### getAdminOverviewPage
+- **Fichier** : `src/lib/server/member/queries/adminOverview.ts`
+- **Paramètres** : `(tx, profileId: string)`
+- **Retour** : `AdminOverviewPageData` — compteurs seulement
+- **Erreurs** : `PROFILE_NOT_FOUND`, `ACCOUNT_INACTIVE`, `INSUFFICIENT_ROLE`
+- **Rôle minimum** : `secretaire`
+
+#### runMemberCommand (forme révisée)
+- **Fichier** : `src/lib/server/member/commands.ts`
+- **Paramètres** : `(tx, actor, action: string, payload: unknown)`
+- **Retour** : `CommandResult` — **jamais** d'instantané, **jamais** de lecture globale
+- **Erreurs** : `MemberCommandError` (inchangée : statut + `code`)
+- **Rôle minimum** : par commande (§4)
+
 ---
 
 ## 12. Règles métier transverses
@@ -995,6 +1423,9 @@ Les droits de gestion sont indépendants de cette matrice de lecture :
 | 18  | **Colonnes d'album manquantes**                                                                                            | `albums.album_date`, `media.caption`, `media.sort_order` sont requis par F6 mais absents du schéma Drizzle.                                                                       | Migration à prévoir (étape 25)                     |
 | 19  | **Visibilité nominative des réponses**                                                                                     | **Tranché le 2026-11-20 (Q-A3)** : chef = événements mono-pupitre de son pupitre uniquement ; multi-pupitres et globaux = secrétaire/admin ; membre = sa propre réponse et les agrégats. Appliqué en base **et** côté serveur (§12.2).              | **Q-A3** (audit RLS)                                |
 | 20  | **`GET /api/storage/usage` et `POST /api/sync-storage`**                                                                   | `docs/media.md` mentionne une route de synchronisation ; le load `/dashboard/admin/media` peut suffire.                                                                           | À confirmer par l'équipe                           |
+| 21  | **`isChef` d'un autre profil** — projection de page, affichage des chefs et édition                                       | §12.3 / Q-A5 déclarent `isChef` strictement interne, et interdisent `/dashboard/pupitre/membres`, où l'écran affiche pourtant les chefs (`activeChefs`). Le retrait serait une **modification d'interface**, hors du chantier 2026-11-25. Le contrat retient : projection **uniquement** par `getPupitrePage` et `listAdminMembersPage`, jamais dans l'annuaire, l'agenda ou les notifications. | **Q-2026-11-25-01** (client)                        |
+| 22  | **Droits d'écriture sur `tests/**`** et tests vides (`tests/i18n.test.ts`, `tests/invitation.test.ts`)                     | L'étape 73 prévoit `tests/member-queries.test.ts` ; l'attribution de `tests/**` n'est pas confirmée, et deux fichiers de test sont vides (0 octet).                              | **Q-2026-11-25-02** et **-03** (Chef)              |
+| 23  | **Nommage des DTO de page** : `date`/`type`/`status`/`pupitreIds` (code) vs `eventDate`/`eventType`/`state`/`pupitres` (§3) | Les composants lisent les noms du code ; renommer casserait l'interface. Les DTO de page (§3.1) suivent donc le code ; l'idéalisation du §3 reste un objectif documentaire non planifié. | Choix de contrat, à ne pas rouvrir sans refonte d'écran |
 
 ---
 

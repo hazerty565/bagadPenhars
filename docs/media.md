@@ -2,11 +2,11 @@
 
 ## 📋 Vue d'ensemble
 
-Ce document décrit l'architecture et les règles métier pour la gestion des médias (photos) dans l'application, avec stockage sur Cloudflare R2, optimisation à la volée via Cloudflare Image Resizing, et suivi du quota dans Neon.
+Ce document décrit la gestion des médias : les images sont validées et converties en WebP avant stockage dans Cloudflare R2; Cloudflare Image Resizing sert les variantes d'affichage à la volée. Le quota est suivi dans Neon.
 
 > **Décision Q-2026-11-08-02 :** un seul quota global (une ligne `storage_usage`, buckets additionnés), colonnes en `bigint`, avec `quota_bytes`, `alert_threshold_bytes`, `block_threshold_bytes` et `last_sync_at`.
 >
-> **Décision Q-2026-11-08-03 :** option B — R2 + **Cloudflare Image Resizing** à la volée sur un domaine public. Aucune image n'est téléversée dans Cloudflare Images ; une seule version est stockée dans R2.
+> **Décision Q-2026-11-08-03 :** R2 + **Cloudflare Image Resizing** à la volée sur un domaine public. Les images sont converties en WebP avant stockage dans R2; le produit Cloudflare Images n'est pas utilisé.
 >
 > **Décision Q-2026-11-08-04 :** les bindings R2 s'appellent `R2_PUBLIC` et `R2_PRIVATE` ; les objets privés sont servis par `/api/files/[...key]` après contrôle serveur, sans URL signée.
 
@@ -20,7 +20,8 @@ Ce document décrit l'architecture et les règles métier pour la gestion des m�
 - **ORM** : Drizzle ORM
 - **Base de données** : Neon (PostgreSQL) avec Hyperdrive pour la mise en pool
 - **Stockage** : Cloudflare R2 (2 buckets : `bagad-public` et `bagad-private`, bindings `R2_PUBLIC` / `R2_PRIVATE`)
-- **Optimisation images** : Cloudflare Image Resizing à la volée (aucun stockage d'images chez Cloudflare Images)
+- **Conversion et stockage** : conversion en WebP avant écriture dans R2; une seule version optimisée est conservée.
+- **Variantes d'affichage** : Cloudflare Image Resizing à la volée pour les images publiques (le produit Cloudflare Images n'est pas utilisé)
 - **Authentification** : Better Auth (cookies HTTP-only, sessions sécurisées)
 - **Déploiement** : Cloudflare Pages Functions
 
@@ -93,6 +94,11 @@ Avant tout traitement, le fichier doit passer ces vérifications :
 
 ## 🔄 Flux d'Upload Détaillé
 
+> **État du code vérifié le 2026-11-25 :** `inspectImageUpload()` valide le
+> type, la taille et les dimensions, mais ne convertit pas le contenu en WebP.
+> Le flux ci-dessous décrit le comportement attendu; la conversion avant R2
+> reste à implémenter et à vérifier.
+
 ### Étape 1 : Validation côté client
 
 - Vérification du type et de la taille avant envoi
@@ -102,7 +108,7 @@ Avant tout traitement, le fichier doit passer ces vérifications :
 
 ```
 1. Le serveur reçoit la requête d'upload
-2. Il demande à Neon l'autorisation via la fonction `reserve_storage()`
+2. Il demande à Neon l'autorisation via `app.reserve_storage_bytes(bytes)`
 3. Neon vérifie : used_bytes + reserved_bytes + taille_estimée ≤ block_threshold
 4. Si OK → Neon réserve le volume (reserved_bytes += taille_estimée)
 5. Si KO → Retour d'erreur "Quota dépassé"
@@ -111,18 +117,18 @@ Avant tout traitement, le fichier doit passer ces vérifications :
 **Pourquoi une réservation ?**  
 Évite les race conditions : si deux admins uploadent en même temps et que le quota est à 7.9 Go, la réservation garantit qu'on ne dépasse pas 8 Go.
 
-### Étape 3 : Upload direct dans R2
+### Étape 3 : Conversion et upload dans R2
 
-- Le fichier validé est uploadé directement dans son bucket définitif :
-  - `public/events/{event_id}/{uuid}.{ext}` (bucket `R2_PUBLIC`)
-  - `private/events/{event_id}/{uuid}.{ext}` (bucket `R2_PRIVATE`)
-- Aucun fichier temporaire et aucun passage par Cloudflare Images : la décision Q-2026-11-08-03 retient R2 + Image Resizing à la volée.
+- Le fichier validé est converti en WebP (dimensions maximales 2000 × 2000, ratio conservé, qualité cible 82, métadonnées inutiles supprimées), puis écrit dans son bucket définitif :
+  - `public/events/{event_id}/{uuid}.webp` (bucket `R2_PUBLIC`)
+  - `private/events/{event_id}/{uuid}.webp` (bucket `R2_PRIVATE`)
+- La conversion en WebP a lieu avant le stockage R2. Le fichier stocké est la source des variantes d'affichage; il n'est pas téléversé dans le produit Cloudflare Images.
 - Le type MIME et les dimensions sont vérifiés côté serveur avant l'écriture ; les fichiers non conformes sont refusés.
 
-### Étape 4 : Transformation à la volée (à l'affichage uniquement)
+### Étape 4 : Variantes d'affichage à la volée
 
 - Aucune variante n'est stockée : les URLs d'affichage sont construites à la demande (voir « Stratégie d'affichage »).
-- Pour les images publiques, Cloudflare Image Resizing produit le WebP 2000×2000 q82 et la vignette 400×400, avec suppression des métadonnées.
+- Pour les images publiques, Cloudflare Image Resizing adapte les dimensions et le cadrage pour l'affichage. La source est déjà un WebP optimisé avant son stockage.
 - Les images privées ne passent pas par le domaine public : elles sont servies par `/api/files/[...key]` après guard, donc sans redimensionnement edge.
 
 ### Étape 5 : Enregistrement dans Neon
@@ -134,7 +140,7 @@ Avant tout traitement, le fichier doit passer ces vérifications :
 
 ### Étape 6 : Finalisation du quota
 
-- Appel à `finalize_upload()` :
+- Appel à `app.finalize_storage_upload(reserved, actual, bucket)` :
   - `public_bytes` ou `private_bytes` += taille réelle du fichier
   - `reserved_bytes` -= taille estimée
   - Mise à jour de `last_sync_at`
@@ -143,67 +149,19 @@ Avant tout traitement, le fichier doit passer ces vérifications :
 
 Si une erreur survient à n'importe quelle étape :
 
-1. Libération de la réservation (`release_reservation()`)
+1. Libération de la réservation (`app.release_storage_bytes(bytes)`)
 2. Suppression des fichiers temporaires dans R2
 3. Retour d'un message d'erreur à l'utilisateur
 
 ---
 
-## 🗄️ Structure des Données (Drizzle)
+## 🗄️ Schéma des données
 
-### Table `storage_usage` (une seule ligne globale)
-
-```typescript
-// Schéma Drizzle cible (décision Q-2026-11-08-02)
-export const storageUsage = pgTable('storage_usage', {
-	id: uuid('id').primaryKey().defaultRandom(),
-	public_bytes: bigint('public_bytes', { mode: 'number' }).notNull().default(0),
-	private_bytes: bigint('private_bytes', { mode: 'number' }).notNull().default(0),
-	reserved_bytes: bigint('reserved_bytes', { mode: 'number' }).notNull().default(0),
-	quota_bytes: bigint('quota_bytes', { mode: 'number' }).notNull().default(8_589_934_592),
-	alert_threshold_bytes: bigint('alert_threshold_bytes', { mode: 'number' })
-		.notNull()
-		.default(7_516_192_768),
-	block_threshold_bytes: bigint('block_threshold_bytes', { mode: 'number' })
-		.notNull()
-		.default(8_589_934_592),
-	last_sync_at: timestamp('last_sync_at', { withTimezone: true }),
-	updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
-});
-```
-
-### Table `media` (alignée sur `src/lib/db/schema.ts`)
-
-```typescript
-export const media = pgTable('media', {
-	id: uuid('id').defaultRandom().primaryKey(),
-	title: varchar('title', { length: 200 }).notNull(),
-	description: text('description'),
-	file_key: varchar('file_key', { length: 500 }).notNull().unique(),
-	bucket: varchar('bucket', { length: 50 }).notNull(), // 'R2_PUBLIC' | 'R2_PRIVATE'
-	mime_type: varchar('mime_type', { length: 100 }).notNull(),
-	size: integer('size').notNull(), // un fichier ≤ 20 Mo tient dans un integer
-	album_id: uuid('album_id').references(() => albums.id, { onDelete: 'set null' }),
-	uploaded_by: uuid('uploaded_by')
-		.notNull()
-		.references(() => profiles.id, { onDelete: 'restrict' }),
-	created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-	updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
-});
-```
-
-### Table `events` (référence)
-
-```typescript
-export const events = pgTable('events', {
-	id: uuid('id').defaultRandom().primaryKey(),
-	name: varchar('name', { length: 255 }).notNull(),
-	description: text('description'),
-	eventDate: date('event_date'),
-	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
-});
-```
+Les exemples de schéma précédemment présents ici ne correspondaient plus au
+modèle appliqué. La référence est [`database.md`](./database.md) et le schéma
+Drizzle courant dans `src/lib/db/schema.ts`. Les fonctions SQL de quota sont
+`app.reserve_storage_bytes`, `app.finalize_storage_upload` et
+`app.release_storage_bytes` (migration `0008_storage_quota_functions.sql`).
 
 ---
 
@@ -378,8 +336,8 @@ crons = ["0 0 * * *"]  # Synchronisation quotidienne
 
 1. Admin upload une image JPG de 5 Mo
 2. Réservation de ~7.5 Mo (estimation)
-3. Le fichier validé est stocké tel quel dans R2 (aucune variante stockée)
-4. Finalisation : `public_bytes` += 5 Mo, `reserved_bytes` -= 7.5 Mo
+3. L'image est convertie en WebP, puis stockée dans R2 (aucune variante stockée)
+4. Finalisation : `public_bytes` augmente de la taille WebP réelle et la réservation estimée est libérée
 5. Affichage dans la galerie via une URL Image Resizing
 
 ### Quota atteint
@@ -411,7 +369,7 @@ crons = ["0 0 * * *"]  # Synchronisation quotidienne
 
 1. **Image Resizing vs R2** : Cloudflare Image Resizing transforme les images à la volée ; il ne stocke rien. Les images restent dans R2 (Q-2026-11-08-03).
 
-2. **Limites de Cloudflare Workers** : 128 Mo de mémoire (plan Free). Aucune image n'est décodée dans le Worker : le fichier est stocké tel quel et les variantes sont produites par Image Resizing.
+2. **Conversion et limites d'exécution** : la conversion WebP est faite avant l'écriture dans R2 et doit respecter les limites de l'environnement d'exécution retenu. Image Resizing sert les variantes publiques à l'affichage; il ne remplace pas cette conversion.
 
 3. **Transactions atomiques** : La réservation de quota utilise `FOR UPDATE` dans PostgreSQL pour verrouiller la ligne unique `storage_usage` et éviter les race conditions.
 
@@ -447,7 +405,7 @@ L'image est stockée une seule fois dans R2. À l'affichage, Cloudflare génère
 ### Coût / quota
 
 - Image Resizing est facturé au compte Cloudflare selon l'offre ; aucune « transformation unique » Cloudflare Images n'est consommée.
-- Le format de sortie est forcé en WebP (`format=webp`), les métadonnées sont supprimées par le redimensionneur.
+- Le format d'affichage peut être forcé en WebP (`format=webp`). La conversion de la source et la suppression des métadonnées ont déjà lieu avant le stockage R2.
 
 ### Exemple d'implémentation (URL)
 
