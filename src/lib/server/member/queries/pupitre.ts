@@ -1,13 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
 import type { Transaction } from '$lib/db';
-import {
-	documents,
-	notificationReads,
-	notifications,
-	profilePupitres,
-	profiles,
-	pupitres
-} from '$lib/db/schema';
+import { profilePupitres, profiles, pupitres } from '$lib/db/schema';
 import type { AppRole } from '$lib/auth/roles';
 import { isSecretaire } from '$lib/auth/roles';
 import type { MemberLevel, MemberPupitreId } from '$lib/member/types';
@@ -222,11 +215,6 @@ export async function getPupitrePage(
 	}
 
 	const members: PupitreMember[] = memberRows.map((row) => {
-		const rawPupitres = row.pupitres;
-		const pupitreUuids: string[] = Array.isArray(rawPupitres)
-			? rawPupitres.map((p) => p.pupitre_id).filter((id): id is string => typeof id === 'string')
-			: [];
-
 		const ownedPupitres = (pupilByProfile.get(row.id) ?? []).map((r) => ({
 			pupitreId: r.slug as MemberPupitreId,
 			isChef: r.is_chef === true

@@ -10,6 +10,7 @@
 
 	export const prerender = true;
 
+	// eslint-disable-next-line svelte/valid-prop-names-in-kit-pages
 	let { data, form }: PageProps = $props();
 
 	const t = $derived(getDict(data.lang));

@@ -28,29 +28,6 @@ export interface NotificationsPageData {
 	notifications: NotificationPageItem[];
 }
 
-interface NotificationRow {
-	id: string;
-	title: string;
-	body: string;
-	audience: MemberNotificationAudience;
-	sent_by: string;
-	created_at: Date | string | null;
-}
-
-interface PupitreTargetRow {
-	notificationId: string;
-	pupitreId: string;
-}
-
-interface ProfileTargetRow {
-	notificationId: string;
-	profileId: string;
-}
-
-interface ReadRow {
-	notificationId: string;
-}
-
 function toDateTimeString(value: Date | string | null): string {
 	if (!value) return '';
 	return typeof value === 'string' ? value : value.toISOString();

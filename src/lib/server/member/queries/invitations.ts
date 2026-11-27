@@ -8,20 +8,6 @@ export interface InvitationsPageData {
 	invitations: MemberInvitation[];
 }
 
-interface InvitationRow {
-	id: string;
-	email: string;
-	first_name: string;
-	last_name: string;
-	expires_at: Date | string | null;
-	last_sent_at: Date | string | null;
-	cancelled_at: Date | string | null;
-	accepted_at: Date | string | null;
-	created_by: string;
-	invited_by_first_name: string | null;
-	invited_by_last_name: string | null;
-}
-
 /**
  * Liste les invitations avec leur statut calculé.
  *

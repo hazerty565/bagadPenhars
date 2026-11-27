@@ -8,15 +8,6 @@ export interface SettingsPageData {
 	settings: MemberSettings;
 }
 
-interface SettingsRow {
-	association_name: string;
-	contact_email: string;
-	contact_address: string | null;
-	website: string | null;
-	notify_on_event_create: boolean;
-	notify_reminder_days: number;
-}
-
 interface StorageRow {
 	public_bytes: string | number;
 	private_bytes: string | number;

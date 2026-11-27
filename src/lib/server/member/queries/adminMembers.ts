@@ -25,20 +25,6 @@ export interface AdminMembersPageData {
 	membersCount: number;
 }
 
-interface MemberRow {
-	id: string;
-	first_name: string;
-	last_name: string;
-	email: string;
-	role: AppRole;
-	account_status: AccountStatus;
-	email_confirmed: boolean;
-	musician_level: string | null;
-	bureau_position_id: string | null;
-	bureau_title: string | null;
-	created_at: Date | string | null;
-}
-
 interface MemberPupitreRow {
 	profile_id: string;
 	pupitre_id: string;

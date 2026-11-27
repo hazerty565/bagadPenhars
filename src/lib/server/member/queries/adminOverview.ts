@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import type { Transaction } from '$lib/db';
-import { events, invitations, profiles } from '$lib/db/schema';
+import { profiles } from '$lib/db/schema';
 import { MemberQueryError } from './errors';
 
 export interface StorageUsage {

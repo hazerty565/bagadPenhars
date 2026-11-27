@@ -7,14 +7,7 @@ import type {
 	MemberProfilePupitre,
 	MemberPupitreId
 } from '$lib/member/types';
-import {
-	bureauPositions,
-	notificationReads,
-	notifications,
-	profilePupitres,
-	profiles,
-	pupitres
-} from '$lib/db/schema';
+import { bureauPositions, profilePupitres, profiles, pupitres } from '$lib/db/schema';
 import { MemberQueryError } from './errors';
 
 /**

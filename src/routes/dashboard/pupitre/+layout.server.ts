@@ -1,4 +1,3 @@
-import { error, redirect } from '@sveltejs/kit';
 import { requireAuth } from '$lib/server/member/queries/common';
 import type { LayoutServerLoad } from './$types';
 

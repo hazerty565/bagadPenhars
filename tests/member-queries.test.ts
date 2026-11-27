@@ -1,5 +1,4 @@
 ﻿import { describe, it, expect } from 'vitest';
-import type { AppRole, AccountStatus } from '$lib/auth/roles';
 
 /**
  * Tests des lectures ciblées de l'espace adhérent (étape 73 — F9).

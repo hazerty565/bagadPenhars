@@ -7,7 +7,7 @@
 	import Join from '$lib/components/home/Join.svelte';
 	import NewsPreview from '$lib/components/home/NewsPreview.svelte';
 	import { getDict } from '$lib/i18n';
-	import type { Dictionary, Lang } from '$lib/i18n';
+	import type { Lang } from '$lib/i18n';
 	import type { PublicPhoto, PublicEvent, PublicArticle } from '$lib/types';
 
 	let {

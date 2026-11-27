@@ -5,8 +5,7 @@ import {
 	events as eventsTable,
 	eventResponses,
 	profilePupitres,
-	profiles,
-	pupitres
+	profiles
 } from '$lib/db/schema';
 import type { AgendaPageData, MemberEventPageItem } from '$lib/member/types';
 
@@ -41,15 +40,11 @@ export async function listAgendaEvents(
 		return { events: [] };
 	}
 
-	const actorRole = roleRows[0].role;
-
 	// Pupitres de l'acteur (pour marquer myResponse et responseSummary)
 	const actorPupitreRows = await tx
 		.select({ pupitreId: profilePupitres.pupitre_id })
 		.from(profilePupitres)
 		.where(eq(profilePupitres.profile_id, profileId));
-
-	const actorPupitreIds = new Set(actorPupitreRows.map((row) => row.pupitreId));
 
 	// Récupère tous les événements non annulés (RLS filtre par visibilité)
 	const eventRows = await tx

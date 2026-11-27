@@ -1,7 +1,5 @@
-﻿const fs = require('fs');
-const NL = String.fromCharCode(10);
-let content = '';
-content += "import { describe, expect, it } from 'vitest';" + NL;
+﻿const NL = String.fromCharCode(10);
+let content = "import { describe, expect, it } from 'vitest';" + NL;
 content += "import { eq, and, sql } from 'drizzle-orm';" + NL;
 content += "import type { Transaction } from '$lib/db';" + NL;
 content += "import type { AppRole, AccountStatus } from '$lib/auth/roles';" + NL;
@@ -461,3 +459,6 @@ content += '			expect(p.isChef).toBeUndefined();' + NL;
 content += '		});' + NL;
 content += '	});' + NL;
 content += '});' + NL;
+
+const fs = require('fs');
+fs.writeFileSync('tests/member-queries.test.ts', content);

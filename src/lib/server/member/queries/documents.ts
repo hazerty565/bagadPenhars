@@ -20,23 +20,6 @@ export interface DocumentsPageData {
 	documents: DocumentPageItem[];
 }
 
-interface DocumentRow {
-	id: string;
-	title: string;
-	description: string | null;
-	file_name: string;
-	mime_type: string;
-	size: number;
-	uploaded_by: string;
-	pupitre_id: string | null;
-	created_at: Date | string | null;
-}
-
-interface PupitreMapRow {
-	id: string;
-	slug: string;
-}
-
 function toDateString(value: Date | string | null): string {
 	if (!value) return '';
 	const iso = typeof value === 'string' ? value : value.toISOString();
