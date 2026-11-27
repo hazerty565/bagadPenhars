@@ -270,12 +270,12 @@
   RLS : 52 = `0006` lot événements (C1-C4, Q-A1/A2/A4, `app.create_event`,
   visibilité `interne` imposée à l'INSERT et à l'UPDATE), 53 = `0006` lot
   présences/annuaire/hygiène (C5, C6, C8, P8), 54 = application sur Neon `test`
-  + matrice SQL par rôle, 55 = alignement backend (`commands.ts`,
-  `permissions.ts`, `snapshot.ts`), 56 = `0007_storage_quota_functions`,
-  57 = matrice de tests par rôle et revue croisée. `CONTRAT_API.md` : aucun
-  endpoint modifié, §11/§12.1/§12.2/§12.3/§12.4 réalignés + §12.8. 5 questions
-  ouvertes consignées (événements `pupitre` existants, `can_view_event`,
-  chef multi-pupitres, suppression à venir, correction documentaire).
+  - matrice SQL par rôle, 55 = alignement backend (`commands.ts`,
+    `permissions.ts`, `snapshot.ts`), 56 = `0007_storage_quota_functions`,
+    57 = matrice de tests par rôle et revue croisée. `CONTRAT_API.md` : aucun
+    endpoint modifié, §11/§12.1/§12.2/§12.3/§12.4 réalignés + §12.8. 5 questions
+    ouvertes consignées (événements `pupitre` existants, `can_view_event`,
+    chef multi-pupitres, suppression à venir, correction documentaire).
 - **Itérations** : 0
 - **Fichiers modifiés** : `equipe/PLAN.md`, `equipe/CONTRAT_API.md`,
   `docs/questions.md`

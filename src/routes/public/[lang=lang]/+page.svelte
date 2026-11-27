@@ -10,7 +10,16 @@
 	import type { Dictionary, Lang } from '$lib/i18n';
 	import type { PublicPhoto, PublicEvent, PublicArticle } from '$lib/types';
 
-	let { data }: { data: { lang: Lang; galleryPhotos: PublicPhoto[]; upcomingEvents: PublicEvent[]; latestArticles: PublicArticle[] } } = $props();
+	let {
+		data
+	}: {
+		data: {
+			lang: Lang;
+			galleryPhotos: PublicPhoto[];
+			upcomingEvents: PublicEvent[];
+			latestArticles: PublicArticle[];
+		};
+	} = $props();
 
 	const t = $derived(getDict(data.lang));
 </script>

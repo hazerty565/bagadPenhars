@@ -20,17 +20,17 @@ chargement ciblé par page, les services de mutation, les permissions et les pag
 
 ## Organisation
 
-| Fichier / dossier | Rôle                                                          |
-| ----------------- | ------------------------------------------------------------- |
-| `clock.ts`        | Date du jour (saisie de formulaires) et formatage             |
-| `types.ts`        | Types de chargement ciblé par page (`CONTRAT_API.md` §3.1)   |
+| Fichier / dossier | Rôle                                                            |
+| ----------------- | --------------------------------------------------------------- |
+| `clock.ts`        | Date du jour (saisie de formulaires) et formatage               |
+| `types.ts`        | Types de chargement ciblé par page (`CONTRAT_API.md` §3.1)      |
 | `store.svelte.ts` | Store par sections, `member.request`, notifications d'interface |
-| `permissions.ts`  | Droits métier (miroir des guards serveur)                     |
-| `pupitres.ts`     | Liste des pupitres (`bombarde`, `cornemuse`, …)               |
-| `photos.ts`       | Bibliothèque de visuels partagée client/serveur (albums)      |
-| `services/`       | Mutations : construisent la commande et appliquent le retour  |
-| `components/`     | Coquille, barre latérale, notifications                       |
-| `pages/`          | Pages de l'espace adhérents (agenda, documents, admin…)       |
+| `permissions.ts`  | Droits métier (miroir des guards serveur)                       |
+| `pupitres.ts`     | Liste des pupitres (`bombarde`, `cornemuse`, …)                 |
+| `photos.ts`       | Bibliothèque de visuels partagée client/serveur (albums)        |
+| `services/`       | Mutations : construisent la commande et appliquent le retour    |
+| `components/`     | Coquille, barre latérale, notifications                         |
+| `pages/`          | Pages de l'espace adhérents (agenda, documents, admin…)         |
 
 ## Règles
 

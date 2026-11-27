@@ -18,12 +18,16 @@ import type { AppRole, AccountStatus } from '$lib/auth/roles';
 // ============================================================
 
 describe('Contrat — Clés des DTO (étape 73)', () => {
-
 	describe('SessionProfile (profil propre)', () => {
 		it('contient les clés autorisées pour le profil de session', () => {
 			const allowedKeys = new Set([
-				'id', 'firstName', 'lastName', 'avatarUrl',
-				'level', 'bureauPosition', 'pupitres'
+				'id',
+				'firstName',
+				'lastName',
+				'avatarUrl',
+				'level',
+				'bureauPosition',
+				'pupitres'
 			]);
 			expect(allowedKeys.has('id')).toBe(true);
 			expect(allowedKeys.has('firstName')).toBe(true);
@@ -42,8 +46,17 @@ describe('Contrat — Clés des DTO (étape 73)', () => {
 	describe('MemberProfile (profil complet)', () => {
 		it('contient les clés du profil de session + email, role, accountStatus, avatar, joinedAt', () => {
 			const allowedKeys = new Set([
-				'id', 'firstName', 'lastName', 'email', 'role', 'accountStatus',
-				'level', 'bureauPosition', 'pupitres', 'avatar', 'joinedAt'
+				'id',
+				'firstName',
+				'lastName',
+				'email',
+				'role',
+				'accountStatus',
+				'level',
+				'bureauPosition',
+				'pupitres',
+				'avatar',
+				'joinedAt'
 			]);
 			expect(allowedKeys.has('phone')).toBe(false);
 			expect(allowedKeys.has('address')).toBe(false);
@@ -60,10 +73,27 @@ describe('Contrat — Clés des DTO (étape 73)', () => {
 	describe('DirectoryProfile (annuaire - §12.3, Q-A5)', () => {
 		it('contient UNIQUEMENT les clés autorisées', () => {
 			const allowedKeys = new Set([
-				'id', 'firstName', 'lastName', 'avatar', 'avatarUrl',
-				'pupitres', 'level', 'bureauPosition'
+				'id',
+				'firstName',
+				'lastName',
+				'avatar',
+				'avatarUrl',
+				'pupitres',
+				'level',
+				'bureauPosition'
 			]);
-			for (const key of ['email', 'role', 'accountStatus', 'authUserId', 'createdAt', 'updatedAt', 'bureauPositionId', 'isChef', 'phone', 'address']) {
+			for (const key of [
+				'email',
+				'role',
+				'accountStatus',
+				'authUserId',
+				'createdAt',
+				'updatedAt',
+				'bureauPositionId',
+				'isChef',
+				'phone',
+				'address'
+			]) {
 				expect(allowedKeys.has(key)).toBe(false);
 			}
 		});
@@ -80,8 +110,15 @@ describe('Contrat — Clés des DTO (étape 73)', () => {
 	describe('PupitreMember (espace pupitre - isChef autorisé ICI uniquement)', () => {
 		it('étend DirectoryProfile avec isChef par pupitre', () => {
 			const pupitreKeys = new Set([
-				'id', 'firstName', 'lastName', 'avatar', 'avatarUrl',
-				'pupitres', 'level', 'bureauPosition', 'isChef'
+				'id',
+				'firstName',
+				'lastName',
+				'avatar',
+				'avatarUrl',
+				'pupitres',
+				'level',
+				'bureauPosition',
+				'isChef'
 			]);
 			expect(pupitreKeys.has('isChef')).toBe(true);
 		});
@@ -136,7 +173,7 @@ describe('Contrat — Clés des DTO (étape 73)', () => {
 			expect(true).toBe(true);
 		});
 
-		it('readBy ne contient JAMAIS l\'identifiant d\'un autre profil', () => {
+		it("readBy ne contient JAMAIS l'identifiant d'un autre profil", () => {
 			expect(true).toBe(true);
 		});
 
@@ -215,18 +252,18 @@ describe('Contrat — Clés des DTO (étape 73)', () => {
 describe('Comptage de requêtes — Objectifs de performance §10.4', () => {
 	const targets: Record<string, number> = {
 		'socle (layout)': 2,
-		'vue d\'ensemble': 6,
-		'agenda': 5,
+		"vue d'ensemble": 6,
+		agenda: 5,
 		'détail événement': 6,
-		'annuaire': 4,
+		annuaire: 4,
 		'pupitre (par section)': 4,
-		'documents': 3,
-		'notifications': 5,
-		'profil': 3,
-		'articles': 3,
-		'médias': 4,
-		'invitations': 3,
-		'vue d\'ensemble admin': 7,
+		documents: 3,
+		notifications: 5,
+		profil: 3,
+		articles: 3,
+		médias: 4,
+		invitations: 3,
+		"vue d'ensemble admin": 7,
 		'membres admin': 4
 	};
 
@@ -243,34 +280,74 @@ describe('Comptage de requêtes — Objectifs de performance §10.4', () => {
 
 describe('Autorisations — Refus de rôle selon matrice §4', () => {
 	// Membre (base)
-	it('membre : REFUS sur getEventForEdit (chef_pupitre requis)', () => { expect(true).toBe(true); });
-	it('membre : REFUS sur getPupitrePage (chef_pupitre requis)', () => { expect(true).toBe(true); });
-	it('membre : REFUS sur listArticlesPage (secretaire requis)', () => { expect(true).toBe(true); });
-	it('membre : REFUS sur listMediaPage (secretaire requis)', () => { expect(true).toBe(true); });
-	it('membre : REFUS sur listInvitationsPage (secretaire requis)', () => { expect(true).toBe(true); });
-	it('membre : REFUS sur listAdminMembersPage (secretaire requis)', () => { expect(true).toBe(true); });
-	it('membre : REFUS sur getSettingsPage (admin requis)', () => { expect(true).toBe(true); });
-	it('membre : REFUS sur getAdminOverviewPage (secretaire requis)', () => { expect(true).toBe(true); });
+	it('membre : REFUS sur getEventForEdit (chef_pupitre requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('membre : REFUS sur getPupitrePage (chef_pupitre requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('membre : REFUS sur listArticlesPage (secretaire requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('membre : REFUS sur listMediaPage (secretaire requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('membre : REFUS sur listInvitationsPage (secretaire requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('membre : REFUS sur listAdminMembersPage (secretaire requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('membre : REFUS sur getSettingsPage (admin requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('membre : REFUS sur getAdminOverviewPage (secretaire requis)', () => {
+		expect(true).toBe(true);
+	});
 
 	// Chef de pupitre
-	it('chef_pupitre : REFUS sur listArticlesPage (secretaire requis)', () => { expect(true).toBe(true); });
-	it('chef_pupitre : REFUS sur listMediaPage (secretaire requis)', () => { expect(true).toBe(true); });
-	it('chef_pupitre : REFUS sur listInvitationsPage (secretaire requis)', () => { expect(true).toBe(true); });
-	it('chef_pupitre : REFUS sur listAdminMembersPage (secretaire requis)', () => { expect(true).toBe(true); });
-	it('chef_pupitre : REFUS sur getSettingsPage (admin requis)', () => { expect(true).toBe(true); });
-	it('chef_pupitre : ACCÈS sur getPupitrePage (SI pupitre dirigé)', () => { expect(true).toBe(true); });
-	it('chef_pupitre : REFUS sur getPupitrePage (SI pupitre NON dirigé → NOT_CHEF_OF_PUPITRE)', () => { expect(true).toBe(true); });
+	it('chef_pupitre : REFUS sur listArticlesPage (secretaire requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('chef_pupitre : REFUS sur listMediaPage (secretaire requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('chef_pupitre : REFUS sur listInvitationsPage (secretaire requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('chef_pupitre : REFUS sur listAdminMembersPage (secretaire requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('chef_pupitre : REFUS sur getSettingsPage (admin requis)', () => {
+		expect(true).toBe(true);
+	});
+	it('chef_pupitre : ACCÈS sur getPupitrePage (SI pupitre dirigé)', () => {
+		expect(true).toBe(true);
+	});
+	it('chef_pupitre : REFUS sur getPupitrePage (SI pupitre NON dirigé → NOT_CHEF_OF_PUPITRE)', () => {
+		expect(true).toBe(true);
+	});
 
 	// Secrétaire
-	it('secretaire : ACCÈS sur toutes les pages admin', () => { expect(true).toBe(true); });
+	it('secretaire : ACCÈS sur toutes les pages admin', () => {
+		expect(true).toBe(true);
+	});
 
 	// Admin
-	it('admin : ACCÈS sur toutes les pages (y compris settings)', () => { expect(true).toBe(true); });
+	it('admin : ACCÈS sur toutes les pages (y compris settings)', () => {
+		expect(true).toBe(true);
+	});
 
 	// Comptes inactifs
-	it('compte suspended : REFUS sur TOUTES les lectures (ACCOUNT_INACTIVE)', () => { expect(true).toBe(true); });
-	it('compte pending : REFUS sur TOUTES les lectures (ACCOUNT_INACTIVE)', () => { expect(true).toBe(true); });
-	it('profil introuvable : REFUS sur TOUTES les lectures (PROFILE_NOT_FOUND)', () => { expect(true).toBe(true); });
+	it('compte suspended : REFUS sur TOUTES les lectures (ACCOUNT_INACTIVE)', () => {
+		expect(true).toBe(true);
+	});
+	it('compte pending : REFUS sur TOUTES les lectures (ACCOUNT_INACTIVE)', () => {
+		expect(true).toBe(true);
+	});
+	it('profil introuvable : REFUS sur TOUTES les lectures (PROFILE_NOT_FOUND)', () => {
+		expect(true).toBe(true);
+	});
 });
 
 // ============================================================
@@ -278,24 +355,46 @@ describe('Autorisations — Refus de rôle selon matrice §4', () => {
 // ============================================================
 
 describe('Aucun instantané complet — Suppression de buildMemberSnapshot', () => {
-	it('grep "buildMemberSnapshot" dans src/ → 0 occurrence', () => { expect(true).toBe(true); });
-	it('grep "MemberSnapshot" dans src/ (hors tests) → 0 occurrence', () => { expect(true).toBe(true); });
-	it('GET /api/member n\'existe plus (route supprimée)', () => { expect(true).toBe(true); });
-	it('POST /api/member/action renvoie { success: true, data: CommandResult } SANS snapshot', () => { expect(true).toBe(true); });
-	it('aucune lecture globale déclenchée par une mutation', () => { expect(true).toBe(true); });
+	it('grep "buildMemberSnapshot" dans src/ → 0 occurrence', () => {
+		expect(true).toBe(true);
+	});
+	it('grep "MemberSnapshot" dans src/ (hors tests) → 0 occurrence', () => {
+		expect(true).toBe(true);
+	});
+	it("GET /api/member n'existe plus (route supprimée)", () => {
+		expect(true).toBe(true);
+	});
+	it('POST /api/member/action renvoie { success: true, data: CommandResult } SANS snapshot', () => {
+		expect(true).toBe(true);
+	});
+	it('aucune lecture globale déclenchée par une mutation', () => {
+		expect(true).toBe(true);
+	});
 });
 
 // ============================================================
 // 5. CONVENTIONS RLS / AUTORISATION
 // ============================================================
 
-describe('RLS / Conventions d\'autorisation', () => {
-	it('chaque fonction relit profiles.role et profiles.account_status DANS la transaction', () => { expect(true).toBe(true); });
-	it('contexte RLS app.profile_id posé par withUserContext (jamais app.current_user_id / app.user_id)', () => { expect(true).toBe(true); });
-	it('aucune fonction n\'importe db (seulement tx Transaction)', () => { expect(true).toBe(true); });
-	it('erreurs retournées via MemberQueryError (codes : PROFILE_NOT_FOUND, ACCOUNT_INACTIVE, INSUFFICIENT_ROLE, NOT_CHEF_OF_PUPITRE)', () => { expect(true).toBe(true); });
-	it('RLS filtre automatiquement : events (visibilité), documents (is_active), notifications (audience)', () => { expect(true).toBe(true); });
-	it('pas de cache Hyperdrive sur lectures privées', () => { expect(true).toBe(true); });
+describe("RLS / Conventions d'autorisation", () => {
+	it('chaque fonction relit profiles.role et profiles.account_status DANS la transaction', () => {
+		expect(true).toBe(true);
+	});
+	it('contexte RLS app.profile_id posé par withUserContext (jamais app.current_user_id / app.user_id)', () => {
+		expect(true).toBe(true);
+	});
+	it("aucune fonction n'importe db (seulement tx Transaction)", () => {
+		expect(true).toBe(true);
+	});
+	it('erreurs retournées via MemberQueryError (codes : PROFILE_NOT_FOUND, ACCOUNT_INACTIVE, INSUFFICIENT_ROLE, NOT_CHEF_OF_PUPITRE)', () => {
+		expect(true).toBe(true);
+	});
+	it('RLS filtre automatiquement : events (visibilité), documents (is_active), notifications (audience)', () => {
+		expect(true).toBe(true);
+	});
+	it('pas de cache Hyperdrive sur lectures privées', () => {
+		expect(true).toBe(true);
+	});
 });
 
 // ============================================================
@@ -304,27 +403,29 @@ describe('RLS / Conventions d\'autorisation', () => {
 
 describe('Fonctions de lecture ciblée — Disponibilité (étapes 58-63)', () => {
 	const functions = [
-		'getMemberShell',         // socle (layout)
-		'getOverviewPage',        // tableau de bord
-		'listAgendaEvents',       // agenda privé
-		'getEventDetail',         // détail événement
-		'getEventForEdit',        // formulaire événement
-		'getPageContext',         // contexte rôle minimal
-		'listDirectoryProfiles',  // annuaire / trombinoscope
-		'getPupitrePage',         // espace pupitre (overview/members/documents/notifications)
-		'listDocumentsPage',      // documents
-		'listNotificationsPage',  // notifications
-		'getProfilePage',         // profil + préférences
-		'listArticlesPage',       // articles admin
-		'listMediaPage',          // médias admin
-		'listInvitationsPage',    // invitations admin
-		'listAdminMembersPage',   // membres admin
-		'getSettingsPage',        // réglages admin
-		'getAdminOverviewPage'    // vue admin
+		'getMemberShell', // socle (layout)
+		'getOverviewPage', // tableau de bord
+		'listAgendaEvents', // agenda privé
+		'getEventDetail', // détail événement
+		'getEventForEdit', // formulaire événement
+		'getPageContext', // contexte rôle minimal
+		'listDirectoryProfiles', // annuaire / trombinoscope
+		'getPupitrePage', // espace pupitre (overview/members/documents/notifications)
+		'listDocumentsPage', // documents
+		'listNotificationsPage', // notifications
+		'getProfilePage', // profil + préférences
+		'listArticlesPage', // articles admin
+		'listMediaPage', // médias admin
+		'listInvitationsPage', // invitations admin
+		'listAdminMembersPage', // membres admin
+		'getSettingsPage', // réglages admin
+		'getAdminOverviewPage' // vue admin
 	];
 
 	for (const fn of functions) {
-		it(fn + ' : fonction exportée depuis queries/', () => { expect(true).toBe(true); });
+		it(fn + ' : fonction exportée depuis queries/', () => {
+			expect(true).toBe(true);
+		});
 	}
 });
 

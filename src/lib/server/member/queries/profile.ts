@@ -39,10 +39,7 @@ export interface ProfilePageData {
  *
  * Erreurs : PROFILE_NOT_FOUND, ACCOUNT_INACTIVE.
  */
-export async function getProfilePage(
-	tx: Transaction,
-	profileId: string
-): Promise<ProfilePageData> {
+export async function getProfilePage(tx: Transaction, profileId: string): Promise<ProfilePageData> {
 	const profileRows = await tx
 		.select({
 			id: profiles.id,
@@ -58,25 +55,16 @@ export async function getProfilePage(
 			created_at: profiles.created_at
 		})
 		.from(profiles)
-		.leftJoin(
-			bureauPositions,
-			eq(profiles.bureau_position_id, bureauPositions.id)
-		)
+		.leftJoin(bureauPositions, eq(profiles.bureau_position_id, bureauPositions.id))
 		.where(eq(profiles.id, profileId))
 		.limit(1);
 
 	const profileRow = profileRows[0];
 	if (!profileRow) {
-		throw new MemberQueryError(
-			QueryErrorCode.PROFILE_NOT_FOUND,
-			'Profil introuvable.'
-		);
+		throw new MemberQueryError(QueryErrorCode.PROFILE_NOT_FOUND, 'Profil introuvable.');
 	}
 	if (profileRow.account_status !== 'active') {
-		throw new MemberQueryError(
-			QueryErrorCode.ACCOUNT_INACTIVE,
-			'Compte non actif.'
-		);
+		throw new MemberQueryError(QueryErrorCode.ACCOUNT_INACTIVE, 'Compte non actif.');
 	}
 
 	const pupitreRows = await tx
@@ -109,8 +97,7 @@ export async function getProfilePage(
 			global_enabled: notificationPreferences.global_enabled,
 			events_enabled: notificationPreferences.events_enabled,
 			reminders_enabled: notificationPreferences.reminders_enabled,
-			no_response_reminder_enabled:
-				notificationPreferences.no_response_reminder_enabled
+			no_response_reminder_enabled: notificationPreferences.no_response_reminder_enabled
 		})
 		.from(notificationPreferences)
 		.where(eq(notificationPreferences.profile_id, profileId));

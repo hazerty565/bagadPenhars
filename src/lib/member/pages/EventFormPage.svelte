@@ -48,9 +48,7 @@
 	let description = $state(existing?.description ?? '');
 	let date = $state(existing?.date ?? addDays(TODAY, 7));
 	let type = $state<MemberEventType>(existing?.type ?? 'repetition');
-	let visibility = $state<MemberEventVisibility>(
-		existing?.visibility ?? 'interne'
-	);
+	let visibility = $state<MemberEventVisibility>(existing?.visibility ?? 'interne');
 	let location = $state(existing?.location ?? 'Espace Chaptal, Quimper');
 	let isPoll = $state(existing?.isPoll ?? false);
 	let pupitreIds = $state<MemberPupitreId[]>(

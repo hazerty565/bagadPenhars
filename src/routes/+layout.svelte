@@ -21,7 +21,10 @@
 		rel="stylesheet"
 		href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap"
 		media="print"
-		on:load={() => { const link = document.querySelector('link[href*="fonts.googleapis.com"][rel="stylesheet"]'); if (link instanceof HTMLLinkElement) link.media = 'all'; }}
+		on:load={() => {
+			const link = document.querySelector('link[href*="fonts.googleapis.com"][rel="stylesheet"]');
+			if (link instanceof HTMLLinkElement) link.media = 'all';
+		}}
 	/>
 	<noscript>
 		<link

@@ -18,57 +18,58 @@ Le chantier « chargement ciblé de l'espace privé » (étapes 58 à 73) est **
 
 ## 3. Statistiques
 
-| Gravité | Nombre |
-|---------|--------|
-| P0 (bloquant critique) | 0 |
-| P1 (majeur) | 1 |
-| P2 (significatif) | 2 |
-| P3 (mineur) | 1 |
-| **Total** | **4** |
+| Gravité                | Nombre |
+| ---------------------- | ------ |
+| P0 (bloquant critique) | 0      |
+| P1 (majeur)            | 1      |
+| P2 (significatif)      | 2      |
+| P3 (mineur)            | 1      |
+| **Total**              | **4**  |
 
 ## 4. Vérification du plan
 
-| Étape du plan | Réalisée | Conforme | Remarque |
-|---------------|----------|----------|----------|
-| 58 – Fonctions de lecture ciblées : socle (`getMemberShell`) | Oui | Oui | `queries/shell.ts` + `hooks.server.ts` |
-| 59 – Chargements `overview` / `agenda` / `event` / `eventForm` | Oui | Oui | `queries/overview.ts`, `agenda.ts`, `events.ts` |
-| 60 – Chargements `directory` / `pupitre` / `documents` / `notifications` | Oui | Oui | `queries/directory.ts`, `pupitre.ts`, `documents.ts`, `notifications.ts` |
-| 61 – Chargements `profile` / `settings` / `adminOverview` / `adminMembers` | Oui | Oui | `queries/profile.ts`, `settings.ts`, `adminOverview.ts`, `adminMembers.ts` |
-| 62 – Chargements `adminInvitations` / `adminArticles` / `adminMedia` / `adminNotifications` | Oui | Oui | `queries/invitations.ts`, `articles.ts`, `media.ts`, `notifications.ts` (admin) |
-| 63 – Layout adhérents : socle uniquement (`memberShell`) | Oui | Oui | `routes/dashboard/+layout.server.ts` |
-| 64 – Pages `overview` / `agenda` / `agenda/[id]` / `agenda/nouveau` / `agenda/[id]/modifier` | Oui | Oui | 5 fichiers `+page.server.ts` |
-| 65 – Pages `membres` / `pupitre/*` / `documents` / `notifications` / `profil` / `securite` | Oui | Oui | 7 fichiers `+page.server.ts` |
-| 66 – Pages admin (11 fichiers) | Oui | Oui | `routes/dashboard/admin/**/+page.server.ts` |
-| 67 – DTO `MemberPageEnvelope` + types de page | Oui | Oui | `src/lib/member/types.ts` (§3.1 du contrat) |
-| 68 – `POST /api/member/action` : retour `CommandResult` sans snapshot | Oui | Oui | `routes/api/member/action/+server.ts` |
-| 69 – Suppression `buildMemberSnapshot` + `GET /api/member` | Oui | Oui | Fichiers absents (confirmés) |
-| 70 – Guards `requireAuth` / `requireRole` dans chaque load ciblé | Oui | Oui | `queries/common.ts` + tous les `+page.server.ts` |
-| 71 – Relecture rôle/statut dans la transaction (défense en profondeur) | Oui | Oui | Chaque `queries/*.ts` relit `profiles.role` / `account_status` |
-| 72 – Contexte RLS `app.profile_id` via `withUserContext` sur **chaque** lecture | Oui | Oui | `db/index.ts:63-75` + `runQuery` dans `queries/common.ts` |
-| 73 – Tests `member-queries.test.ts` (clés DTO, comptage requêtes, refus rôle) | Non | Non vérifiable | Attribué au Testeur (Q-2026-11-25-02, option A) — planifié, non exécuté |
+| Étape du plan                                                                                | Réalisée | Conforme       | Remarque                                                                        |
+| -------------------------------------------------------------------------------------------- | -------- | -------------- | ------------------------------------------------------------------------------- |
+| 58 – Fonctions de lecture ciblées : socle (`getMemberShell`)                                 | Oui      | Oui            | `queries/shell.ts` + `hooks.server.ts`                                          |
+| 59 – Chargements `overview` / `agenda` / `event` / `eventForm`                               | Oui      | Oui            | `queries/overview.ts`, `agenda.ts`, `events.ts`                                 |
+| 60 – Chargements `directory` / `pupitre` / `documents` / `notifications`                     | Oui      | Oui            | `queries/directory.ts`, `pupitre.ts`, `documents.ts`, `notifications.ts`        |
+| 61 – Chargements `profile` / `settings` / `adminOverview` / `adminMembers`                   | Oui      | Oui            | `queries/profile.ts`, `settings.ts`, `adminOverview.ts`, `adminMembers.ts`      |
+| 62 – Chargements `adminInvitations` / `adminArticles` / `adminMedia` / `adminNotifications`  | Oui      | Oui            | `queries/invitations.ts`, `articles.ts`, `media.ts`, `notifications.ts` (admin) |
+| 63 – Layout adhérents : socle uniquement (`memberShell`)                                     | Oui      | Oui            | `routes/dashboard/+layout.server.ts`                                            |
+| 64 – Pages `overview` / `agenda` / `agenda/[id]` / `agenda/nouveau` / `agenda/[id]/modifier` | Oui      | Oui            | 5 fichiers `+page.server.ts`                                                    |
+| 65 – Pages `membres` / `pupitre/*` / `documents` / `notifications` / `profil` / `securite`   | Oui      | Oui            | 7 fichiers `+page.server.ts`                                                    |
+| 66 – Pages admin (11 fichiers)                                                               | Oui      | Oui            | `routes/dashboard/admin/**/+page.server.ts`                                     |
+| 67 – DTO `MemberPageEnvelope` + types de page                                                | Oui      | Oui            | `src/lib/member/types.ts` (§3.1 du contrat)                                     |
+| 68 – `POST /api/member/action` : retour `CommandResult` sans snapshot                        | Oui      | Oui            | `routes/api/member/action/+server.ts`                                           |
+| 69 – Suppression `buildMemberSnapshot` + `GET /api/member`                                   | Oui      | Oui            | Fichiers absents (confirmés)                                                    |
+| 70 – Guards `requireAuth` / `requireRole` dans chaque load ciblé                             | Oui      | Oui            | `queries/common.ts` + tous les `+page.server.ts`                                |
+| 71 – Relecture rôle/statut dans la transaction (défense en profondeur)                       | Oui      | Oui            | Chaque `queries/*.ts` relit `profiles.role` / `account_status`                  |
+| 72 – Contexte RLS `app.profile_id` via `withUserContext` sur **chaque** lecture              | Oui      | Oui            | `db/index.ts:63-75` + `runQuery` dans `queries/common.ts`                       |
+| 73 – Tests `member-queries.test.ts` (clés DTO, comptage requêtes, refus rôle)                | Non      | Non vérifiable | Attribué au Testeur (Q-2026-11-25-02, option A) — planifié, non exécuté         |
 
 ## 5. Vérification du contrat API
 
-| Endpoint / Load | Frontend conforme | Backend conforme | Statut | Remarque |
-|-----------------|-------------------|------------------|--------|----------|
-| `GET /dashboard` (layout → `memberShell`) | Oui | Oui | OK | `getMemberShell` → `MemberShell` |
-| `GET /dashboard` (page → `overview`) | Oui | Oui | OK | `getOverviewPage` → `OverviewPageData` |
-| `GET /dashboard/agenda` | Oui | Oui | OK | `listAgendaEvents` → `AgendaPageData` |
-| `GET /dashboard/agenda/[id]` | Oui | Oui | OK | `getEventDetail` → `EventDetailPageData` (Q-A3 respecté) |
-| `GET /dashboard/membres` | Oui | Oui | OK | `listDirectoryProfiles` → `DirectoryProfile[]` (sans email/role) |
-| `GET /dashboard/pupitre/*` | Oui | Oui | OK | `getPupitrePage` → `PupitrePageData` (`isChef` autorisé ici) |
-| `GET /dashboard/admin/membres` | Oui | Oui | OK | `listAdminMembersPage` → `AdminMembersPageData` (email/role/isChef autorisés) |
-| `POST /api/member/action` | Oui | Oui | OK | Retour `CommandResult` (§7.12), plus de `snapshot` |
+| Endpoint / Load                           | Frontend conforme | Backend conforme | Statut | Remarque                                                                      |
+| ----------------------------------------- | ----------------- | ---------------- | ------ | ----------------------------------------------------------------------------- |
+| `GET /dashboard` (layout → `memberShell`) | Oui               | Oui              | OK     | `getMemberShell` → `MemberShell`                                              |
+| `GET /dashboard` (page → `overview`)      | Oui               | Oui              | OK     | `getOverviewPage` → `OverviewPageData`                                        |
+| `GET /dashboard/agenda`                   | Oui               | Oui              | OK     | `listAgendaEvents` → `AgendaPageData`                                         |
+| `GET /dashboard/agenda/[id]`              | Oui               | Oui              | OK     | `getEventDetail` → `EventDetailPageData` (Q-A3 respecté)                      |
+| `GET /dashboard/membres`                  | Oui               | Oui              | OK     | `listDirectoryProfiles` → `DirectoryProfile[]` (sans email/role)              |
+| `GET /dashboard/pupitre/*`                | Oui               | Oui              | OK     | `getPupitrePage` → `PupitrePageData` (`isChef` autorisé ici)                  |
+| `GET /dashboard/admin/membres`            | Oui               | Oui              | OK     | `listAdminMembersPage` → `AdminMembersPageData` (email/role/isChef autorisés) |
+| `POST /api/member/action`                 | Oui               | Oui              | OK     | Retour `CommandResult` (§7.12), plus de `snapshot`                            |
 
 ## 6. Défauts détaillés
 
 ### 6.1 Défauts P0 (bloquants critiques)
 
-*Aucun.*
+_Aucun._
 
 ### 6.2 Défauts P1 (majeurs)
 
 #### REV-01 : Tests `member-queries.test.ts` absents (étape 73 non exécutée)
+
 - **Gravité** : P1
 - **Fichier** : `tests/member-queries.test.ts` (existe mais non validé)
 - **Ligne/Fonction** : Fichier de test
@@ -81,6 +82,7 @@ Le chantier « chargement ciblé de l'espace privé » (étapes 58 à 73) est **
 ### 6.3 Défauts P2 (significatifs)
 
 #### REV-02 : `pupitre/+layout.server.ts` ne vérifie pas l'authentification (TL-04)
+
 - **Gravité** : P2
 - **Fichier** : `src/routes/dashboard/pupitre/+layout.server.ts`
 - **Ligne/Fonction** : Ligne 3 (load minimal)
@@ -91,6 +93,7 @@ Le chantier « chargement ciblé de l'espace privé » (étapes 58 à 73) est **
 - **Responsable pressenti** : Backend
 
 #### REV-03 : `MemberProfile` expose encore des champs interdits pour l'annuaire (cohérence `DirectoryProfile`)
+
 - **Gravité** : P2
 - **Fichier** : `src/lib/member/types.ts`
 - **Ligne/Fonction** : Interface `MemberProfile` (lignes 43–58)
@@ -103,6 +106,7 @@ Le chantier « chargement ciblé de l'espace privé » (étapes 58 à 73) est **
 ### 6.4 Défauts P3 (mineurs)
 
 #### REV-04 : Warnings `state_referenced_locally` préexistants (TL-01)
+
 - **Gravité** : P3
 - **Fichier** : `src/routes/dashboard/articles/ArticleFormPage.svelte`, `src/routes/dashboard/agenda/EventFormPage.svelte`, `src/routes/dashboard/profil/ProfilePage.svelte`, `src/routes/+layout.svelte`
 - **Ligne/Fonction** : Diverses (état local référencé mais non réactif)
@@ -114,11 +118,11 @@ Le chantier « chargement ciblé de l'espace privé » (étapes 58 à 73) est **
 
 ## 7. Points à vérifier
 
-| Point | Raison |
-|-------|--------|
-| Exécution effective de `pnpm run test` avec `member-queries.test.ts` | Fichier présent mais non exécuté dans cette session ; étape 73 bloquante pour la clôture du chantier |
-| Vérification du store `src/lib/member/store.svelte.ts` : `member.profiles` typé `DirectoryProfile[]` | Conformité au contrat §3.1 (note) ; éviter toute régression d'affichage `email`/`role` d'autrui |
-| Aucune régression sur les pages publiques (agenda, articles, médias) | Le chantier ne les touche pas, mais un `build` complet a passé — confirmation par le testeur recommandée |
+| Point                                                                                                | Raison                                                                                                   |
+| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Exécution effective de `pnpm run test` avec `member-queries.test.ts`                                 | Fichier présent mais non exécuté dans cette session ; étape 73 bloquante pour la clôture du chantier     |
+| Vérification du store `src/lib/member/store.svelte.ts` : `member.profiles` typé `DirectoryProfile[]` | Conformité au contrat §3.1 (note) ; éviter toute régression d'affichage `email`/`role` d'autrui          |
+| Aucune régression sur les pages publiques (agenda, articles, médias)                                 | Le chantier ne les touche pas, mais un `build` complet a passé — confirmation par le testeur recommandée |
 
 ## 8. Améliorations non bloquantes
 

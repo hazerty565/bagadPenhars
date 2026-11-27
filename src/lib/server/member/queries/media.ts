@@ -1,11 +1,6 @@
 import { asc, eq, inArray, sql } from 'drizzle-orm';
 import type { Transaction } from '$lib/db';
-import {
-	albums,
-	media,
-	profiles,
-	storageUsage
-} from '$lib/db/schema';
+import { albums, media, profiles, storageUsage } from '$lib/db/schema';
 import { MemberQueryError } from './errors';
 import type { MemberAlbum, MemberMedia } from '$lib/member/types';
 import type { StorageUsage } from '$lib/server/storage';
@@ -32,10 +27,7 @@ export interface MediaPageData {
  *
  * Erreurs : PROFILE_NOT_FOUND, ACCOUNT_INACTIVE, STORAGE_USAGE_NOT_FOUND.
  */
-export async function listMediaPage(
-	tx: Transaction,
-	profileId: string
-): Promise<MediaPageData> {
+export async function listMediaPage(tx: Transaction, profileId: string): Promise<MediaPageData> {
 	// Relire le rôle et le statut dans la transaction (défense en profondeur)
 	const profileRows = await tx
 		.select({
@@ -135,10 +127,7 @@ export async function listMediaPage(
 
 	const storageRow = storageRows[0];
 	if (!storageRow) {
-		throw new MemberQueryError(
-			'STORAGE_USAGE_NOT_FOUND',
-			'Aucune ligne de stockage trouvée.'
-		);
+		throw new MemberQueryError('STORAGE_USAGE_NOT_FOUND', 'Aucune ligne de stockage trouvée.');
 	}
 
 	const publicBytes = Number(storageRow.public_bytes ?? 0);

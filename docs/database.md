@@ -183,12 +183,12 @@ périodique réconcilie les compteurs Neon avec le contenu réel des deux bucket
 La matrice de base reste celle du brief. Les guards et les politiques RLS
 doivent tous deux la faire respecter :
 
-| Rôle           | Comptes                     | Événements                                         | Contenus        | Documents                      | Notifications         |
-| -------------- | --------------------------- | -------------------------------------------------- | --------------- | ------------------------------ | --------------------- |
-| `member`       | Profil propre               | Lire/répondre selon visibilité                     | Lire le public  | Lire tous les documents actifs | Préférences propres   |
+| Rôle           | Comptes                     | Événements                                        | Contenus        | Documents                      | Notifications         |
+| -------------- | --------------------------- | ------------------------------------------------- | --------------- | ------------------------------ | --------------------- |
+| `member`       | Profil propre               | Lire/répondre selon visibilité                    | Lire le public  | Lire tous les documents actifs | Préférences propres   |
 | `chef_pupitre` | Aucun                       | Gérer les événements mono-pupitre de ses pupitres | Aucun           | Déposer pour ses pupitres      | Notifier ses pupitres |
-| `secretaire`   | Inviter, activer, suspendre | Tous les événements                                | Articles/albums | Tous les documents autorisés   | Plusieurs pupitres    |
-| `admin`        | Tous                        | Tous                                               | Tous            | Tous                           | Tous                  |
+| `secretaire`   | Inviter, activer, suspendre | Tous les événements                               | Articles/albums | Tous les documents autorisés   | Plusieurs pupitres    |
+| `admin`        | Tous                        | Tous                                              | Tous            | Tous                           | Tous                  |
 
 ### Règles détaillées pour les événements
 

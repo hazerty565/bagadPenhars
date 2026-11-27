@@ -1,11 +1,6 @@
 import { asc, eq } from 'drizzle-orm';
 import type { Transaction } from '$lib/db';
-import {
-	invitationPupitres,
-	invitations,
-	pupitres,
-	profiles
-} from '$lib/db/schema';
+import { invitationPupitres, invitations, pupitres, profiles } from '$lib/db/schema';
 import type { MemberInvitation } from '$lib/member/types';
 import { MemberQueryError } from './errors';
 
@@ -101,10 +96,7 @@ export async function listInvitationsPage(
 			status = 'cancelled';
 		} else if (row.accepted_at) {
 			status = 'accepted';
-		} else if (
-			row.expires_at &&
-			new Date(row.expires_at) < now
-		) {
+		} else if (row.expires_at && new Date(row.expires_at) < now) {
 			status = 'expired';
 		}
 

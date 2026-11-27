@@ -68,10 +68,7 @@ export async function getSettingsPage(
 		.limit(1);
 
 	if (!settingsRows[0]) {
-		throw new MemberQueryError(
-			'PROFILE_NOT_FOUND',
-			'Aucun réglage d’association trouvé.'
-		);
+		throw new MemberQueryError('PROFILE_NOT_FOUND', 'Aucun réglage d’association trouvé.');
 	}
 
 	const storageResult = await tx.execute(sql`
@@ -84,8 +81,7 @@ export async function getSettingsPage(
 		order by updated_at desc
 		limit 1
 	`);
-	const storageRow = ((storageResult as unknown as { rows: StorageRow[] }).rows ??
-		[])[0];
+	const storageRow = ((storageResult as unknown as { rows: StorageRow[] }).rows ?? [])[0];
 
 	const publicBytes = Number(storageRow?.public_bytes ?? 0);
 	const privateBytes = Number(storageRow?.private_bytes ?? 0);

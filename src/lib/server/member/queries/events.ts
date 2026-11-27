@@ -49,9 +49,7 @@ export async function getEventDetail(
 			id: eventsTable.id,
 			title: eventsTable.title,
 			description: eventsTable.description,
-			eventDate: sql<string>`to_char(${eventsTable.event_date}, 'YYYY-MM-DD')`.as(
-				'eventDate'
-			),
+			eventDate: sql<string>`to_char(${eventsTable.event_date}, 'YYYY-MM-DD')`.as('eventDate'),
 			eventType: eventsTable.event_type,
 			visibility: eventsTable.visibility,
 			isPoll: eventsTable.is_poll,
@@ -71,10 +69,7 @@ export async function getEventDetail(
 	let visible = false;
 	if (actorRole === 'admin' || actorRole === 'secretaire') {
 		visible = true;
-	} else if (
-		eventRow.visibility === 'public' ||
-		eventRow.visibility === 'interne'
-	) {
+	} else if (eventRow.visibility === 'public' || eventRow.visibility === 'interne') {
 		visible = true;
 	} else if (eventRow.visibility === 'pupitre') {
 		const eventPupitreRows = await tx
@@ -90,9 +85,7 @@ export async function getEventDetail(
 				.from(profilePupitres)
 				.where(eq(profilePupitres.profile_id, profileId));
 
-			const actorPupitreIds = actorPupitreRows.map(
-				(row) => row.pupitreId
-			);
+			const actorPupitreIds = actorPupitreRows.map((row) => row.pupitreId);
 
 			visible = eventPupitreIds.some((p) => actorPupitreIds.includes(p));
 		}
@@ -114,12 +107,7 @@ export async function getEventDetail(
 	const myResponseRows = await tx
 		.select({ status: eventResponses.status })
 		.from(eventResponses)
-		.where(
-			and(
-				eq(eventResponses.event_id, eventId),
-				eq(eventResponses.profile_id, profileId)
-			)
-		)
+		.where(and(eq(eventResponses.event_id, eventId), eq(eventResponses.profile_id, profileId)))
 		.limit(1);
 
 	const myResponse = myResponseRows[0]?.status ?? null;
@@ -133,10 +121,12 @@ export async function getEventDetail(
 		where event_id = ${eventId}
 	`);
 
-	const summary = (summaryResult as unknown as Array<{
-		present_count: string;
-		absent_count: string;
-	}>)[0];
+	const summary = (
+		summaryResult as unknown as Array<{
+			present_count: string;
+			absent_count: string;
+		}>
+	)[0];
 	const presentCount = Number(summary?.present_count ?? 0);
 	const absentCount = Number(summary?.absent_count ?? 0);
 
@@ -177,9 +167,10 @@ export async function getEventDetail(
 				eventId: eventResponses.event_id,
 				profileId: eventResponses.profile_id,
 				status: eventResponses.status,
-				updatedAt: sql<string>`to_char(${eventResponses.updated_at}, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`.as(
-					'updatedAt'
-				)
+				updatedAt:
+					sql<string>`to_char(${eventResponses.updated_at}, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`.as(
+						'updatedAt'
+					)
 			})
 			.from(eventResponses)
 			.where(eq(eventResponses.event_id, eventId));
@@ -221,9 +212,7 @@ export async function getEventForEdit(
 			id: eventsTable.id,
 			title: eventsTable.title,
 			description: eventsTable.description,
-			eventDate: sql<string>`to_char(${eventsTable.event_date}, 'YYYY-MM-DD')`.as(
-				'eventDate'
-			),
+			eventDate: sql<string>`to_char(${eventsTable.event_date}, 'YYYY-MM-DD')`.as('eventDate'),
 			eventType: eventsTable.event_type,
 			visibility: eventsTable.visibility,
 			isPoll: eventsTable.is_poll,
@@ -261,11 +250,7 @@ export async function getEventForEdit(
 	} else if (actorRole === 'chef_pupitre') {
 		// Chef : seulement mono-pupitre de son pupitre
 		if (pupitreIds.length === 1) {
-			const chefOk = await isChefOfPupitre(
-				tx,
-				profileId,
-				pupitreIds[0] as unknown as string
-			);
+			const chefOk = await isChefOfPupitre(tx, profileId, pupitreIds[0] as unknown as string);
 			if (chefOk) {
 				canManage = true;
 				canDelete = true;
@@ -349,12 +334,7 @@ export async function getPageContext(
 			})
 			.from(profilePupitres)
 			.innerJoin(pupitres, eq(profilePupitres.pupitre_id, pupitres.id))
-			.where(
-				and(
-					eq(profilePupitres.profile_id, profileId),
-					eq(profilePupitres.is_chef, true)
-				)
-			);
+			.where(and(eq(profilePupitres.profile_id, profileId), eq(profilePupitres.is_chef, true)));
 
 		pupitreRows = chefPupitres.map((row) => ({
 			id: row.id,
@@ -387,10 +367,7 @@ async function isChefOfPupitre(
 		.select({ is_chef: profilePupitres.is_chef })
 		.from(profilePupitres)
 		.where(
-			and(
-				eq(profilePupitres.profile_id, profileId),
-				eq(profilePupitres.pupitre_id, pupitreId)
-			)
+			and(eq(profilePupitres.profile_id, profileId), eq(profilePupitres.pupitre_id, pupitreId))
 		)
 		.limit(1);
 

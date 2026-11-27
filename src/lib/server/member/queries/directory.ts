@@ -60,22 +60,16 @@ export async function listDirectoryProfiles(
 		from app.member_directory
 		order by last_name, first_name
 	`);
-	const rows = ((directoryResult as unknown as { rows: DirectoryRow[] }).rows ?? []);
+	const rows = (directoryResult as unknown as { rows: DirectoryRow[] }).rows ?? [];
 
 	// Résoudre uuid de pupitre → slug (MemberPupitreId) pour l'exposition
-	const pupitreRows = await tx
-		.select({ id: pupitres.id, slug: pupitres.slug })
-		.from(pupitres);
-	const slugById = new Map<string, string>(
-		pupitreRows.map((row) => [row.id, row.slug])
-	);
+	const pupitreRows = await tx.select({ id: pupitres.id, slug: pupitres.slug }).from(pupitres);
+	const slugById = new Map<string, string>(pupitreRows.map((row) => [row.id, row.slug]));
 
 	const directoryProfiles: DirectoryProfile[] = rows.map((row) => {
 		const rawPupitres = row.pupitres;
 		const pupitreUuids: string[] = Array.isArray(rawPupitres)
-			? rawPupitres
-					.map((p) => p.pupitre_id)
-					.filter((id): id is string => typeof id === 'string')
+			? rawPupitres.map((p) => p.pupitre_id).filter((id): id is string => typeof id === 'string')
 			: [];
 
 		return {

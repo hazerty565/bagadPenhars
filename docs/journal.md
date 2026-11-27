@@ -34,6 +34,7 @@
 - **Fichiers** : `drizzle/0006_rls_hardening.sql`, `drizzle/0007_events_delete_policy_fix.sql`, `drizzle/0008_storage_quota_functions.sql`, `drizzle/meta/_journal.json` mis à jour ; 5 fichiers Svelte/modifiés pour retrait badges `isChef` et alignement visibility `EventFormPage` ; `equipe/INTEGRATION.md` + `equipe/REVUE.md` produits.
 
 **Reste (point de contrôle 2 client)** :
+
 - Transmission `isChef` dans profils sec/admin pour l'écran d'administration des pupitres (non critique, déjà noté dans la revue).
 - **Option A choisie** : droits d'écriture `tests/**` attribués à `dev-backend` et `testeur` via les fichiers de configuration `.opencode/agents` (`.opencode/agents/dev-backend.md` et `.opencode/agents/testeur.md`). La matrice de tests PostgreSQL par rôle (48 assertions) peut désormais être automisée. Arbitrage clos — pas de changement de code supplémentaire requis pour cette étape.
 

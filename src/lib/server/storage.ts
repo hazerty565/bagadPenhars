@@ -137,7 +137,11 @@ function toNumber(value: string | number | null | undefined): number {
  * blocage ; `warning` est placé à 80 % du seuil d'alerte pour prévenir avant
  * la zone critique.
  */
-function levelOf(usedBytes: number, reservedBytes: number, usage: StorageFunctionRow): StorageLevel {
+function levelOf(
+	usedBytes: number,
+	reservedBytes: number,
+	usage: StorageFunctionRow
+): StorageLevel {
 	const alertThreshold = toNumber(usage.alert_at);
 	const blockThreshold = toNumber(usage.block_at);
 	if (usedBytes + reservedBytes >= blockThreshold) return 'blocked';

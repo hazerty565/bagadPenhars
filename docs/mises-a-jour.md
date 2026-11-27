@@ -38,69 +38,69 @@ valeurs à chaque fois.
 
 ### §7.1 — Packages conservés
 
-| Package demandé | Version plan | Dernière version stable | Statut | Action requise |
-| :--- | :--- | :--- | :--- | :--- |
-| `svelte` | `5` | 5.58.0 (verrouillé 5.56.0 ; max de la majeure 5 = 5.58.0) | Obsolète (mineure dans la majeure) | Mettre à jour le verrou vers 5.58.0 à l'étape 48 ; livrer le plan en « 5.58 » |
-| `@sveltejs/kit` | `2` | 3.3.1 → **majeure 3 installée nulle part** ; max de la majeure 2 = 2.70.4 (verrouillé 2.61.1) | Obsolète (mineure) **+ majeure 3 disponible** | Verrou vers 2.70.4 en session ; **ajouter SvelteKit 3 aux majeures différées du §2.1** (§2.1 ne cite que Tailwind 4, Zod 4, Svelte 6) |
-| `@sveltejs/vite-plugin-svelte` | `non précisé` (`^7.0.0`) | 7.3.1 (verrouillé 7.1.2) | Obsolète (mineure) | Verrou vers 7.3.1 ; préciser « 7.3 » au plan |
-| `vite` | `8` | 8.3.8 (verrouillé 8.0.14) | Obsolète (mineure) | Verrou vers 8.3.8 (compatible avec Kit 2.70.4 et plugin 7.3.1 : `vite ^8`) |
-| `@sveltejs/adapter-cloudflare` | `non précisé` (`^7.0.0`) | 8.0.3 (impose `@sveltejs/kit ^3`) ; max de la majeure 7 = 7.2.10 = **verrouillé** | À jour dans sa majeure ; majeure 8 indisponible **en l'état** | Conserver 7.2.10 ; la 8 est interdite tant que Kit reste en 2 (peer `@sveltejs/kit ^3.0.0-next.0`) |
-| `typescript` | `6` | 7.0.2 ; max de la majeure 6 = 6.0.3 = **verrouillé** | À jour dans sa majeure ; majeure 7 disponible | Conserver 6.0.3 en session ; noter TS 7 (portage natif) comme majeure hors session |
-| `svelte-check` | `4.4` | 4.7.8 (verrouillé 4.4.8) | Obsolète (mineure) | Verrou vers 4.7.8 ; `npm run check` reste la garde |
-| `@types/node` | `22` | 26.6.6 ; max de la majeure 22 = 22.20.5 (verrouillé 22.19.19) | Obsolète (patch) | Verrou vers 22.20.5. **Ne pas monter en 26** : la CI épingle Node 22 (`.github/workflows/ci.yml`) |
-| `tailwindcss` | `3.4` | 4.3.5 ; max de la majeure 3 = 3.4.19 = **verrouillé** | À jour dans sa majeure ; majeure 4 déjà différée par le plan | Conserver ; aucun changement |
-| `postcss` | `non précisé` (`^8.4.32`) | 8.5.33 (verrouillé 8.5.15) | Obsolète (patch) | Verrou vers 8.5.33 à l'étape 48 |
-| `autoprefixer` | `non précisé` (`^10.4.16`) | 10.6.2 (verrouillé 10.5.0) | Obsolète (mineure) | Verrou vers 10.6.2 |
-| `better-auth` | `non précisé` (`^1.0.0`) | 1.7.25 (verrouillé 1.7.18) | Obsolète (patch) **et plage beaucoup trop large** | 1. Verrou vers 1.7.25 ; 2. **resserrer la plage** (`^1.7.25`) : `^1.0.0` accepte n'importe quelle 1.x future, y compris une 1.8 qui relèverait encore ses peers ; 3. le plan doit citer « better-auth 1.7 » |
-| `@better-auth/infra` | `non précisé` (`^0.4.27`) | 0.4.31 | Obsolète (patch) **+ paquet non utilisé + peer non satisfait** | **Arbitrage architecte requis** : le paquet n'est importé nulle part dans `src/` (voir détails). Soit le retirer (supprime le conflit `zod`), soit le monter en 0.4.31 et justifier son usage |
-| `drizzle-orm` | `0.39` | 0.45.4 (verrouillé 0.39.3) | **Incompatible** | **Mettre à jour le plan en `0.45.x`** : `better-auth` 1.7 exige `drizzle-orm ^0.45.2` (voir détails). Ne pas lancer la phase 3 sur 0.39 |
-| `drizzle-kit` | `0.30` | 0.31.11 (verrouillé 0.30.6) | **Incompatible** | **Mettre à jour le plan en `0.31.x`** : `better-auth` 1.7 exige `drizzle-kit >=0.31.4`. Générer une migration d'essai avant de toucher `drizzle/` |
-| `pg` | `non précisé` (`^8.13.1`) | 8.23.1 = **verrouillé** | À jour | Conserver ; driver conservé côté serveur uniquement |
-| `@types/pg` | `non précisé` (`^8.11.10`) | 8.23.1 = **verrouillé** | À jour | Conserver |
-| `zod` | `3.24` | 4.6.7 ; max de la majeure 3 = 3.25.76 = **verrouillé** | À jour dans sa majeure ; majeure 4 déjà différée par le plan | **Ne pas monter en 4 pendant la session** (15 fichiers importent l'API Zod 3) et **ne pas ajouter d'`override`** pour forcer une seule version (voir détails) |
-| `resend` | `non précisé` (`^4.0.0`) | 6.38.1 ; max de la majeure 4 = 4.8.0 = **verrouillé** | Obsolète (2 majeures de retard, publiées le 2025-08-06/07) | Proposer la montée en **6.38.1** à l'étape 48 : sans risque pour notre usage (`emails.send` html/text) et retire `@react-email/render` + React 19.3.1 du graphe. Décision architecte/client (majeure) |
-| `@lucide/svelte` | `1.71` | 1.75.0 (verrouillé **1.71.0**, épinglé sans `^`) | Obsolète (mineure), **figé volontairement** | Conserver 1.71.0 pendant la session (épinglage documenté au journal + exception `minimumReleaseAgeExclude`). 1.75.0 est publié **le jour de l'audit** → aucune adoption immédiate ; si montée, revalider `ssr.noExternal` et redémarrer le serveur de dev |
-| `leaflet` | `non précisé` (`^1.9.4`) | 1.9.4 = **verrouillé** (`latest` ; `2.0.0-beta.4` existe mais reste en beta) | À jour | Conserver ; ne pas toucher à la 2.0 beta. Toujours confirmé utilisé (`Map.svelte`, page Contact, import dynamique dans `onMount`) → §7.1 « à confirmer à l'étape 46 » est tranchable : **il reste utilisé** |
-| `@types/leaflet` | `non précisé` (`^1.9.22`) | 1.9.22 = **verrouillé** | À jour | Conserver |
-| `vitest` | `4` | 5.1.1 ; max de la majeure 4 = 4.1.12 (verrouillé 4.1.7) | Obsolète (patch) ; majeure 5 disponible | Verrou vers 4.1.12. **Garder la 4 en session** : `@vitest/browser-playwright` 4 et `vitest-browser-svelte` 2.2.1 partent avec elle, et l'étape 45 repose sur cette chaîne |
-| `@vitest/browser-playwright` | `non précisé` (`^4.1.3`) | 5.1.1 ; max de la majeure 4 = 4.1.12 (verrouillé 4.1.7) | Obsolète (patch) ; majeure 5 disponible | Verrou vers 4.1.12, en lockstep avec `vitest` |
-| `vitest-browser-svelte` | `2.1` | 3.1.0 ; max de la majeure 2 = **2.2.1** | Obsolète (mineure) ; majeure 3 disponible | Verrou vers 2.2.1 (peer `vitest ^4`, donc la majeure 3 est liée à Vitest 5) |
-| `playwright` | `1.59` | 1.65.1 (verrouillé **1.60.0**) | Obsolète (mineure). Le plan annonce 1.59 alors que le verrou est déjà 1.60.0 | Verrou vers 1.65.1 **seulement** avec `@vitest/browser-playwright` compatible ; sinon conserver 1.60.0 et corriger le plan (« 1.60 ») |
-| `wrangler` | `non précisé` (`^4.40.0`) | 4.164.0 (verrouillé 4.158.0) | Obsolète (mineure) | Verrou vers 4.164.0 ; `adapter-cloudflare` 7.2.10 exige `wrangler ^4.118.0` → OK |
-| `@cloudflare/workers-types` | `non précisé` (`^4.20241205.0`) | 5.20261118.1 ; max de la majeure 4 = 4.20260702.1 = **verrouillé** | À jour dans sa majeure ; majeure 5 disponible | Conserver 4.x en session (la 5 est une rupture de typage Workers) ; à traiter avec la majeure adaptateur/Kit |
-| `prettier` | `non précisé` (`^3.8.1`) | 3.10.1 (verrouillé 3.8.3) | Obsolète (mineure) | Verrou vers 3.10.1 |
-| `prettier-plugin-svelte` | `non précisé` (`^3.5.1`) | 4.2.0 ; max de la majeure 3 = 3.5.2 = **verrouillé** | À jour dans sa majeure ; majeure 4 disponible | Conserver 3.5.2 (la 4.2.0 change le contrat de plugin) ; noter comme majeure hors session |
-| `eslint` | `non précisé` (`^10.2.0`) | 10.15.0 (verrouillé 10.4.1) | Obsolète (mineure) | Verrou vers 10.15.0 ; vérifier `npm run lint` (Prettier + ESLint sur tout le dépôt) |
-| `@eslint/js` | `non précisé` (`^10.0.1`) | 10.0.1 = **verrouillé** | À jour | Conserver |
-| `@eslint/compat` | `non précisé` (`^2.0.4`) | 2.1.1 (verrouillé 2.1.0) | Obsolète (patch) | Verrou vers 2.1.1 |
-| `typescript-eslint` | `non précisé` (`^8.58.1`) | 8.73.0 (verrouillé 8.60.0) | Obsolète (mineure) | Verrou vers 8.73.0 |
-| `eslint-plugin-svelte` | `non précisé` (`^3.17.0`) | 3.24.1 (verrouillé 3.19.0) | Obsolète (mineure) | Verrou vers 3.24.1 |
-| `eslint-config-prettier` | `non précisé` (`^10.1.8`) | 10.1.8 = **verrouillé** | À jour | Conserver |
-| `globals` | `non précisé` (`^17.4.0`) | 17.14.0 (verrouillé 17.6.0) | Obsolète (mineure) | Verrou vers 17.14.0 |
+| Package demandé                | Version plan                    | Dernière version stable                                                                       | Statut                                                                       | Action requise                                                                                                                                                                                                                                            |
+| :----------------------------- | :------------------------------ | :-------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `svelte`                       | `5`                             | 5.58.0 (verrouillé 5.56.0 ; max de la majeure 5 = 5.58.0)                                     | Obsolète (mineure dans la majeure)                                           | Mettre à jour le verrou vers 5.58.0 à l'étape 48 ; livrer le plan en « 5.58 »                                                                                                                                                                             |
+| `@sveltejs/kit`                | `2`                             | 3.3.1 → **majeure 3 installée nulle part** ; max de la majeure 2 = 2.70.4 (verrouillé 2.61.1) | Obsolète (mineure) **+ majeure 3 disponible**                                | Verrou vers 2.70.4 en session ; **ajouter SvelteKit 3 aux majeures différées du §2.1** (§2.1 ne cite que Tailwind 4, Zod 4, Svelte 6)                                                                                                                     |
+| `@sveltejs/vite-plugin-svelte` | `non précisé` (`^7.0.0`)        | 7.3.1 (verrouillé 7.1.2)                                                                      | Obsolète (mineure)                                                           | Verrou vers 7.3.1 ; préciser « 7.3 » au plan                                                                                                                                                                                                              |
+| `vite`                         | `8`                             | 8.3.8 (verrouillé 8.0.14)                                                                     | Obsolète (mineure)                                                           | Verrou vers 8.3.8 (compatible avec Kit 2.70.4 et plugin 7.3.1 : `vite ^8`)                                                                                                                                                                                |
+| `@sveltejs/adapter-cloudflare` | `non précisé` (`^7.0.0`)        | 8.0.3 (impose `@sveltejs/kit ^3`) ; max de la majeure 7 = 7.2.10 = **verrouillé**             | À jour dans sa majeure ; majeure 8 indisponible **en l'état**                | Conserver 7.2.10 ; la 8 est interdite tant que Kit reste en 2 (peer `@sveltejs/kit ^3.0.0-next.0`)                                                                                                                                                        |
+| `typescript`                   | `6`                             | 7.0.2 ; max de la majeure 6 = 6.0.3 = **verrouillé**                                          | À jour dans sa majeure ; majeure 7 disponible                                | Conserver 6.0.3 en session ; noter TS 7 (portage natif) comme majeure hors session                                                                                                                                                                        |
+| `svelte-check`                 | `4.4`                           | 4.7.8 (verrouillé 4.4.8)                                                                      | Obsolète (mineure)                                                           | Verrou vers 4.7.8 ; `npm run check` reste la garde                                                                                                                                                                                                        |
+| `@types/node`                  | `22`                            | 26.6.6 ; max de la majeure 22 = 22.20.5 (verrouillé 22.19.19)                                 | Obsolète (patch)                                                             | Verrou vers 22.20.5. **Ne pas monter en 26** : la CI épingle Node 22 (`.github/workflows/ci.yml`)                                                                                                                                                         |
+| `tailwindcss`                  | `3.4`                           | 4.3.5 ; max de la majeure 3 = 3.4.19 = **verrouillé**                                         | À jour dans sa majeure ; majeure 4 déjà différée par le plan                 | Conserver ; aucun changement                                                                                                                                                                                                                              |
+| `postcss`                      | `non précisé` (`^8.4.32`)       | 8.5.33 (verrouillé 8.5.15)                                                                    | Obsolète (patch)                                                             | Verrou vers 8.5.33 à l'étape 48                                                                                                                                                                                                                           |
+| `autoprefixer`                 | `non précisé` (`^10.4.16`)      | 10.6.2 (verrouillé 10.5.0)                                                                    | Obsolète (mineure)                                                           | Verrou vers 10.6.2                                                                                                                                                                                                                                        |
+| `better-auth`                  | `non précisé` (`^1.0.0`)        | 1.7.25 (verrouillé 1.7.18)                                                                    | Obsolète (patch) **et plage beaucoup trop large**                            | 1. Verrou vers 1.7.25 ; 2. **resserrer la plage** (`^1.7.25`) : `^1.0.0` accepte n'importe quelle 1.x future, y compris une 1.8 qui relèverait encore ses peers ; 3. le plan doit citer « better-auth 1.7 »                                               |
+| `@better-auth/infra`           | `non précisé` (`^0.4.27`)       | 0.4.31                                                                                        | Obsolète (patch) **+ paquet non utilisé + peer non satisfait**               | **Arbitrage architecte requis** : le paquet n'est importé nulle part dans `src/` (voir détails). Soit le retirer (supprime le conflit `zod`), soit le monter en 0.4.31 et justifier son usage                                                             |
+| `drizzle-orm`                  | `0.39`                          | 0.45.4 (verrouillé 0.39.3)                                                                    | **Incompatible**                                                             | **Mettre à jour le plan en `0.45.x`** : `better-auth` 1.7 exige `drizzle-orm ^0.45.2` (voir détails). Ne pas lancer la phase 3 sur 0.39                                                                                                                   |
+| `drizzle-kit`                  | `0.30`                          | 0.31.11 (verrouillé 0.30.6)                                                                   | **Incompatible**                                                             | **Mettre à jour le plan en `0.31.x`** : `better-auth` 1.7 exige `drizzle-kit >=0.31.4`. Générer une migration d'essai avant de toucher `drizzle/`                                                                                                         |
+| `pg`                           | `non précisé` (`^8.13.1`)       | 8.23.1 = **verrouillé**                                                                       | À jour                                                                       | Conserver ; driver conservé côté serveur uniquement                                                                                                                                                                                                       |
+| `@types/pg`                    | `non précisé` (`^8.11.10`)      | 8.23.1 = **verrouillé**                                                                       | À jour                                                                       | Conserver                                                                                                                                                                                                                                                 |
+| `zod`                          | `3.24`                          | 4.6.7 ; max de la majeure 3 = 3.25.76 = **verrouillé**                                        | À jour dans sa majeure ; majeure 4 déjà différée par le plan                 | **Ne pas monter en 4 pendant la session** (15 fichiers importent l'API Zod 3) et **ne pas ajouter d'`override`** pour forcer une seule version (voir détails)                                                                                             |
+| `resend`                       | `non précisé` (`^4.0.0`)        | 6.38.1 ; max de la majeure 4 = 4.8.0 = **verrouillé**                                         | Obsolète (2 majeures de retard, publiées le 2025-08-06/07)                   | Proposer la montée en **6.38.1** à l'étape 48 : sans risque pour notre usage (`emails.send` html/text) et retire `@react-email/render` + React 19.3.1 du graphe. Décision architecte/client (majeure)                                                     |
+| `@lucide/svelte`               | `1.71`                          | 1.75.0 (verrouillé **1.71.0**, épinglé sans `^`)                                              | Obsolète (mineure), **figé volontairement**                                  | Conserver 1.71.0 pendant la session (épinglage documenté au journal + exception `minimumReleaseAgeExclude`). 1.75.0 est publié **le jour de l'audit** → aucune adoption immédiate ; si montée, revalider `ssr.noExternal` et redémarrer le serveur de dev |
+| `leaflet`                      | `non précisé` (`^1.9.4`)        | 1.9.4 = **verrouillé** (`latest` ; `2.0.0-beta.4` existe mais reste en beta)                  | À jour                                                                       | Conserver ; ne pas toucher à la 2.0 beta. Toujours confirmé utilisé (`Map.svelte`, page Contact, import dynamique dans `onMount`) → §7.1 « à confirmer à l'étape 46 » est tranchable : **il reste utilisé**                                               |
+| `@types/leaflet`               | `non précisé` (`^1.9.22`)       | 1.9.22 = **verrouillé**                                                                       | À jour                                                                       | Conserver                                                                                                                                                                                                                                                 |
+| `vitest`                       | `4`                             | 5.1.1 ; max de la majeure 4 = 4.1.12 (verrouillé 4.1.7)                                       | Obsolète (patch) ; majeure 5 disponible                                      | Verrou vers 4.1.12. **Garder la 4 en session** : `@vitest/browser-playwright` 4 et `vitest-browser-svelte` 2.2.1 partent avec elle, et l'étape 45 repose sur cette chaîne                                                                                 |
+| `@vitest/browser-playwright`   | `non précisé` (`^4.1.3`)        | 5.1.1 ; max de la majeure 4 = 4.1.12 (verrouillé 4.1.7)                                       | Obsolète (patch) ; majeure 5 disponible                                      | Verrou vers 4.1.12, en lockstep avec `vitest`                                                                                                                                                                                                             |
+| `vitest-browser-svelte`        | `2.1`                           | 3.1.0 ; max de la majeure 2 = **2.2.1**                                                       | Obsolète (mineure) ; majeure 3 disponible                                    | Verrou vers 2.2.1 (peer `vitest ^4`, donc la majeure 3 est liée à Vitest 5)                                                                                                                                                                               |
+| `playwright`                   | `1.59`                          | 1.65.1 (verrouillé **1.60.0**)                                                                | Obsolète (mineure). Le plan annonce 1.59 alors que le verrou est déjà 1.60.0 | Verrou vers 1.65.1 **seulement** avec `@vitest/browser-playwright` compatible ; sinon conserver 1.60.0 et corriger le plan (« 1.60 »)                                                                                                                     |
+| `wrangler`                     | `non précisé` (`^4.40.0`)       | 4.164.0 (verrouillé 4.158.0)                                                                  | Obsolète (mineure)                                                           | Verrou vers 4.164.0 ; `adapter-cloudflare` 7.2.10 exige `wrangler ^4.118.0` → OK                                                                                                                                                                          |
+| `@cloudflare/workers-types`    | `non précisé` (`^4.20241205.0`) | 5.20261118.1 ; max de la majeure 4 = 4.20260702.1 = **verrouillé**                            | À jour dans sa majeure ; majeure 5 disponible                                | Conserver 4.x en session (la 5 est une rupture de typage Workers) ; à traiter avec la majeure adaptateur/Kit                                                                                                                                              |
+| `prettier`                     | `non précisé` (`^3.8.1`)        | 3.10.1 (verrouillé 3.8.3)                                                                     | Obsolète (mineure)                                                           | Verrou vers 3.10.1                                                                                                                                                                                                                                        |
+| `prettier-plugin-svelte`       | `non précisé` (`^3.5.1`)        | 4.2.0 ; max de la majeure 3 = 3.5.2 = **verrouillé**                                          | À jour dans sa majeure ; majeure 4 disponible                                | Conserver 3.5.2 (la 4.2.0 change le contrat de plugin) ; noter comme majeure hors session                                                                                                                                                                 |
+| `eslint`                       | `non précisé` (`^10.2.0`)       | 10.15.0 (verrouillé 10.4.1)                                                                   | Obsolète (mineure)                                                           | Verrou vers 10.15.0 ; vérifier `npm run lint` (Prettier + ESLint sur tout le dépôt)                                                                                                                                                                       |
+| `@eslint/js`                   | `non précisé` (`^10.0.1`)       | 10.0.1 = **verrouillé**                                                                       | À jour                                                                       | Conserver                                                                                                                                                                                                                                                 |
+| `@eslint/compat`               | `non précisé` (`^2.0.4`)        | 2.1.1 (verrouillé 2.1.0)                                                                      | Obsolète (patch)                                                             | Verrou vers 2.1.1                                                                                                                                                                                                                                         |
+| `typescript-eslint`            | `non précisé` (`^8.58.1`)       | 8.73.0 (verrouillé 8.60.0)                                                                    | Obsolète (mineure)                                                           | Verrou vers 8.73.0                                                                                                                                                                                                                                        |
+| `eslint-plugin-svelte`         | `non précisé` (`^3.17.0`)       | 3.24.1 (verrouillé 3.19.0)                                                                    | Obsolète (mineure)                                                           | Verrou vers 3.24.1                                                                                                                                                                                                                                        |
+| `eslint-config-prettier`       | `non précisé` (`^10.1.8`)       | 10.1.8 = **verrouillé**                                                                       | À jour                                                                       | Conserver                                                                                                                                                                                                                                                 |
+| `globals`                      | `non précisé` (`^17.4.0`)       | 17.14.0 (verrouillé 17.6.0)                                                                   | Obsolète (mineure)                                                           | Verrou vers 17.14.0                                                                                                                                                                                                                                       |
 
 ### §7.2 — Déclarés mais absents
 
-| Package demandé | Version plan | Dernière version stable | Statut | Action requise |
-| :--- | :--- | :--- | :--- | :--- |
-| `svelte-i18n` | `absent` | — (non interrogé : paquet non retenu) | Absent — conforme | Rien. Q-2026-11-09-01 reste ouverte ; `AGENTS.md` §0 le cite à tort. Aucun import sous `src/` (vérifié) |
-| Bibliothèque d'animation tierce | `Écartée` (Q-2026-11-17-01 A) | — | **Écartée — conforme** | Aucune bibliothèque tierce n'est installée ou importée; les animations restent en CSS/Svelte. La référence d'`AGENTS.md` a été retirée. |
+| Package demandé                 | Version plan                  | Dernière version stable               | Statut                 | Action requise                                                                                                                          |
+| :------------------------------ | :---------------------------- | :------------------------------------ | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| `svelte-i18n`                   | `absent`                      | — (non interrogé : paquet non retenu) | Absent — conforme      | Rien. Q-2026-11-09-01 reste ouverte ; `AGENTS.md` §0 le cite à tort. Aucun import sous `src/` (vérifié)                                 |
+| Bibliothèque d'animation tierce | `Écartée` (Q-2026-11-17-01 A) | —                                     | **Écartée — conforme** | Aucune bibliothèque tierce n'est installée ou importée; les animations restent en CSS/Svelte. La référence d'`AGENTS.md` a été retirée. |
 
 ### §7.3 — Proposé pour cette session
 
-| Package demandé | Version plan | Dernière version stable | Statut | Action requise |
-| :--- | :--- | :--- | :--- | :--- |
-| `image-size` | `non précisé` | **2.1.0** (publié le 2026-11-06 ; `legacy` = 1.2.1, à ne pas utiliser) | **À jour — validé techniquement** | **Installer `image-size@2.1.0` exactement** (§7.3 à préciser). Voir les conditions d'usage dans les détails |
+| Package demandé | Version plan  | Dernière version stable                                                | Statut                            | Action requise                                                                                              |
+| :-------------- | :------------ | :--------------------------------------------------------------------- | :-------------------------------- | :---------------------------------------------------------------------------------------------------------- |
+| `image-size`    | `non précisé` | **2.1.0** (publié le 2026-11-06 ; `legacy` = 1.2.1, à ne pas utiliser) | **À jour — validé techniquement** | **Installer `image-size@2.1.0` exactement** (§7.3 à préciser). Voir les conditions d'usage dans les détails |
 
 ### §7.4 — Volontairement écartés
 
-| Package demandé | Version plan | Dernière version stable | Statut | Action requise |
-| :--- | :--- | :--- | :--- | :--- |
-| `sharp` | Écarté | — | Écarté — conforme | Aucun changement : binaire natif, incompatible Workers. Absent de `package.json` |
-| SDK serveur OneSignal | Écarté | — | Écarté — conforme | Aucun changement : `fetch` suffit. Absent de `package.json` |
-| `@neondatabase/serverless` | Interdit | — | Écarté — conforme | Aucun changement. Absent de `package.json` (et `pg` reste le driver) |
-| Cloudflare Images | Écarté | — | Écarté — conforme | Aucun changement |
-| `@milkdown/kit` | Différé | — | Écarté — conforme | Aucun changement pour la session |
-| `marked` / `markdown-it` | Non nécessaire | — | Écarté — conforme | Aucun changement : l'extraction de `MarkdownView.svelte` (étape 38) ne crée pas de dépendance |
+| Package demandé            | Version plan   | Dernière version stable | Statut            | Action requise                                                                                |
+| :------------------------- | :------------- | :---------------------- | :---------------- | :-------------------------------------------------------------------------------------------- |
+| `sharp`                    | Écarté         | —                       | Écarté — conforme | Aucun changement : binaire natif, incompatible Workers. Absent de `package.json`              |
+| SDK serveur OneSignal      | Écarté         | —                       | Écarté — conforme | Aucun changement : `fetch` suffit. Absent de `package.json`                                   |
+| `@neondatabase/serverless` | Interdit       | —                       | Écarté — conforme | Aucun changement. Absent de `package.json` (et `pg` reste le driver)                          |
+| Cloudflare Images          | Écarté         | —                       | Écarté — conforme | Aucun changement                                                                              |
+| `@milkdown/kit`            | Différé        | —                       | Écarté — conforme | Aucun changement pour la session                                                              |
+| `marked` / `markdown-it`   | Non nécessaire | —                       | Écarté — conforme | Aucun changement : l'extraction de `MarkdownView.svelte` (étape 38) ne crée pas de dépendance |
 
 ---
 
@@ -112,9 +112,9 @@ C'est le seul point qui justifie à lui seul un `PLAN À ACTUALISER`.
 
 Preuves relevées au registre le 2026-11-18 :
 
-| Version de `better-auth` | peer `drizzle-orm` | peer `drizzle-kit` |
-| :--- | :--- | :--- |
-| 1.5.0 / 1.6.0 | `>=0.41.0` | `>=0.31.4` |
+| Version de `better-auth`                    | peer `drizzle-orm`                     | peer `drizzle-kit`                 |
+| :------------------------------------------ | :------------------------------------- | :--------------------------------- |
+| 1.5.0 / 1.6.0                               | `>=0.41.0`                             | `>=0.31.4`                         |
 | **1.7.0 → 1.7.25** (dont 1.7.18 verrouillé) | **`^0.45.2 \|\| >=1.0.0-rc.1 <2.0.0`** | **`>=0.31.4 \|\| >=1.0.0-beta.1`** |
 
 Le projet verrouille `drizzle-orm@0.39.3` et `drizzle-kit@0.30.6`. L'écart n'est donc pas nouveau
@@ -261,29 +261,29 @@ Le §2.1 ne diffère explicitement que « Tailwind 4, Zod 4, Svelte 6 ». La vei
 révèle d'autres, toutes à acter comme dette différée pour éviter qu'elles ne soient « découvertes »
 en cours de session :
 
-| Paquet | Verrouillé | Majeure disponible | Contrainte de compatibilité |
-| :--- | :--- | :--- | :--- |
-| `@sveltejs/kit` | 2.61.1 | **3.3.1** | peer `svelte ^5.57.1`, `vite ^8.0.12` → entraîne un lot Svelte/Kit/adaptateur |
-| `@sveltejs/adapter-cloudflare` | 7.2.10 | **8.0.3** | exige `@sveltejs/kit ^3.0.0-next.0` → **interdit** tant que Kit reste en 2 |
-| `typescript` | 6.0.3 | **7.0.2** | portage natif ; sortir de 6 en pleine session ferait bouger `svelte-check` et `typescript-eslint` |
-| `vitest` (+ `@vitest/browser-playwright`, `vitest-browser-svelte`) | 4.1.7 / 4.1.7 / 2.1.1 | **5.1.1 / 5.1.1 / 3.1.0** | chaîne solidaire ; l'étape 45 repose dessus |
-| `@cloudflare/workers-types` | 4.20260702.1 | **5.20261118.1** | rupture de typage Workers ; à coupler avec la majeure adaptateur |
-| `prettier-plugin-svelte` | 3.5.2 | **4.2.0** | nouveau contrat de plugin (peer `prettier ^3` inchangé) |
-| `resend` | 4.8.0 | **6.38.1** | sans risque pour notre usage (voir §6) |
+| Paquet                                                             | Verrouillé            | Majeure disponible        | Contrainte de compatibilité                                                                       |
+| :----------------------------------------------------------------- | :-------------------- | :------------------------ | :------------------------------------------------------------------------------------------------ |
+| `@sveltejs/kit`                                                    | 2.61.1                | **3.3.1**                 | peer `svelte ^5.57.1`, `vite ^8.0.12` → entraîne un lot Svelte/Kit/adaptateur                     |
+| `@sveltejs/adapter-cloudflare`                                     | 7.2.10                | **8.0.3**                 | exige `@sveltejs/kit ^3.0.0-next.0` → **interdit** tant que Kit reste en 2                        |
+| `typescript`                                                       | 6.0.3                 | **7.0.2**                 | portage natif ; sortir de 6 en pleine session ferait bouger `svelte-check` et `typescript-eslint` |
+| `vitest` (+ `@vitest/browser-playwright`, `vitest-browser-svelte`) | 4.1.7 / 4.1.7 / 2.1.1 | **5.1.1 / 5.1.1 / 3.1.0** | chaîne solidaire ; l'étape 45 repose dessus                                                       |
+| `@cloudflare/workers-types`                                        | 4.20260702.1          | **5.20261118.1**          | rupture de typage Workers ; à coupler avec la majeure adaptateur                                  |
+| `prettier-plugin-svelte`                                           | 3.5.2                 | **4.2.0**                 | nouveau contrat de plugin (peer `prettier ^3` inchangé)                                           |
+| `resend`                                                           | 4.8.0                 | **6.38.1**                | sans risque pour notre usage (voir §6)                                                            |
 
 ### 10. Compatibilité SSR / SvelteKit des paquets sensibles présents
 
-| Paquet | Vérification | Verdict |
-| :--- | :--- | :--- |
-| `better-auth` 1.7.18 | peers `svelte ^5`, `@sveltejs/kit ^2`, `drizzle-orm ^0.45.2` | Svelte/Kit : **OK**. `drizzle-orm` : **non satisfait** (§1). Nécessite `ssr.noExternal` (§3) |
-| `@better-auth/infra` 0.4.27 | peer `zod >=4.1.12` | **Non satisfait** et paquet non importé (§2) |
-| `@lucide/svelte` 1.71.0 | peer `svelte ^5` | OK ; **doit rester dans `ssr.noExternal`** (composants `.svelte`) |
-| `leaflet` 1.9.4 | import dynamique dans `onMount` ; CSS statique | OK, aucun rendu serveur de Leaflet |
-| `pg` 8.23.1 | aucun import hors `src/lib/server/**` (2 fichiers), `@types/pg` aligné | OK ; ne jamais importer côté client |
-| `drizzle-orm` 0.39.3 | `node-postgres` + `@cloudflare/workers-types` en peer optionnel | OK techniquement, mais à monter (§1) |
-| `resend` 4.8.0 | `engines: node >= 20` (Node 22 OK) ; import serveur uniquement (`src/lib/server/email.ts`) | OK |
-| `zod` 3.25.76 | double résolution avec `zod@4.6.7` transitif | OK **grâce** à `ssr.noExternal` ; ne pas toucher (§3) |
-| `image-size` 2.1.0 (à venir) | entrée racine sans module Node ; `engines: node >= 18` inopérant sous workerd | OK, sous réserve de n'importer que la racine |
+| Paquet                       | Vérification                                                                               | Verdict                                                                                      |
+| :--------------------------- | :----------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------- |
+| `better-auth` 1.7.18         | peers `svelte ^5`, `@sveltejs/kit ^2`, `drizzle-orm ^0.45.2`                               | Svelte/Kit : **OK**. `drizzle-orm` : **non satisfait** (§1). Nécessite `ssr.noExternal` (§3) |
+| `@better-auth/infra` 0.4.27  | peer `zod >=4.1.12`                                                                        | **Non satisfait** et paquet non importé (§2)                                                 |
+| `@lucide/svelte` 1.71.0      | peer `svelte ^5`                                                                           | OK ; **doit rester dans `ssr.noExternal`** (composants `.svelte`)                            |
+| `leaflet` 1.9.4              | import dynamique dans `onMount` ; CSS statique                                             | OK, aucun rendu serveur de Leaflet                                                           |
+| `pg` 8.23.1                  | aucun import hors `src/lib/server/**` (2 fichiers), `@types/pg` aligné                     | OK ; ne jamais importer côté client                                                          |
+| `drizzle-orm` 0.39.3         | `node-postgres` + `@cloudflare/workers-types` en peer optionnel                            | OK techniquement, mais à monter (§1)                                                         |
+| `resend` 4.8.0               | `engines: node >= 20` (Node 22 OK) ; import serveur uniquement (`src/lib/server/email.ts`) | OK                                                                                           |
+| `zod` 3.25.76                | double résolution avec `zod@4.6.7` transitif                                               | OK **grâce** à `ssr.noExternal` ; ne pas toucher (§3)                                        |
+| `image-size` 2.1.0 (à venir) | entrée racine sans module Node ; `engines: node >= 18` inopérant sous workerd              | OK, sous réserve de n'importer que la racine                                                 |
 
 ---
 
@@ -363,13 +363,13 @@ actualisations à faire dans la même passe, sans bloquer davantage.
 
 ### Conflits de `peerDependencies` connus (état exact)
 
-| Conflit | Gravité | Effet aujourd'hui | Traitement |
-| :--- | :--- | :--- | :--- |
-| `zod` 3/4 : `@better-auth/infra` exige `zod >=4.1.12`, le projet utilise `zod 3.25.76` (et `better-call` exige `zod 4`) | Moyen | **Silencieux** : peers `optional`, double résolution dans le verrou, neutralisée par `ssr.noExternal` dans `vite.config.ts` | Ne pas forcer d'`override` ; trancher le sort de `@better-auth/infra` ; revalider `ssr.noExternal` à chaque montée de `better-auth` |
-| `drizzle-orm` / `drizzle-kit` : `better-auth` 1.7 exige `^0.45.2` / `>=0.31.4`, le projet a 0.39.3 / 0.30.6 | **Élevé** | Silencieux aussi (`optional`), mais l'adaptateur Drizzle de Better Auth tourne hors support | Monter en 0.45.x / 0.31.x (plan à actualiser) |
-| `@better-auth/infra` → `better-auth >=1.4.0`, `@better-auth/core >=1.4.0` | Faible | Satisfait (1.7.18) | Aucun |
-| `@lucide/svelte` → `svelte ^5` ; `resend` → `@react-email/render` (optionnel en 4.x, absent en 6.x) | Aucun | Satisfait | Aucun |
-| `adapter-cloudflare 8.0.3` → `@sveltejs/kit ^3` | Aucun (non installé) | Interdit la montée de l'adaptateur tant que Kit reste en 2 | Ne pas monter |
+| Conflit                                                                                                                 | Gravité              | Effet aujourd'hui                                                                                                           | Traitement                                                                                                                          |
+| :---------------------------------------------------------------------------------------------------------------------- | :------------------- | :-------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
+| `zod` 3/4 : `@better-auth/infra` exige `zod >=4.1.12`, le projet utilise `zod 3.25.76` (et `better-call` exige `zod 4`) | Moyen                | **Silencieux** : peers `optional`, double résolution dans le verrou, neutralisée par `ssr.noExternal` dans `vite.config.ts` | Ne pas forcer d'`override` ; trancher le sort de `@better-auth/infra` ; revalider `ssr.noExternal` à chaque montée de `better-auth` |
+| `drizzle-orm` / `drizzle-kit` : `better-auth` 1.7 exige `^0.45.2` / `>=0.31.4`, le projet a 0.39.3 / 0.30.6             | **Élevé**            | Silencieux aussi (`optional`), mais l'adaptateur Drizzle de Better Auth tourne hors support                                 | Monter en 0.45.x / 0.31.x (plan à actualiser)                                                                                       |
+| `@better-auth/infra` → `better-auth >=1.4.0`, `@better-auth/core >=1.4.0`                                               | Faible               | Satisfait (1.7.18)                                                                                                          | Aucun                                                                                                                               |
+| `@lucide/svelte` → `svelte ^5` ; `resend` → `@react-email/render` (optionnel en 4.x, absent en 6.x)                     | Aucun                | Satisfait                                                                                                                   | Aucun                                                                                                                               |
+| `adapter-cloudflare 8.0.3` → `@sveltejs/kit ^3`                                                                         | Aucun (non installé) | Interdit la montée de l'adaptateur tant que Kit reste en 2                                                                  | Ne pas monter                                                                                                                       |
 
 **Aucun audit de sécurité n'a été réalisé ici** (rôle de l'agent sécurité) : les alertes Dependabot
 citées au §2.1/§8 du plan ne sont pas traitées dans ce document, et les montées proposées ci-dessus
@@ -385,24 +385,24 @@ des notes de version. Seul ce fichier a été écrit.
 
 ### Synthèse des 6 points
 
-| # | Point contrôlé | Verdict |
-| :--- | :--- | :--- |
-| 1 | `drizzle-orm` 0.45.4 / `drizzle-kit` 0.31.11 face aux peers de `better-auth` 1.7.18, et absence d'autre contrainte | **CONFORME** |
-| 2 | `better-auth` resserré à `~1.7.18` au lieu de `^1.7.25` | **ACCEPTABLE** — aucune version ≥ 1.7.19 n'est requise |
-| 3 | Séquence de l'étape 50 techniquement sûre | **SÛRE**, avec 2 critères à corriger et 1 fausse alerte du plan |
-| 4 | Retrait de `@better-auth/infra`, `ssr.noExternal` à 4 entrées | **CONFIRMÉ** |
-| 5 | `image-size` 2.1.0, `leaflet` 1.9.4, `@types/leaflet` 1.9.22 | **CONFIRMÉ** |
-| 6 | Aucune version annoncée contredite, numérotation cohérente | **CONFORME** |
+| #   | Point contrôlé                                                                                                     | Verdict                                                         |
+| :-- | :----------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------- |
+| 1   | `drizzle-orm` 0.45.4 / `drizzle-kit` 0.31.11 face aux peers de `better-auth` 1.7.18, et absence d'autre contrainte | **CONFORME**                                                    |
+| 2   | `better-auth` resserré à `~1.7.18` au lieu de `^1.7.25`                                                            | **ACCEPTABLE** — aucune version ≥ 1.7.19 n'est requise          |
+| 3   | Séquence de l'étape 50 techniquement sûre                                                                          | **SÛRE**, avec 2 critères à corriger et 1 fausse alerte du plan |
+| 4   | Retrait de `@better-auth/infra`, `ssr.noExternal` à 4 entrées                                                      | **CONFIRMÉ**                                                    |
+| 5   | `image-size` 2.1.0, `leaflet` 1.9.4, `@types/leaflet` 1.9.22                                                       | **CONFIRMÉ**                                                    |
+| 6   | Aucune version annoncée contredite, numérotation cohérente                                                         | **CONFORME**                                                    |
 
 ### 1. Peers Drizzle : conformes, et l'écart était bien silencieux
 
 Peers mesurés de `better-auth@1.7.18` (tous deux `optional: true` dans `peerDependenciesMeta`, ce qui
 explique l'absence de tout échec avec le verrou actuel) :
 
-| Peer | Plage exigée | Version proposée par le plan | Verdict |
-| :--- | :--- | :--- | :--- |
-| `drizzle-orm` | `^0.45.2 \|\| >=1.0.0-rc.1 <2.0.0` | **0.45.4** | Satisfait (caret sur 0.x = `>=0.45.2 <0.46.0`) |
-| `drizzle-kit` | `>=0.31.4 \|\| >=1.0.0-beta.1` | **0.31.11** | Satisfait |
+| Peer          | Plage exigée                       | Version proposée par le plan | Verdict                                        |
+| :------------ | :--------------------------------- | :--------------------------- | :--------------------------------------------- |
+| `drizzle-orm` | `^0.45.2 \|\| >=1.0.0-rc.1 <2.0.0` | **0.45.4**                   | Satisfait (caret sur 0.x = `>=0.45.2 <0.46.0`) |
+| `drizzle-kit` | `>=0.31.4 \|\| >=1.0.0-beta.1`     | **0.31.11**                  | Satisfait                                      |
 
 Aucune autre dépendance du projet ne contraint Drizzle négativement :
 
@@ -559,11 +559,11 @@ de `svelte-i18n` (version choisie par le mainteneur). Point de contrôle n°1 va
 `pnpm install --frozen-lockfile` réussit (verrou inchangé, SHA-256 du verrou avant travaux :
 `6202D4EE…D883B1`). Contrôles immédiatement après, sur cet arbre :
 
-| Contrôle | Résultat de référence | Détail |
-| :--- | :--- | :--- |
-| `npm run check` | **OK** — 0 erreur, **20 avertissements** (4 fichiers) | Avertissements `state_referenced_locally` préexistants (ProfilePage, dashboard/+layout) |
-| `npm run build` | **OK** | `✓ built in 21.53s`, `adapter-cloudflare ✔ done` |
-| `npm run test` | **ÉCHEC PRÉEXISTANT** (exit 1) | 3 suites vides → `Error: No test suite found in file …` (`tests/guards.test.ts`, `tests/i18n.test.ts`, `tests/invitation.test.ts`, à remplir aux étapes 45/52/53) **et** `Error: browserType.launch: Executable doesn't exist at … chromium_headless_shell-1223 …` (navigateur Playwright non téléchargé). En revanche **40 tests passent dans 18 fichiers**. |
+| Contrôle        | Résultat de référence                                 | Détail                                                                                                                                                                                                                                                                                                                                                        |
+| :-------------- | :---------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run check` | **OK** — 0 erreur, **20 avertissements** (4 fichiers) | Avertissements `state_referenced_locally` préexistants (ProfilePage, dashboard/+layout)                                                                                                                                                                                                                                                                       |
+| `npm run build` | **OK**                                                | `✓ built in 21.53s`, `adapter-cloudflare ✔ done`                                                                                                                                                                                                                                                                                                              |
+| `npm run test`  | **ÉCHEC PRÉEXISTANT** (exit 1)                        | 3 suites vides → `Error: No test suite found in file …` (`tests/guards.test.ts`, `tests/i18n.test.ts`, `tests/invitation.test.ts`, à remplir aux étapes 45/52/53) **et** `Error: browserType.launch: Executable doesn't exist at … chromium_headless_shell-1223 …` (navigateur Playwright non téléchargé). En revanche **40 tests passent dans 18 fichiers**. |
 
 Cette signature d'échec est **identique à chaque palier** (après Drizzle, après l'étape 51, après `svelte-i18n`) :
 elle n'est imputable à aucune des installations. `npm run test` ne peut donc pas servir de garde de non-régression
@@ -583,23 +583,23 @@ sommes en 4 (`4.20260702.1`) — aucune version concernée n'a bougé.
 
 **Diff du verrou — conforme, trois écarts d'anticipation à connaître** :
 
-| Attendu au plan | Constaté | Lecture |
-| :--- | :--- | :--- |
-| retrait de `gel` | `gel@2.2.1` **reste** | `gel` est un **peer optionnel de `drizzle-orm` 0.45** (et l'était déjà de `drizzle-kit` 0.30). Seule sa résolution change : `gel@2.2.1` → `gel@2.2.1(supports-color@10.2.2)`. La ligne « retrait de `gel` » du plan est inexacte, sans conséquence. |
-| ajout de `esbuild ^0.25.4` | `esbuild@0.25.12` ajouté | Conforme. `drizzle-kit@0.31.11` déclare aussi `@esbuild-kit/esm-loader@2.6.5` → les entrées `@esbuild-kit/*` **restent** (elles ne disparaissent pas avec `esbuild-register`). |
-| retrait d'`esbuild-register` / `esbuild@0.19.12` | conformes | `esbuild-register@3.6.0(esbuild@0.19.12)` retiré. **Effet de bord mécanique** : toutes les chaînes de peer de `vite`, `@sveltejs/kit`, `@sveltejs/vite-plugin-svelte`, `@sveltejs/adapter-cloudflare`, `vitest`, `@vitest/browser*`, `vitefu` réécrivent `esbuild@0.19.12` → `esbuild@0.28.2` (version déjà présente au verrou, portée par `vite`). **Ce sont des réécritures de lignes de peers, pas des montées de version.** |
-| — | `supports-color@10.2.2` apparaît dans les chaînes de peers `eslint`/`typescript-eslint`/`debug` | Conséquence mécanique de `gel@2.2.1(supports-color@10.2.2)`. **Aucune version de `eslint`, `typescript-eslint` ou `debug` ne change.** |
+| Attendu au plan                                  | Constaté                                                                                        | Lecture                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| :----------------------------------------------- | :---------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| retrait de `gel`                                 | `gel@2.2.1` **reste**                                                                           | `gel` est un **peer optionnel de `drizzle-orm` 0.45** (et l'était déjà de `drizzle-kit` 0.30). Seule sa résolution change : `gel@2.2.1` → `gel@2.2.1(supports-color@10.2.2)`. La ligne « retrait de `gel` » du plan est inexacte, sans conséquence.                                                                                                                                                                             |
+| ajout de `esbuild ^0.25.4`                       | `esbuild@0.25.12` ajouté                                                                        | Conforme. `drizzle-kit@0.31.11` déclare aussi `@esbuild-kit/esm-loader@2.6.5` → les entrées `@esbuild-kit/*` **restent** (elles ne disparaissent pas avec `esbuild-register`).                                                                                                                                                                                                                                                  |
+| retrait d'`esbuild-register` / `esbuild@0.19.12` | conformes                                                                                       | `esbuild-register@3.6.0(esbuild@0.19.12)` retiré. **Effet de bord mécanique** : toutes les chaînes de peer de `vite`, `@sveltejs/kit`, `@sveltejs/vite-plugin-svelte`, `@sveltejs/adapter-cloudflare`, `vitest`, `@vitest/browser*`, `vitefu` réécrivent `esbuild@0.19.12` → `esbuild@0.28.2` (version déjà présente au verrou, portée par `vite`). **Ce sont des réécritures de lignes de peers, pas des montées de version.** |
+| —                                                | `supports-color@10.2.2` apparaît dans les chaînes de peers `eslint`/`typescript-eslint`/`debug` | Conséquence mécanique de `gel@2.2.1(supports-color@10.2.2)`. **Aucune version de `eslint`, `typescript-eslint` ou `debug` ne change.**                                                                                                                                                                                                                                                                                          |
 
 Aucun autre paquet direct (`svelte`, `@sveltejs/kit`, `vite`, `zod`, `better-auth`, `pg`, `resend`, `leaflet`…)
 ne bouge. Aucune modification sous `drizzle/`, aucun `override`/`resolution`, `vite.config.ts` intact.
 
 ## 3. Étape 51 — hygiène du verrou
 
-| Action | Diff du verrou | Contrôle |
-| :--- | :--- | :--- |
-| Retrait `@better-auth/infra` (`pnpm remove`) | **−3 paquets** : `@better-auth/infra@0.4.27`, `@xmldom/xmldom@0.9.12`, `libphonenumber-js@1.13.15` (ses seules dépendances exclusives) ; la variante `better-call@1.4.5(zod@3.25.76)` disparaît, seule subsiste `better-call@1.4.5(zod@4.6.7)` | `grep better-auth/infra` sur `src/`, `scripts/`, `tests/`, `.github/` : **aucune occurrence**, comme l'annonçait le plan. `ssr.noExternal` non touché (les 4 entrées restent). |
-| `image-size` exact (`pnpm add -E image-size@2.1.0`) | **+1 entrée**, 0 dépendance, 0 peer | `pnpm why image-size` → `2.1.0` unique, en `dependencies`. |
-| `better-auth` `~1.7.18` | 1 ligne d'importateur (`specifier: ^1.0.0` → `~1.7.18`), **aucun paquet ne bouge** (1.7.18 satisfait déjà la plage) | `pnpm install --frozen-lockfile` réussit ⇒ la CI ne cassera pas en `ERR_PNPM_OUTDATED_LOCKFILE`. |
+| Action                                              | Diff du verrou                                                                                                                                                                                                                                 | Contrôle                                                                                                                                                                       |
+| :-------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Retrait `@better-auth/infra` (`pnpm remove`)        | **−3 paquets** : `@better-auth/infra@0.4.27`, `@xmldom/xmldom@0.9.12`, `libphonenumber-js@1.13.15` (ses seules dépendances exclusives) ; la variante `better-call@1.4.5(zod@3.25.76)` disparaît, seule subsiste `better-call@1.4.5(zod@4.6.7)` | `grep better-auth/infra` sur `src/`, `scripts/`, `tests/`, `.github/` : **aucune occurrence**, comme l'annonçait le plan. `ssr.noExternal` non touché (les 4 entrées restent). |
+| `image-size` exact (`pnpm add -E image-size@2.1.0`) | **+1 entrée**, 0 dépendance, 0 peer                                                                                                                                                                                                            | `pnpm why image-size` → `2.1.0` unique, en `dependencies`.                                                                                                                     |
+| `better-auth` `~1.7.18`                             | 1 ligne d'importateur (`specifier: ^1.0.0` → `~1.7.18`), **aucun paquet ne bouge** (1.7.18 satisfait déjà la plage)                                                                                                                            | `pnpm install --frozen-lockfile` réussit ⇒ la CI ne cassera pas en `ERR_PNPM_OUTDATED_LOCKFILE`.                                                                               |
 
 **Reste à trancher par le Chef (hors de la consigne reçue)** : le point 4 de l'étape 51 (« mise hors jeu de
 `package-lock.json` ») n'a **pas** été exécuté ; `package-lock.json` est toujours présent. Je ne l'ai pas supprimé
@@ -607,9 +607,9 @@ de ma propre initiative.
 
 ## 4. Étape 52 — audit et installation de `svelte-i18n`
 
-| Package demandé | Version plan | Dernière version stable | Statut | Action retenue |
-| :--- | :--- | :--- | :--- | :--- |
-| `svelte-i18n` | **non prescrite** (choix mainteneur) | **4.0.1** (`dist-tags.latest`, publiée le **2024-10-21** ; `next` = 3.5.0-alpha.0 obsolète, `alpha` = 4.0.0-alpha.1) | **Compatible et utilisable sur Workers** | **Installé en `dependencies`, version exacte `4.0.1`** |
+| Package demandé | Version plan                         | Dernière version stable                                                                                              | Statut                                   | Action retenue                                         |
+| :-------------- | :----------------------------------- | :------------------------------------------------------------------------------------------------------------------- | :--------------------------------------- | :----------------------------------------------------- |
+| `svelte-i18n`   | **non prescrite** (choix mainteneur) | **4.0.1** (`dist-tags.latest`, publiée le **2024-10-21** ; `next` = 3.5.0-alpha.0 obsolète, `alpha` = 4.0.0-alpha.1) | **Compatible et utilisable sur Workers** | **Installé en `dependencies`, version exacte `4.0.1`** |
 
 ### Preuves de compatibilité (tarball 4.0.1 inspecté)
 
@@ -657,25 +657,25 @@ vérifier (absence de `node:` dans `runtime.js`, garde `typeof window`) est pré
 
 ## 5. Contrôles de fin de phase
 
-| Contrôle | Après Drizzle (étape 50) | Après étape 51 | Après `svelte-i18n` |
-| :--- | :--- | :--- | :--- |
-| `npm run check` | 0 erreur, 20 avertissements | 0 erreur, 20 avertissements | 0 erreur, 20 avertissements |
-| `npm run build` | OK (`✓ built in 22.90s`, adapter-cloudflare ✔) | OK (`19.78s`) | OK (`19.67s`) |
-| `npm run test` | même échec préexistant (3 suites vides + Playwright absent, 40 tests passent) | idem | idem |
-| `pnpm install --frozen-lockfile` | — | — | **OK** (`Lockfile is up to date`, 66 ms) |
+| Contrôle                         | Après Drizzle (étape 50)                                                      | Après étape 51              | Après `svelte-i18n`                      |
+| :------------------------------- | :---------------------------------------------------------------------------- | :-------------------------- | :--------------------------------------- |
+| `npm run check`                  | 0 erreur, 20 avertissements                                                   | 0 erreur, 20 avertissements | 0 erreur, 20 avertissements              |
+| `npm run build`                  | OK (`✓ built in 22.90s`, adapter-cloudflare ✔)                                | OK (`19.78s`)               | OK (`19.67s`)                            |
+| `npm run test`                   | même échec préexistant (3 suites vides + Playwright absent, 40 tests passent) | idem                        | idem                                     |
+| `pnpm install --frozen-lockfile` | —                                                                             | —                           | **OK** (`Lockfile is up to date`, 66 ms) |
 
 ## 6. Diff global du verrou, résumé par paquet (base `HEAD` → final)
 
 **Directs**
 
-| Paquet | Avant | Après | Nature |
-| :--- | :--- | :--- | :--- |
-| `drizzle-orm` | `^0.39.0` → 0.39.3 | `0.45.4` | montée ciblée (étape 50) |
-| `drizzle-kit` | `^0.30.0` → 0.30.6 | `0.31.11` | montée ciblée (étape 50) |
-| `better-auth` | `^1.0.0` → 1.7.18 | `~1.7.18` → **1.7.18** | resserrement, **version inchangée** |
-| `@better-auth/infra` | `^0.4.27` → 0.4.27 | **retiré** | étape 51 |
-| `image-size` | absent | **`2.1.0`** exact | étape 51 |
-| `svelte-i18n` | absent | **`4.0.1`** exact | étape 52 |
+| Paquet               | Avant              | Après                  | Nature                              |
+| :------------------- | :----------------- | :--------------------- | :---------------------------------- |
+| `drizzle-orm`        | `^0.39.0` → 0.39.3 | `0.45.4`               | montée ciblée (étape 50)            |
+| `drizzle-kit`        | `^0.30.0` → 0.30.6 | `0.31.11`              | montée ciblée (étape 50)            |
+| `better-auth`        | `^1.0.0` → 1.7.18  | `~1.7.18` → **1.7.18** | resserrement, **version inchangée** |
+| `@better-auth/infra` | `^0.4.27` → 0.4.27 | **retiré**             | étape 51                            |
+| `image-size`         | absent             | **`2.1.0`** exact      | étape 51                            |
+| `svelte-i18n`        | absent             | **`4.0.1`** exact      | étape 52                            |
 
 **Retirés (6)** : `@better-auth/infra@0.4.27`, `@xmldom/xmldom@0.9.12`, `libphonenumber-js@1.13.15` (exclusifs
 d'infra), `drizzle-orm@0.39.3`, `drizzle-kit@0.30.6`, `esbuild-register@3.6.0`.
@@ -719,13 +719,13 @@ d'équipe. Branche `main` jamais touchée, `production` jamais contactée (aucun
 L'arbre était **propre** (`git status --porcelain` vide) au début de l'intervention, sur `dev`, HEAD `17a015a`.
 `package.json` et `pnpm-lock.yaml` contiennent **déjà** l'état cible des phases 3 des 2026-11-18/19 :
 
-| Point | État constaté (HEAD) | Verdict |
-| :--- | :--- | :--- |
-| `drizzle-orm` | `0.45.4` exact, en `dependencies` | conforme à l'étape 50 |
-| `drizzle-kit` | `0.31.11` exact, **en `devDependencies`** | conforme (devDependency conservée) |
-| `better-auth` | `~1.7.18`, résolu **1.7.18**, `specifier` du verrou `~1.7.18` | conforme à l'étape 51.3 |
-| `@better-auth/infra` | **absent** de `package.json` **et** du verrou (0 occurrence) | conforme à l'étape 51.1 |
-| `image-size` | `2.1.0` exact, **une seule** entrée de paquet | conforme à l'étape 51.2 |
+| Point                | État constaté (HEAD)                                          | Verdict                            |
+| :------------------- | :------------------------------------------------------------ | :--------------------------------- |
+| `drizzle-orm`        | `0.45.4` exact, en `dependencies`                             | conforme à l'étape 50              |
+| `drizzle-kit`        | `0.31.11` exact, **en `devDependencies`**                     | conforme (devDependency conservée) |
+| `better-auth`        | `~1.7.18`, résolu **1.7.18**, `specifier` du verrou `~1.7.18` | conforme à l'étape 51.3            |
+| `@better-auth/infra` | **absent** de `package.json` **et** du verrou (0 occurrence)  | conforme à l'étape 51.1            |
+| `image-size`         | `2.1.0` exact, **une seule** entrée de paquet                 | conforme à l'étape 51.2            |
 
 Conséquence : **aucun `pnpm add` n'a été exécuté**. Les commandes prescrites (`pnpm add -E drizzle-orm@0.45.4
 drizzle-kit@0.31.11`) auraient été soit sans effet sur les versions, soit **régressives** (`drizzle-kit` serait
@@ -735,12 +735,12 @@ en fin d'intervention).
 
 ## 2. Contrôle de référence sur l'arbre hydraté (étalon)
 
-| Contrôle | Résultat | Sortie brute (extrait) |
-| :--- | :--- | :--- |
-| `pnpm install --frozen-lockfile` | **OK** | `Lockfile is up to date, resolution step is skipped` / `Done in 589ms` |
-| `npm run check` | **ÉCHEC (exit 1)** | `svelte-check found 1 error and 20 warnings in 5 files` |
-| `npm run build` | **OK** | `✓ built in 22.93s` / `adapter-cloudflare ✔ done` |
-| `npm run test` | **ÉCHEC (exit 1)** | `Test Files 2 failed \| 19 passed (22)` / `Tests 56 passed (56)` |
+| Contrôle                         | Résultat           | Sortie brute (extrait)                                                 |
+| :------------------------------- | :----------------- | :--------------------------------------------------------------------- |
+| `pnpm install --frozen-lockfile` | **OK**             | `Lockfile is up to date, resolution step is skipped` / `Done in 589ms` |
+| `npm run check`                  | **ÉCHEC (exit 1)** | `svelte-check found 1 error and 20 warnings in 5 files`                |
+| `npm run build`                  | **OK**             | `✓ built in 22.93s` / `adapter-cloudflare ✔ done`                      |
+| `npm run test`                   | **ÉCHEC (exit 1)** | `Test Files 2 failed \| 19 passed (22)` / `Tests 56 passed (56)`       |
 
 **L'erreur de `check` est unique et nommée** :
 
@@ -753,7 +753,7 @@ Error: Type 'StorageFunctionRow' does not satisfy the constraint 'Record<string,
 
 Ce n'est **pas** une régression d'installation : c'est la contrainte `db.execute<TRow extends Record<string, unknown>>`
 de `drizzle-orm` 0.45, appliquée à un type de retour écrit **sans index signature**. L'analyse du 2026-11-18 avait
-écarté à juste titre la rupture de *signature* de `db.execute` ; ce qui casse ici est la **contrainte générique**
+écarté à juste titre la rupture de _signature_ de `db.execute` ; ce qui casse ici est la **contrainte générique**
 sur le type fourni par l'appelant, dans un fichier (`storage.ts`, quotas R2) **postérieur** à cette analyse.
 **Correction attendue du développeur backend, hors de mon périmètre** : soit `type StorageFunctionRow = { … } &
 Record<string, unknown>`, soit un `execute` non générique suivi d'un cast local. **Aucun `as any` global, aucun
@@ -782,12 +782,12 @@ Sortie : `29 tables` … `No schema changes, nothing to migrate 😴` (exit 0).
 
 Comparaison SHA‑256 fichier par fichier entre `drizzle/` et la copie après génération :
 
-| Fichier | Résultat |
-| :--- | :--- |
-| `0000` → `0005` (`.sql`) | **identiques à l'octet** |
-| `meta/0000` → `meta/0004_snapshot.json` | **identiques à l'octet** |
-| `meta/_journal.json` | **identique** (entrée `idx: 5` inchangée, `0005_snapshot.json` toujours absent) |
-| fichiers créés | **aucun** |
+| Fichier                                 | Résultat                                                                        |
+| :-------------------------------------- | :------------------------------------------------------------------------------ |
+| `0000` → `0005` (`.sql`)                | **identiques à l'octet**                                                        |
+| `meta/0000` → `meta/0004_snapshot.json` | **identiques à l'octet**                                                        |
+| `meta/_journal.json`                    | **identique** (entrée `idx: 5` inchangée, `0005_snapshot.json` toujours absent) |
+| fichiers créés                          | **aucun**                                                                       |
 
 **Diff nul ⇒ OK pour la règle de lecture du plan.** La 0.31 ne réécrit **aucune** migration appliquée, ne crée pas
 l'instantané manquant de `0005` et ne retouche pas l'ordre des tags. Le piège préexistant (`6` entrées de journal
@@ -796,18 +796,18 @@ Dossier de travail supprimé après mesure.
 
 ## 4. Étape 51 — contrôle par contenu du verrou, et seul geste restant
 
-| Critère du mandat | Constat dans `pnpm-lock.yaml` | Verdict |
-| :--- | :--- | :--- |
-| `gel` retiré / `esbuild-register` retiré | `esbuild-register` : **0** occurrence. `gel@2.2.1` : **présent** (10 lignes) | `gel` subsiste — **peer optionnel de `drizzle-orm` 0.45**, résolu `gel@2.2.1(supports-color@10.2.2)` ; écart d'anticipation déjà documenté le 2026-11-19, sans conséquence |
-| `esbuild@0.25.x` ajouté | `esbuild@0.25.` : 2 lignes (0.25.12) | conforme |
-| `tsx ^4.21.0` ajouté | `tsx@` : 41 lignes, résolu `tsx@4.23.15` | conforme |
-| `esbuild@0.19.12` retiré | **2 occurrences restantes** | **écart** : la 0.19.12 est revenue avec le sous-arbre CLI de `svelte-i18n` (déjà signalé le 2026-11-19). Les chaînes de peers de `vite` restent sur `esbuild@0.28.2` |
-| peers de `better-auth` réécrits | `better-auth@1.7.18(…)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(…))` | conforme |
-| `@xmldom/xmldom`, `libphonenumber-js` disparus | **0** occurrence | conforme |
-| `jose`, `@noble/hashes`, `@better-fetch/fetch`, `better-call`, `@better-auth/utils` restent | 22 / 2 / 22 / 22 / 22 lignes | conforme |
-| une seule entrée `image-size` | 3 lignes = importateur + paquet + instantané, **un seul paquet** | conforme |
-| `specifier` `better-auth` = `~1.7.18`, version résolue inchangée | `specifier: ~1.7.18` / `version: 1.7.18(…)` | conforme |
-| aucune autre version de paquet direct | `svelte@5.56.0`, `@sveltejs/kit@2.61.1`, `vite@8.0.14`, `zod@3.25.76`, `pg@8.23.1` — inchangés | conforme |
+| Critère du mandat                                                                           | Constat dans `pnpm-lock.yaml`                                                                  | Verdict                                                                                                                                                                    |
+| :------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gel` retiré / `esbuild-register` retiré                                                    | `esbuild-register` : **0** occurrence. `gel@2.2.1` : **présent** (10 lignes)                   | `gel` subsiste — **peer optionnel de `drizzle-orm` 0.45**, résolu `gel@2.2.1(supports-color@10.2.2)` ; écart d'anticipation déjà documenté le 2026-11-19, sans conséquence |
+| `esbuild@0.25.x` ajouté                                                                     | `esbuild@0.25.` : 2 lignes (0.25.12)                                                           | conforme                                                                                                                                                                   |
+| `tsx ^4.21.0` ajouté                                                                        | `tsx@` : 41 lignes, résolu `tsx@4.23.15`                                                       | conforme                                                                                                                                                                   |
+| `esbuild@0.19.12` retiré                                                                    | **2 occurrences restantes**                                                                    | **écart** : la 0.19.12 est revenue avec le sous-arbre CLI de `svelte-i18n` (déjà signalé le 2026-11-19). Les chaînes de peers de `vite` restent sur `esbuild@0.28.2`       |
+| peers de `better-auth` réécrits                                                             | `better-auth@1.7.18(…)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(…))`                            | conforme                                                                                                                                                                   |
+| `@xmldom/xmldom`, `libphonenumber-js` disparus                                              | **0** occurrence                                                                               | conforme                                                                                                                                                                   |
+| `jose`, `@noble/hashes`, `@better-fetch/fetch`, `better-call`, `@better-auth/utils` restent | 22 / 2 / 22 / 22 / 22 lignes                                                                   | conforme                                                                                                                                                                   |
+| une seule entrée `image-size`                                                               | 3 lignes = importateur + paquet + instantané, **un seul paquet**                               | conforme                                                                                                                                                                   |
+| `specifier` `better-auth` = `~1.7.18`, version résolue inchangée                            | `specifier: ~1.7.18` / `version: 1.7.18(…)`                                                    | conforme                                                                                                                                                                   |
+| aucune autre version de paquet direct                                                       | `svelte@5.56.0`, `@sveltejs/kit@2.61.1`, `vite@8.0.14`, `zod@3.25.76`, `pg@8.23.1` — inchangés | conforme                                                                                                                                                                   |
 
 Résolutions vérifiées : `pnpm why drizzle-orm` → **0.45.4 (1 version)** ; `pnpm why drizzle-kit` → **0.31.11
 (1 version)** ; `pnpm why image-size` → **2.1.0 (1 version)**.

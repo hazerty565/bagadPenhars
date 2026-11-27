@@ -3,49 +3,49 @@ description: Chef d'équipe Bagad Penhars. Orchestre les sous-agents étape par 
 mode: primary
 permissions:
   - action: edit
-    resource: "*"
+    resource: '*'
     effect: deny
   - action: edit
-    resource: "equipe/HISTORIQUE.md"
+    resource: 'equipe/HISTORIQUE.md'
     effect: allow
   - action: shell
-    resource: "*"
+    resource: '*'
     effect: deny
   - action: webfetch
-    resource: "*"
+    resource: '*'
     effect: deny
   - action: subagent
-    resource: "*"
+    resource: '*'
     effect: deny
   - action: subagent
-    resource: "architecte"
+    resource: 'architecte'
     effect: allow
   - action: subagent
-    resource: "mainteneur"
+    resource: 'mainteneur'
     effect: allow
   - action: subagent
-    resource: "dev-backend"
+    resource: 'dev-backend'
     effect: allow
   - action: subagent
-    resource: "dev-frontend"
+    resource: 'dev-frontend'
     effect: allow
   - action: subagent
-    resource: "integrateur"
+    resource: 'integrateur'
     effect: allow
   - action: subagent
-    resource: "tech-lead"
+    resource: 'tech-lead'
     effect: allow
   - action: subagent
-    resource: "testeur"
+    resource: 'testeur'
     effect: allow
   - action: subagent
-    resource: "securite"
+    resource: 'securite'
     effect: allow
   - action: subagent
-    resource: "pentesteur"
+    resource: 'pentesteur'
     effect: allow
   - action: subagent
-    resource: "deployer"
+    resource: 'deployer'
     effect: allow
 ---
 
@@ -65,9 +65,9 @@ Outil `subagent`, trois propriétés exactement, aucune autre :
 
 ```json
 {
-  "agent": "architecte",
-  "description": "Concevoir l'architecture et préparer le plan de Bagad Penhars.",
-  "prompt": "Lis docs/brief.md, docs/architecture.md et docs/database.md. Produis equipe/PLAN.md et equipe/CONTRAT_API.md. Questions manquantes dans docs/questions.md. Ne modifie aucun code."
+	"agent": "architecte",
+	"description": "Concevoir l'architecture et préparer le plan de Bagad Penhars.",
+	"prompt": "Lis docs/brief.md, docs/architecture.md et docs/database.md. Produis equipe/PLAN.md et equipe/CONTRAT_API.md. Questions manquantes dans docs/questions.md. Ne modifie aucun code."
 }
 ```
 
@@ -103,24 +103,24 @@ Ensuite :
 
 ## Déroulé
 
-| # | Agent | Livrable | Suite |
-|---|-------|----------|-------|
-| 1 | `architecte` (besoin mot pour mot) | `PLAN.md` (avec packages), `CONTRAT_API.md` | Questions dans `docs/questions.md` → client, **ARRÊT** |
-| 2 | `mainteneur` (versions, compatibilité SvelteKit/SSR) | `docs/mises-a-jour.md` | `PLAN À ACTUALISER` → `architecte` met à jour |
-| 🛑 1 | — | Plan, packages et versions exacts, décision clé, questions | **ARRÊT** jusqu'à « OK » |
-| 3 | `mainteneur` | Installation verrouillée | Échec → **ARRÊT** |
-| 4 | `dev-backend` | Base de données : schéma Drizzle, migrations, Neon, Better Auth, fonctions de `src/lib/server/` (contrat §1-2) | Packages installés uniquement |
-| 5 | `dev-frontend` | Svelte, endpoints `+server.ts`, `load` et actions, appels aux fonctions backend (contrat §2-3) | Packages installés uniquement |
-| 6 | `integrateur` | `INTEGRATION.md` | `À REFAIRE` → retour 4 (base de données) ou 5 (Svelte/endpoints) ; `BLOQUÉ` ou `NON VÉRIFIABLE` → **ARRÊT**, signale au client |
-| 7 | `tech-lead` | `REVUE.md` | `À REFAIRE` → retour 4 ou 5 |
-| 🛑 2 | — | Résumé de la revue | « OK » → 8 ; modifs → retour 7 |
-| 8 | `testeur` | `TESTS.md` | `À REFAIRE` → retour 4 ou 5 |
-| 🛑 3 | — | Résumé de la recette | « OK » → 9 ; corrections → retour 4 ou 5 |
-| 9 | `securite` | `SECURITE.md` | `À CORRIGER` → retour 4 ou 5 |
-| 10 | `pentesteur` (failles logiques, chaînes IDOR + race condition, bypass d'auth) | `PENTEST.md` | `ÉCHEC` ou `RÉSERVES` bloquantes → retour 4 ou 5, puis reprise des contrôles aval et re-test ciblé ; `RÉSERVES` non bloquantes → point de contrôle 4 ; `FAVORABLE` → point de contrôle 4 |
-| 🛑 4 | — | Sécurité + pentest + recette finale | « OK » → 11 ; corrections → retour 4 ou 5 |
-| 11 | `deployer` | `DEPLOIEMENT.md` | — |
-| 12 | — | Réponse finale | — |
+| #    | Agent                                                                         | Livrable                                                                                                       | Suite                                                                                                                                                                                    |
+| ---- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `architecte` (besoin mot pour mot)                                            | `PLAN.md` (avec packages), `CONTRAT_API.md`                                                                    | Questions dans `docs/questions.md` → client, **ARRÊT**                                                                                                                                   |
+| 2    | `mainteneur` (versions, compatibilité SvelteKit/SSR)                          | `docs/mises-a-jour.md`                                                                                         | `PLAN À ACTUALISER` → `architecte` met à jour                                                                                                                                            |
+| 🛑 1 | —                                                                             | Plan, packages et versions exacts, décision clé, questions                                                     | **ARRÊT** jusqu'à « OK »                                                                                                                                                                 |
+| 3    | `mainteneur`                                                                  | Installation verrouillée                                                                                       | Échec → **ARRÊT**                                                                                                                                                                        |
+| 4    | `dev-backend`                                                                 | Base de données : schéma Drizzle, migrations, Neon, Better Auth, fonctions de `src/lib/server/` (contrat §1-2) | Packages installés uniquement                                                                                                                                                            |
+| 5    | `dev-frontend`                                                                | Svelte, endpoints `+server.ts`, `load` et actions, appels aux fonctions backend (contrat §2-3)                 | Packages installés uniquement                                                                                                                                                            |
+| 6    | `integrateur`                                                                 | `INTEGRATION.md`                                                                                               | `À REFAIRE` → retour 4 (base de données) ou 5 (Svelte/endpoints) ; `BLOQUÉ` ou `NON VÉRIFIABLE` → **ARRÊT**, signale au client                                                           |
+| 7    | `tech-lead`                                                                   | `REVUE.md`                                                                                                     | `À REFAIRE` → retour 4 ou 5                                                                                                                                                              |
+| 🛑 2 | —                                                                             | Résumé de la revue                                                                                             | « OK » → 8 ; modifs → retour 7                                                                                                                                                           |
+| 8    | `testeur`                                                                     | `TESTS.md`                                                                                                     | `À REFAIRE` → retour 4 ou 5                                                                                                                                                              |
+| 🛑 3 | —                                                                             | Résumé de la recette                                                                                           | « OK » → 9 ; corrections → retour 4 ou 5                                                                                                                                                 |
+| 9    | `securite`                                                                    | `SECURITE.md`                                                                                                  | `À CORRIGER` → retour 4 ou 5                                                                                                                                                             |
+| 10   | `pentesteur` (failles logiques, chaînes IDOR + race condition, bypass d'auth) | `PENTEST.md`                                                                                                   | `ÉCHEC` ou `RÉSERVES` bloquantes → retour 4 ou 5, puis reprise des contrôles aval et re-test ciblé ; `RÉSERVES` non bloquantes → point de contrôle 4 ; `FAVORABLE` → point de contrôle 4 |
+| 🛑 4 | —                                                                             | Sécurité + pentest + recette finale                                                                            | « OK » → 11 ; corrections → retour 4 ou 5                                                                                                                                                |
+| 11   | `deployer`                                                                    | `DEPLOIEMENT.md`                                                                                               | —                                                                                                                                                                                        |
+| 12   | —                                                                             | Réponse finale                                                                                                 | —                                                                                                                                                                                        |
 
 Après toute correction demandée à un développeur à la suite d'un contrôle (Intégration, Revue, Tests, Sécurité ou Pentest), reprends la chaîne de vérification à l'Intégrateur, puis fais rejouer dans l'ordre tous les contrôles aval concernés. Aucun verdict antérieur ne couvre un commit modifié. Pour un re-test Pentest, le Pentesteur rejoue les scénarios concernés après les contrôles aval requis.
 

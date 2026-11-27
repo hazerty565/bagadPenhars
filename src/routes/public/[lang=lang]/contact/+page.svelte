@@ -19,10 +19,7 @@
 				<address class="mt-2 not-italic text-sm text-ink/65 space-y-1">
 					<span>{site.address.street}</span>
 					<span>{site.address.postalCode} {site.address.city}</span>
-					<a
-						href={`mailto:${site.email}`}
-						class="break-all transition-colors hover:text-marine"
-					>
+					<a href={`mailto:${site.email}`} class="break-all transition-colors hover:text-marine">
 						{site.email.replace('@', '(@)')}
 					</a>
 				</address>
@@ -39,7 +36,13 @@
 
 			<div>
 				<label class="block text-sm font-medium mb-2" for="email">{t.contact.form.email}</label>
-				<input type="email" id="email" name="email" required class="shadow-sm rounded border w-full" />
+				<input
+					type="email"
+					id="email"
+					name="email"
+					required
+					class="shadow-sm rounded border w-full"
+				/>
 			</div>
 
 			<div>

@@ -1,13 +1,12 @@
 import { asc, eq, sql } from 'drizzle-orm';
 import type { Transaction } from '$lib/db';
-import {
-	articles,
-	profiles,
-	profilePupitres,
-	pupitres,
-	bureauPositions
-} from '$lib/db/schema';
-import type { MemberArticle, DirectoryProfile, MemberLevel, MemberPupitreId } from '$lib/member/types';
+import { articles, profiles, profilePupitres, pupitres, bureauPositions } from '$lib/db/schema';
+import type {
+	MemberArticle,
+	DirectoryProfile,
+	MemberLevel,
+	MemberPupitreId
+} from '$lib/member/types';
 import { MemberQueryError } from './errors';
 
 export interface ArticlesPageData {
@@ -124,10 +123,7 @@ export async function listArticlesPage(
 			};
 			authorsById.set(row.id, author);
 		}
-		if (
-			row.pupitre_slug &&
-			!author.pupitres.some((p) => p.pupitreId === row.pupitre_slug)
-		) {
+		if (row.pupitre_slug && !author.pupitres.some((p) => p.pupitreId === row.pupitre_slug)) {
 			author.pupitres.push({
 				pupitreId: row.pupitre_slug as MemberPupitreId
 			});
@@ -135,9 +131,7 @@ export async function listArticlesPage(
 	}
 
 	const authors: DirectoryProfile[] = Array.from(authorsById.values()).sort(
-		(a, b) =>
-			a.lastName.localeCompare(b.lastName) ||
-			a.firstName.localeCompare(b.firstName)
+		(a, b) => a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName)
 	);
 
 	return { articles: articlesData, authors };

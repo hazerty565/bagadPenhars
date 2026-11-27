@@ -51,14 +51,14 @@ Trois réserves empêchent une validation sans condition : **`app.can_view_prese
 
 ## 3. Statistiques (périmètre `0006`)
 
-| Gravité | Nombre |
-|---------|--------|
-| Critique | 0 |
-| Élevé (Majeure) | 1 |
-| Moyen (Modérée) | 3 |
-| Faible (Mineure) | 7 |
-| Information | 4 |
-| **Total** | **15** |
+| Gravité          | Nombre |
+| ---------------- | ------ |
+| Critique         | 0      |
+| Élevé (Majeure)  | 1      |
+| Moyen (Modérée)  | 3      |
+| Faible (Mineure) | 7      |
+| Information      | 4      |
+| **Total**        | **15** |
 
 Correspondance des échelles : la mission de cet audit utilise Critique / Élevé / Moyen / Faible ; l'équivalence avec le barème du rapport est indiquée entre parenthèses.
 
@@ -226,31 +226,31 @@ Relecture des 420 lignes : la migration ne contient que du DDL (`CREATE`/`DROP`/
 
 ## 5. Contrôles réalisés
 
-| Contrôle | Statut | Résultat |
-|----------|--------|----------|
-| Lecture intégrale de `0006` (420 lignes) | Réalisé | 15 constats (0 critique) |
-| Branche `created_by` retirée de `can_manage_event` | Réalisé | **Conforme** (0006:47-68 ; comparer 0002:160) |
-| Durcissement `SECURITY DEFINER` de `create_event` | Réalisé | **Conforme** (search_path, REVOKE PUBLIC, GRANT ciblé, pas de SQL dynamique) |
-| Rôle non fourni par le client (relu depuis `profiles`) | Réalisé | **Conforme** (`current_profile_id` 93, `current_role` 116, `is_role_at_least` 109) |
-| Bornes de création pour un chef (interne / 1 pupitre / dirigé) | Réalisé | **Conforme** (118, 122, 126 ; doublons neutralisés 103-107) |
-| Atomicité événement + ciblage | Réalisé | **Conforme** (une seule fonction, une seule transaction implicite) |
-| Insertion directe fermée (C2/C3) | Réalisé | **Conforme** (190-204) |
-| `USING` + `WITH CHECK` + trigger sans trou entre eux (C4) | Réalisé | **Conforme** (227-290), avec la réserve M01 sur le code |
-| `session_user` = propriétaire : légitimité du court-circuit | Réalisé | **Conforme** (`current_user` serait inopérant sous `SECURITY DEFINER`) ; condition d'exploitation F05 |
-| `events_delete` bornée au mono-pupitre dirigé, aucun droit au créateur | Réalisé | **Conforme** (296-318) ; conséquence M03 |
-| Fermeture de C5 (chef sur multi-pupitres) | Réalisé | **Conforme pour un `chef_pupitre`** (338-341) ; **trou de rôle E01** |
-| `event_responses_select` : propre ligne toujours, autres seulement via présence | Réalisé | **Conforme** (359-365) |
-| `member_directory` : plus d'`isChef`, `bureau_title` en fin, `security_invoker = false` | Réalisé | **Conforme** (376-408) |
-| `member_directory` : aucune donnée personnelle supplémentaire | Réalisé | **Conforme** (colonnes de §12.3 uniquement ; ni email, ni téléphone, ni adresse, ni date de naissance, ni statut de compte, ni `bureau_position_id`) |
-| `REVOKE DELETE ON invitations` effectif (aucune policy DELETE résiduelle) | Réalisé | **Conforme** (417 ; `0002` n'a pas de policy `DELETE` sur `invitations`) ; réserve F01 sur la table enfant |
-| `DROP TABLE playing_with_neon` sans dépendance cachée | **Non réalisable** | Dépendances invisibles hors base — cf. §6 |
-| Régressions de `GRANT` sur objets recréés | Réalisé | **Conforme** : `CREATE OR REPLACE` conserve les privilèges ; la vue recréée est re-`GRANT` (408) ; la fonction nouvelle est explicitement `GRANT` (176-184) car `GRANT EXECUTE ON ALL FUNCTIONS` (0002:507) est antérieur et ne couvre pas les fonctions futures |
-| Policies oubliées / laissées ouvertes à `PUBLIC` | Réalisé | Aucune : toutes les policies de `0006` sont `TO bagad_app` ; aucune policy permissive §4.5 du script de secours n'est réintroduite |
-| Fonctions `STABLE`/`VOLATILE` | Réalisé | Correct : `can_manage_event` et `can_view_presence` en `STABLE` (lecture seule), `create_event` en `VOLATILE` par défaut (écriture) |
-| `WITH CHECK` absent là où `USING` seul ne protège pas | Réalisé | Aucun cas dans `0006` (UPDATE : les deux présents ; INSERT : `WITH CHECK` présent ; DELETE : `USING` seul, correct) |
-| Cohérence code ↔ RLS | Réalisé | 3 écarts : M01 (delete/insert du ciblage, cancel), M02 (`location`), E01 (rôle des présences) |
-| `git status` / `git log` / SHA audité | Non réalisé | Shell indisponible (`Permission denied: shell`) — arbre de travail courant |
-| Exécution du SQL / test dynamique / base contactée | Non réalisé | Interdit par la mission et impossible sans client PostgreSQL |
+| Contrôle                                                                                | Statut             | Résultat                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lecture intégrale de `0006` (420 lignes)                                                | Réalisé            | 15 constats (0 critique)                                                                                                                                                                                                                                         |
+| Branche `created_by` retirée de `can_manage_event`                                      | Réalisé            | **Conforme** (0006:47-68 ; comparer 0002:160)                                                                                                                                                                                                                    |
+| Durcissement `SECURITY DEFINER` de `create_event`                                       | Réalisé            | **Conforme** (search_path, REVOKE PUBLIC, GRANT ciblé, pas de SQL dynamique)                                                                                                                                                                                     |
+| Rôle non fourni par le client (relu depuis `profiles`)                                  | Réalisé            | **Conforme** (`current_profile_id` 93, `current_role` 116, `is_role_at_least` 109)                                                                                                                                                                               |
+| Bornes de création pour un chef (interne / 1 pupitre / dirigé)                          | Réalisé            | **Conforme** (118, 122, 126 ; doublons neutralisés 103-107)                                                                                                                                                                                                      |
+| Atomicité événement + ciblage                                                           | Réalisé            | **Conforme** (une seule fonction, une seule transaction implicite)                                                                                                                                                                                               |
+| Insertion directe fermée (C2/C3)                                                        | Réalisé            | **Conforme** (190-204)                                                                                                                                                                                                                                           |
+| `USING` + `WITH CHECK` + trigger sans trou entre eux (C4)                               | Réalisé            | **Conforme** (227-290), avec la réserve M01 sur le code                                                                                                                                                                                                          |
+| `session_user` = propriétaire : légitimité du court-circuit                             | Réalisé            | **Conforme** (`current_user` serait inopérant sous `SECURITY DEFINER`) ; condition d'exploitation F05                                                                                                                                                            |
+| `events_delete` bornée au mono-pupitre dirigé, aucun droit au créateur                  | Réalisé            | **Conforme** (296-318) ; conséquence M03                                                                                                                                                                                                                         |
+| Fermeture de C5 (chef sur multi-pupitres)                                               | Réalisé            | **Conforme pour un `chef_pupitre`** (338-341) ; **trou de rôle E01**                                                                                                                                                                                             |
+| `event_responses_select` : propre ligne toujours, autres seulement via présence         | Réalisé            | **Conforme** (359-365)                                                                                                                                                                                                                                           |
+| `member_directory` : plus d'`isChef`, `bureau_title` en fin, `security_invoker = false` | Réalisé            | **Conforme** (376-408)                                                                                                                                                                                                                                           |
+| `member_directory` : aucune donnée personnelle supplémentaire                           | Réalisé            | **Conforme** (colonnes de §12.3 uniquement ; ni email, ni téléphone, ni adresse, ni date de naissance, ni statut de compte, ni `bureau_position_id`)                                                                                                             |
+| `REVOKE DELETE ON invitations` effectif (aucune policy DELETE résiduelle)               | Réalisé            | **Conforme** (417 ; `0002` n'a pas de policy `DELETE` sur `invitations`) ; réserve F01 sur la table enfant                                                                                                                                                       |
+| `DROP TABLE playing_with_neon` sans dépendance cachée                                   | **Non réalisable** | Dépendances invisibles hors base — cf. §6                                                                                                                                                                                                                        |
+| Régressions de `GRANT` sur objets recréés                                               | Réalisé            | **Conforme** : `CREATE OR REPLACE` conserve les privilèges ; la vue recréée est re-`GRANT` (408) ; la fonction nouvelle est explicitement `GRANT` (176-184) car `GRANT EXECUTE ON ALL FUNCTIONS` (0002:507) est antérieur et ne couvre pas les fonctions futures |
+| Policies oubliées / laissées ouvertes à `PUBLIC`                                        | Réalisé            | Aucune : toutes les policies de `0006` sont `TO bagad_app` ; aucune policy permissive §4.5 du script de secours n'est réintroduite                                                                                                                               |
+| Fonctions `STABLE`/`VOLATILE`                                                           | Réalisé            | Correct : `can_manage_event` et `can_view_presence` en `STABLE` (lecture seule), `create_event` en `VOLATILE` par défaut (écriture)                                                                                                                              |
+| `WITH CHECK` absent là où `USING` seul ne protège pas                                   | Réalisé            | Aucun cas dans `0006` (UPDATE : les deux présents ; INSERT : `WITH CHECK` présent ; DELETE : `USING` seul, correct)                                                                                                                                              |
+| Cohérence code ↔ RLS                                                                    | Réalisé            | 3 écarts : M01 (delete/insert du ciblage, cancel), M02 (`location`), E01 (rôle des présences)                                                                                                                                                                    |
+| `git status` / `git log` / SHA audité                                                   | Non réalisé        | Shell indisponible (`Permission denied: shell`) — arbre de travail courant                                                                                                                                                                                       |
+| Exécution du SQL / test dynamique / base contactée                                      | Non réalisé        | Interdit par la mission et impossible sans client PostgreSQL                                                                                                                                                                                                     |
 
 ---
 
@@ -277,17 +277,17 @@ Relecture des 420 lignes : la migration ne contient que du DDL (`CREATE`/`DROP`/
 
 ### 6.3 Assertions à ajouter à la matrice de l'étape 54 (en plus de T01–T33)
 
-| # | Rôle / cas | Action | Attendu |
-|---|-----------|--------|---------|
-| T34 | `bagad_app` | `select session_user, current_user` | `bagad_app` — sinon le runtime est propriétaire et **toute** la RLS est contournée |
-| T35 | chef | `UPDATE events SET title=…` sur son événement `interne` mono-pupitre (via le code actuel, delete+insert du ciblage) | **refus** explicite (42501) tant que l'étape 55 n'est pas livrée — documenter, ne pas « réparer » la policy |
-| T36 | chef | annule un événement `pupitre` existant de son pupitre | comportement à **trancher** (Q-A7 b) ; mesurer aujourd'hui : refus 42501 |
-| T37 | chef | supprime son événement mono-pupitre portant des réponses | mesurer le nombre de `event_responses` avant/après → confirme la cascade (M03) |
-| T38 | `member` avec `profile_pupitres.is_chef = true` | lit `event_responses` d'un événement mono-pupitre de ce pupitre | **refus** (0 ligne) — actuellement **faux** : c'est E01 |
-| T39 | chef | crée un événement avec un lieu via `app.create_event` | `location` conservé (aujourd'hui impossible : M02) |
-| T40 | secrétaire | `DELETE FROM invitation_pupitres WHERE …` | comportement attendu après F01 : refus de privilège |
-| T41 | `bagad_app` | `DELETE FROM invitations` | erreur de **privilège** (42501), pas 0 ligne (T27 le prévoit déjà : le conserver tel quel) |
-| T42 | propriétaire (migration) | `DELETE`/`UPDATE` via `session_user = neondb_owner` | passe sans trigger — confirme le court-circuit et **fige** la condition F05 |
+| #   | Rôle / cas                                      | Action                                                                                                              | Attendu                                                                                                     |
+| --- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| T34 | `bagad_app`                                     | `select session_user, current_user`                                                                                 | `bagad_app` — sinon le runtime est propriétaire et **toute** la RLS est contournée                          |
+| T35 | chef                                            | `UPDATE events SET title=…` sur son événement `interne` mono-pupitre (via le code actuel, delete+insert du ciblage) | **refus** explicite (42501) tant que l'étape 55 n'est pas livrée — documenter, ne pas « réparer » la policy |
+| T36 | chef                                            | annule un événement `pupitre` existant de son pupitre                                                               | comportement à **trancher** (Q-A7 b) ; mesurer aujourd'hui : refus 42501                                    |
+| T37 | chef                                            | supprime son événement mono-pupitre portant des réponses                                                            | mesurer le nombre de `event_responses` avant/après → confirme la cascade (M03)                              |
+| T38 | `member` avec `profile_pupitres.is_chef = true` | lit `event_responses` d'un événement mono-pupitre de ce pupitre                                                     | **refus** (0 ligne) — actuellement **faux** : c'est E01                                                     |
+| T39 | chef                                            | crée un événement avec un lieu via `app.create_event`                                                               | `location` conservé (aujourd'hui impossible : M02)                                                          |
+| T40 | secrétaire                                      | `DELETE FROM invitation_pupitres WHERE …`                                                                           | comportement attendu après F01 : refus de privilège                                                         |
+| T41 | `bagad_app`                                     | `DELETE FROM invitations`                                                                                           | erreur de **privilège** (42501), pas 0 ligne (T27 le prévoit déjà : le conserver tel quel)                  |
+| T42 | propriétaire (migration)                        | `DELETE`/`UPDATE` via `session_user = neondb_owner`                                                                 | passe sans trigger — confirme le court-circuit et **fige** la condition F05                                 |
 
 ---
 
@@ -314,27 +314,28 @@ Relecture des 420 lignes : la migration ne contient que du DDL (`CREATE`/`DROP`/
 
 ## 9. Traçabilité
 
-| Constat | Gravité | État |
-|---------|---------|------|
-| SEC-RLS-E01 — `can_view_presence` sans contrôle de rôle | Élevé | **Ouvert** — corrigeable dans `0006` avant l'étape 54 |
-| SEC-RLS-M01 — code incompatible (delete/insert du ciblage, cancel) | Moyen | Ouvert — étape 55 + séquencement |
-| SEC-RLS-M02 — `create_event` sans `location` | Moyen | **Ouvert** — corrigeable dans `0006` avant l'étape 54 |
-| SEC-RLS-M03 — suppression par chef = perte des réponses (cascade) | Moyen | Ouvert — décision client |
-| SEC-RLS-F01 — `invitation_pupitres` garde `DELETE` | Faible | Ouvert |
-| SEC-RLS-F02 — `pupitre` sans ciblage accepté par la fonction | Faible | Ouvert |
-| SEC-RLS-F03 — `cancelled_by` non protégé par le trigger | Faible | Ouvert |
-| SEC-RLS-F04 — `events_insert` ne vérifie pas `created_by` | Faible | Ouvert |
-| SEC-RLS-F05 — court-circuit propriétaire : condition d'exploitation | Faible | Ouvert — assertion T34 |
-| SEC-RLS-F06 — `profile_pupitres_select` expose `is_chef` | Faible | Ouvert — hors `0006` |
-| SEC-RLS-F07 — instantané `drizzle/meta/0006` absent | Faible | Ouvert — outillage |
-| SEC-RLS-I01 — agrégats non servis par la base | Information | À traiter à l'étape 55 |
-| SEC-RLS-I02 — `0006` rejouable | Information | Constaté |
-| SEC-RLS-I03 — aucune écriture de données | Information | Constaté |
-| SEC-RLS-I04 — badge « chef » retiré de l'UI par effet de bord | Information | À aligner (55/46) |
+| Constat                                                             | Gravité     | État                                                  |
+| ------------------------------------------------------------------- | ----------- | ----------------------------------------------------- |
+| SEC-RLS-E01 — `can_view_presence` sans contrôle de rôle             | Élevé       | **Ouvert** — corrigeable dans `0006` avant l'étape 54 |
+| SEC-RLS-M01 — code incompatible (delete/insert du ciblage, cancel)  | Moyen       | Ouvert — étape 55 + séquencement                      |
+| SEC-RLS-M02 — `create_event` sans `location`                        | Moyen       | **Ouvert** — corrigeable dans `0006` avant l'étape 54 |
+| SEC-RLS-M03 — suppression par chef = perte des réponses (cascade)   | Moyen       | Ouvert — décision client                              |
+| SEC-RLS-F01 — `invitation_pupitres` garde `DELETE`                  | Faible      | Ouvert                                                |
+| SEC-RLS-F02 — `pupitre` sans ciblage accepté par la fonction        | Faible      | Ouvert                                                |
+| SEC-RLS-F03 — `cancelled_by` non protégé par le trigger             | Faible      | Ouvert                                                |
+| SEC-RLS-F04 — `events_insert` ne vérifie pas `created_by`           | Faible      | Ouvert                                                |
+| SEC-RLS-F05 — court-circuit propriétaire : condition d'exploitation | Faible      | Ouvert — assertion T34                                |
+| SEC-RLS-F06 — `profile_pupitres_select` expose `is_chef`            | Faible      | Ouvert — hors `0006`                                  |
+| SEC-RLS-F07 — instantané `drizzle/meta/0006` absent                 | Faible      | Ouvert — outillage                                    |
+| SEC-RLS-I01 — agrégats non servis par la base                       | Information | À traiter à l'étape 55                                |
+| SEC-RLS-I02 — `0006` rejouable                                      | Information | Constaté                                              |
+| SEC-RLS-I03 — aucune écriture de données                            | Information | Constaté                                              |
+| SEC-RLS-I04 — badge « chef » retiré de l'UI par effet de bord       | Information | À aligner (55/46)                                     |
 
 **Audit antérieur non rouvert ici** : l'audit du 12 novembre 2026 (code applicatif, `equipe/AUDIT-DEMO.md`) conserve ses constats SEC-M01 à SEC-I04, dont SEC-M02 (RLS absente) que `0002` puis `0006` traitent. Leur levée devra être prononcée sur preuves, pas sur la seule existence de ces migrations.
 
 **Conditions opposables pour un feu vert** (toutes vérifiables) :
+
 1. E01 corrigé dans `app.can_view_presence` (contrôle de rôle) et prouvé par T38 ;
 2. M02 corrigé (`p_location`) et prouvé par T39 ;
 3. T34 (session_user = `bagad_app`), T37 (cascade), T27/T41 (privilège `DELETE invitations`) exécutés sur `test` avec le résultat attendu ;

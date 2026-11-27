@@ -57,9 +57,7 @@ export async function listAgendaEvents(
 			id: eventsTable.id,
 			title: eventsTable.title,
 			description: eventsTable.description,
-			eventDate: sql<string>`to_char(${eventsTable.event_date}, 'YYYY-MM-DD')`.as(
-				'eventDate'
-			),
+			eventDate: sql<string>`to_char(${eventsTable.event_date}, 'YYYY-MM-DD')`.as('eventDate'),
 			eventType: eventsTable.event_type,
 			visibility: eventsTable.visibility,
 			isPoll: eventsTable.is_poll,
@@ -109,10 +107,7 @@ export async function listAgendaEvents(
 		group by event_id
 	`);
 
-	const summaryMap = new Map<
-		string,
-		{ present: number; absent: number; total: number }
-	>();
+	const summaryMap = new Map<string, { present: number; absent: number; total: number }>();
 	for (const row of summaryRows as unknown as Array<{
 		event_id: string;
 		present_count: string;

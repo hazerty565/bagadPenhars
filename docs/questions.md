@@ -201,11 +201,9 @@ décisions entièrement intégrées aux documents de référence sont retirées 
 migration générée, aucune écriture en base, `production` n'a jamais été
 contactée.**
 
-
 ### Questions ouvertes du 2026-11-20
 
 Les décisions Q-A1 à Q-A9 sont détaillées dans `equipe/PLAN.md` §9 et `database.md`; les points ci-dessous restent ouverts.
-
 
 Les cinq questions ci-dessous ne bloquent **aucune** étape du plan. Elles sont
 consignées telles quelles pour que les développeurs ne tranchent pas à la place
@@ -233,7 +231,7 @@ du client.
 
 - **Contexte :** Q-A1 ne concerne que la **gestion**. La fonction de **lecture**
   `app.can_view_event()` conserve sa branche `OR e.created_by =
-  app.current_profile_id()`.
+app.current_profile_id()`.
 - **Ambiguïté :** un chef qui a créé un événement qu'il **ne gère plus** (perte
   du pupitre, événement élargi) doit-il conserver la **lecture** de cet
   événement ? Aujourd'hui : oui.

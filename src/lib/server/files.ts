@@ -151,7 +151,11 @@ async function servePrivate(
 
 	const profileId = locals.profile!.id;
 	if (scope.kind === 'avatar' && scope.profileId !== profileId) {
-		return errorResponse(403, 'forbidden', 'Vous ne pouvez consulter que votre propre photo de profil.');
+		return errorResponse(
+			403,
+			'forbidden',
+			'Vous ne pouvez consulter que votre propre photo de profil.'
+		);
 	}
 	if (scope.kind === 'albumMedia' && !isSecretaire(locals.role)) {
 		return errorResponse(

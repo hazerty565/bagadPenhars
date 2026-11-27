@@ -152,17 +152,21 @@ class MemberStore {
 
 	/** Préférences de notification de la page profil (objet unique → tableau pour compatibilité). */
 	get preferences(): MemberPreferences[] {
-		const data = this.page?.memberPage.data as {
-			preferences?: MemberPreferences | null;
-		} | undefined;
+		const data = this.page?.memberPage.data as
+			| {
+					preferences?: MemberPreferences | null;
+			  }
+			| undefined;
 		if (data?.preferences) return [data.preferences];
 		return [];
 	}
 
 	get settings(): MemberSettings {
-		const data = this.page?.memberPage.data as {
-			settings?: MemberSettings;
-		} | undefined;
+		const data = this.page?.memberPage.data as
+			| {
+					settings?: MemberSettings;
+			  }
+			| undefined;
 		return data?.settings ?? EMPTY_SETTINGS;
 	}
 

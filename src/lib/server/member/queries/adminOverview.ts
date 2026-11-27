@@ -71,9 +71,7 @@ export async function getAdminOverviewPage(
 
 	// Nombre total de membres
 	const membersResult = await tx.execute(sql`select count(*) as cnt from profiles`);
-	const members = Number(
-		((membersResult as unknown as { rows: CountRow[] }).rows?.[0]?.cnt ?? 0)
-	);
+	const members = Number((membersResult as unknown as { rows: CountRow[] }).rows?.[0]?.cnt ?? 0);
 
 	// Invitations en attente (ni acceptées, ni annulées)
 	const pendingInvitationsResult = await tx.execute(sql`
@@ -81,8 +79,7 @@ export async function getAdminOverviewPage(
 		where accepted_at is null and cancelled_at is null
 	`);
 	const pendingInvitations = Number(
-		((pendingInvitationsResult as unknown as { rows: CountRow[] }).rows?.[0]?.cnt ??
-			0)
+		(pendingInvitationsResult as unknown as { rows: CountRow[] }).rows?.[0]?.cnt ?? 0
 	);
 
 	// Événements à venir (non annulés, date >= aujourd'hui Europe/Paris)
@@ -92,8 +89,7 @@ export async function getAdminOverviewPage(
 		  and event_date >= (now() AT TIME ZONE 'Europe/Paris')::date
 	`);
 	const upcomingEvents = Number(
-		((upcomingEventsResult as unknown as { rows: CountRow[] }).rows?.[0]?.cnt ??
-			0)
+		(upcomingEventsResult as unknown as { rows: CountRow[] }).rows?.[0]?.cnt ?? 0
 	);
 
 	// Stockage global
@@ -109,8 +105,7 @@ export async function getAdminOverviewPage(
 		order by updated_at desc
 		limit 1
 	`);
-	const storageRow = ((storageResult as unknown as { rows: StorageRow[] }).rows ??
-		[])[0];
+	const storageRow = ((storageResult as unknown as { rows: StorageRow[] }).rows ?? [])[0];
 
 	const publicBytes = Number(storageRow?.public_bytes ?? 0);
 	const privateBytes = Number(storageRow?.private_bytes ?? 0);

@@ -80,12 +80,7 @@ export const POST: RequestHandler = async ({ locals, request, url }) => {
 
 	try {
 		const result = await withUserContext(locals.db, profileId, async (tx) => {
-			return runMemberCommand(
-				tx,
-				{ profileId, origin: url.origin },
-				action,
-				record.payload ?? {}
-			);
+			return runMemberCommand(tx, { profileId, origin: url.origin }, action, record.payload ?? {});
 		});
 
 		if (

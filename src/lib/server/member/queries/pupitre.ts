@@ -138,10 +138,7 @@ export async function getPupitrePage(
 			.select({ is_chef: profilePupitres.is_chef })
 			.from(profilePupitres)
 			.where(
-				and(
-					eq(profilePupitres.profile_id, profileId),
-					eq(profilePupitres.pupitre_id, pupitreUuid)
-				)
+				and(eq(profilePupitres.profile_id, profileId), eq(profilePupitres.pupitre_id, pupitreUuid))
 			)
 			.limit(1);
 
@@ -171,10 +168,7 @@ export async function getPupitrePage(
 			where pupitre_id = ${pupitreUuid}
 			  and is_active = true
 		`);
-		const count = Number(
-			((docResult as unknown as { rows: [{ cnt: string }] }).rows?.[0]?.cnt ??
-				0)
-		);
+		const count = Number((docResult as unknown as { rows: [{ cnt: string }] }).rows?.[0]?.cnt ?? 0);
 		return { ...base, documentsCount: count };
 	}
 
@@ -188,8 +182,7 @@ export async function getPupitrePage(
 			)
 		`);
 		const count = Number(
-			((unreadResult as unknown as { rows: [{ cnt: string }] }).rows?.[0]?.cnt ??
-				0)
+			(unreadResult as unknown as { rows: [{ cnt: string }] }).rows?.[0]?.cnt ?? 0
 		);
 		return { ...base, unreadCount: count };
 	}
@@ -206,7 +199,7 @@ export async function getPupitrePage(
 		where pp.pupitre_id = ${pupitreUuid}
 		order by md.last_name, md.first_name
 	`);
-	const memberRows = ((membersResult as unknown as { rows: DirectoryRow[] }).rows ?? []);
+	const memberRows = (membersResult as unknown as { rows: DirectoryRow[] }).rows ?? [];
 
 	// Tous les pupitres (avec is_chef et slug) des membres du pupitre ciblé
 	const pupilRows: MemberPupitreRow[] = await tx
@@ -231,9 +224,7 @@ export async function getPupitrePage(
 	const members: PupitreMember[] = memberRows.map((row) => {
 		const rawPupitres = row.pupitres;
 		const pupitreUuids: string[] = Array.isArray(rawPupitres)
-			? rawPupitres
-					.map((p) => p.pupitre_id)
-					.filter((id): id is string => typeof id === 'string')
+			? rawPupitres.map((p) => p.pupitre_id).filter((id): id is string => typeof id === 'string')
 			: [];
 
 		const ownedPupitres = (pupilByProfile.get(row.id) ?? []).map((r) => ({

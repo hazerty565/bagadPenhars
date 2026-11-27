@@ -79,9 +79,7 @@ export async function listDocumentsPage(
 	}
 
 	// Map uuid de pupitre -> slug (MemberPupitreId) pour l'exposition
-	const pupitreRows = await tx
-		.select({ id: pupitres.id, slug: pupitres.slug })
-		.from(pupitres);
+	const pupitreRows = await tx.select({ id: pupitres.id, slug: pupitres.slug }).from(pupitres);
 	const slugById = new Map<string, MemberPupitreId>();
 	for (const row of pupitreRows) {
 		slugById.set(row.id, row.slug as MemberPupitreId);

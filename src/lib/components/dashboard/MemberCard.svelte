@@ -15,7 +15,7 @@
 
 	// Aria-label complet incluant toutes les informations visibles de la carte
 	const memberAriaLabel = $derived(
-		`Voir la fiche de ${profile.firstName} ${profile.lastName}, ${LEVEL_LABELS[profile.level]}${profile.pupitres.length > 0 ? ', pupitres : ' + profile.pupitres.map(p => pupitreName(p.pupitreId) + (p.isChef ? ' (chef)' : '')).join(', ') : ''}${profile.bureauPosition ? ', ' + profile.bureauPosition : ''}`
+		`Voir la fiche de ${profile.firstName} ${profile.lastName}, ${LEVEL_LABELS[profile.level]}${profile.pupitres.length > 0 ? ', pupitres : ' + profile.pupitres.map((p) => pupitreName(p.pupitreId) + (p.isChef ? ' (chef)' : '')).join(', ') : ''}${profile.bureauPosition ? ', ' + profile.bureauPosition : ''}`
 	);
 </script>
 

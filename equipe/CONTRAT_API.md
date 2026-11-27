@@ -526,24 +526,24 @@ export type CommandResult =
 
 ## 4. Matrice des gardes et des droits
 
-| Opération                                             | `member`                 | `chef_pupitre`                                      | `secretaire`       | `admin` |
-| ----------------------------------------------------- | ------------------------ | ---------------------------------------------------- | ------------------ | ------- |
-| Lire l'agenda public                                  | oui (anonyme aussi)      | oui                                                  | oui                | oui     |
-| Lire l'agenda privé (`interne` + `pupitre` autorisés) | oui                      | oui                                                  | oui                | oui     |
-| Répondre à un événement visible                       | oui                      | oui                                                  | oui                | oui     |
-| Consulter le trombinoscope                            | oui                      | oui                                                  | oui                | oui     |
-| Lire les documents actifs                             | oui                      | oui                                                  | oui                | oui     |
-| Déposer un document                                   | non                      | ses pupitres dirigés                                 | tous               | tous    |
-| Gérer un événement                                    | non                      | événement mono-pupitre de l'un de ses pupitres       | tous               | tous    |
-| Créer un événement                                    | non                      | `interne`, **exactement 1** pupitre dirigé | `public`/`interne`/`pupitre`, 0 à N pupitres | idem secrétaire |
-| Supprimer un événement                                | non                      | **mono-pupitre de son pupitre** | tous           | tous    |
-| Lire les présences nominatives                        | non (sa propre réponse)  | **mono-pupitre de son pupitre** | tous           | tous    |
-| Gérer articles / albums                               | non                      | non                          | oui                | oui     |
-| Envoyer une notification                              | non                      | son pupitre                  | plusieurs pupitres | global  |
-| Inviter / activer / suspendre                         | non                      | non                          | oui                | oui     |
-| Modifier un rôle applicatif                           | non                      | non                          | non                | oui     |
-| Modifier les pupitres d'un membre                     | non                      | non                          | oui                | oui     |
-| Modifier son propre profil                            | oui (hors rôle/pupitres) | oui                          | oui                | oui     |
+| Opération                                             | `member`                 | `chef_pupitre`                                 | `secretaire`                                 | `admin`         |
+| ----------------------------------------------------- | ------------------------ | ---------------------------------------------- | -------------------------------------------- | --------------- |
+| Lire l'agenda public                                  | oui (anonyme aussi)      | oui                                            | oui                                          | oui             |
+| Lire l'agenda privé (`interne` + `pupitre` autorisés) | oui                      | oui                                            | oui                                          | oui             |
+| Répondre à un événement visible                       | oui                      | oui                                            | oui                                          | oui             |
+| Consulter le trombinoscope                            | oui                      | oui                                            | oui                                          | oui             |
+| Lire les documents actifs                             | oui                      | oui                                            | oui                                          | oui             |
+| Déposer un document                                   | non                      | ses pupitres dirigés                           | tous                                         | tous            |
+| Gérer un événement                                    | non                      | événement mono-pupitre de l'un de ses pupitres | tous                                         | tous            |
+| Créer un événement                                    | non                      | `interne`, **exactement 1** pupitre dirigé     | `public`/`interne`/`pupitre`, 0 à N pupitres | idem secrétaire |
+| Supprimer un événement                                | non                      | **mono-pupitre de son pupitre**                | tous                                         | tous            |
+| Lire les présences nominatives                        | non (sa propre réponse)  | **mono-pupitre de son pupitre**                | tous                                         | tous            |
+| Gérer articles / albums                               | non                      | non                                            | oui                                          | oui             |
+| Envoyer une notification                              | non                      | son pupitre                                    | plusieurs pupitres                           | global          |
+| Inviter / activer / suspendre                         | non                      | non                                            | oui                                          | oui             |
+| Modifier un rôle applicatif                           | non                      | non                                            | non                                          | oui             |
+| Modifier les pupitres d'un membre                     | non                      | non                                            | oui                                          | oui             |
+| Modifier son propre profil                            | oui (hors rôle/pupitres) | oui                                            | oui                                          | oui             |
 
 ---
 
@@ -803,15 +803,15 @@ Toutes les routes de cette section exigent `requireAuth(locals)` : session valid
 - **Entrée** :
   ```json
   {
-    "action": "profile.avatar.remove",
-    "payload": {}
+  	"action": "profile.avatar.remove",
+  	"payload": {}
   }
   ```
 - **Succès** :
   ```json
   {
-    "success": true,
-    "data": { "kind": "profile", "profile": "MemberProfile" }
+  	"success": true,
+  	"data": { "kind": "profile", "profile": "MemberProfile" }
   }
   ```
 - **Erreurs** : `403 forbidden_own_profile`, `403 account_suspended`, `404 not_found` si aucune photo n'est déposée.
@@ -841,32 +841,32 @@ Toutes les routes de cette section exigent `requireAuth(locals)` : session valid
   `isChef` d'un autre profil, uniquement dans `getPupitrePage` et
   `listAdminMembersPage` (§10.5 du plan, §13 point 21).
 
-| Load (`+*.server.ts`) | Fonction (§11.1) | `memberPage.section` et `data` | Rôle minimum | Erreurs spécifiques |
-| --- | --- | --- | --- | --- |
-| `GET /dashboard` — **layout** | `getMemberShell` | enveloppe `memberShell` : `{ profile, unreadCount }` | `member` | — |
-| `GET /dashboard` | `getOverviewPage` | `overview` : `OverviewPageData` | `member` | — |
-| `GET /dashboard/agenda` | `listAgendaEvents` | `agenda` : `AgendaPageData` | `member` | — |
-| `GET /dashboard/agenda/[id]` | `getEventDetail` | `event` : `EventDetailPageData` | `member` | `404` événement invisible |
-| `GET /dashboard/agenda/nouveau` | `getPageContext` | aucune section (le socle suffit) | `chef_pupitre` | `403` |
-| `GET /dashboard/agenda/[id]/modifier` | `getEventForEdit` | `eventForm` : `EventFormPageData` | `chef_pupitre` (périmètre) / `secretaire` | `404`, `403 not_chef_of_pupitre` |
-| `GET /dashboard/admin/agenda/new` | `getPageContext` | aucune section | `secretaire` | `403` |
-| `GET /dashboard/membres` | `listDirectoryProfiles` | `directory` : `{ profiles: DirectoryProfile[] }` | `member` | — |
-| `GET /dashboard/pupitre` | `getPupitrePage` (`section: 'overview'`) | `pupitre` : `PupitrePageData` | `chef_pupitre` | `403 not_chef_of_pupitre` |
-| `GET /dashboard/pupitre/membres` | `getPupitrePage` (`section: 'members'`) | `pupitre` : `{ pupitre, members }` | `chef_pupitre` | `403` |
-| `GET /dashboard/pupitre/documents` | `getPupitrePage` (`section: 'documents'`) | `pupitre` : `{ pupitre, documentsCount }` | `chef_pupitre` | `403` |
-| `GET /dashboard/pupitre/notifications` | `getPupitrePage` (`section: 'notifications'`) | `pupitre` : `{ pupitre, unreadCount }` | `chef_pupitre` | `403` |
-| `GET /dashboard/documents` | `listDocumentsPage` | `documents` : `DocumentsPageData` | `member` | — |
-| `GET /dashboard/notifications` | `listNotificationsPage` | `notifications` : `NotificationsPageData` | `member` | — |
-| `GET /dashboard/profil` | `getProfilePage` | `profile` : `ProfilePageData` | `member` | — |
-| `GET /dashboard/securite` | *(aucune)* | aucune section (le socle suffit) | `member` | — |
-| `GET /dashboard/admin` | `getAdminOverviewPage` | `adminOverview` : `AdminOverviewPageData` | `secretaire` | `403` |
-| `GET /dashboard/admin/membres` | `listAdminMembersPage` | `adminMembers` : `AdminMembersPageData` | `secretaire` | `403` |
-| `GET /dashboard/admin/invitations` | `listInvitationsPage` | `invitations` : `InvitationsPageData` | `secretaire` | `403` |
-| `GET /dashboard/admin/articles` et `.../new`, `.../[id]/edit` | `listArticlesPage` | `articles` : `ArticlesPageData` | `secretaire` | `403` ; `404` édition d'un article absent |
-| `GET /dashboard/admin/notifications` | `listNotificationsPage` | `notifications` : `NotificationsPageData` (avec `recipients`) | `secretaire` | `403` |
-| `GET /dashboard/admin/media` | `listMediaPage` | `media` : `MediaPageData` | `secretaire` | `403` |
-| `GET /dashboard/admin/settings` | `getSettingsPage` | `settings` : `SettingsPageData` | `admin` | `403` |
-| `GET /dashboard/admin/permissions` | *(aucune)* | aucune section (le socle suffit) | `admin` | `403` |
+| Load (`+*.server.ts`)                                         | Fonction (§11.1)                              | `memberPage.section` et `data`                                | Rôle minimum                              | Erreurs spécifiques                       |
+| ------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------- | ----------------------------------------- | ----------------------------------------- |
+| `GET /dashboard` — **layout**                                 | `getMemberShell`                              | enveloppe `memberShell` : `{ profile, unreadCount }`          | `member`                                  | —                                         |
+| `GET /dashboard`                                              | `getOverviewPage`                             | `overview` : `OverviewPageData`                               | `member`                                  | —                                         |
+| `GET /dashboard/agenda`                                       | `listAgendaEvents`                            | `agenda` : `AgendaPageData`                                   | `member`                                  | —                                         |
+| `GET /dashboard/agenda/[id]`                                  | `getEventDetail`                              | `event` : `EventDetailPageData`                               | `member`                                  | `404` événement invisible                 |
+| `GET /dashboard/agenda/nouveau`                               | `getPageContext`                              | aucune section (le socle suffit)                              | `chef_pupitre`                            | `403`                                     |
+| `GET /dashboard/agenda/[id]/modifier`                         | `getEventForEdit`                             | `eventForm` : `EventFormPageData`                             | `chef_pupitre` (périmètre) / `secretaire` | `404`, `403 not_chef_of_pupitre`          |
+| `GET /dashboard/admin/agenda/new`                             | `getPageContext`                              | aucune section                                                | `secretaire`                              | `403`                                     |
+| `GET /dashboard/membres`                                      | `listDirectoryProfiles`                       | `directory` : `{ profiles: DirectoryProfile[] }`              | `member`                                  | —                                         |
+| `GET /dashboard/pupitre`                                      | `getPupitrePage` (`section: 'overview'`)      | `pupitre` : `PupitrePageData`                                 | `chef_pupitre`                            | `403 not_chef_of_pupitre`                 |
+| `GET /dashboard/pupitre/membres`                              | `getPupitrePage` (`section: 'members'`)       | `pupitre` : `{ pupitre, members }`                            | `chef_pupitre`                            | `403`                                     |
+| `GET /dashboard/pupitre/documents`                            | `getPupitrePage` (`section: 'documents'`)     | `pupitre` : `{ pupitre, documentsCount }`                     | `chef_pupitre`                            | `403`                                     |
+| `GET /dashboard/pupitre/notifications`                        | `getPupitrePage` (`section: 'notifications'`) | `pupitre` : `{ pupitre, unreadCount }`                        | `chef_pupitre`                            | `403`                                     |
+| `GET /dashboard/documents`                                    | `listDocumentsPage`                           | `documents` : `DocumentsPageData`                             | `member`                                  | —                                         |
+| `GET /dashboard/notifications`                                | `listNotificationsPage`                       | `notifications` : `NotificationsPageData`                     | `member`                                  | —                                         |
+| `GET /dashboard/profil`                                       | `getProfilePage`                              | `profile` : `ProfilePageData`                                 | `member`                                  | —                                         |
+| `GET /dashboard/securite`                                     | _(aucune)_                                    | aucune section (le socle suffit)                              | `member`                                  | —                                         |
+| `GET /dashboard/admin`                                        | `getAdminOverviewPage`                        | `adminOverview` : `AdminOverviewPageData`                     | `secretaire`                              | `403`                                     |
+| `GET /dashboard/admin/membres`                                | `listAdminMembersPage`                        | `adminMembers` : `AdminMembersPageData`                       | `secretaire`                              | `403`                                     |
+| `GET /dashboard/admin/invitations`                            | `listInvitationsPage`                         | `invitations` : `InvitationsPageData`                         | `secretaire`                              | `403`                                     |
+| `GET /dashboard/admin/articles` et `.../new`, `.../[id]/edit` | `listArticlesPage`                            | `articles` : `ArticlesPageData`                               | `secretaire`                              | `403` ; `404` édition d'un article absent |
+| `GET /dashboard/admin/notifications`                          | `listNotificationsPage`                       | `notifications` : `NotificationsPageData` (avec `recipients`) | `secretaire`                              | `403`                                     |
+| `GET /dashboard/admin/media`                                  | `listMediaPage`                               | `media` : `MediaPageData`                                     | `secretaire`                              | `403`                                     |
+| `GET /dashboard/admin/settings`                               | `getSettingsPage`                             | `settings` : `SettingsPageData`                               | `admin`                                   | `403`                                     |
+| `GET /dashboard/admin/permissions`                            | _(aucune)_                                    | aucune section (le socle suffit)                              | `admin`                                   | `403`                                     |
 
 **Règles de page :**
 
@@ -1101,35 +1101,35 @@ Sauf mention contraire, les routes de cette section exigent `requireRole(locals,
 
 Ces fonctions ne sont pas des endpoints HTTP ; elles fixent l'interface entre modules serveur.
 
-| Fonction                  | Signature cible                                                            | Règles                                                                                                                                                                              |
-| ------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `withUserContext`         | `(db: DB, profileId: string, cb: (tx) => Promise<T>) => Promise<T>` | Ouvre une transaction, exécute **`set_config('app.profile_id', ..., true)`** — **seul** réglage de contexte admis, **jamais** `app.current_user_id` ni `app.user_id` — puis `cb`. Le rôle n'est **pas** passé en paramètre : les policies le lisent depuis `profiles.role` par `app.profile_id`. Contexte local à la transaction (aucune fuite entre requêtes, y compris après `ROLLBACK`). **Q-2026-11-08-01**, **Q-A9** (audit du 2026-11-20). |
-| `reserveStorage`          | `(bytes: number) => Promise<{ reserved: boolean; usage: StorageUsage }>`   | Vérifie `used + reserved + bytes <= blockThreshold`; sinon `quota_exceeded`.                                                                                                        |
-| `finalizeUpload`          | `(reservedBytes: number, actualBytes: number) => Promise<StorageUsage>`    | `used += actual`, `reserved -= reserved`.                                                                                                                                           |
-| `releaseReservation`      | `(reservedBytes: number) => Promise<StorageUsage>`                         | `reserved -= reserved` en cas d'échec.                                                                                                                                              |
-| `listEvents`              | `(actor, options?) => Promise<MemberEvent[]>`                              | Applique la visibilité §12.1.                                                                                                                                                       |
-| `getEventById`            | `(eventId: string) => Promise<EventWithPupitres \| null>`                  | Inclut les pupitres ciblés.                                                                                                                                                         |
-| `createEvent`             | `(actor, data) => Promise<Event>`                                          | Guard en amont **et** délégation à la fonction SQL **`app.create_event(..., p_pupitre_ids uuid[])`** (`SECURITY DEFINER`) : l'événement et ses pupitres sont insérés **dans la même transaction**. Chef : **exactement 1** pupitre qu'il dirige et `visibility = 'interne'` **seulement** ; secrétaire/admin : `public`/`interne`/`pupitre` et **0 à N** pupitres (0 = global). Aucune insertion directe dans `events` par un chef. **Q-A1/Q-A2** (2026-11-20). |
-| `updateEvent`             | `(actor, eventId, data) => Promise<Event>`                                 | Guard en amont ; remplace les pupitres si `pupitreIds` fourni. Un chef **ne peut pas élargir** la visibilité (il reste en `interne`) ni faire sortir l'événement de son périmètre ; `created_by` et `is_poll` ne sont pas modifiables par un chef. **Q-A1/Q-A2**. |
-| `cancelEvent`             | `(actor, eventId, reason?) => Promise<Event>`                              | Renseigne `cancelled_at` ; ne supprime aucune réponse. **Q-2026-11-08-05**.                                                                                                         |
-| `deleteEvent`             | `(actor, eventId) => Promise<void>`                                        | Un chef supprime **uniquement** un événement **mono-pupitre de son pupitre** ; multi-pupitres et global : secrétaire/admin. Aucun droit dérivé du seul statut de créateur. Les réponses suivent la politique de conservation. **Q-A4** (2026-11-20). |
-| `upsertResponse`          | `(actor, { eventId, profileId, status }) => Promise<EventResponse>`        | `profileId` doit égaler `actor.profileId` ; vérifie l'état `actif` et la visibilité.                                                                                                |
-| `getProfileWithPupitres`  | `(profileId) => Promise<SessionProfile \| null>`                           | Inclut `isChef`.                                                                                                                                                                    |
-| `updateOwnProfile`        | `(profileId, updates) => Promise<Profile>`                                 | Champs limités à `first_name`, `last_name`, `phone`, `address`, `musician_level`.                                                                                                   |
-| `activateProfile`         | `(profileId) => Promise<Profile>`                                          | Vérifie `email_confirmed` en amont.                                                                                                                                                 |
-| `suspendProfile`          | `(profileId) => Promise<Profile>`                                          | Conserve les données.                                                                                                                                                               |
-| `createInvitation`        | `(data) => Promise<Invitation>`                                            | Jeton empreinté, TTL 1 h.                                                                                                                                                           |
-| `validateInvitation`      | `(token, email) => Promise<Invitation \| null>`                            | Refuse expiré, consommé, adresse non concordante.                                                                                                                                   |
-| `markInvitationAccepted`  | `(invitationId) => Promise<Invitation>`                                    | Renseigne `accepted_at`.                                                                                                                                                            |
-| `uploadObject`            | `(bindings, bucket, key, body, mimeType) => Promise<R2ObjectMetadata>`     | Bucket `public` ou `private`.                                                                                                                                                       |
-| `getObject`               | `(bindings, bucket, key) => Promise<{ body, mimeType } \| null>`           | Lecture après guard.                                                                                                                                                                |
-| `deleteObject`            | `(bindings, bucket, key) => Promise<void>`                                 | Suppression R2.                                                                                                                                                                     |
-| `sendPushNotification`    | `({ playerIds, title, message, url? }) => Promise<unknown>`                | **Ne doit pas être appelée avec des `playerIds` fournis par le navigateur** ; l'audience est résolue côté serveur.                                                                  |
-| `resolveAudience`         | `(role, actorPupitreIds, requestedPupitreIds) => string[]`                 | Admin = global ; secrétaire = plusieurs ; chef = ses pupitres ; membre = refusé.                                                                                                    |
-| `sendEmail`               | `({ to, subject, html, text? }) => Promise<ResendResult>`                  | Clé Resend serveur uniquement.                                                                                                                                                      |
-| `sendInvitationEmail`     | `(to, invitationLink) => Promise<ResendResult>`                            | Lien 1 h.                                                                                                                                                                           |
-| `sendPasswordResetEmail`  | `(to, resetLink) => Promise<ResendResult>`                                 | Lien Better Auth.                                                                                                                                                                   |
-| `sendContactConfirmation` | `(to) => Promise<ResendResult>`                                            | Après succès de l'envoi principal.                                                                                                                                                  |
+| Fonction                  | Signature cible                                                          | Règles                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `withUserContext`         | `(db: DB, profileId: string, cb: (tx) => Promise<T>) => Promise<T>`      | Ouvre une transaction, exécute **`set_config('app.profile_id', ..., true)`** — **seul** réglage de contexte admis, **jamais** `app.current_user_id` ni `app.user_id` — puis `cb`. Le rôle n'est **pas** passé en paramètre : les policies le lisent depuis `profiles.role` par `app.profile_id`. Contexte local à la transaction (aucune fuite entre requêtes, y compris après `ROLLBACK`). **Q-2026-11-08-01**, **Q-A9** (audit du 2026-11-20).                |
+| `reserveStorage`          | `(bytes: number) => Promise<{ reserved: boolean; usage: StorageUsage }>` | Vérifie `used + reserved + bytes <= blockThreshold`; sinon `quota_exceeded`.                                                                                                                                                                                                                                                                                                                                                                                    |
+| `finalizeUpload`          | `(reservedBytes: number, actualBytes: number) => Promise<StorageUsage>`  | `used += actual`, `reserved -= reserved`.                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `releaseReservation`      | `(reservedBytes: number) => Promise<StorageUsage>`                       | `reserved -= reserved` en cas d'échec.                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `listEvents`              | `(actor, options?) => Promise<MemberEvent[]>`                            | Applique la visibilité §12.1.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `getEventById`            | `(eventId: string) => Promise<EventWithPupitres \| null>`                | Inclut les pupitres ciblés.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `createEvent`             | `(actor, data) => Promise<Event>`                                        | Guard en amont **et** délégation à la fonction SQL **`app.create_event(..., p_pupitre_ids uuid[])`** (`SECURITY DEFINER`) : l'événement et ses pupitres sont insérés **dans la même transaction**. Chef : **exactement 1** pupitre qu'il dirige et `visibility = 'interne'` **seulement** ; secrétaire/admin : `public`/`interne`/`pupitre` et **0 à N** pupitres (0 = global). Aucune insertion directe dans `events` par un chef. **Q-A1/Q-A2** (2026-11-20). |
+| `updateEvent`             | `(actor, eventId, data) => Promise<Event>`                               | Guard en amont ; remplace les pupitres si `pupitreIds` fourni. Un chef **ne peut pas élargir** la visibilité (il reste en `interne`) ni faire sortir l'événement de son périmètre ; `created_by` et `is_poll` ne sont pas modifiables par un chef. **Q-A1/Q-A2**.                                                                                                                                                                                               |
+| `cancelEvent`             | `(actor, eventId, reason?) => Promise<Event>`                            | Renseigne `cancelled_at` ; ne supprime aucune réponse. **Q-2026-11-08-05**.                                                                                                                                                                                                                                                                                                                                                                                     |
+| `deleteEvent`             | `(actor, eventId) => Promise<void>`                                      | Un chef supprime **uniquement** un événement **mono-pupitre de son pupitre** ; multi-pupitres et global : secrétaire/admin. Aucun droit dérivé du seul statut de créateur. Les réponses suivent la politique de conservation. **Q-A4** (2026-11-20).                                                                                                                                                                                                            |
+| `upsertResponse`          | `(actor, { eventId, profileId, status }) => Promise<EventResponse>`      | `profileId` doit égaler `actor.profileId` ; vérifie l'état `actif` et la visibilité.                                                                                                                                                                                                                                                                                                                                                                            |
+| `getProfileWithPupitres`  | `(profileId) => Promise<SessionProfile \| null>`                         | Inclut `isChef`.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `updateOwnProfile`        | `(profileId, updates) => Promise<Profile>`                               | Champs limités à `first_name`, `last_name`, `phone`, `address`, `musician_level`.                                                                                                                                                                                                                                                                                                                                                                               |
+| `activateProfile`         | `(profileId) => Promise<Profile>`                                        | Vérifie `email_confirmed` en amont.                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `suspendProfile`          | `(profileId) => Promise<Profile>`                                        | Conserve les données.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `createInvitation`        | `(data) => Promise<Invitation>`                                          | Jeton empreinté, TTL 1 h.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `validateInvitation`      | `(token, email) => Promise<Invitation \| null>`                          | Refuse expiré, consommé, adresse non concordante.                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `markInvitationAccepted`  | `(invitationId) => Promise<Invitation>`                                  | Renseigne `accepted_at`.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `uploadObject`            | `(bindings, bucket, key, body, mimeType) => Promise<R2ObjectMetadata>`   | Bucket `public` ou `private`.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `getObject`               | `(bindings, bucket, key) => Promise<{ body, mimeType } \| null>`         | Lecture après guard.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `deleteObject`            | `(bindings, bucket, key) => Promise<void>`                               | Suppression R2.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `sendPushNotification`    | `({ playerIds, title, message, url? }) => Promise<unknown>`              | **Ne doit pas être appelée avec des `playerIds` fournis par le navigateur** ; l'audience est résolue côté serveur.                                                                                                                                                                                                                                                                                                                                              |
+| `resolveAudience`         | `(role, actorPupitreIds, requestedPupitreIds) => string[]`               | Admin = global ; secrétaire = plusieurs ; chef = ses pupitres ; membre = refusé.                                                                                                                                                                                                                                                                                                                                                                                |
+| `sendEmail`               | `({ to, subject, html, text? }) => Promise<ResendResult>`                | Clé Resend serveur uniquement.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `sendInvitationEmail`     | `(to, invitationLink) => Promise<ResendResult>`                          | Lien 1 h.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `sendPasswordResetEmail`  | `(to, resetLink) => Promise<ResendResult>`                               | Lien Better Auth.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `sendContactConfirmation` | `(to) => Promise<ResendResult>`                                          | Après succès de l'envoi principal.                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### 11.1 Fonctions de lecture ciblée (2026-11-25)
 
@@ -1144,6 +1144,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 `NOT_CHEF_OF_PUPITRE`. Le `+*.server.ts` traduit en `403`/`404`.
 
 #### getMemberShell
+
 - **Fichier** : `src/lib/server/member/queries/shell.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `MemberShell` — `{ profile: MemberProfile; unreadCount: number }` ; `profile.pupitres[].isChef` **uniquement** pour ce profil.
@@ -1151,6 +1152,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `member` (compte actif)
 
 #### getPageContext
+
 - **Fichier** : `src/lib/server/member/queries/context.ts`
 - **Paramètres** : `(tx, profileId: string, minRole: AppRole)`
 - **Retour** : `{ role: AppRole; accountStatus: AccountStatus }`
@@ -1158,6 +1160,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `minRole`
 
 #### getOverviewPage
+
 - **Fichier** : `src/lib/server/member/queries/overview.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `OverviewPageData` — 10 prochains événements visibles (`MemberEventPageItem`), 3 dernières notifications (`readBy` = soi), nombre de documents
@@ -1165,6 +1168,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `member`
 
 #### listAgendaEvents
+
 - **Fichier** : `src/lib/server/member/queries/agenda.ts`
 - **Paramètres** : `(tx, profileId: string, filters?: { from?: string; to?: string })`
 - **Retour** : `AgendaPageData` — événements visibles (RLS), `myResponse`, `responseSummary`
@@ -1172,6 +1176,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `member`
 
 #### getEventDetail
+
 - **Fichier** : `src/lib/server/member/queries/events.ts`
 - **Paramètres** : `(tx, profileId: string, eventId: string)`
 - **Retour** : `EventDetailPageData | null` — `event`, `profiles` (audience minimale, `DirectoryProfile`), `responses` (ma réponse ; nominatif seulement si §12.2 l'autorise)
@@ -1179,6 +1184,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `member`
 
 #### getEventForEdit
+
 - **Fichier** : `src/lib/server/member/queries/events.ts`
 - **Paramètres** : `(tx, profileId: string, eventId: string)`
 - **Retour** : `EventFormPageData | null`
@@ -1186,6 +1192,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `chef_pupitre` (événement mono-pupitre de son périmètre) ou `secretaire`/`admin`
 
 #### listDirectoryProfiles
+
 - **Fichier** : `src/lib/server/member/queries/directory.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `{ profiles: DirectoryProfile[] }` — §12.3 uniquement, aucune `isChef`, aucune valeur fabriquée
@@ -1193,6 +1200,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `member`
 
 #### getPupitrePage
+
 - **Fichier** : `src/lib/server/member/queries/pupitre.ts`
 - **Paramètres** : `(tx, profileId: string, input: { pupitreId: string; section: 'overview' | 'members' | 'documents' | 'notifications' })`
 - **Retour** : `PupitrePageData` — une seule section renseignée ; `members` typés `PupitreMember` (seule projection portant `isChef`, pour l'affichage des chefs)
@@ -1201,6 +1209,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Note** : seule fonction, avec `listAdminMembersPage`, qui expose `isChef` d'un autre profil (affichage des chefs, édition) — §13 point 21.
 
 #### listDocumentsPage
+
 - **Fichier** : `src/lib/server/member/queries/documents.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `DocumentsPageData` — documents actifs + compteurs par pupitre
@@ -1208,6 +1217,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `member`
 
 #### listNotificationsPage
+
 - **Fichier** : `src/lib/server/member/queries/notifications.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `NotificationsPageData` — `readBy` réduit à `[profileId]`/`[]` ; `recipients`/`pupitres` seulement pour les rôles qui envoient
@@ -1215,6 +1225,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `member`
 
 #### getProfilePage
+
 - **Fichier** : `src/lib/server/member/queries/profile.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `ProfilePageData` — `profile` (soi-même), `preferences` (`null` si aucune ligne)
@@ -1222,6 +1233,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `member`
 
 #### listArticlesPage
+
 - **Fichier** : `src/lib/server/member/queries/articles.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `ArticlesPageData` — articles + `authors` minimaux (`DirectoryProfile`)
@@ -1229,6 +1241,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `secretaire`
 
 #### listMediaPage
+
 - **Fichier** : `src/lib/server/member/queries/media.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `MediaPageData` — albums + photos + `storage`
@@ -1236,6 +1249,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `secretaire`
 
 #### listInvitationsPage
+
 - **Fichier** : `src/lib/server/member/queries/invitations.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `InvitationsPageData`
@@ -1243,6 +1257,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `secretaire`
 
 #### listAdminMembersPage
+
 - **Fichier** : `src/lib/server/member/queries/adminMembers.ts`
 - **Paramètres** : `(tx, profileId: string, filters?: { query?: string; role?: AppRole; accountStatus?: AccountStatus })`
 - **Retour** : `AdminMembersPageData` — `MemberAdminSummary[]` (rôle, statut, niveau, pupitres + `isChef`, titre et `bureauPositionId` pour l'édition)
@@ -1250,6 +1265,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `secretaire`
 
 #### getSettingsPage
+
 - **Fichier** : `src/lib/server/member/queries/settings.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `SettingsPageData` — réglages + `storage`
@@ -1257,6 +1273,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `admin`
 
 #### getAdminOverviewPage
+
 - **Fichier** : `src/lib/server/member/queries/adminOverview.ts`
 - **Paramètres** : `(tx, profileId: string)`
 - **Retour** : `AdminOverviewPageData` — compteurs seulement
@@ -1264,6 +1281,7 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 - **Rôle minimum** : `secretaire`
 
 #### runMemberCommand (forme révisée)
+
 - **Fichier** : `src/lib/server/member/commands.ts`
 - **Paramètres** : `(tx, actor, action: string, payload: unknown)`
 - **Retour** : `CommandResult` — **jamais** d'instantané, **jamais** de lecture globale
@@ -1279,10 +1297,10 @@ Conventions d'erreur : pas d'erreur HTTP ici ; elles renvoient `null`
 La **visibilité** détermine qui peut consulter et à qui répondre. Elle ne donne
 pas, à elle seule, un droit de modification ou de suppression.
 
-| `visibility` | Visiteur anonyme | Membre actif |
-| ------------ | ---------------- | ------------ |
-| `public`     | lecture          | lecture + RSVP |
-| `interne`    | interdit         | lecture + RSVP |
+| `visibility` | Visiteur anonyme | Membre actif                                     |
+| ------------ | ---------------- | ------------------------------------------------ |
+| `public`     | lecture          | lecture + RSVP                                   |
+| `interne`    | interdit         | lecture + RSVP                                   |
 | `pupitre`    | interdit         | lecture + RSVP si l'un de ses pupitres est ciblé |
 
 Les droits de gestion sont indépendants de cette matrice de lecture :
@@ -1332,7 +1350,7 @@ Les droits de gestion sont indépendants de cette matrice de lecture :
   - **secrétaire et admin** : tous les événements, y compris multi-pupitres et globaux ;
   - **chef de pupitre** : **uniquement** les événements ciblant **exactement un** pupitre qu'il dirige. Un chef dont **un** pupitre participe à un événement **multi-pupitres**, ou un événement **global sans pupitre**, **ne voit pas** la liste nominative ;
   - **membre** : jamais celle des autres ; il lit **sa propre** réponse et les **agrégats** (`responseSummary`, `isPoll`).
-  La règle est appliquée **en base** (policies de `event_responses`) **et** côté serveur — un masquage d'interface ne vaut pas protection. Les agrégats restent lisibles selon §12.1.
+    La règle est appliquée **en base** (policies de `event_responses`) **et** côté serveur — un masquage d'interface ne vaut pas protection. Les agrégats restent lisibles selon §12.1.
 
 ### 12.3 Trombinoscope
 
@@ -1401,31 +1419,31 @@ Les droits de gestion sont indépendants de cette matrice de lecture :
 
 ## 13. Points « À CONFIRMER » et dépendances
 
-| #   | Point                                                                                                                      | Pourquoi                                                                                                                                                                          | Renvoi                                             |
-| --- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| 1   | **Driver transactionnel** `neon-http` vs `neon-serverless` + `Pool`                                                        | `set_config(..., true)` exige la même transaction que les requêtes ; `neon-http` ne le permet pas. Le contrat cible `withUserContext`, mais le choix du driver n'est pas tranché. | **Q-2026-11-08-01**                                |
-| 2   | **Modèle `storage_usage`** global vs par bucket, colonnes `bigint` et seuils                                               | `docs/database.md` et `docs/media.md` divergent ; le schéma actuel est en `integer`.                                                                                              | **Q-2026-11-08-02**                                |
-| 3   | **Pipeline images** Cloudflare Images vs R2 + variantes                                                                    | Les URL `imagedelivery.net/{hash}/{r2_key}` ne servent pas une clé R2 ; le contrat expose `thumbnailUrl` / `fullUrl` sans figer le fournisseur.                                   | **Q-2026-11-08-03**                                |
-| 4   | **Noms des bindings R2**                                                                                                   | Trois noms coexistent (`R2_BUCKET`, `R2_BUCKET_PUBLIC/PRIVATE`, `bagad_public/private`). Le contrat cible `R2_PUBLIC` / `R2_PRIVATE`.                                             | **Q-2026-11-08-04**                                |
-| 5   | **État annulé** `cancelled_at`                                                                                             | Le schéma `events` n'a ni statut ni date d'annulation ; le contrat expose `state: 'annule'` et `cancelledAt`.                                                                     | **Q-2026-11-08-05**                                |
-| 6   | **Création du compte à l'invitation**                                                                                      | Better Auth ne crée pas d'utilisateur sans plugin admin ou flux d'inscription ; le parcours §5.5/§5.6 en dépend.                                                                  | **Q-2026-11-08-06**                                |
-| 7   | **Cadence des notifications** création vs J-3                                                                              | `docs/Spec.md` §4.6 et `docs/event.md` décrivent deux mécanismes ; le contrat expose les deux préférences sans trancher.                                                          | **Q-2026-11-08-07**                                |
-| 8   | **Durées de conservation et purge**                                                                                        | Aucune durée validée pour réponses, `activity_log`, messages de contact, invitations expirées ; aucune purge automatique.                                                         | **Q-2026-11-08-08**                                |
-| 9   | **Dossiers historiques Supabase/Netlify**                                                                                  | Le déplacement ou la suppression exige l'accord du client ; sans impact direct sur l'API.                                                                                         | **Q-2026-11-08-09**                                |
-| 10  | **Couleurs et icônes PWA**                                                                                                 | Le manifest et les icônes ne sont pas finalisés ; sans impact sur l'API, mais bloque la PWA.                                                                                      | **Q-2026-11-07-02**                                |
-| 11  | **Route canonique d'invitation** : `/auth/invitation?/invite` (existant) vs `/dashboard/admin/invitations?/invite` (cible) | Doublon de route ; le contrat choisit l'administration, l'implémentation existante est sous `auth/`.                                                                              | À confirmer par l'équipe (pas une question client) |
-| 12  | **Route du trombinoscope** : `/dashboard/trombinoscope` (à créer) vs `/dashboard/membres` vs `/dashboard/pupitre/membres`  | Aucune route dédiée n'existe ; le contrat propose `/dashboard/trombinoscope`.                                                                                                     | À confirmer par l'équipe                           |
-| 13  | **Action RSVP sur l'agenda public**                                                                                        | L'action `?/rsvp` existe sur `/[lang]/agenda`, qui doit être en lecture seule (F4). Le contrat la déplace vers `/dashboard/agenda?/rsvp`.                                         | Écart à corriger (F4, F16, F17)                    |
-| 14  | **Contact : action `submit` vs endpoint `/api/contact`**                                                                   | Le document parle d'« endpoint SvelteKit » ; le contrat choisit une action `submit` pour le progressive enhancement.                                                              | Choix de contrat, à valider frontend/backend       |
-| 15  | **`/dashboard/admin/permissions` vs `/dashboard/admin/settings`**                                                          | La route `permissions` porte un `settingsSchema` (`siteName`, `supportEmail`) ; `settings` n'a pas de load. Les deux pages se recoupent.                                          | À confirmer par l'équipe                           |
-| 16  | **`bureauPositionId` modifiable par le membre**                                                                            | `docs/Spec.md` §4.3 dit « hors rôle et pupitres » ; le titre du bureau est honorifique et validé par le bureau. Le contrat le réserve à l'administration.                         | À confirmer (règle absente)                        |
-| 17  | **Révocation d'invitation**                                                                                                | Le schéma `invitations` n'a pas de `revoked_at` ; faut-il supprimer la ligne ou ajouter une colonne ?                                                                             | À confirmer (migration)                            |
-| 18  | **Colonnes d'album manquantes**                                                                                            | `albums.album_date`, `media.caption`, `media.sort_order` sont requis par F6 mais absents du schéma Drizzle.                                                                       | Migration à prévoir (étape 25)                     |
-| 19  | **Visibilité nominative des réponses**                                                                                     | **Tranché le 2026-11-20 (Q-A3)** : chef = événements mono-pupitre de son pupitre uniquement ; multi-pupitres et globaux = secrétaire/admin ; membre = sa propre réponse et les agrégats. Appliqué en base **et** côté serveur (§12.2).              | **Q-A3** (audit RLS)                                |
-| 20  | **`GET /api/storage/usage` et `POST /api/sync-storage`**                                                                   | `docs/media.md` mentionne une route de synchronisation ; le load `/dashboard/admin/media` peut suffire.                                                                           | À confirmer par l'équipe                           |
-| 21  | **`isChef` d'un autre profil** — projection de page, affichage des chefs et édition                                       | §12.3 / Q-A5 déclarent `isChef` strictement interne, et interdisent `/dashboard/pupitre/membres`, où l'écran affiche pourtant les chefs (`activeChefs`). Le retrait serait une **modification d'interface**, hors du chantier 2026-11-25. Le contrat retient : projection **uniquement** par `getPupitrePage` et `listAdminMembersPage`, jamais dans l'annuaire, l'agenda ou les notifications. | **Q-2026-11-25-01** (client)                        |
-| 22  | **Droits d'écriture sur `tests/**`** et tests vides (`tests/i18n.test.ts`, `tests/invitation.test.ts`)                     | L'étape 73 prévoit `tests/member-queries.test.ts` ; l'attribution de `tests/**` n'est pas confirmée, et deux fichiers de test sont vides (0 octet).                              | **Q-2026-11-25-02** et **-03** (Chef)              |
-| 23  | **Nommage des DTO de page** : `date`/`type`/`status`/`pupitreIds` (code) vs `eventDate`/`eventType`/`state`/`pupitres` (§3) | Les composants lisent les noms du code ; renommer casserait l'interface. Les DTO de page (§3.1) suivent donc le code ; l'idéalisation du §3 reste un objectif documentaire non planifié. | Choix de contrat, à ne pas rouvrir sans refonte d'écran |
+| #   | Point                                                                                                                       | Pourquoi                                                                                                                                                                                                                                                                                                                                                                                        | Renvoi                                                  |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 1   | **Driver transactionnel** `neon-http` vs `neon-serverless` + `Pool`                                                         | `set_config(..., true)` exige la même transaction que les requêtes ; `neon-http` ne le permet pas. Le contrat cible `withUserContext`, mais le choix du driver n'est pas tranché.                                                                                                                                                                                                               | **Q-2026-11-08-01**                                     |
+| 2   | **Modèle `storage_usage`** global vs par bucket, colonnes `bigint` et seuils                                                | `docs/database.md` et `docs/media.md` divergent ; le schéma actuel est en `integer`.                                                                                                                                                                                                                                                                                                            | **Q-2026-11-08-02**                                     |
+| 3   | **Pipeline images** Cloudflare Images vs R2 + variantes                                                                     | Les URL `imagedelivery.net/{hash}/{r2_key}` ne servent pas une clé R2 ; le contrat expose `thumbnailUrl` / `fullUrl` sans figer le fournisseur.                                                                                                                                                                                                                                                 | **Q-2026-11-08-03**                                     |
+| 4   | **Noms des bindings R2**                                                                                                    | Trois noms coexistent (`R2_BUCKET`, `R2_BUCKET_PUBLIC/PRIVATE`, `bagad_public/private`). Le contrat cible `R2_PUBLIC` / `R2_PRIVATE`.                                                                                                                                                                                                                                                           | **Q-2026-11-08-04**                                     |
+| 5   | **État annulé** `cancelled_at`                                                                                              | Le schéma `events` n'a ni statut ni date d'annulation ; le contrat expose `state: 'annule'` et `cancelledAt`.                                                                                                                                                                                                                                                                                   | **Q-2026-11-08-05**                                     |
+| 6   | **Création du compte à l'invitation**                                                                                       | Better Auth ne crée pas d'utilisateur sans plugin admin ou flux d'inscription ; le parcours §5.5/§5.6 en dépend.                                                                                                                                                                                                                                                                                | **Q-2026-11-08-06**                                     |
+| 7   | **Cadence des notifications** création vs J-3                                                                               | `docs/Spec.md` §4.6 et `docs/event.md` décrivent deux mécanismes ; le contrat expose les deux préférences sans trancher.                                                                                                                                                                                                                                                                        | **Q-2026-11-08-07**                                     |
+| 8   | **Durées de conservation et purge**                                                                                         | Aucune durée validée pour réponses, `activity_log`, messages de contact, invitations expirées ; aucune purge automatique.                                                                                                                                                                                                                                                                       | **Q-2026-11-08-08**                                     |
+| 9   | **Dossiers historiques Supabase/Netlify**                                                                                   | Le déplacement ou la suppression exige l'accord du client ; sans impact direct sur l'API.                                                                                                                                                                                                                                                                                                       | **Q-2026-11-08-09**                                     |
+| 10  | **Couleurs et icônes PWA**                                                                                                  | Le manifest et les icônes ne sont pas finalisés ; sans impact sur l'API, mais bloque la PWA.                                                                                                                                                                                                                                                                                                    | **Q-2026-11-07-02**                                     |
+| 11  | **Route canonique d'invitation** : `/auth/invitation?/invite` (existant) vs `/dashboard/admin/invitations?/invite` (cible)  | Doublon de route ; le contrat choisit l'administration, l'implémentation existante est sous `auth/`.                                                                                                                                                                                                                                                                                            | À confirmer par l'équipe (pas une question client)      |
+| 12  | **Route du trombinoscope** : `/dashboard/trombinoscope` (à créer) vs `/dashboard/membres` vs `/dashboard/pupitre/membres`   | Aucune route dédiée n'existe ; le contrat propose `/dashboard/trombinoscope`.                                                                                                                                                                                                                                                                                                                   | À confirmer par l'équipe                                |
+| 13  | **Action RSVP sur l'agenda public**                                                                                         | L'action `?/rsvp` existe sur `/[lang]/agenda`, qui doit être en lecture seule (F4). Le contrat la déplace vers `/dashboard/agenda?/rsvp`.                                                                                                                                                                                                                                                       | Écart à corriger (F4, F16, F17)                         |
+| 14  | **Contact : action `submit` vs endpoint `/api/contact`**                                                                    | Le document parle d'« endpoint SvelteKit » ; le contrat choisit une action `submit` pour le progressive enhancement.                                                                                                                                                                                                                                                                            | Choix de contrat, à valider frontend/backend            |
+| 15  | **`/dashboard/admin/permissions` vs `/dashboard/admin/settings`**                                                           | La route `permissions` porte un `settingsSchema` (`siteName`, `supportEmail`) ; `settings` n'a pas de load. Les deux pages se recoupent.                                                                                                                                                                                                                                                        | À confirmer par l'équipe                                |
+| 16  | **`bureauPositionId` modifiable par le membre**                                                                             | `docs/Spec.md` §4.3 dit « hors rôle et pupitres » ; le titre du bureau est honorifique et validé par le bureau. Le contrat le réserve à l'administration.                                                                                                                                                                                                                                       | À confirmer (règle absente)                             |
+| 17  | **Révocation d'invitation**                                                                                                 | Le schéma `invitations` n'a pas de `revoked_at` ; faut-il supprimer la ligne ou ajouter une colonne ?                                                                                                                                                                                                                                                                                           | À confirmer (migration)                                 |
+| 18  | **Colonnes d'album manquantes**                                                                                             | `albums.album_date`, `media.caption`, `media.sort_order` sont requis par F6 mais absents du schéma Drizzle.                                                                                                                                                                                                                                                                                     | Migration à prévoir (étape 25)                          |
+| 19  | **Visibilité nominative des réponses**                                                                                      | **Tranché le 2026-11-20 (Q-A3)** : chef = événements mono-pupitre de son pupitre uniquement ; multi-pupitres et globaux = secrétaire/admin ; membre = sa propre réponse et les agrégats. Appliqué en base **et** côté serveur (§12.2).                                                                                                                                                          | **Q-A3** (audit RLS)                                    |
+| 20  | **`GET /api/storage/usage` et `POST /api/sync-storage`**                                                                    | `docs/media.md` mentionne une route de synchronisation ; le load `/dashboard/admin/media` peut suffire.                                                                                                                                                                                                                                                                                         | À confirmer par l'équipe                                |
+| 21  | **`isChef` d'un autre profil** — projection de page, affichage des chefs et édition                                         | §12.3 / Q-A5 déclarent `isChef` strictement interne, et interdisent `/dashboard/pupitre/membres`, où l'écran affiche pourtant les chefs (`activeChefs`). Le retrait serait une **modification d'interface**, hors du chantier 2026-11-25. Le contrat retient : projection **uniquement** par `getPupitrePage` et `listAdminMembersPage`, jamais dans l'annuaire, l'agenda ou les notifications. | **Q-2026-11-25-01** (client)                            |
+| 22  | **Droits d'écriture sur `tests/**`** et tests vides (`tests/i18n.test.ts`, `tests/invitation.test.ts`)                      | L'étape 73 prévoit `tests/member-queries.test.ts` ; l'attribution de `tests/**` n'est pas confirmée, et deux fichiers de test sont vides (0 octet).                                                                                                                                                                                                                                             | **Q-2026-11-25-02** et **-03** (Chef)                   |
+| 23  | **Nommage des DTO de page** : `date`/`type`/`status`/`pupitreIds` (code) vs `eventDate`/`eventType`/`state`/`pupitres` (§3) | Les composants lisent les noms du code ; renommer casserait l'interface. Les DTO de page (§3.1) suivent donc le code ; l'idéalisation du §3 reste un objectif documentaire non planifié.                                                                                                                                                                                                        | Choix de contrat, à ne pas rouvrir sans refonte d'écran |
 
 ---
 

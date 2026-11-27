@@ -8,13 +8,13 @@
 		"directory": ".svelte-kit/cloudflare"
 	},
 	"r2_buckets": [
-  	{
-    	"binding": "PUBLIC_STORAGE",
-    	"bucket_name": "bagad-public"
- 	 },
-  	{
-    	"binding": "PRIVATE_FILES",
-    	"bucket_name": "bagad-private"
- 	 }
+		{
+			"binding": "PUBLIC_STORAGE",
+			"bucket_name": "bagad-public"
+		},
+		{
+			"binding": "PRIVATE_FILES",
+			"bucket_name": "bagad-private"
+		}
 	]
 }

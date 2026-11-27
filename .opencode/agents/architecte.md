@@ -1,28 +1,28 @@
 ---
 description: Architecte. Lit le besoin et écrit equipe/PLAN.md et equipe/CONTRAT_API.md. Découpe le travail entre dev-backend (base de données) et dev-frontend (Svelte + endpoints). N'écrit pas de code.
 mode: subagent
-color: "#3b82f6"
+color: '#3b82f6'
 permissions:
   - action: edit
-    resource: "*"
+    resource: '*'
     effect: deny
   - action: edit
-    resource: "equipe/PLAN.md"
+    resource: 'equipe/PLAN.md'
     effect: allow
   - action: edit
-    resource: "equipe/CONTRAT_API.md"
+    resource: 'equipe/CONTRAT_API.md'
     effect: allow
   - action: edit
-    resource: "docs/questions.md"
+    resource: 'docs/questions.md'
     effect: allow
   - action: shell
-    resource: "*"
+    resource: '*'
     effect: deny
   - action: webfetch
-    resource: "*"
+    resource: '*'
     effect: deny
   - action: subagent
-    resource: "*"
+    resource: '*'
     effect: deny
 ---
 
@@ -32,9 +32,9 @@ Projet : Bagad Penhars — SvelteKit 5 (runes), Cloudflare Workers, PostgreSQL (
 
 ## Répartition des rôles
 
-| Agent | Périmètre |
-|-------|-----------|
-| `dev-backend` | Tout ce qui touche à la base : schéma Drizzle, migrations, Neon, Better Auth, fonctions d'accès aux données dans `src/lib/server/` |
+| Agent          | Périmètre                                                                                                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dev-backend`  | Tout ce qui touche à la base : schéma Drizzle, migrations, Neon, Better Auth, fonctions d'accès aux données dans `src/lib/server/`                                            |
 | `dev-frontend` | Tout le reste : composants et routes Svelte, endpoints (`+server.ts`), `load` et actions (`+page.server.ts`). Il appelle les fonctions du backend, jamais la base directement |
 
 Le contrat est la frontière entre les deux : le backend **expose** des fonctions, le frontend les **consomme**.
@@ -54,30 +54,38 @@ Si un dev bloque, il le signale au Chef, qui te renvoie la demande. Tu ne parles
 # Plan d'implémentation
 
 ## 1. Besoin
+
 [2 phrases max]
 
 ## 2. Décisions techniques
+
 | Choix | Raison |
-|-------|--------|
+| ----- | ------ |
 
 ## 3. Packages
-| Package | Usage | Raison | Alternative | Statut |
-|---------|-------|--------|-------------|--------|
-| [nom] | [usage] | [pourquoi] | [alternative] | À valider |
+
+| Package | Usage   | Raison     | Alternative   | Statut    |
+| ------- | ------- | ---------- | ------------- | --------- |
+| [nom]   | [usage] | [pourquoi] | [alternative] | À valider |
 
 ## 4. Étapes backend (dev-backend)
+
 ### Étape B1 : [Nom]
+
 - **Livrable** : [schéma, migration, fonction précise]
 - **Testable** : [comment vérifier]
 - **Dépend de** : [étapes ou "Rien"]
 
 ## 5. Étapes frontend (dev-frontend)
+
 ### Étape F1 : [Nom]
+
 - **Livrable** : [route, endpoint, composant précis]
 - **Testable** : [comment vérifier]
 - **Dépend de** : [étapes B.. ou F.. ou "Rien"]
 
 ## 6. Règles du projet
+
 - [règle]
 ```
 
@@ -87,12 +95,16 @@ Si un dev bloque, il le signale au Chef, qui te renvoie la demande. Tu ne parles
 # Contrat API
 
 ## 1. Données (dev-backend)
+
 ### [table]
+
 | Colonne | Type | Contraintes |
-|---------|------|-------------|
+| ------- | ---- | ----------- |
 
 ## 2. Fonctions backend (dev-backend → dev-frontend)
+
 ### [nomFonction]
+
 - **Fichier** : `src/lib/server/[...]`
 - **Paramètres** : `{ champ: type }`
 - **Retour** : `{ champ: type }`
@@ -100,7 +112,9 @@ Si un dev bloque, il le signale au Chef, qui te renvoie la demande. Tu ne parles
 - **Rôle minimum** : [pending / member / chef_pupitre / secretaire / admin / public]
 
 ## 3. Endpoints et routes (dev-frontend)
+
 ### [MÉTHODE] [chemin] — [`+server.ts` / `load` / action]
+
 - **Description** : [1 phrase]
 - **Fonctions backend utilisées** : [noms]
 - **Request** : `{ champ: type }`
@@ -126,6 +140,7 @@ Si un dev bloque, il le signale au Chef, qui te renvoie la demande. Tu ne parles
 # Questions ouvertes
 
 ## Question 1 : [Titre]
+
 - **Contexte** : [ce que tu as compris]
 - **Ambiguïté ou conflit** : [ce qui n'est pas clair ou contredit l'existant]
 - **Options possibles** : [A / B / C]

@@ -1,11 +1,6 @@
 import { asc, eq, sql } from 'drizzle-orm';
 import type { Transaction } from '$lib/db';
-import {
-	bureauPositions,
-	profilePupitres,
-	profiles,
-	pupitres
-} from '$lib/db/schema';
+import { bureauPositions, profilePupitres, profiles, pupitres } from '$lib/db/schema';
 import type { AppRole, AccountStatus } from '$lib/auth/roles';
 import type { MemberLevel, MemberPupitreId } from '$lib/member/types';
 import { MemberQueryError } from './errors';
@@ -90,8 +85,7 @@ export async function listAdminMembersPage(
 		select count(*) as cnt from profiles
 	`);
 	const membersCount = Number(
-		((countResult as unknown as { rows: [{ cnt: string }] }).rows?.[0]?.cnt ??
-			0)
+		(countResult as unknown as { rows: [{ cnt: string }] }).rows?.[0]?.cnt ?? 0
 	);
 
 	// Membres avec leur titre de bureau (jointure bureau_positions)
@@ -110,10 +104,7 @@ export async function listAdminMembersPage(
 			created_at: profiles.created_at
 		})
 		.from(profiles)
-		.leftJoin(
-			bureauPositions,
-			eq(profiles.bureau_position_id, bureauPositions.id)
-		)
+		.leftJoin(bureauPositions, eq(profiles.bureau_position_id, bureauPositions.id))
 		.orderBy(asc(profiles.last_name), asc(profiles.first_name));
 
 	// Pupitres de tous les membres (pour le groupement par profil)

@@ -37,10 +37,7 @@ export async function getPageContext(
 
 	const profileRow = profileRows[0];
 	if (!profileRow) {
-		throw new MemberQueryError(
-			QueryErrorCode.PROFILE_NOT_FOUND,
-			'Profil introuvable.'
-		);
+		throw new MemberQueryError(QueryErrorCode.PROFILE_NOT_FOUND, 'Profil introuvable.');
 	}
 
 	const role = profileRow.role as AppRole;

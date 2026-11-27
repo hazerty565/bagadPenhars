@@ -68,10 +68,7 @@ export function requireAuth(locals: AuthLocals): void {
  * Vérifie que le rôle du profil courant est supérieur ou égal au rôle requis.
  * Le rôle est lu depuis locals.profile.role (provenant de profiles.role, jamais du client).
  */
-export function requireRole(
-	locals: Pick<AuthLocals, 'profile'>,
-	required: AppRole
-): void {
+export function requireRole(locals: Pick<AuthLocals, 'profile'>, required: AppRole): void {
 	if (!locals.profile) {
 		throw error(401, 'Authentification requise.');
 	}
