@@ -12,16 +12,23 @@ import type {
 	MemberSettings,
 	MemberShell,
 	MemberPageEnvelope,
-	PageSection
+	PageSection,
+	MemberAdminSummary,
+	DirectoryProfile,
+	PupitreMember,
+	AgendaPageData,
+	OverviewPageData,
+	AdminOverviewPageData,
+	AdminMembersPageData,
+	ArticlesPageData
 } from './types';
 
 /**
  * Store de l'espace adhérents — chargement ciblé par section (étapes 58 à 73).
  *
  * Le layout charge le socle (`memberShell`) et chaque page charge ses données
- * (`memberPage`). Le store ne fait que conserver ces deux états et les exposer
- * via des getters dont les noms sont inchangés par rapport à l'ancien snapshot,
- * afin que les composants n'aient pas à être modifiés à cette étape.
+ * (`memberPage`). Le store expose des getters typés selon la section courante
+ * pour que les composants accèdent aux bonnes clés des DTO.
  *
  * Aucune donnée n'est persistée dans le navigateur. La déconnexion vide l'état.
  */
@@ -102,73 +109,188 @@ class MemberStore {
 		return this.profile.id;
 	}
 
-	get profiles(): MemberProfile[] {
-		const data = this.page?.memberPage.data as { profiles?: unknown } | undefined;
-		if (data?.profiles) return data.profiles as MemberProfile[];
-		return [];
+	/** Section courante (pour le typage des getters). */
+	get currentSection(): PageSection | null {
+		return this.page?.memberPage.section ?? null;
 	}
 
+	// ——————————————————————————————————————————————————————————————————————
+	// Getters pour les sections communes (profil membre)
+	// ——————————————————————————————————————————————————————————————————————
+
+	/** Événements : agenda + vue d'ensemble (MemberEventPageItem[]). */
 	get events(): MemberEvent[] {
-		const data = this.page?.memberPage.data as { events?: unknown } | undefined;
-		if (data?.events) return data.events as MemberEvent[];
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as AgendaPageData | OverviewPageData | undefined;
+		if (data?.events) return data.events;
 		return [];
 	}
 
+	/** Réponses RSVP de l'acteur courant. */
 	get responses(): MemberResponse[] {
-		const data = this.page?.memberPage.data as { responses?: unknown } | undefined;
-		if (data?.responses) return data.responses as MemberResponse[];
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as { responses?: MemberResponse[] } | undefined;
+		if (data?.responses) return data.responses;
 		return [];
 	}
 
+	/** Notifications : overview + pupitre + admin. */
 	get notifications(): MemberNotification[] {
-		const data = this.page?.memberPage.data as { notifications?: unknown } | undefined;
-		if (data?.notifications) return data.notifications as MemberNotification[];
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as
+			| OverviewPageData
+			| { notifications?: MemberNotification[] }
+			| undefined;
+		if (data?.notifications) return data.notifications;
 		return [];
 	}
 
+	/** Documents : overview + pupitre. */
 	get documents(): MemberDocument[] {
-		const data = this.page?.memberPage.data as { documents?: unknown } | undefined;
-		if (data?.documents) return data.documents as MemberDocument[];
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as { documents?: MemberDocument[] } | undefined;
+		if (data?.documents) return data.documents;
 		return [];
 	}
 
+	/** Articles : admin articles. */
 	get articles(): MemberArticle[] {
-		const data = this.page?.memberPage.data as { articles?: unknown } | undefined;
-		if (data?.articles) return data.articles as MemberArticle[];
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as ArticlesPageData | undefined;
+		if (data?.articles) return data.articles;
 		return [];
 	}
 
+	/** Albums : media. */
 	get albums(): MemberAlbum[] {
-		const data = this.page?.memberPage.data as { albums?: unknown } | undefined;
-		if (data?.albums) return data.albums as MemberAlbum[];
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as { albums?: MemberAlbum[] } | undefined;
+		if (data?.albums) return data.albums;
 		return [];
 	}
 
+	/** Invitations : admin invitations. */
 	get invitations(): MemberInvitation[] {
-		const data = this.page?.memberPage.data as { invitations?: unknown } | undefined;
-		if (data?.invitations) return data.invitations as MemberInvitation[];
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as { invitations?: MemberInvitation[] } | undefined;
+		if (data?.invitations) return data.invitations;
 		return [];
 	}
 
-	/** Préférences de notification de la page profil (objet unique → tableau pour compatibilité). */
+	/** Préférences de notification de la page profil. */
 	get preferences(): MemberPreferences[] {
-		const data = this.page?.memberPage.data as
-			| {
-					preferences?: MemberPreferences | null;
-			  }
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as
+			| { preferences?: MemberPreferences | null }
 			| undefined;
 		if (data?.preferences) return [data.preferences];
 		return [];
 	}
 
 	get settings(): MemberSettings {
-		const data = this.page?.memberPage.data as
-			| {
-					settings?: MemberSettings;
-			  }
-			| undefined;
+		if (!this.page) return EMPTY_SETTINGS;
+		const data = this.page.memberPage.data as { settings?: MemberSettings } | undefined;
 		return data?.settings ?? EMPTY_SETTINGS;
 	}
+
+	// ——————————————————————————————————————————————————————————————————————
+	// Getters spécifiques aux sections admin / pupitre (nouveaux DTO)
+	// ——————————————————————————————————————————————————————————————————————
+
+	/** Membres pour l'annuaire admin : MemberAdminSummary[] (clé `members` du DTO). */
+	get adminMembers(): MemberAdminSummary[] {
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as AdminMembersPageData | undefined;
+		if (data?.members) return data.members;
+		return [];
+	}
+
+	/** Nombre total de membres (admin). */
+	get adminMembersCount(): number {
+		if (!this.page) return 0;
+		const data = this.page.memberPage.data as AdminMembersPageData | undefined;
+		return data?.membersCount ?? 0;
+	}
+
+	/** Membres pour l'espace pupitre : PupitreMember[] (clé `members` du DTO pupitre). */
+	get pupitreMembers(): PupitreMember[] {
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as { members?: PupitreMember[] } | undefined;
+		if (data?.members) return data.members;
+		return [];
+	}
+
+	/** Comptage documents pupitre (clé `documentsCount`). */
+	get pupitreDocumentsCount(): number {
+		if (!this.page) return 0;
+		const data = this.page.memberPage.data as { documentsCount?: number } | undefined;
+		return data?.documentsCount ?? 0;
+	}
+
+	/** Compteur notifications non lues pupitre (clé `unreadCount`). */
+	get pupitreUnreadCount(): number {
+		if (!this.page) return 0;
+		const data = this.page.memberPage.data as { unreadCount?: number } | undefined;
+		return data?.unreadCount ?? 0;
+	}
+
+	/** Compteurs admin overview (clé `counts`). */
+	get adminCounts(): AdminOverviewPageData['counts'] | null {
+		if (!this.page) return null;
+		const data = this.page.memberPage.data as AdminOverviewPageData | undefined;
+		return data?.counts ?? null;
+	}
+
+	/** Stockage admin overview (clé `storage`). */
+	get adminStorage(): AdminOverviewPageData['storage'] | null {
+		if (!this.page) return null;
+		const data = this.page.memberPage.data as AdminOverviewPageData | undefined;
+		return data?.storage ?? null;
+	}
+
+	/** Auteurs distincts pour la page articles admin (clé `authors`, typés DirectoryProfile[]). */
+	get authors(): DirectoryProfile[] {
+		if (!this.page) return [];
+		const data = this.page.memberPage.data as ArticlesPageData | undefined;
+		if (data?.authors) return data.authors;
+		return [];
+	}
+
+	/** Documents count pour la page overview membre (clé `documentsCount`). */
+	get overviewDocumentsCount(): number {
+		if (!this.page) return 0;
+		const data = this.page.memberPage.data as OverviewPageData | undefined;
+		return data?.documentsCount ?? 0;
+	}
+
+	/** Profils de l'annuaire (compatibilité avec l'ancien code qui utilisait `profiles`). */
+	/** @deprecated Utiliser `adminMembers` ou `pupitreMembers` selon la section. */
+	get profiles(): MemberProfile[] {
+		// Fallback : si on a des adminMembers, les convertir en MemberProfile partiel
+		if (this.currentSection === 'adminMembers' && this.adminMembers.length > 0) {
+			return this.adminMembers.map((m) => ({
+				id: m.id,
+				firstName: m.firstName,
+				lastName: m.lastName,
+				email: m.email,
+				role: m.role,
+				accountStatus: m.accountStatus,
+				level: m.level ?? 'bagad',
+				bureauPosition: m.bureauPosition,
+				pupitres: m.pupitres,
+				avatar: 1,
+				joinedAt: m.createdAt
+			}));
+		}
+		// Pour les autres sections, tenter l'ancien format
+		const data = this.page?.memberPage.data as { profiles?: MemberProfile[] } | undefined;
+		if (data?.profiles) return data.profiles;
+		return [];
+	}
+
+	// ——————————————————————————————————————————————————————————————————————
+	// Méthodes de mutation du store
+	// ——————————————————————————————————————————————————————————————————————
 
 	/** Définit le socle (appelé par le layout après son load). */
 	applyShell(shell: MemberShell): void {

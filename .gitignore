@@ -22,6 +22,16 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Artefacts de debug / sorties temporaires d'outils
+check_*.log
+check_out*.txt
+types_check.txt
+test_escape.txt
+test_utf8.txt
+tests/temp.txt
+fix.ps1
+fix.bat
+
 # Additional ignores
 .pnpm-store/
 dist/

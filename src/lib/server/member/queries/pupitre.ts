@@ -51,12 +51,6 @@ interface DirectoryRow {
 	bureau_title: string | null;
 }
 
-interface PupitreLookupRow {
-	id: string;
-	slug: string;
-	name: string;
-}
-
 interface MemberPupitreRow {
 	profile_id: string;
 	pupitre_id: string;

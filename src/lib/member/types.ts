@@ -269,3 +269,12 @@ export interface DirectoryProfile {
 	level: MemberLevel;
 	bureauPosition: string | null;
 }
+
+/** Re-exports des DTO de page pour le store et les composants. */
+export type {
+	MemberAdminSummary,
+	AdminMembersPageData
+} from '$lib/server/member/queries/adminMembers';
+export type { PupitreMember, PupitrePageData } from '$lib/server/member/queries/pupitre';
+export type { AdminOverviewPageData } from '$lib/server/member/queries/adminOverview';
+export type { ArticlesPageData } from '$lib/server/member/queries/articles';

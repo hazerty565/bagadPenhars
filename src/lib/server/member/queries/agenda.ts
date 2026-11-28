@@ -1,12 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import type { Transaction } from '$lib/db';
-import {
-	eventPupitres,
-	events as eventsTable,
-	eventResponses,
-	profilePupitres,
-	profiles
-} from '$lib/db/schema';
+import { eventPupitres, events as eventsTable, eventResponses, profiles } from '$lib/db/schema';
 import type { AgendaPageData, MemberEventPageItem } from '$lib/member/types';
 
 export interface AgendaEventFilters {
@@ -39,12 +33,6 @@ export async function listAgendaEvents(
 	if (!roleRows[0]) {
 		return { events: [] };
 	}
-
-	// Pupitres de l'acteur (pour marquer myResponse et responseSummary)
-	const actorPupitreRows = await tx
-		.select({ pupitreId: profilePupitres.pupitre_id })
-		.from(profilePupitres)
-		.where(eq(profilePupitres.profile_id, profileId));
 
 	// Récupère tous les événements non annulés (RLS filtre par visibilité)
 	const eventRows = await tx

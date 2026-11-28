@@ -6,9 +6,6 @@
 	import { site } from '$lib/data/site';
 	import type { PageData } from './$types';
 
-	export const prerender = true;
-
-	// eslint-disable-next-line svelte/valid-prop-names-in-kit-pages
 	let { data }: { data: PageData } = $props();
 
 	const t = $derived(getDict(data.lang));

@@ -56,8 +56,6 @@ export async function listInvitationsPage(
 		.leftJoin(profiles, eq(invitations.created_by, profiles.id))
 		.orderBy(asc(invitations.created_at));
 
-	const invitationIds = invitationRows.map((row) => row.id);
-
 	// Pupitres par invitation
 	const pupitreRows = await tx
 		.select({
