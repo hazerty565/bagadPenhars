@@ -12,14 +12,18 @@ export function visibleProfiles(): MemberProfile[] {
 	);
 }
 
+/** Membres d'un pupitre (utilise le store ciblé quand disponible). */
 export function profilesOfPupitre(pupitreId: MemberPupitreId): MemberProfile[] {
-	return visibleProfiles().filter((profile) =>
+	const src = member.pupitreProfiles.length > 0 ? member.pupitreProfiles : visibleProfiles();
+	return src.filter((profile) =>
 		profile.pupitres.some((pupitre) => pupitre.pupitreId === pupitreId)
 	);
 }
 
+/** Chefs actifs d'un pupitre (utilise le store ciblé quand disponible). */
 export function activeChefs(pupitreId: MemberPupitreId): MemberProfile[] {
-	return visibleProfiles().filter((profile) =>
+	const src = member.pupitreProfiles.length > 0 ? member.pupitreProfiles : visibleProfiles();
+	return src.filter((profile) =>
 		profile.pupitres.some((pupitre) => pupitre.pupitreId === pupitreId && pupitre.isChef)
 	);
 }

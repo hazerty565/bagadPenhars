@@ -278,14 +278,48 @@ class MemberStore {
 				level: m.level ?? 'bagad',
 				bureauPosition: m.bureauPosition,
 				pupitres: m.pupitres,
-				avatar: 1,
-				joinedAt: m.createdAt
+				avatar: m.avatar,
+				joinedAt: m.joinedAt
+			}));
+		}
+		// Pour la section pupitre, convertir pupitreMembers
+		if (this.currentSection === 'pupitre' && this.pupitreMembers.length > 0) {
+			return this.pupitreMembers.map((m) => ({
+				id: m.id,
+				firstName: m.firstName,
+				lastName: m.lastName,
+				email: '',
+				role: 'member' as const,
+				accountStatus: 'active' as const,
+				level: m.level ?? 'bagad',
+				bureauPosition: m.bureauPosition,
+				pupitres: m.pupitres,
+				avatar: m.avatar,
+				joinedAt: ''
 			}));
 		}
 		// Pour les autres sections, tenter l'ancien format
 		const data = this.page?.memberPage.data as { profiles?: MemberProfile[] } | undefined;
 		if (data?.profiles) return data.profiles;
 		return [];
+	}
+
+	/** Membres du pupitre courant sous forme MemberProfile[] (pour compatibilité services). */
+	get pupitreProfiles(): MemberProfile[] {
+		if (this.currentSection !== 'pupitre' || this.pupitreMembers.length === 0) return [];
+		return this.pupitreMembers.map((m) => ({
+			id: m.id,
+			firstName: m.firstName,
+			lastName: m.lastName,
+			email: '',
+			role: 'member' as const,
+			accountStatus: 'active' as const,
+			level: m.level ?? 'bagad',
+			bureauPosition: m.bureauPosition,
+			pupitres: m.pupitres,
+			avatar: m.avatar,
+			joinedAt: ''
+		}));
 	}
 
 	// ——————————————————————————————————————————————————————————————————————

@@ -53,7 +53,7 @@
 	}
 
 	function authorName(id: string): string {
-		const author = member.profiles.find((profile) => profile.id === id);
+		const author = member.authors.find((profile) => profile.id === id);
 		return author ? `${author.firstName} ${author.lastName}` : 'Auteur inconnu';
 	}
 </script>

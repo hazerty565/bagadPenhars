@@ -28,7 +28,12 @@
 	} from '$lib/member/labels';
 	import { MEMBER_PUPITRES, pupitreName } from '$lib/member/pupitres';
 	import { ALL_STATUSES, type AccountStatus, type AppRole } from '$lib/auth/roles';
-	import type { MemberLevel, MemberProfilePupitre, MemberPupitreId } from '$lib/member/types';
+	import type {
+		MemberLevel,
+		MemberProfilePupitre,
+		MemberPupitreId,
+		MemberAdminSummary
+	} from '$lib/member/types';
 
 	const actor = $derived(actorOf(member.activeProfile));
 	const allowed = $derived(canManageMembers(actor));
@@ -44,8 +49,8 @@
 	let editError = $state<string | null>(null);
 
 	const members = $derived(
-		member.profiles
-			.filter((profile) => {
+		member.adminMembers
+			.filter((profile: MemberAdminSummary) => {
 				if (roleFilter !== 'all' && profile.role !== roleFilter) return false;
 				if (statusFilter !== 'all' && profile.accountStatus !== statusFilter) return false;
 				if (
@@ -66,15 +71,16 @@
 	);
 
 	const pendingCount = $derived(
-		member.profiles.filter((profile) => profile.accountStatus === 'pending').length
+		member.adminMembers.filter((profile: MemberAdminSummary) => profile.accountStatus === 'pending')
+			.length
 	);
 
 	function openEditor(profileId: string) {
-		const profile = member.profiles.find((item) => item.id === profileId);
+		const profile = member.adminMembers.find((item: MemberAdminSummary) => item.id === profileId);
 		if (!profile) return;
 		expandedId = expandedId === profileId ? null : profileId;
 		editPupitres = profile.pupitres.map((pupitre) => ({ ...pupitre }));
-		editLevel = profile.level;
+		editLevel = profile.level ?? 'bagad';
 		editBureau = profile.bureauPosition ?? '';
 		editError = null;
 	}
@@ -278,7 +284,9 @@
 								{/each}
 							</div>
 						</td>
-						<td class="px-4 py-3 text-xs text-ink">{LEVEL_LABELS[profile.level]}</td>
+						<td class="px-4 py-3 text-xs text-ink"
+							>{profile.level ? LEVEL_LABELS[profile.level] : '—'}</td
+						>
 						<td class="px-4 py-3 text-xs text-ink">{profile.bureauPosition ?? '—'}</td>
 						<td class="px-4 py-3 text-right">
 							<div class="flex flex-wrap items-center justify-end gap-3">

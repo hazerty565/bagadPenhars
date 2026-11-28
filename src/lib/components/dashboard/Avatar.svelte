@@ -1,8 +1,16 @@
 <script lang="ts">
 	import type { MemberProfile } from '$lib/member/types';
 
+	/** Champs minimaux requis par l'avatar. */
+	interface AvatarProfile {
+		id: string;
+		firstName: string;
+		lastName: string;
+		avatar: number;
+	}
+
 	interface Props {
-		profile: MemberProfile;
+		profile: MemberProfile | AvatarProfile;
 		size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 		decorative?: boolean;
 	}

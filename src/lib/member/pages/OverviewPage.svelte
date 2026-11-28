@@ -38,7 +38,7 @@
 
 	const myPupitres = $derived(profile.pupitres);
 	const chefPupitres = $derived(myPupitres.filter((pupitre) => pupitre.isChef));
-	const documentsCount = $derived(member.documents.length);
+	const documentsCount = $derived(member.overviewDocumentsCount);
 
 	function summaryOf(eventId: string) {
 		const event = member.events.find((item) => item.id === eventId);

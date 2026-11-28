@@ -1,12 +1,19 @@
 import { error } from '@sveltejs/kit';
-import { requireAuth } from '$lib/server/member/queries/common';
+import { requireAuth, requireRole } from '$lib/server/member/queries/common';
 import { runQuery } from '$lib/server/member/queries/common';
 import { getEventForEdit } from '$lib/server/member/queries/events';
 import type { AuthLocals } from '$lib/server/member/queries/common';
 import type { PageServerLoad } from './$types';
 
+/**
+ * Édition d'événement — formulaire.
+ *
+ * Section : eventForm. Rôle minimum : chef_pupitre.
+ * Seuls les chefs de pupitre (et au-dessus) peuvent éditer un événement.
+ */
 export const load: PageServerLoad = async ({ locals, params }) => {
 	requireAuth(locals as unknown as AuthLocals);
+	requireRole(locals as unknown as Pick<AuthLocals, 'profile'>, 'chef_pupitre');
 
 	const profileId = locals.profile!.id;
 	const eventId = params.id ?? '';

@@ -17,7 +17,8 @@ export interface MemberAdminSummary {
 	bureauPosition: string | null;
 	bureauPositionId: string | null;
 	pupitres: Array<{ pupitreId: MemberPupitreId; name: string; isChef: boolean }>;
-	createdAt: string;
+	avatar: number;
+	joinedAt: string;
 }
 
 export interface AdminMembersPageData {
@@ -87,6 +88,7 @@ export async function listAdminMembersPage(
 			musician_level: profiles.musician_level,
 			bureau_position_id: profiles.bureau_position_id,
 			bureau_title: bureauPositions.title,
+			avatar: profiles.avatar,
 			created_at: profiles.created_at
 		})
 		.from(profiles)
@@ -131,7 +133,8 @@ export async function listAdminMembersPage(
 			bureauPosition: row.bureau_title ?? null,
 			bureauPositionId: row.bureau_position_id,
 			pupitres: pupitresList,
-			createdAt: toISOString(row.created_at)
+			avatar: row.avatar ?? 1,
+			joinedAt: toISOString(row.created_at)
 		};
 	});
 

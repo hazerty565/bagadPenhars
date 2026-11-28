@@ -92,7 +92,7 @@
 	>
 		<StatCard
 			label="Membres"
-			value={member.profiles.length}
+			value={member.adminCounts?.members ?? 0}
 			hint="Profils fictifs actifs"
 			tone="marine"
 		>

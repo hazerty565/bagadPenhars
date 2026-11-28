@@ -2,139 +2,175 @@
 
 ## 1. Informations générales
 
-- **Date de la revue** : 2026-11-26
-- **Type de revue** : Initiale
+- **Date de la revue** : 2026-11-28
+- **Type de revue** : Initiale (commit `41a266c` sur `dev`)
 - **Auditeur** : Agent Tech Lead
-- **Commit audité** : Non spécifié (état courant du dépôt)
+- **Commit audité** : 41a266c
 - **Documents consultés** :
-  - `equipe/PLAN.md` §10 (étapes 58–73)
-  - `equipe/CONTRAT_API.md` §3.1, §7.11, §7.12, §11.1, §12
-  - `equipe/INTEGRATION.md` (verdict SATISFAISANT, points TL-01 à TL-06)
-  - `docs/questions.md` — Q-2026-11-25-01/02/03 (résolues par le Chef)
+  - `AGENTS.md`
+  - `equipe/CONTRAT_API.md` (§3.1, §4, §7.10, §7.11, §11.1)
+  - `equipe/INTEGRATION.md`
+  - `equipe/PLAN.md` (étapes 58–73)
+  - Code source : `src/lib/member/store.svelte.ts`, `src/routes/dashboard/admin/**/+page.server.ts`, `src/routes/dashboard/agenda/**/+page.server.ts`, `src/lib/member/pages/*.svelte`, `src/lib/member/services/members.ts`, `src/lib/server/member/queries/*.ts`
 
 ## 2. Résumé exécutif
 
-Le chantier « chargement ciblé de l'espace privé » (étapes 58 à 73) est **implémenté, compilé et buildé sans erreur**. L'architecture « un load par page, un DTO par page » (§7.11 du contrat) est respectée : le layout ne charge que le socle (`MemberShell`), chaque page charge ses propres données via une fonction de lecture ciblée exécutée dans une transaction RLS (`withUserContext` + `set_config('app.profile_id', ...)`). Les guards serveur (`requireAuth`, `requireRole`) sont appliqués dans chaque `+page.server.ts`. La suppression effective de `buildMemberSnapshot` et de `GET /api/member` est confirmée. Les mutations restent unifiées sous `POST /api/member/action` avec un retour `CommandResult` sans snapshot (§7.12). Les décisions du Chef (Q-2026-11-25-01/02/03) sont appliquées.
+L'infrastructure technique est en place : le store expose les getters conformes aux DTO de page (§7.11), les 4 routes admin ont maintenant leurs guards `requireRole('secretaire')`, et l'arbre `src/routes/public/` a été supprimé. **Cependant, 5 pages frontend n'utilisent pas les nouveaux getters** et continuent de lire `member.profiles` (fallback déprécié) ou `member.documents.length`, ce qui rend des données vides ou incorrectes malgré des DTO serveur corrects. La route `/dashboard/agenda/[id]/modifier` manque son guard de rôle. Le verdict est **À REFAIRE** pour ces défauts P1.
 
 ## 3. Statistiques
 
 | Gravité                | Nombre |
 | ---------------------- | ------ |
 | P0 (bloquant critique) | 0      |
-| P1 (majeur)            | 1      |
+| P1 (majeur)            | 6      |
 | P2 (significatif)      | 2      |
-| P3 (mineur)            | 1      |
-| **Total**              | **4**  |
+| P3 (mineur)            | 0      |
+| **Total**              | **8**  |
 
 ## 4. Vérification du plan
 
-| Étape du plan                                                                                | Réalisée | Conforme       | Remarque                                                                        |
-| -------------------------------------------------------------------------------------------- | -------- | -------------- | ------------------------------------------------------------------------------- |
-| 58 – Fonctions de lecture ciblées : socle (`getMemberShell`)                                 | Oui      | Oui            | `queries/shell.ts` + `hooks.server.ts`                                          |
-| 59 – Chargements `overview` / `agenda` / `event` / `eventForm`                               | Oui      | Oui            | `queries/overview.ts`, `agenda.ts`, `events.ts`                                 |
-| 60 – Chargements `directory` / `pupitre` / `documents` / `notifications`                     | Oui      | Oui            | `queries/directory.ts`, `pupitre.ts`, `documents.ts`, `notifications.ts`        |
-| 61 – Chargements `profile` / `settings` / `adminOverview` / `adminMembers`                   | Oui      | Oui            | `queries/profile.ts`, `settings.ts`, `adminOverview.ts`, `adminMembers.ts`      |
-| 62 – Chargements `adminInvitations` / `adminArticles` / `adminMedia` / `adminNotifications`  | Oui      | Oui            | `queries/invitations.ts`, `articles.ts`, `media.ts`, `notifications.ts` (admin) |
-| 63 – Layout adhérents : socle uniquement (`memberShell`)                                     | Oui      | Oui            | `routes/dashboard/+layout.server.ts`                                            |
-| 64 – Pages `overview` / `agenda` / `agenda/[id]` / `agenda/nouveau` / `agenda/[id]/modifier` | Oui      | Oui            | 5 fichiers `+page.server.ts`                                                    |
-| 65 – Pages `membres` / `pupitre/*` / `documents` / `notifications` / `profil` / `securite`   | Oui      | Oui            | 7 fichiers `+page.server.ts`                                                    |
-| 66 – Pages admin (11 fichiers)                                                               | Oui      | Oui            | `routes/dashboard/admin/**/+page.server.ts`                                     |
-| 67 – DTO `MemberPageEnvelope` + types de page                                                | Oui      | Oui            | `src/lib/member/types.ts` (§3.1 du contrat)                                     |
-| 68 – `POST /api/member/action` : retour `CommandResult` sans snapshot                        | Oui      | Oui            | `routes/api/member/action/+server.ts`                                           |
-| 69 – Suppression `buildMemberSnapshot` + `GET /api/member`                                   | Oui      | Oui            | Fichiers absents (confirmés)                                                    |
-| 70 – Guards `requireAuth` / `requireRole` dans chaque load ciblé                             | Oui      | Oui            | `queries/common.ts` + tous les `+page.server.ts`                                |
-| 71 – Relecture rôle/statut dans la transaction (défense en profondeur)                       | Oui      | Oui            | Chaque `queries/*.ts` relit `profiles.role` / `account_status`                  |
-| 72 – Contexte RLS `app.profile_id` via `withUserContext` sur **chaque** lecture              | Oui      | Oui            | `db/index.ts:63-75` + `runQuery` dans `queries/common.ts`                       |
-| 73 – Tests `member-queries.test.ts` (clés DTO, comptage requêtes, refus rôle)                | Non      | Non vérifiable | Attribué au Testeur (Q-2026-11-25-02, option A) — planifié, non exécuté         |
+| Étape du plan                                    | Réalisée | Conforme | Remarque                                                   |
+| ------------------------------------------------ | -------- | -------- | ---------------------------------------------------------- |
+| 58–62 : Chargement ciblé (store, types, queries) | Oui      | Partiel  | Store prêt, mais pages non migrées                         |
+| 63–67 : Routes admin + guards                    | Oui      | Partiel  | 4/4 routes corrigées, mais 1 route canonique défaillante   |
+| 68–73 : Nettoyage routes publiques               | Oui      | Oui      | `src/routes/public/` supprimé, aucune référence résiduelle |
+| Build / Check / Lint                             | Oui      | Oui      | Validé par le Chef (`check=0`, `lint=0`, `build=✅`)       |
 
 ## 5. Vérification du contrat API
 
-| Endpoint / Load                           | Frontend conforme | Backend conforme | Statut | Remarque                                                                      |
-| ----------------------------------------- | ----------------- | ---------------- | ------ | ----------------------------------------------------------------------------- |
-| `GET /dashboard` (layout → `memberShell`) | Oui               | Oui              | OK     | `getMemberShell` → `MemberShell`                                              |
-| `GET /dashboard` (page → `overview`)      | Oui               | Oui              | OK     | `getOverviewPage` → `OverviewPageData`                                        |
-| `GET /dashboard/agenda`                   | Oui               | Oui              | OK     | `listAgendaEvents` → `AgendaPageData`                                         |
-| `GET /dashboard/agenda/[id]`              | Oui               | Oui              | OK     | `getEventDetail` → `EventDetailPageData` (Q-A3 respecté)                      |
-| `GET /dashboard/membres`                  | Oui               | Oui              | OK     | `listDirectoryProfiles` → `DirectoryProfile[]` (sans email/role)              |
-| `GET /dashboard/pupitre/*`                | Oui               | Oui              | OK     | `getPupitrePage` → `PupitrePageData` (`isChef` autorisé ici)                  |
-| `GET /dashboard/admin/membres`            | Oui               | Oui              | OK     | `listAdminMembersPage` → `AdminMembersPageData` (email/role/isChef autorisés) |
-| `POST /api/member/action`                 | Oui               | Oui              | OK     | Retour `CommandResult` (§7.12), plus de `snapshot`                            |
+| Endpoint                                  | Frontend conforme                     | Backend conforme | Statut     | Remarque                                    |
+| ----------------------------------------- | ------------------------------------- | ---------------- | ---------- | ------------------------------------------- |
+| `GET /dashboard/admin/agenda`             | Non (page non vérifiée)               | Oui              | ERREUR     | Backend OK, guard `secretaire` présent      |
+| `GET /dashboard/admin/articles/new`       | Non (page non vérifiée)               | Oui              | ERREUR     | Backend OK, guard `secretaire` présent      |
+| `GET /dashboard/admin/articles/[id]/edit` | Non (page non vérifiée)               | Oui              | ERREUR     | Backend OK, guard `secretaire` présent      |
+| `GET /dashboard/admin/notifications`      | Non (page non vérifiée)               | Oui              | ERREUR     | Backend OK, guard `secretaire` présent      |
+| `GET /dashboard/agenda/nouveau`           | Non vérifié                           | Oui              | OK         | Guard `chef_pupitre` conforme matrice       |
+| `GET /dashboard/agenda/[id]/modifier`     | Non vérifié                           | **Non**          | **ERREUR** | **Manque `requireRole('chef_pupitre')`**    |
+| `GET /dashboard/admin/membres`            | **Non** (lit `profiles` fallback)     | Oui              | **ERREUR** | DTO `members` non lu par la page            |
+| `GET /dashboard/pupitre/membres`          | **Non** (lit `profiles` via service)  | Oui              | **ERREUR** | DTO `members` (`PupitreMember[]`) non lu    |
+| `GET /dashboard/admin`                    | **Non** (lit `profiles.length`)       | Oui              | **ERREUR** | DTO `counts` / `storage` non lu             |
+| `GET /dashboard` (overview)               | **Non** (lit `documents.length`)      | Oui              | **ERREUR** | DTO `documentsCount` non lu                 |
+| `GET /dashboard/admin/articles`           | **Non** (lit `profiles` pour auteurs) | Oui              | **ERREUR** | DTO `authors` (`DirectoryProfile[]`) non lu |
 
 ## 6. Défauts détaillés
 
-### 6.1 Défauts P0 (bloquants critiques)
+### 6.1 Défauts P1 (majeurs)
 
-_Aucun._
-
-### 6.2 Défauts P1 (majeurs)
-
-#### REV-01 : Tests `member-queries.test.ts` absents (étape 73 non exécutée)
+#### R-001 : AdminMembersPage lit `member.profiles` au lieu de `member.adminMembers`
 
 - **Gravité** : P1
-- **Fichier** : `tests/member-queries.test.ts` (existe mais non validé)
-- **Ligne/Fonction** : Fichier de test
-- **Constat** : L'étape 73 du plan prévoit des tests automatisés couvrant les clés DTO, le comptage de requêtes par page, les refus de rôle (403) et la règle Q-A3 (présences nominatives). Le fichier `tests/member-queries.test.ts` est présent dans le dépôt (vu dans `git status`) mais n'a pas été exécuté ni validé. L'intégrateur le signale comme « Planifié » (TL-05).
-- **Preuve** : `equipe/INTEGRATION.md` §7 (TL-05) ; `equipe/PLAN.md` étape 73 ; `docs/questions.md` Q-2026-11-25-02 (décision Chef : attribution au Testeur).
-- **Conséquence** : Aucune preuve automatisée de non-régression sur les lectures ciblées, les gardes et le comptage de requêtes. Le chantier ne peut pas être considéré comme pleinement clos tant que ces tests ne passent pas.
-- **Attendu** : Exécution de `pnpm run test` avec les tests `member-queries.test.ts` passant (couverture : clés DTO, comptage requêtes, refus rôle, Q-A3).
-- **Responsable pressenti** : Testeur
-
-### 6.3 Défauts P2 (significatifs)
-
-#### REV-02 : `pupitre/+layout.server.ts` ne vérifie pas l'authentification (TL-04)
-
-- **Gravité** : P2
-- **Fichier** : `src/routes/dashboard/pupitre/+layout.server.ts`
-- **Ligne/Fonction** : Ligne 3 (load minimal)
-- **Constat** : Le layout pupitre ne fait **pas** le garde `requireAuth` ; il renvoie seulement `{ user: locals.user }`. Les pages enfants (`pupitre/+page.server.ts`, `pupitre/membres/+page.server.ts`, etc.) appliquent bien `requireAuth` + `requireRole('chef_pupitre')` via `runQuery`. L'accès est donc refusé au niveau des pages, mais le layout lui-même est accessible sans vérification.
-- **Preuve** : Code lu dans `src/routes/dashboard/pupitre/+layout.server.ts` (3 lignes) ; `equipe/INTEGRATION.md` TL-04.
-- **Conséquence** : Risque faible (les données sont protégées au niveau page), mais incohérence avec le principe « guards appliqués dans chaque load ». Une future page pupitre sans garde hériterait d'un accès non vérifié.
-- **Attendu** : Ajouter `requireAuth` dans `pupitre/+layout.server.ts` (ou documenter explicitement l'exception acceptée).
-- **Responsable pressenti** : Backend
-
-#### REV-03 : `MemberProfile` expose encore des champs interdits pour l'annuaire (cohérence `DirectoryProfile`)
-
-- **Gravité** : P2
-- **Fichier** : `src/lib/member/types.ts`
-- **Ligne/Fonction** : Interface `MemberProfile` (lignes 43–58)
-- **Constat** : `MemberProfile` (utilisé pour le profil de session dans `MemberShell`) expose `email`, `role`, `accountStatus`, `joinedAt`. C'est correct pour le profil **courant**. En revanche, `DirectoryProfile` (annuaire) les exclut correctement. Le contrat §12.3 et Q-A5 interdisent les valeurs inventées ; l'ancien `snapshot.ts` fabriquait `email: ''`, `role: 'member'`… — c'est corrigé. Le point reste une réserve de cohérence : s'assurer qu'aucun chemin de code ne réutilise `MemberProfile` pour afficher un autre membre.
-- **Preuve** : `src/lib/member/types.ts` interfaces `MemberProfile` vs `DirectoryProfile` ; `equipe/INTEGRATION.md` TL-03.
-- **Conséquence** : Risque de fuite accidentelle si un composant utilise le mauvais type. Le store `src/lib/member/store.svelte.ts` doit être vérifié.
-- **Attendu** : Vérifier que `member.profiles` dans le store est bien typé `DirectoryProfile[]` (conforme au contrat §3.1 note) et qu'aucun composant n'affiche `email`/`role` d'autrui.
+- **Fichier** : `src/lib/member/pages/AdminMembersPage.svelte`
+- **Ligne/Fonction** : Ligne 46 (`const members = $derived(member.profiles...)`)
+- **Constat** : La page utilise le getter déprécié `profiles` (fallback qui convertit `adminMembers` en `MemberProfile[]` partiel) au lieu du getter dédié `adminMembers` qui expose `MemberAdminSummary[]` avec tous les champs requis (email, role, accountStatus, emailConfirmed, level, bureauPositionId, pupitres avec isChef, createdAt).
+- **Preuve** : `store.svelte.ts` lignes 200–206 expose `adminMembers` correctement ; `AdminMembersPageData` (§3.1 contrat) attend `members: MemberAdminSummary[]`.
+- **Conséquence** : L'affichage fonctionne partiellement (le fallback convertit), mais `email`, `role`, `accountStatus` sont présents alors qu'ils ne devraient l'être que dans l'admin, et `bureauPositionId` (nécessaire à l'édition du titre) est perdu. La pagination `membersCount` n'est pas utilisée.
+- **Attendu** : Remplacer `member.profiles` par `member.adminMembers` et adapter les accès aux champs (`profile.role` → `profile.role`, `profile.accountStatus` → `profile.accountStatus`, etc. — les noms sont identiques). Utiliser `member.adminMembersCount` pour le total.
 - **Responsable pressenti** : Frontend
 
-### 6.4 Défauts P3 (mineurs)
+#### R-002 : PupitrePage utilise `profilesOfPupitre()` (basé sur `member.profiles`) au lieu de `member.pupitreMembers`
 
-#### REV-04 : Warnings `state_referenced_locally` préexistants (TL-01)
+- **Gravité** : P1
+- **Fichier** : `src/lib/member/pages/PupitrePage.svelte` + `src/lib/member/services/members.ts`
+- **Ligne/Fonction** : `PupitrePage.svelte` ligne 48 (`profilesOfPupitre(pupitreId)`) ; `members.ts` ligne 15–19 (`profilesOfPupitre`)
+- **Constat** : Le service `profilesOfPupitre` filtre `member.profiles` (fallback `DirectoryProfile[]` converti en `MemberProfile[]`) au lieu d'utiliser `member.pupitreMembers` qui expose `PupitreMember[]` avec `isChef` — la **seule** projection autorisée à porter `isChef` d'un autre profil (contrat §3.1, §7.11, décision Q-2026-11-25-01).
+- **Preuve** : `store.svelte.ts` lignes 215–221 expose `pupitreMembers: PupitreMember[]` ; `PupitrePageData.members` est typé `PupitreMember[]` (§3.1).
+- **Conséquence** : L'espace pupitre affiche 0 membre / 0 chef (vu dans le rapport d'intégration I-003). Le champ `isChef` n'est pas disponible via le fallback `profiles`.
+- **Attendu** : Remplacer `profilesOfPupitre(pupitreId)` par un filtre sur `member.pupitreMembers` (ou ajouter un getter `pupitreMembersOf(pupitreId)` dans le store). Supprimer `profilesOfPupitre` du service.
+- **Responsable pressenti** : Frontend
 
-- **Gravité** : P3
-- **Fichier** : `src/routes/dashboard/articles/ArticleFormPage.svelte`, `src/routes/dashboard/agenda/EventFormPage.svelte`, `src/routes/dashboard/profil/ProfilePage.svelte`, `src/routes/+layout.svelte`
-- **Ligne/Fonction** : Diverses (état local référencé mais non réactif)
-- **Constat** : 19 warnings `state_referenced_locally` préexistants sur 4 composants. Ne bloquent pas le build. Hors périmètre du chantier (composants inchangés).
-- **Preuve** : `equipe/INTEGRATION.md` §4 (commande `pnpm run check` : 0 erreur, 19 warnings) ; TL-01.
-- **Conséquence** : Aucun impact fonctionnel. Dette technique à corriger hors session.
-- **Attendu** : Corriger en utilisant `$derived` ou passer par props, lors d'une prochaine session de nettoyage.
+#### R-003 : AdminOverviewPage lit `member.profiles.length` au lieu de `member.adminCounts.members`
+
+- **Gravité** : P1
+- **Fichier** : `src/lib/member/pages/AdminOverviewPage.svelte`
+- **Ligne/Fonction** : Ligne 95 (`value={member.profiles.length}`)
+- **Constat** : La page utilise le fallback `profiles` pour compter les membres, alors que le DTO `AdminOverviewPageData` fournit `counts: { members, pendingInvitations, upcomingEvents }` et `storage: StorageUsage`.
+- **Preuve** : `store.svelte.ts` lignes 237–249 expose `adminCounts` et `adminStorage` ; `getAdminOverviewPage` retourne bien ces champs (§11.1).
+- **Conséquence** : Compteur « Membres » à 0 si le fallback `profiles` est vide (ce qui est le cas hors section `adminMembers`). Les compteurs « Invitations en attente », « Articles publiés », « Notifications non lues » utilisent aussi des sources incorrectes (`member.invitations`, `member.articles` qui sont pour d'autres sections).
+- **Attendu** : Utiliser `member.adminCounts?.members ?? 0`, `member.adminCounts?.pendingInvitations ?? 0`, `member.adminCounts?.upcomingEvents ?? 0`. Pour le stockage, utiliser `member.adminStorage` (formatage via `formatBytes`).
+- **Responsable pressenti** : Frontend
+
+#### R-004 : OverviewPage lit `member.documents.length` au lieu de `member.overviewDocumentsCount`
+
+- **Gravité** : P1
+- **Fichier** : `src/lib/member/pages/OverviewPage.svelte`
+- **Ligne/Fonction** : Ligne 41 (`const documentsCount = $derived(member.documents.length)`)
+- **Constat** : La page utilise le getter `documents` (qui lit `DocumentsPageData.documents` — section `documents`) au lieu du champ `documentsCount` de `OverviewPageData`.
+- **Preuve** : `store.svelte.ts` lignes 259–264 expose `overviewDocumentsCount` ; `getOverviewPage` retourne `documentsCount: number` (§11.1).
+- **Conséquence** : Compteur « Documents disponibles » à 0 sur la page d'accueil membre (vu dans I-003).
+- **Attendu** : Remplacer par `member.overviewDocumentsCount`.
+- **Responsable pressenti** : Frontend
+
+#### R-005 : AdminArticlesPage lit `member.profiles` pour les auteurs au lieu de `member.authors`
+
+- **Gravité** : P1
+- **Fichier** : `src/lib/member/pages/AdminArticlesPage.svelte`
+- **Ligne/Fonction** : Ligne 55–58 (`authorName` utilise `member.profiles.find()`)
+- **Constat** : La fonction `authorName` cherche l'auteur dans `member.profiles` (fallback `MemberProfile[]` avec email/role/accountStatus) au lieu de `member.authors` qui expose `DirectoryProfile[]` (projection minimale sans données sensibles, contrat §12.3).
+- **Preuve** : `store.svelte.ts` lignes 251–257 expose `authors: DirectoryProfile[]` ; `listArticlesPage` retourne `authors: DirectoryProfile[]` (§11.1).
+- **Conséquence** : Affichage « Auteur inconnu » pour tous les articles (vu dans I-003). Fuite potentielle de `email`/`role`/`accountStatus` si le fallback est utilisé ailleurs.
+- **Attendu** : Remplacer par `member.authors.find(a => a.id === id)`.
+- **Responsable pressenti** : Frontend
+
+#### R-006 : Route `/dashboard/agenda/[id]/modifier` manque `requireRole('chef_pupitre')`
+
+- **Gravité** : P1
+- **Fichier** : `src/routes/dashboard/agenda/[id]/modifier/+page.server.ts`
+- **Ligne/Fonction** : Ligne 9 (seul `requireAuth`)
+- **Constat** : La route canonique pour l'édition d'événement par un chef de pupitre n'a que `requireAuth`. Le contrat (§7.11 tableau) exige un rôle minimum `chef_pupitre` (périmètre) / `secretaire`. La fonction `getEventForEdit` vérifie le périmètre en interne, mais la route doit aussi avoir le guard explicite.
+- **Preuve** : Comparaison avec `/dashboard/agenda/nouveau` (ligne 9 : `requireRole('chef_pupitre')`) et `/dashboard/admin/articles/[id]/edit` (ligne 17 : `requireRole('secretaire')`).
+- **Conséquence** : Tout membre actif (rôle `member`) peut accéder au formulaire d'édition d'événement → HTTP 200 au lieu de 403. La vérification serveur dans `getEventForEdit` renverra `NOT_CHEF_OF_PUPITRE` (403/404), mais l'absence de guard explicite viole le principe de défense en profondeur (§2.7).
+- **Attendu** : Ajouter `requireRole(locals, 'chef_pupitre')` après `requireAuth`.
+- **Responsable pressenti** : Backend
+
+### 6.2 Défauts P2 (significatifs)
+
+#### R-007 : Doublons de routes `eventForm` non arbitrés
+
+- **Gravité** : P2
+- **Fichier** : `equipe/CONTRAT_API.md` (I-010), routes concernées
+- **Constat** : Deux routes servent la même section `eventForm` avec des guards différents :
+  - `/dashboard/agenda/nouveau` → `chef_pupitre` (création événement mono-pupitre interne)
+  - `/dashboard/admin/agenda/new` → `secretaire` (création événement public/interne/pupitre, 0–N pupitres)
+  - `/dashboard/agenda/[id]/modifier` → `requireAuth` seul (défaillant, voir R-006)
+  - `/dashboard/admin/articles/[id]/edit` → `secretaire`
+- **Preuve** : Contrat §7.11 tableau lignes 850–852, 865 ; code des 4 routes.
+- **Conséquence** : Ambiguïté UX (deux entrées menu pour « Nouvel événement » / « Modifier événement »), risque de contournement de la matrice des permissions (un chef pourrait accéder à la route admin s'il devine l'URL).
+- **Attendu** : Arbitrage du Chef pour désigner la route canonique par rôle, supprimer ou rediriger l'autre. Documenter dans `CONTRAT_API.md` et `docs/questions.md`.
+- **Responsable pressenti** : Chef / Architecte
+
+#### R-008 : Getter `profiles` (fallback) maintient une surface d'attaque / confusion
+
+- **Gravité** : P2
+- **Fichier** : `src/lib/member/store.svelte.ts`
+- **Ligne/Fonction** : Lignes 266–289 (`get profiles()`)
+- **Constat** : Le fallback `profiles` convertit `adminMembers` en `MemberProfile[]` avec `email`, `role`, `accountStatus` — des champs interdits dans l'annuaire (contrat §12.3). Pour les autres sections, il tente de lire une clé `profiles` qui n'existe plus dans les DTO de page.
+- **Preuve** : Code du getter ; contrat §3.1 note « `profiles` déprécié en fallback ».
+- **Conséquence** : Risque de régression si une page utilise `member.profiles` en croyant avoir des `DirectoryProfile` (ex. `PupitrePage` via `profilesOfPupitre`). Fuite de données sensibles possible.
+- **Attendu** : Une fois toutes les pages migrées (R-001 à R-005), supprimer le getter `profiles` et le service `profilesOfPupitre` / `visibleProfiles` / `activeChefs` / `eventAudience` qui en dépendent. Remplacer par des getters typés par section.
 - **Responsable pressenti** : Frontend
 
 ## 7. Points à vérifier
 
-| Point                                                                                                | Raison                                                                                                   |
-| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Exécution effective de `pnpm run test` avec `member-queries.test.ts`                                 | Fichier présent mais non exécuté dans cette session ; étape 73 bloquante pour la clôture du chantier     |
-| Vérification du store `src/lib/member/store.svelte.ts` : `member.profiles` typé `DirectoryProfile[]` | Conformité au contrat §3.1 (note) ; éviter toute régression d'affichage `email`/`role` d'autrui          |
-| Aucune régression sur les pages publiques (agenda, articles, médias)                                 | Le chantier ne les touche pas, mais un `build` complet a passé — confirmation par le testeur recommandée |
+| Point                                                           | Raison                                                                                                                       |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Tests `pnpm test` après corrections                             | `tests/i18n.test.ts` et `tests/invitation.test.ts` sont vides (0 octet) — hors périmètre Tech Lead, mais bloquant pour la CI |
+| Bindings `wrangler.jsonc` (R2_PUBLIC / R2_PRIVATE / HYPERDRIVE) | Configuration déploiement, accord Chef requis (I-005)                                                                        |
+| Migration `0008` appliquée sur Neon                             | Preuve d'application manquante (I-026 rapport intégration)                                                                   |
 
 ## 8. Améliorations non bloquantes
 
-- Uniformiser l'application de `requireAuth` dans **tous** les layouts (ajouter dans `pupitre/+layout.server.ts` pour cohérence).
-- Documenter explicitement dans `docs/architecture.md` le pattern « un load par page, transaction RLS par lecture » pour les futurs intervenants.
-- Nettoyer les 19 warnings `state_referenced_locally` lors d'une session dédiée.
+- Supprimer le plugin Vite `bagad-exclude-demo-from-build` (cible `$lib/demo/**` inexistant, 51–54 % temps de build)
+- Nettoyer les ~9 Mo d'artefacts de debug à la racine et dans `src/` (`gen_tests.js`, `check_*.log`, `*.bat`, `*.ps1`, `Context.MD`, `docs/lighthouse*.json`)
+- Réécrire `static/robots.txt` avec les vraies routes (`/dashboard`, `/auth`, `/api`)
+- Ajouter `<link rel="manifest">` dans `app.html` (PWA non installable actuellement, `manifest.webmanifest` vide)
+- Justifier ou retirer `@lhci/cli` / `lighthouse` de `package.json` (gouvernance packages AGENTS.md §2)
 
 ## 9. Recommandations prioritaires
 
-1. **Exécuter l'étape 73** : faire passer les tests `member-queries.test.ts` (responsable : Testeur). C'est la seule action bloquante pour valider définitivement le chantier.
-2. **Corriger REV-02** : ajouter `requireAuth` dans `pupitre/+layout.server.ts` (responsable : Backend) — correction rapide, cohérence défensive.
-3. **Vérifier REV-03** : audit du store et des composants pour confirmer l'absence d'affichage `email`/`role` d'autrui (responsable : Frontend).
+1. **Corriger les 5 pages frontend** (R-001 à R-005) pour utiliser les getters dédiés du store (`adminMembers`, `pupitreMembers`, `adminCounts`/`adminStorage`, `overviewDocumentsCount`, `authors`). C'est la cause racine des écrans vides signalés dans I-003.
+2. **Ajouter `requireRole('chef_pupitre')`** sur `/dashboard/agenda/[id]/modifier/+page.server.ts` (R-006).
+3. **Arbitrer les doublons de routes** `eventForm` (R-007) avant de merger — décision Chef/Architecte à consigner dans `docs/questions.md` et `CONTRAT_API.md`.
+4. **Supprimer le fallback `profiles`** une fois les migrations faites (R-008).
 
 ## 10. Verdict
 
